@@ -12,7 +12,10 @@ export function effectiveConfig(item: Item, category: Category | undefined): Ale
 }
 
 /** Fecha en que vence el lote según el tipo de control, o `null` si no aplica o faltan datos. */
-export function lotDueDate(lot: Lot, controlType: AlertConfig['controlType']): IsoDay | null {
+export function lotDueDate(
+  lot: Pick<Lot, 'expiryDate' | 'manufactureDate' | 'shelfLifeMonths'>,
+  controlType: AlertConfig['controlType'],
+): IsoDay | null {
   switch (controlType) {
     case 'expiryDate':
       return lot.expiryDate;

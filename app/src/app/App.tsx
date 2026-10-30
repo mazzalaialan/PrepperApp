@@ -3,6 +3,11 @@ import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
+import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
+import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
+import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
+import { ItemsPage } from '@/modules/inventory/pages/ItemsPage';
+import { LocationsPage } from '@/modules/inventory/pages/LocationsPage';
 import { HomePage } from './pages/HomePage';
 import { SectionPage } from './pages/SectionPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -19,6 +24,11 @@ const router = createHashRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/inventory', element: <SectionPage section="inventory" /> },
+      { path: '/inventory/items', element: <ItemsPage /> },
+      { path: '/inventory/items/:id', element: <ItemEditPage /> },
+      { path: '/inventory/locations', element: <LocationsPage /> },
+      { path: '/inventory/categories', element: <CategoriesPage /> },
+      { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/field', element: <SectionPage section="field" /> },
       { path: '/library', element: <SectionPage section="library" /> },
       { path: '/settings', element: <SettingsPage /> },

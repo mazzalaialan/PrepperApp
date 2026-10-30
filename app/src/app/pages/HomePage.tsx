@@ -1,18 +1,52 @@
 import { useTranslation } from 'react-i18next';
-import { BellRing } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BellRing, CircleCheck } from 'lucide-react';
+import { AlertList, ShortageList } from '@/modules/inventory/components/AlertList';
+import { useAlerts, useShortages } from '@/modules/inventory/selectors';
+import { useInventory } from '@/modules/inventory/store';
 import { ModuleGrid } from '@/ui/ModuleGrid';
+
+const HOME_ALERT_LIMIT = 5;
+
+function AlertSummary() {
+  const { t } = useTranslation();
+  const hasItems = useInventory((s) => s.items.size > 0);
+  const alerts = useAlerts();
+  const shortages = useShortages();
+  const total = alerts.length + shortages.length;
+
+  if (total === 0) {
+    return (
+      <section className="card summary">
+        <CircleCheck size={24} style={{ color: 'var(--ok)' }} aria-hidden />
+        <div>
+          <h2>{t('home.alertsTitle')}</h2>
+          <p className="hint">{hasItems ? t('alerts.allGood') : t('home.alertsEmpty')}</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="card stack">
+      <div className="summary">
+        <BellRing size={24} style={{ color: 'var(--warn)' }} aria-hidden />
+        <h2 style={{ flex: 1 }}>{t('home.alertsCount', { count: total })}</h2>
+        <Link to="/inventory/alerts">{t('home.seeAll')}</Link>
+      </div>
+      {alerts.length > 0 && <AlertList alerts={alerts} limit={HOME_ALERT_LIMIT} />}
+      {alerts.length < HOME_ALERT_LIMIT && shortages.length > 0 && (
+        <ShortageList shortages={shortages.slice(0, HOME_ALERT_LIMIT - alerts.length)} />
+      )}
+    </section>
+  );
+}
 
 export function HomePage() {
   const { t } = useTranslation();
   return (
     <>
-      <section className="card" style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <BellRing size={24} style={{ color: 'var(--accent)', flexShrink: 0 }} aria-hidden />
-        <div>
-          <h2 style={{ fontSize: '1.05rem', marginBottom: 4 }}>{t('home.alertsTitle')}</h2>
-          <p className="hint">{t('home.alertsEmpty')}</p>
-        </div>
-      </section>
+      <AlertSummary />
       <h2 className="section-title">{t('sections.inventory')}</h2>
       <ModuleGrid section="inventory" />
       <h2 className="section-title">{t('sections.field')}</h2>

@@ -10,3 +10,5 @@ Thumbs.db
 .env
 .env.*
 *.tsbuildinfo
+e2e-results/
+playwright-report/

@@ -43,7 +43,7 @@ export function buildSystemCategories(): Category[] {
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
-    nameKey: `categories.${spec.key}`,
+    nameKey: `categoryNames.${spec.key}`,
     name: '',
     isSystem: true,
     hidden: false,

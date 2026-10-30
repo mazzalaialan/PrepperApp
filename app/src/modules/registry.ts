@@ -12,6 +12,7 @@ import {
   Moon,
   Package,
   Sparkles,
+  Tags,
   Triangle,
   Warehouse,
 } from 'lucide-react';
@@ -24,6 +25,8 @@ export interface ModuleDef {
   id: string;
   section: Section;
   icon: LucideIcon;
+  /** Ruta de la pantalla del módulo. */
+  path?: string;
   /** Fase en la que se implementa (ARQUITECTURA §16). */
   phase: Phase;
   /** `true` cuando el módulo ya tiene pantalla. */
@@ -35,9 +38,10 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { id: 'inventory', section: 'inventory', icon: Package, phase: 'F1', implemented: false },
-  { id: 'locations', section: 'inventory', icon: Warehouse, phase: 'F1', implemented: false },
-  { id: 'alerts', section: 'inventory', icon: BellRing, phase: 'F1', implemented: false },
+  { id: 'inventory', section: 'inventory', icon: Package, phase: 'F1', implemented: true, path: '/inventory/items' },
+  { id: 'locations', section: 'inventory', icon: Warehouse, phase: 'F1', implemented: true, path: '/inventory/locations' },
+  { id: 'alerts', section: 'inventory', icon: BellRing, phase: 'F1', implemented: true, path: '/inventory/alerts' },
+  { id: 'categories', section: 'inventory', icon: Tags, phase: 'F1', implemented: true, path: '/inventory/categories' },
   { id: 'backup', section: 'inventory', icon: Archive, phase: 'F1', implemented: false },
   { id: 'documents', section: 'inventory', icon: FileText, phase: 'F3', implemented: false },
   { id: 'recommendations', section: 'inventory', icon: Calculator, phase: 'F3', implemented: false },
