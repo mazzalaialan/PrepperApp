@@ -131,6 +131,19 @@ describe('inventario', () => {
     expect(await db.alertIndex.count()).toBe(0);
   });
 
+  it('la foto se reemplaza y se borra con el artículo', async () => {
+    const water = item();
+    await inv().saveItem(water);
+    const image = (b: number) => ({ bytes: new Uint8Array([b]), mime: 'image/webp', width: 1, height: 1 });
+    await inv().setItemPhoto(water.id, image(1));
+    await inv().setItemPhoto(water.id, image(2));
+    expect(inv().attachments.size).toBe(1);
+    expect(await db.blobs.count()).toBe(1);
+    await inv().deleteItem(water.id);
+    expect(inv().attachments.size).toBe(0);
+    expect(await db.blobs.count()).toBe(0);
+  });
+
   it('se vacía al bloquear', () => {
     lockVault();
     expect(inv().loaded).toBe(false);

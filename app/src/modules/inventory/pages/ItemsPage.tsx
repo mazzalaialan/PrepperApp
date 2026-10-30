@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { Plus, Search, Star } from 'lucide-react';
+import { Plus, ScanBarcode, Search, Star } from 'lucide-react';
+import { useCapabilities } from '@/core/capabilities/capabilities';
+import { BarcodeScanner } from '@/ui/BarcodeScanner';
 import { CategoryIcon } from '@/ui/CategoryIcon';
 import { AlertBadge } from '../components/AlertBadge';
 import { quantityOf } from '../domain/stock';
@@ -16,8 +18,17 @@ export function ItemsPage() {
   );
   const worst = useWorstAlertByItem();
   const categoryOptions = useCategoryOptions();
+  const navigate = useNavigate();
+  const canScan = useCapabilities((s) => (s.caps?.barcode && s.caps.camera) ?? false);
+  const [scanning, setScanning] = useState(false);
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState('');
+
+  function handleScan(code: string) {
+    setScanning(false);
+    const match = [...items.values()].find((i) => i.barcode === code);
+    navigate(match ? `/inventory/items/${match.id}` : `/inventory/items/new?barcode=${encodeURIComponent(code)}`);
+  }
   const [favoritesOnly, setFavoritesOnly] = useState(false);
 
   const rows = useMemo(() => {
@@ -70,7 +81,13 @@ export function ItemsPage() {
         >
           <Star size={18} fill={favoritesOnly ? 'currentColor' : 'none'} /> {t('items.favorites')}
         </button>
+        {canScan && (
+          <button className="btn" type="button" onClick={() => setScanning(true)}>
+            <ScanBarcode size={18} /> {t('scanner.scan')}
+          </button>
+        )}
       </div>
+      {scanning && <BarcodeScanner onDetected={handleScan} onClose={() => setScanning(false)} />}
 
       {rows.length === 0 ? (
         <p className="empty">{items.size === 0 ? t('items.empty') : t('items.noResults')}</p>

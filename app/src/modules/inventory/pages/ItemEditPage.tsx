@@ -1,13 +1,16 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Star, Trash2 } from 'lucide-react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Plus, ScanBarcode, Star, Trash2 } from 'lucide-react';
+import { useCapabilities } from '@/core/capabilities/capabilities';
 import { newEntity } from '@/core/model/entity';
 import type { ControlType, Item, Lot } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { toGrams, type WeightUnit } from '@/core/units/units';
+import { BarcodeScanner } from '@/ui/BarcodeScanner';
 import { parseNum } from '@/ui/numbers';
 import { AlertBadge } from '../components/AlertBadge';
+import { ItemPhoto } from '../components/ItemPhoto';
 import { CONTROL_TYPES } from '../components/controlTypes';
 import { LotDialog } from '../components/LotDialog';
 import { StockMinSection } from '../components/StockMinSection';
@@ -43,17 +46,19 @@ function weightForDisplay(grams: number | null, imperial: boolean): { value: str
   return grams >= 1000 ? { value: String(+(grams / 1000).toFixed(3)), unit: 'kg' } : { value: String(+grams.toFixed(0)), unit: 'g' };
 }
 
-
 export function ItemEditPage() {
   const { id } = useParams();
+  const [params] = useSearchParams();
   const isNew = id === 'new';
   const stored = useInventory((s) => (id ? s.items.get(id) : undefined));
   const loaded = useInventory((s) => s.loaded);
+  // Al escanear un código desconocido desde el listado, llega precargado.
+  const fresh = useMemo(() => ({ ...emptyItem(), barcode: params.get('barcode') }), [params]);
 
   if (!loaded) return null;
   if (!isNew && !stored) return <NotFound />;
   // `key` reinicia el formulario al pasar de "nuevo" a guardado.
-  return <ItemForm key={stored?.id ?? 'new'} initial={stored ?? emptyItem()} isNew={isNew} />;
+  return <ItemForm key={stored?.id ?? 'new'} initial={stored ?? fresh} isNew={isNew} />;
 }
 
 function NotFound() {
@@ -77,6 +82,8 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
   const [weight, setWeight] = useState(initialWeight.value);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(initialWeight.unit);
   const [saved, setSaved] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const canScan = useCapabilities((s) => (s.caps?.barcode && s.caps.camera) ?? false);
   const inherits = draft.controlType === null;
 
   const category = categories.get(draft.categoryId);
@@ -173,8 +180,24 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
         </div>
         <div className="field">
           <label htmlFor="barcode">{t('items.barcode')}</label>
-          <input id="barcode" className="input" inputMode="numeric" value={draft.barcode ?? ''} onChange={(e) => set({ barcode: e.target.value.trim() || null })} />
+          <div className="input-group">
+            <input id="barcode" className="input" inputMode="numeric" value={draft.barcode ?? ''} onChange={(e) => set({ barcode: e.target.value.trim() || null })} />
+            {canScan && (
+              <button className="btn" type="button" onClick={() => setScanning(true)} aria-label={t('scanner.title')} title={t('scanner.title')}>
+                <ScanBarcode size={20} />
+              </button>
+            )}
+          </div>
         </div>
+        {scanning && (
+          <BarcodeScanner
+            onClose={() => setScanning(false)}
+            onDetected={(code) => {
+              set({ barcode: code });
+              setScanning(false);
+            }}
+          />
+        )}
         <div className="field">
           <label htmlFor="notes">{t('items.notes')}</label>
           <textarea id="notes" className="input textarea" value={draft.notes} onChange={(e) => set({ notes: e.target.value })} />
@@ -208,6 +231,7 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
 
       {!isNew && (
         <>
+          <ItemPhoto itemId={initial.id} name={initial.name} />
           <LotsSection item={initial} lang={i18n.language} />
           <StockMinSection item={initial} />
         </>

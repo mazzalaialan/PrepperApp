@@ -100,7 +100,7 @@ Servicios externos opcionales y reemplazables:
 | Búsqueda | **MiniSearch** | Índices serializables, se generan de antemano por paquete |
 | Astronomía | `astronomy-engine` | Sol, luna, fases, planetas y coordenadas estelares, 100% offline |
 | Declinación magnética | Modelo WMM (offline) | En Argentina el desvío supera los 10°; sin corregir, los rumbos son erróneos |
-| Códigos de barras | `BarcodeDetector` nativo (Android) con respaldo `zxing-wasm` (PC) | |
+| Códigos de barras | `BarcodeDetector` nativo (Android). Respaldo `zxing-wasm` para PC: pendiente; mientras tanto en PC el código se tipea | |
 | Imágenes | Compresión propia con `OffscreenCanvas` → WebP | Sin dependencias |
 | Tests | Vitest + Playwright | |
 | Servidor | Node.js + Fastify + SQLite, empaquetado en Docker | Mínimo, autoalojable en cualquier máquina |

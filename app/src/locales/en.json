@@ -145,6 +145,21 @@
     "capacityUnitPlaceholder": "L, uses…",
     "capacityRemaining": "Remaining"
   },
+  "photo": {
+    "title": "Photo",
+    "none": "No photo",
+    "processing": "Processing…",
+    "take": "Take photo",
+    "choose": "Choose image",
+    "remove": "Remove",
+    "invalid": "Couldn't read the image."
+  },
+  "scanner": {
+    "title": "Scan barcode",
+    "scan": "Scan",
+    "hint": "Point the camera at the barcode.",
+    "cameraDenied": "No camera access. Check the site permissions."
+  },
   "stockMin": {
     "title": "Minimum stock",
     "hint": "Set how much you want at each location. Stock in sub-locations also counts.",

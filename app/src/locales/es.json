@@ -145,6 +145,21 @@
     "capacityUnitPlaceholder": "L, usos…",
     "capacityRemaining": "Restante"
   },
+  "photo": {
+    "title": "Foto",
+    "none": "Sin foto",
+    "processing": "Procesando…",
+    "take": "Sacar foto",
+    "choose": "Elegir imagen",
+    "remove": "Quitar",
+    "invalid": "No se pudo leer la imagen."
+  },
+  "scanner": {
+    "title": "Escanear código",
+    "scan": "Escanear",
+    "hint": "Apuntá la cámara al código de barras.",
+    "cameraDenied": "No hay acceso a la cámara. Revisá los permisos del sitio."
+  },
   "stockMin": {
     "title": "Stock mínimo",
     "hint": "Definí cuánto querés tener en cada ubicación. Cuenta también lo guardado en sus sububicaciones.",

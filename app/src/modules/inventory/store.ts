@@ -1,8 +1,18 @@
 import { create } from 'zustand';
 import { db, type AlertIndexRow } from '@/core/db/db';
-import { repos } from '@/core/db/repository';
+import { blobStore, repos } from '@/core/db/repository';
+import type { CompressedImage } from '@/core/images/compress';
 import { newEntity, touch } from '@/core/model/entity';
-import { MAX_LOCATION_DEPTH, type Category, type Id, type Item, type Location, type Lot, type StockMin } from '@/core/model/types';
+import {
+  MAX_LOCATION_DEPTH,
+  type Attachment,
+  type Category,
+  type Id,
+  type Item,
+  type Location,
+  type Lot,
+  type StockMin,
+} from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
 import { computeAlerts, upcomingNotifications } from './domain/alerts';
 import { missingSystemCategories, systemCategoryId } from './domain/categories';
@@ -33,6 +43,8 @@ interface InventoryState {
   items: ById<Item>;
   lots: ById<Lot>;
   stockMins: ById<StockMin>;
+  /** Solo metadatos; los bytes se leen bajo demanda de `blobStore`. */
+  attachments: ById<Attachment>;
 
   load: () => Promise<void>;
   clear: () => void;
@@ -46,14 +58,16 @@ interface InventoryState {
   saveLot: (l: Lot) => Promise<void>;
   deleteLot: (id: Id) => Promise<void>;
   setStockMin: (itemId: Id, locationId: Id, minQuantity: number | null) => Promise<void>;
+  setItemPhoto: (itemId: Id, image: CompressedImage) => Promise<void>;
+  removeItemPhoto: (itemId: Id) => Promise<void>;
 }
 
 /**
- * Inventario en memoria (ARQUITECTURA Â§7.3): se descifra todo al desbloquear,
+ * Inventario en memoria (ARQUITECTURA §7.3): se descifra todo al desbloquear,
  * cada cambio se persiste cifrado al instante y se descarta al bloquear.
  */
 export const useInventory = create<InventoryState>((set, get) => {
-  /** Regenera el Ã­ndice en claro que usan las notificaciones en segundo plano. */
+  /** Regenera el índice en claro que usan las notificaciones en segundo plano. */
   async function syncAlertIndex() {
     const { lots, items, categories } = get();
     const lotList = [...lots.values()];
@@ -72,7 +86,6 @@ export const useInventory = create<InventoryState>((set, get) => {
     });
   }
 
-
   return {
     loaded: false,
     categories: new Map(),
@@ -80,14 +93,16 @@ export const useInventory = create<InventoryState>((set, get) => {
     items: new Map(),
     lots: new Map(),
     stockMins: new Map(),
+    attachments: new Map(),
 
     async load() {
-      const [categories, locations, items, lots, stockMins] = await Promise.all([
+      const [categories, locations, items, lots, stockMins, attachments] = await Promise.all([
         repos.categories.loadAll(),
         repos.locations.loadAll(),
         repos.items.loadAll(),
         repos.lots.loadAll(),
         repos.stockMins.loadAll(),
+        repos.attachments.loadAll(),
       ]);
       const missing = missingSystemCategories(await repos.categories.loadAll({ includeDeleted: true }));
       await Promise.all(missing.map((c) => repos.categories.put(c)));
@@ -98,6 +113,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         items: toMap(items),
         lots: toMap(lots),
         stockMins: toMap(stockMins),
+        attachments: toMap(attachments),
       });
       await syncAlertIndex();
     },
@@ -110,6 +126,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         items: new Map(),
         lots: new Map(),
         stockMins: new Map(),
+        attachments: new Map(),
       });
     },
 
@@ -124,7 +141,7 @@ export const useInventory = create<InventoryState>((set, get) => {
       const cat = get().categories.get(id);
       if (!cat) return;
       if (cat.isSystem) throw new InventoryError('category-system');
-      // Los artÃ­culos no quedan huÃ©rfanos: pasan a "Otros".
+      // Los artículos no quedan huérfanos: pasan a "Otros".
       const other = systemCategoryId('other');
       for (const item of get().items.values()) {
         if (item.categoryId === id) await get().saveItem({ ...item, categoryId: other });
@@ -142,7 +159,7 @@ export const useInventory = create<InventoryState>((set, get) => {
       const saved = touch(l, { depth: depthFor(l.parentId, get().locations) });
       await repos.locations.put(saved);
       let locations = withValue(get().locations, saved.id, saved);
-      // Mover una ubicaciÃ³n cambia la profundidad de todo su subÃ¡rbol.
+      // Mover una ubicación cambia la profundidad de todo su subárbol.
       for (const childId of subtreeIds(saved.id, [...locations.values()])) {
         if (childId === saved.id) continue;
         const child = locations.get(childId)!;
@@ -160,7 +177,7 @@ export const useInventory = create<InventoryState>((set, get) => {
       const { locations, lots } = get();
       const hasChildren = [...locations.values()].some((l) => l.parentId === id);
       const hasLots = [...lots.values()].some((l) => l.locationId === id);
-      // No se borra en cascada: perder stock por un toque equivocado es peor que pedir que se vacÃ­e primero.
+      // No se borra en cascada: perder stock por un toque equivocado es peor que pedir que se vacíe primero.
       if (hasChildren || hasLots) throw new InventoryError('location-not-empty');
       for (const sm of get().stockMins.values()) {
         if (sm.locationId === id) await get().setStockMin(sm.itemId, id, null);
@@ -177,6 +194,7 @@ export const useInventory = create<InventoryState>((set, get) => {
     },
 
     async deleteItem(id) {
+      await get().removeItemPhoto(id);
       for (const lot of get().lots.values()) if (lot.itemId === id) await repos.lots.remove(lot.id);
       for (const sm of get().stockMins.values()) if (sm.itemId === id) await repos.stockMins.remove(sm.id);
       await repos.items.remove(id);
@@ -215,8 +233,40 @@ export const useInventory = create<InventoryState>((set, get) => {
       await repos.stockMins.put(saved);
       set({ stockMins: withValue(get().stockMins, saved.id, saved) });
     },
+
+    async setItemPhoto(itemId, image) {
+      // Un artículo tiene una sola foto: la nueva reemplaza a la anterior.
+      await get().removeItemPhoto(itemId);
+      const attachment = newEntity<Attachment>({
+        ownerType: 'item',
+        ownerId: itemId,
+        mime: image.mime,
+        width: image.width,
+        height: image.height,
+        order: 0,
+        sizeBytes: image.bytes.byteLength,
+      });
+      await blobStore.put(attachment.id, image.bytes);
+      await repos.attachments.put(attachment);
+      set({ attachments: withValue(get().attachments, attachment.id, attachment) });
+    },
+
+    async removeItemPhoto(itemId) {
+      for (const a of get().attachments.values()) {
+        if (a.ownerType !== 'item' || a.ownerId !== itemId) continue;
+        await repos.attachments.remove(a.id);
+        await blobStore.remove(a.id);
+        set({ attachments: without(get().attachments, a.id) });
+      }
+    },
   };
 });
+
+/** Foto de un artículo, si tiene. */
+export function itemPhoto(attachments: ById<Attachment>, itemId: Id): Attachment | undefined {
+  for (const a of attachments.values()) if (a.ownerType === 'item' && a.ownerId === itemId) return a;
+  return undefined;
+}
 
 /** Carga al desbloquear y descarta al bloquear. */
 onSessionChange(() => {
