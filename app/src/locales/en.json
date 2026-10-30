@@ -239,6 +239,51 @@
     "restoreIntro": "Choose the .vikarg file exported from another device.",
     "createInstead": "Start from scratch"
   },
+  "notifications": {
+    "title": "Notifications",
+    "intro": "Alerts for expiring items and shortages. Only new alerts are sent; they are not repeated every day.",
+    "unsupported": "This browser doesn't support notifications. Alerts show up when you open the app.",
+    "enable": "Turn on notifications",
+    "disable": "Turn off",
+    "test": "Test",
+    "hour": "Daily alert time",
+    "hourHint": "With a server, the alert arrives from this time on. Without one, Chrome picks the moment.",
+    "pushOn": "Connected to server {{server}}.",
+    "pushPending": "A server is configured but this device isn't registered. Turn notifications off and on again.",
+    "localOnly": "No server: approximate daily check (Chrome only does it if the app is installed and used often).",
+    "inAppOnly": "On this device, alerts only show up when you open the app.",
+    "error": {
+      "unreachable": "Couldn't reach the server. Check the address and your connection.",
+      "invalid-response": "The address responds, but it isn't a VikArg server.",
+      "push-unsupported": "This browser doesn't support push notifications.",
+      "permission-denied": "Notifications are blocked. Allow them in the site permissions."
+    }
+  },
+  "transfer": {
+    "source": "Source",
+    "fromFile": "File",
+    "fromCode": "Code",
+    "code": "Transfer code",
+    "scanQr": "Scan QR",
+    "receive": "Receive",
+    "receiving": "Receiving…",
+    "receiveTitle": "Receive backup",
+    "sendTitle": "Send to another device",
+    "needServer": "Sending with a code requires a VikArg server. Set it up in",
+    "sendHint": "Uploads the encrypted backup to your server and gives you a single-use code. The server can't read its contents.",
+    "send": "Create code",
+    "sending": "Sending…",
+    "qrLabel": "Transfer QR",
+    "instructions": "On the other device, scan the QR with the camera, or go to Backup › Restore › Code. Valid once, until {{expires}}.",
+    "error": {
+      "unreachable": "Couldn't reach the server.",
+      "not-found": "The code doesn't exist, was already used or has expired.",
+      "too-many-attempts": "Too many attempts. Wait a few minutes.",
+      "too-large": "The backup is larger than the server accepts.",
+      "failed": "The server couldn't complete the transfer.",
+      "invalid-qr": "That QR isn't a VikArg transfer."
+    }
+  },
   "backup": {
     "exportTitle": "Export",
     "exportHint": "Creates an encrypted .vikarg file with your whole inventory and photos. Opening it requires your current password or the recovery key.",
@@ -301,6 +346,8 @@
     "connectionsHint": "Optional. The app works the same without them.",
     "serverUrl": "VikArg server",
     "serverUrlHint": "For notifications and transfers. Empty = no server.",
+    "serverTest": "Test connection",
+    "serverOk": "VikArg server {{version}} available.",
     "weatherUrl": "Weather source",
     "device": "This device",
     "deviceHint": "Features available on this hardware and browser.",

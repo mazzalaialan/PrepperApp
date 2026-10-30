@@ -42,7 +42,8 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await page.getByRole('button', { name: 'Agregar sububicación' }).click();
   await page.getByRole('dialog').getByLabel('Nombre').fill('Sótano');
   await page.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click();
-  await expect(page.getByText('Sótano')).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText('Sótano', { exact: true })).toBeVisible();
   await shot(page, '04-locations');
 
   // Artículo

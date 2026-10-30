@@ -1,19 +1,34 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Download, ScanLine } from 'lucide-react';
 import { BackupError, readBackup, restoreBackup, BACKUP_EXTENSION, type ParsedBackup, type SecretKind } from '@/core/backup/backup';
+import { TransferError, downloadTransfer, parseTransferLink } from '@/core/backup/transfer';
+import { useCapabilities } from '@/core/capabilities/capabilities';
 import { WrongSecretError } from '@/core/crypto/crypto';
 import { setLanguage } from '@/core/i18n/i18n';
 import { useSettings } from '@/core/settings/settings';
+import { BarcodeScanner } from '@/ui/BarcodeScanner';
 import { readFileBytes } from '@/ui/files';
+import { Segmented } from '@/ui/Segmented';
+
+type Source = 'file' | 'code';
 
 interface Props {
   /** Hay datos en este dispositivo que se van a reemplazar. */
   replacesData: boolean;
+  /** Servidor y código recibidos por link o QR. */
+  initialTransfer?: { server: string; code: string } | null;
   onDone?: () => void;
 }
 
-export function RestoreForm({ replacesData, onDone }: Props) {
+export function RestoreForm({ replacesData, initialTransfer, onDone }: Props) {
   const { t, i18n } = useTranslation();
+  const configuredServer = useSettings((s) => s.settings.serverUrl);
+  const canScan = useCapabilities((s) => (s.caps?.barcode && s.caps.camera) ?? false);
+  const [source, setSource] = useState<Source>(initialTransfer ? 'code' : 'file');
+  const [server, setServer] = useState(initialTransfer?.server ?? configuredServer);
+  const [code, setCode] = useState(initialTransfer?.code ?? '');
+  const [scanning, setScanning] = useState(false);
   const [backup, setBackup] = useState<ParsedBackup | null>(null);
   const [kind, setKind] = useState<SecretKind>('password');
   const [secret, setSecret] = useState('');
@@ -21,16 +36,47 @@ export function RestoreForm({ replacesData, onDone }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function pickFile(file: File | undefined) {
-    setError(null);
-    setBackup(null);
-    if (!file) return;
+  function load(bytes: Uint8Array) {
     try {
-      setBackup(readBackup(await readFileBytes(file)));
+      setBackup(readBackup(bytes));
     } catch (err) {
       if (!(err instanceof BackupError)) throw err;
       setError(t(err.code === 'newer-version' ? 'backup.newerVersion' : 'backup.invalidFile'));
     }
+  }
+
+  async function pickFile(file: File | undefined) {
+    setError(null);
+    setBackup(null);
+    if (file) load(await readFileBytes(file));
+  }
+
+  async function fetchCode(srv = server, c = code) {
+    setError(null);
+    setBackup(null);
+    setBusy(true);
+    try {
+      load(await downloadTransfer(srv, c));
+    } catch (err) {
+      if (!(err instanceof TransferError)) throw err;
+      setError(t(`transfer.error.${err.code}`));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Link o QR: se baja enseguida, el usuario solo tiene que poner la contraseña.
+  useEffect(() => {
+    if (initialTransfer) void fetchCode(initialTransfer.server, initialTransfer.code);
+  }, [initialTransfer]);
+
+  function handleScan(text: string) {
+    setScanning(false);
+    const link = parseTransferLink(text);
+    if (!link) return setError(t('transfer.error.invalid-qr'));
+    setServer(link.server);
+    setCode(link.code);
+    void fetchCode(link.server, link.code);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -55,16 +101,66 @@ export function RestoreForm({ replacesData, onDone }: Props) {
 
   return (
     <form className="stack" onSubmit={handleSubmit}>
-      <div className="field">
-        <label htmlFor="backup-file">{t('backup.file')}</label>
-        <input
-          id="backup-file"
-          className="input file-input"
-          type="file"
-          accept={`${BACKUP_EXTENSION},application/zip,application/octet-stream`}
-          onChange={(e) => void pickFile(e.target.files?.[0])}
-        />
-      </div>
+      {!backup && (
+        <>
+          <Segmented
+            label={t('transfer.source')}
+            value={source}
+            options={[
+              { value: 'file', label: t('transfer.fromFile') },
+              { value: 'code', label: t('transfer.fromCode') },
+            ]}
+            onChange={(s) => {
+              setSource(s);
+              setError(null);
+            }}
+          />
+
+          {source === 'file' ? (
+            <div className="field">
+              <label htmlFor="backup-file">{t('backup.file')}</label>
+              <input
+                id="backup-file"
+                className="input file-input"
+                type="file"
+                accept={`${BACKUP_EXTENSION},application/zip,application/octet-stream`}
+                onChange={(e) => void pickFile(e.target.files?.[0])}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="field">
+                <label htmlFor="transfer-server">{t('settings.serverUrl')}</label>
+                <input id="transfer-server" className="input" type="url" inputMode="url" placeholder="https://" value={server} onChange={(e) => setServer(e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="transfer-code">{t('transfer.code')}</label>
+                <input
+                  id="transfer-code"
+                  className="input code-input"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="XXXX-XXXX"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </div>
+              <div className="row-end">
+                {canScan && (
+                  <button className="btn" type="button" onClick={() => setScanning(true)}>
+                    <ScanLine size={18} /> {t('transfer.scanQr')}
+                  </button>
+                )}
+                <button className="btn btn-primary" type="button" disabled={busy || !server.trim() || code.trim().length < 8} onClick={() => void fetchCode()}>
+                  <Download size={18} /> {busy ? t('transfer.receiving') : t('transfer.receive')}
+                </button>
+              </div>
+              {scanning && <BarcodeScanner onDetected={handleScan} onClose={() => setScanning(false)} />}
+            </>
+          )}
+        </>
+      )}
 
       {backup && (
         <>
@@ -85,6 +181,7 @@ export function RestoreForm({ replacesData, onDone }: Props) {
               spellCheck={false}
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
+              autoFocus
             />
           </div>
           <button

@@ -20,6 +20,13 @@ export default defineConfig({
     VitePWA({
       // 'prompt': la app avisa que hay una versión nueva en lugar de recargar sola.
       registerType: 'prompt',
+      // Service worker propio (src/sw.ts): además de offline, recibe push y hace el aviso diario.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
+      },
       includeAssets: ['favicon.svg', 'brand/*.png'],
       manifest: {
         name: 'VikArg Survival',
@@ -37,10 +44,6 @@ export default defineConfig({
           { src: 'brand/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'brand/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
-        navigateFallback: 'index.html',
       },
     }),
   ],

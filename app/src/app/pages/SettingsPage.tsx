@@ -4,6 +4,7 @@ import { Check, Lock, X } from 'lucide-react';
 import { CAPABILITIES, useCapabilities } from '@/core/capabilities/capabilities';
 import { WrongSecretError } from '@/core/crypto/crypto';
 import { setLanguage } from '@/core/i18n/i18n';
+import { ServerError, checkServer, enableNotifications, normalizeServerUrl } from '@/core/notifications/notifications';
 import { useVault } from '@/core/security/useVault';
 import {
   MIN_PASSWORD_LENGTH,
@@ -13,6 +14,7 @@ import {
 } from '@/core/security/vault';
 import { AUTO_LOCK_OPTIONS, LANGUAGES, THEMES, useSettings, type Settings } from '@/core/settings/settings';
 import { Segmented } from '@/ui/Segmented';
+import { NotificationsSection } from './NotificationsSection';
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -73,6 +75,7 @@ export function SettingsPage() {
       </section>
 
       <ConnectionsSection settings={settings} onSave={update} />
+      <NotificationsSection />
       <DeviceSection />
       <StorageSection />
 
@@ -147,11 +150,28 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
   const [serverUrl, setServerUrl] = useState(settings.serverUrl);
   const [weatherUrl, setWeatherUrl] = useState(settings.weatherUrl);
   const [saved, setSaved] = useState(false);
+  const [check, setCheck] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await onSave({ serverUrl: serverUrl.trim(), weatherUrl: weatherUrl.trim() });
+    const nextServer = serverUrl.trim() ? normalizeServerUrl(serverUrl) : '';
+    const serverChanged = nextServer !== settings.serverUrl;
+    await onSave({ serverUrl: nextServer, weatherUrl: weatherUrl.trim() });
+    setServerUrl(nextServer);
     setSaved(true);
+    // Con notificaciones activas, cambiar de servidor re-registra el dispositivo (o lo da de baja si se vació).
+    if (serverChanged && settings.notificationsEnabled) await enableNotifications().catch(() => undefined);
+  }
+
+  async function testServer() {
+    setCheck(null);
+    try {
+      const info = await checkServer(serverUrl);
+      setCheck({ ok: true, text: t('settings.serverOk', { version: info.version }) });
+    } catch (err) {
+      if (!(err instanceof ServerError)) throw err;
+      setCheck({ ok: false, text: t(`notifications.error.${err.code}`) });
+    }
   }
 
   return (
@@ -173,6 +193,12 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
           }}
         />
         <p className="hint">{t('settings.serverUrlHint')}</p>
+        {serverUrl.trim() && (
+          <button className="btn-link" type="button" onClick={() => void testServer()} style={{ alignSelf: 'flex-start' }}>
+            {t('settings.serverTest')}
+          </button>
+        )}
+        {check && <p className={check.ok ? 'success' : 'error'} role="status">{check.text}</p>}
       </div>
       <div className="field">
         <label htmlFor="weather-url">{t('settings.weatherUrl')}</label>

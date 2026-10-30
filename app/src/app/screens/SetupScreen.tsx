@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { parseTransferLink } from '@/core/backup/transfer';
 import { setLanguage } from '@/core/i18n/i18n';
 import { useVault } from '@/core/security/useVault';
 import { LANGUAGES, useSettings, type Language } from '@/core/settings/settings';
@@ -13,7 +14,9 @@ export function SetupScreen() {
   const create = useVault((s) => s.create);
   const language = useSettings((s) => s.settings.language);
   const update = useSettings((s) => s.update);
-  const [restoring, setRestoring] = useState(false);
+  // Dispositivo nuevo abierto desde el QR de transferencia: va directo a restaurar.
+  const [linkTransfer] = useState(() => parseTransferLink(window.location.href));
+  const [restoring, setRestoring] = useState(linkTransfer !== null);
 
   function changeLanguage(lang: Language) {
     setLanguage(lang);
@@ -35,7 +38,8 @@ export function SetupScreen() {
           {restoring ? (
             <>
               <p className="hint">{t('setup.restoreIntro')}</p>
-              <RestoreForm replacesData={false} />
+              {/* Al terminar se limpia el link: el código es de un solo uso y no debe reintentarse. */}
+              <RestoreForm replacesData={false} initialTransfer={linkTransfer} onDone={() => (window.location.hash = '#/')} />
             </>
           ) : (
             <>

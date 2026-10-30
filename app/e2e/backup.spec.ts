@@ -46,6 +46,9 @@ test('exportar en un dispositivo y restaurar en otro', async ({ page, browser },
 
   await page2.getByLabel('Contraseña que tenías al exportarlo').fill(PASSWORD);
   await page2.getByRole('button', { name: 'Restaurar' }).click();
+  // Al terminar, la app vuelve sola a Inicio: esperar antes de navegar.
+  await expect(page2).toHaveURL(/#\/$/);
+  await expect(page2.getByRole('link', { name: 'Inicio' })).toBeVisible();
   await page2.goto('/#/inventory/items');
   await expect(page2.getByText('Linterna frontal')).toBeVisible();
   await other.close();

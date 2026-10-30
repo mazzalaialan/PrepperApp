@@ -239,6 +239,51 @@
     "restoreIntro": "Elegí el archivo .vikarg exportado desde otro dispositivo.",
     "createInstead": "Empezar de cero"
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "intro": "Avisos de vencimientos y faltantes. Solo se avisa lo nuevo, no se repite todos los días.",
+    "unsupported": "Este navegador no admite notificaciones. Las alertas se ven al abrir la app.",
+    "enable": "Activar notificaciones",
+    "disable": "Desactivar",
+    "test": "Probar",
+    "hour": "Hora del aviso diario",
+    "hourHint": "Con servidor, el aviso llega a partir de esta hora. Sin servidor, Chrome decide el momento.",
+    "pushOn": "Conectado al servidor {{server}}.",
+    "pushPending": "Hay un servidor configurado pero este dispositivo no está registrado. Desactivá y volvé a activar.",
+    "localOnly": "Sin servidor: aviso diario aproximado (Chrome lo hace solo si la app está instalada y la usás seguido).",
+    "inAppOnly": "En este dispositivo las alertas solo se ven al abrir la app.",
+    "error": {
+      "unreachable": "No se pudo conectar con el servidor. Revisá la dirección y la conexión.",
+      "invalid-response": "La dirección responde, pero no es un servidor VikArg.",
+      "push-unsupported": "Este navegador no admite notificaciones push.",
+      "permission-denied": "Las notificaciones están bloqueadas. Habilitalas en los permisos del sitio."
+    }
+  },
+  "transfer": {
+    "source": "Origen",
+    "fromFile": "Archivo",
+    "fromCode": "Código",
+    "code": "Código de transferencia",
+    "scanQr": "Escanear QR",
+    "receive": "Recibir",
+    "receiving": "Recibiendo…",
+    "receiveTitle": "Recibir backup",
+    "sendTitle": "Enviar a otro dispositivo",
+    "needServer": "Para enviar con código hace falta un servidor VikArg. Configuralo en",
+    "sendHint": "Sube el backup cifrado a tu servidor y te da un código de un solo uso. El servidor no puede leer el contenido.",
+    "send": "Generar código",
+    "sending": "Enviando…",
+    "qrLabel": "QR de transferencia",
+    "instructions": "En el otro dispositivo escaneá el QR con la cámara, o elegí Backup › Restaurar › Código. Vale una sola vez, hasta el {{expires}}.",
+    "error": {
+      "unreachable": "No se pudo conectar con el servidor.",
+      "not-found": "El código no existe, ya se usó o venció.",
+      "too-many-attempts": "Demasiados intentos. Esperá unos minutos.",
+      "too-large": "El backup supera el tamaño que acepta el servidor.",
+      "failed": "El servidor no pudo completar la transferencia.",
+      "invalid-qr": "Ese QR no es de una transferencia de VikArg."
+    }
+  },
   "backup": {
     "exportTitle": "Exportar",
     "exportHint": "Genera un archivo .vikarg cifrado con todo tu inventario y tus fotos. Para abrirlo hace falta tu contraseña actual o la clave de recuperación.",
@@ -301,6 +346,8 @@
     "connectionsHint": "Opcionales. La app funciona igual sin ellas.",
     "serverUrl": "Servidor VikArg",
     "serverUrlHint": "Para notificaciones y transferencia. Vacío = sin servidor.",
+    "serverTest": "Probar conexión",
+    "serverOk": "Servidor VikArg {{version}} disponible.",
     "weatherUrl": "Fuente de clima",
     "device": "Este dispositivo",
     "deviceHint": "Funciones disponibles según el hardware y el navegador.",

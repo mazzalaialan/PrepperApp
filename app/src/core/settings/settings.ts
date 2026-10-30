@@ -16,6 +16,9 @@ export interface Settings {
   autoLockMinutes: number;
   serverUrl: string;
   weatherUrl: string;
+  notificationsEnabled: boolean;
+  /** Hora local (0–23) a partir de la cual el servidor envía el aviso del día. */
+  notifyHour: number;
 }
 
 export const LANGUAGES: Language[] = ['es', 'en'];
@@ -33,6 +36,8 @@ export const DEFAULT_SETTINGS: Settings = {
   autoLockMinutes: 5,
   serverUrl: '',
   weatherUrl: 'https://api.open-meteo.com',
+  notificationsEnabled: false,
+  notifyHour: 9,
 };
 
 const SETTINGS_KEY = 'app';

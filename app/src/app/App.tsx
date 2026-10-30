@@ -31,6 +31,7 @@ const router = createHashRouter([
       { path: '/inventory/categories', element: <CategoriesPage /> },
       { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/inventory/backup', element: <BackupPage /> },
+      { path: '/transfer', element: <BackupPage /> },
       { path: '/field', element: <SectionPage section="field" /> },
       { path: '/library', element: <SectionPage section="library" /> },
       { path: '/settings', element: <SettingsPage /> },

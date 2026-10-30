@@ -85,6 +85,7 @@ export const useInventory = create<InventoryState>((set, get) => {
       await db.alertIndex.clear();
       await db.alertIndex.bulkPut(rows);
     });
+    alertIndexListeners.forEach((l) => l());
   }
 
   return {
@@ -262,6 +263,14 @@ export const useInventory = create<InventoryState>((set, get) => {
     },
   };
 });
+
+const alertIndexListeners = new Set<() => void>();
+
+/** Avisa cuando cambia el índice de alertas (p. ej. para enviarlo al servidor de notificaciones). */
+export function onAlertIndexChange(listener: () => void): () => void {
+  alertIndexListeners.add(listener);
+  return () => alertIndexListeners.delete(listener);
+}
 
 /** Foto de un artículo, si tiene. */
 export function itemPhoto(attachments: ById<Attachment>, itemId: Id): Attachment | undefined {
