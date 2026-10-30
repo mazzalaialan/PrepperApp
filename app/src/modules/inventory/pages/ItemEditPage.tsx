@@ -6,9 +6,10 @@ import { useCapabilities } from '@/core/capabilities/capabilities';
 import { newEntity } from '@/core/model/entity';
 import type { ControlType, Item, Lot } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
-import { toGrams, type WeightUnit } from '@/core/units/units';
+import { formatWeight, toGrams, weightForInput, type WeightUnit } from '@/core/units/units';
 import { BarcodeScanner } from '@/ui/BarcodeScanner';
 import { parseNum } from '@/ui/numbers';
+import { WeightInput } from '@/ui/WeightInput';
 import { AlertBadge } from '../components/AlertBadge';
 import { ItemPhoto } from '../components/ItemPhoto';
 import { CONTROL_TYPES } from '../components/controlTypes';
@@ -17,6 +18,7 @@ import { StockMinSection } from '../components/StockMinSection';
 import { capacityPct, effectiveConfig, lotAlert, lotDueDate } from '../domain/alerts';
 import { systemCategoryId } from '../domain/categories';
 import { today } from '../domain/dates';
+import { isPackaged, itemWeightGrams } from '../domain/stock';
 import { formatDay, useCategoryOptions, useLocationOptions } from '../selectors';
 import { useInventory } from '../store';
 
@@ -36,29 +38,18 @@ function emptyItem(): Item {
   });
 }
 
-/** Muestra el peso guardado (gramos) en la unidad más cómoda del sistema elegido. */
-function weightForDisplay(grams: number | null, imperial: boolean): { value: string; unit: WeightUnit } {
-  if (grams === null) return { value: '', unit: imperial ? 'oz' : 'g' };
-  if (imperial) {
-    const lb = grams / toGrams(1, 'lb');
-    return lb >= 1 ? { value: String(+lb.toFixed(2)), unit: 'lb' } : { value: String(+(grams / toGrams(1, 'oz')).toFixed(1)), unit: 'oz' };
-  }
-  return grams >= 1000 ? { value: String(+(grams / 1000).toFixed(3)), unit: 'kg' } : { value: String(+grams.toFixed(0)), unit: 'g' };
-}
-
 export function ItemEditPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const isNew = id === 'new';
   const stored = useInventory((s) => (id ? s.items.get(id) : undefined));
   const loaded = useInventory((s) => s.loaded);
-  // Al escanear un código desconocido desde el listado, llega precargado.
-  const fresh = useMemo(() => ({ ...emptyItem(), barcode: params.get('barcode') }), [params]);
 
   if (!loaded) return null;
   if (!isNew && !stored) return <NotFound />;
-  // `key` reinicia el formulario al pasar de "nuevo" a guardado.
-  return <ItemForm key={stored?.id ?? 'new'} initial={stored ?? fresh} isNew={isNew} />;
+  // `key` remonta el formulario al cambiar de artículo, así cada "nuevo" genera su propio id.
+  // Al escanear un código desconocido desde el listado, llega precargado.
+  return <ItemForm key={stored?.id ?? 'new'} stored={stored} presetBarcode={params.get('barcode')} />;
 }
 
 function NotFound() {
@@ -70,15 +61,18 @@ function NotFound() {
   );
 }
 
-function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
+function ItemForm({ stored, presetBarcode }: { stored: Item | undefined; presetBarcode: string | null }) {
+  // Se crea una sola vez por montaje: nunca reutilizar el id de otro artículo nuevo.
+  const [initial] = useState(() => stored ?? { ...emptyItem(), barcode: presetBarcode });
+  const isNew = !stored;
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const imperial = useSettings((s) => s.settings.units === 'imperial');
+  const units = useSettings((s) => s.settings.units);
   const { saveItem, deleteItem, categories } = useInventory();
   const categoryOptions = useCategoryOptions(initial.categoryId);
 
   const [draft, setDraft] = useState(initial);
-  const initialWeight = weightForDisplay(initial.weightGrams, imperial);
+  const initialWeight = weightForInput(initial.weightGrams, units);
   const [weight, setWeight] = useState(initialWeight.value);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(initialWeight.unit);
   const [saved, setSaved] = useState(false);
@@ -111,8 +105,8 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
   }
 
   async function handleDelete() {
-    if (!window.confirm(t('items.confirmDelete', { name: initial.name }))) return;
-    await deleteItem(initial.id);
+    if (!stored || !window.confirm(t('items.confirmDelete', { name: stored.name }))) return;
+    await deleteItem(stored.id);
     navigate('/inventory/items', { replace: true });
   }
 
@@ -122,7 +116,7 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
         <Link className="icon-btn" to="/inventory/items" aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="page-title" style={{ flex: 1 }}>{isNew ? t('items.new') : initial.name}</h1>
+        <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('items.new')}</h1>
         <button
           className="icon-btn"
           type="button"
@@ -157,26 +151,20 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
           </div>
         </div>
         <div className="field">
-          <label htmlFor="weight">{t('items.weightPerUnit')}</label>
-          <div className="input-group">
-            <input
-              id="weight"
-              className="input"
-              inputMode="decimal"
-              value={weight}
-              onChange={(e) => {
-                setWeight(e.target.value);
-                setSaved(false);
-              }}
-            />
-            <select className="select" value={weightUnit} onChange={(e) => setWeightUnit(e.target.value as WeightUnit)} aria-label={t('items.weightUnit')}>
-              {(imperial ? (['oz', 'lb'] as const) : (['g', 'kg'] as const)).map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-          </div>
+          <label htmlFor="weight">
+            {draft.unit.trim() ? t('items.weightPer', { unit: draft.unit.trim() }) : t('items.weightPerUnit')}
+          </label>
+          <WeightInput
+            id="weight"
+            value={weight}
+            unit={weightUnit}
+            onChange={(v, u) => {
+              setWeight(v);
+              setWeightUnit(u);
+              setSaved(false);
+            }}
+          />
+          <p className="hint">{t('items.weightHint')}</p>
         </div>
         <div className="field">
           <label htmlFor="barcode">{t('items.barcode')}</label>
@@ -229,11 +217,11 @@ function ItemForm({ initial, isNew }: { initial: Item; isNew: boolean }) {
         </div>
       </form>
 
-      {!isNew && (
+      {stored && (
         <>
-          <ItemPhoto itemId={initial.id} name={initial.name} />
-          <LotsSection item={initial} lang={i18n.language} />
-          <StockMinSection item={initial} />
+          <ItemPhoto itemId={stored.id} name={stored.name} />
+          <LotsSection item={stored} lang={i18n.language} />
+          <StockMinSection item={stored} />
         </>
       )}
     </div>
@@ -291,6 +279,18 @@ function LotsSection({ item, lang }: { item: Item; lang: string }) {
   const { controlType } = config;
   const fmt = new Intl.NumberFormat(lang, { maximumFractionDigits: 2 });
   const todayStr = today();
+  const units = useSettings((s) => s.settings.units);
+  const totalQty = lots.reduce((sum, l) => sum + l.quantity, 0);
+  const totalGrams = itemWeightGrams(item, lots);
+
+  /** "4 × botella de 6 L" o solo la cantidad. */
+  function amount(lot: Lot): string {
+    const qty = `${fmt.format(lot.quantity)} ${item.unit}`.trim();
+    if (!isPackaged(lot)) return qty;
+    const size = `${fmt.format(lot.packageSize!)} ${item.unit}`.trim();
+    const pkg = lot.packageName ? t('lots.packageOf', { name: lot.packageName, size }) : size;
+    return `${fmt.format(lot.packageCount!)} × ${pkg} = ${qty}`;
+  }
 
   function detail(lot: Lot): string | null {
     if (controlType === 'capacity') {
@@ -325,9 +325,7 @@ function LotsSection({ item, lang }: { item: Item; lang: string }) {
               <li key={lot.id}>
                 <button className="list-row" type="button" onClick={() => setEditing(lot)}>
                   <span className="list-main">
-                    <span className="list-title">
-                      {fmt.format(lot.quantity)} {item.unit}
-                    </span>
+                    <span className="list-title">{amount(lot)}</span>
                     <span className="list-sub">{labels.get(lot.locationId) ?? '—'}</span>
                     {info && <span className="list-sub">{info}</span>}
                   </span>
@@ -337,6 +335,12 @@ function LotsSection({ item, lang }: { item: Item; lang: string }) {
             );
           })}
         </ul>
+      )}
+      {lots.length > 0 && (
+        <p className="lot-total">
+          {t('lots.itemTotal', { total: `${fmt.format(totalQty)} ${item.unit}`.trim() })}
+          {totalGrams > 0 && ` · ${formatWeight(totalGrams, units, lang)}`}
+        </p>
       )}
       {editing && (
         <LotDialog item={item} controlType={controlType} lot={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />

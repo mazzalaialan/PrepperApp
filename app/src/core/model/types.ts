@@ -65,7 +65,14 @@ export interface Item extends BaseEntity {
 export interface Lot extends BaseEntity {
   itemId: Id;
   locationId: Id;
+  /** Total en la unidad del artículo. Si se carga por envases, = packageCount × packageSize. */
   quantity: number;
+  /** Carga por envases (ej.: 4 botellas de 6 L). Todos `null` = cantidad directa. */
+  packageCount: number | null;
+  packageSize: number | null;
+  packageName: string | null;
+  /** Peso de cada envase vacío; solo se suma al peso si se cargó. */
+  packageTareGrams: number | null;
   expiryDate: IsoDay | null;
   manufactureDate: IsoDay | null;
   shelfLifeMonths: number | null;

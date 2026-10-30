@@ -24,10 +24,41 @@ export function stockShortages(stockMins: StockMin[], lots: Lot[], locations: Lo
   });
 }
 
+/** Campos de envase de lotes guardados antes de que existieran. */
+const NO_PACKAGE = { packageCount: null, packageSize: null, packageName: null, packageTareGrams: null } as const;
+
+/** Completa con valores por defecto los campos que una versión anterior no guardaba. */
+export function normalizeLot(lot: Lot): Lot {
+  return { ...NO_PACKAGE, ...lot };
+}
+
+export function isPackaged(lot: Pick<Lot, 'packageCount' | 'packageSize'>): boolean {
+  return lot.packageCount != null && lot.packageSize != null;
+}
+
+/** Envases × contenido, redondeado para evitar errores de coma flotante (3 × 0,1 = 0,3). */
+export function packagedQuantity(count: number, size: number): number {
+  return Math.round(count * size * 1e6) / 1e6;
+}
+
+/** Contenido (cantidad × peso por unidad) más los envases vacíos, solo si se cargó su peso. */
+export function lotWeightGrams(lot: Lot, item: Item | undefined): number {
+  const content = lot.quantity * (item?.weightGrams ?? 0);
+  const tare = lot.packageCount != null && lot.packageTareGrams != null ? lot.packageCount * lot.packageTareGrams : 0;
+  return content + tare;
+}
+
 /** Peso total en gramos de lo guardado en una ubicación y sus sububicaciones. */
 export function weightAt(locationId: Id, lots: Lot[], items: Map<Id, Item>, locations: Location[]): number {
   const scope = subtreeIds(locationId, locations);
   return active(lots)
     .filter((l) => scope.has(l.locationId))
-    .reduce((sum, l) => sum + l.quantity * (items.get(l.itemId)?.weightGrams ?? 0), 0);
+    .reduce((sum, l) => sum + lotWeightGrams(l, items.get(l.itemId)), 0);
+}
+
+/** Peso total de un artículo en todas sus ubicaciones. */
+export function itemWeightGrams(item: Item, lots: Lot[]): number {
+  return active(lots)
+    .filter((l) => l.itemId === item.id)
+    .reduce((sum, l) => sum + lotWeightGrams(l, item), 0);
 }

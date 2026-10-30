@@ -810,6 +810,12 @@ a.module-card:hover {
   padding: 10px 14px;
 }
 
+.lot-total {
+  margin: 0;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 /* ---------- Fotos y escáner ---------- */
 
 .item-photo {

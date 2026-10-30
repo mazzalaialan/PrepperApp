@@ -39,6 +39,22 @@ export function toGrams(value: number, unit: WeightUnit): number {
   }
 }
 
+/** Gramos → valor editable en la unidad más cómoda del sistema (para precargar formularios). */
+export function weightForInput(grams: number | null, system: UnitSystem): { value: string; unit: WeightUnit } {
+  if (grams === null) return { value: '', unit: system === 'imperial' ? 'oz' : 'g' };
+  if (system === 'imperial') {
+    const lb = grams / GRAMS_PER_POUND;
+    return lb >= 1
+      ? { value: String(+lb.toFixed(2)), unit: 'lb' }
+      : { value: String(+(grams / GRAMS_PER_OUNCE).toFixed(1)), unit: 'oz' };
+  }
+  return grams >= 1000 ? { value: String(+(grams / 1000).toFixed(3)), unit: 'kg' } : { value: String(+grams.toFixed(0)), unit: 'g' };
+}
+
+export function weightUnitsFor(system: UnitSystem): WeightUnit[] {
+  return system === 'imperial' ? ['oz', 'lb'] : ['g', 'kg'];
+}
+
 export function formatDistance(meters: number, system: UnitSystem, locale: string): string {
   if (system === 'imperial') {
     const feet = meters / METERS_PER_FOOT;

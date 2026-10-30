@@ -51,7 +51,7 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await page.getByLabel('Nombre').fill('Atún');
   await page.getByLabel('Categoría', { exact: true }).selectOption({ label: 'Alimento' });
   await page.getByLabel('Unidad', { exact: true }).fill('latas');
-  await page.getByLabel('Peso por unidad').fill('170');
+  await page.getByLabel('Peso por latas').fill('170');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/#\/inventory\/items\/[0-9a-f-]{36}$/);
 
@@ -64,6 +64,45 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await dialog.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Vence en 10 días')).toBeVisible();
   await shot(page, '05-item');
+
+  // Agua por envases: el peso es por litro y el envase vacío solo suma si se carga.
+  await page.goto('/#/inventory/items/new');
+  await page.getByLabel('Nombre').fill('Agua');
+  await page.getByLabel('Unidad', { exact: true }).fill('L');
+  await expect(page.getByText('Peso por L')).toBeVisible();
+  await page.getByLabel('Peso por L').fill('1');
+  await page.getByLabel('Unidad de peso').selectOption('kg');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/items\/[0-9a-f-]{36}$/);
+
+  await page.getByRole('button', { name: 'Agregar lote' }).click();
+  const water = page.getByRole('dialog');
+  await water.getByLabel('Cargar por envases').check();
+  await water.getByLabel('Cantidad de envases').fill('4');
+  await water.getByLabel('Contenido de cada uno (L)').fill('6');
+  await water.getByLabel('Envase (opcional)').fill('botella');
+  await water.getByLabel('Peso del envase vacío (opcional)').fill('300');
+  await expect(water.getByText('Total: 24 L')).toBeVisible();
+  await water.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('4 × botella de 6 L = 24 L')).toBeVisible();
+
+  // El lote nuevo copia el envase anterior; se cambia a un bidón sin tara.
+  await page.getByRole('button', { name: 'Agregar lote' }).click();
+  await expect(water.getByLabel('Cargar por envases')).toBeChecked();
+  await expect(water.getByLabel('Envase (opcional)')).toHaveValue('botella');
+  await water.getByLabel('Cantidad de envases').fill('1');
+  await water.getByLabel('Contenido de cada uno (L)').fill('20');
+  await water.getByLabel('Envase (opcional)').fill('bidón');
+  await water.getByLabel('Peso del envase vacío (opcional)').fill('');
+  await water.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('Total: 44 L · 45,2 kg')).toBeVisible();
+  await shot(page, '05b-water');
+
+  // Regresión: crear "Agua" desde la ficha de otro artículo no debe pisar al "Atún".
+  await page.goto('/#/inventory/items');
+  await expect(page.getByText('Atún')).toBeVisible();
+  await expect(page.getByText('6 latas')).toBeVisible();
+  await expect(page.getByText('44 L')).toBeVisible();
 
   // Inicio muestra la alerta
   await page.getByRole('link', { name: 'Inicio' }).click();

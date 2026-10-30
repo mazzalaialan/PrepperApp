@@ -5,7 +5,7 @@ import { computeAlerts, effectiveConfig, lotDueDate, upcomingNotifications } fro
 import { buildSystemCategories, missingSystemCategories, systemCategoryId } from './categories';
 import { addDays, addMonths, daysBetween, today } from './dates';
 import { buildTree, canMoveTo, pathLabel } from './locations';
-import { quantityOf, stockShortages, weightAt } from './stock';
+import { itemWeightGrams, lotWeightGrams, normalizeLot, packagedQuantity, quantityOf, stockShortages, weightAt } from './stock';
 
 const cats = buildSystemCategories();
 const catMap = new Map(cats.map((c) => [c.id, c]));
@@ -35,6 +35,10 @@ const lot = (itemId: string, over: Partial<Lot> = {}) =>
     itemId,
     locationId: 'loc',
     quantity: 1,
+    packageCount: null,
+    packageSize: null,
+    packageName: null,
+    packageTareGrams: null,
     expiryDate: null,
     manufactureDate: null,
     shelfLifeMonths: null,
@@ -116,6 +120,32 @@ describe('alertas', () => {
       categories: catMap,
     });
     expect(rows).toEqual([expect.objectContaining({ itemName: 'Atún', dueDate: '2027-06-01', notifyFrom: '2027-05-22' })]);
+  });
+});
+
+describe('envases', () => {
+  const water = item({ name: 'Agua', unit: 'L', weightGrams: 1000 });
+
+  it('calcula el total sin errores de coma flotante', () => {
+    expect(packagedQuantity(4, 6)).toBe(24);
+    expect(packagedQuantity(3, 0.1)).toBe(0.3);
+  });
+
+  it('suma el envase vacío solo si se cargó su peso', () => {
+    const bottles = lot(water.id, { quantity: 24, packageCount: 4, packageSize: 6, packageTareGrams: 300 });
+    const jerrycan = lot(water.id, { quantity: 20, packageCount: 1, packageSize: 20 });
+    expect(lotWeightGrams(bottles, water)).toBe(24_000 + 1_200);
+    expect(lotWeightGrams(jerrycan, water)).toBe(20_000);
+    expect(itemWeightGrams(water, [bottles, jerrycan])).toBe(45_200);
+  });
+
+  it('completa los campos de lotes guardados por versiones anteriores', () => {
+    const { packageCount, packageSize, packageName, packageTareGrams, ...old } = lot(water.id, { quantity: 6 });
+    void [packageCount, packageSize, packageName, packageTareGrams];
+    const normalized = normalizeLot(old as never);
+    expect(normalized.packageCount).toBeNull();
+    expect(normalized.packageTareGrams).toBeNull();
+    expect(lotWeightGrams(normalized, water)).toBe(6_000);
   });
 });
 

@@ -3,9 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { ControlType, Item, Lot } from '@/core/model/types';
+import { useSettings } from '@/core/settings/settings';
+import { toGrams, weightForInput, type WeightUnit } from '@/core/units/units';
 import { Dialog } from '@/ui/Dialog';
 import { numToInput, parseNum } from '@/ui/numbers';
+import { WeightInput } from '@/ui/WeightInput';
 import { lotDueDate } from '../domain/alerts';
+import { isPackaged, packagedQuantity } from '../domain/stock';
 import { formatDay, useLocationOptions } from '../selectors';
 import { useInventory } from '../store';
 
@@ -16,15 +20,33 @@ interface Props {
   onClose: () => void;
 }
 
+type Mode = 'packages' | 'direct';
+
 const str = numToInput;
 
 export function LotDialog({ item, controlType, lot, onClose }: Props) {
   const { t, i18n } = useTranslation();
-  const { saveLot, deleteLot } = useInventory();
+  const { saveLot, deleteLot, lots } = useInventory();
+  const units = useSettings((s) => s.settings.units);
   const locationOptions = useLocationOptions();
 
+  // Un lote nuevo copia el envase del último lote envasado del artículo (ej.: otra botella de 6 L).
+  const template =
+    lot ??
+    [...lots.values()]
+      .filter((l) => l.itemId === item.id && isPackaged(l))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ??
+    null;
+  const tareInitial = weightForInput(template?.packageTareGrams ?? null, units);
+
+  const [mode, setMode] = useState<Mode>(template && isPackaged(template) ? 'packages' : 'direct');
   const [locationId, setLocationId] = useState(lot?.locationId ?? locationOptions[0]?.id ?? '');
   const [quantity, setQuantity] = useState(str(lot?.quantity ?? 1));
+  const [packageCount, setPackageCount] = useState(lot ? str(lot.packageCount) : '1');
+  const [packageSize, setPackageSize] = useState(str(template?.packageSize ?? null));
+  const [packageName, setPackageName] = useState(template?.packageName ?? '');
+  const [tare, setTare] = useState(tareInitial.value);
+  const [tareUnit, setTareUnit] = useState<WeightUnit>(tareInitial.unit);
   const [expiryDate, setExpiryDate] = useState(lot?.expiryDate ?? '');
   const [manufactureDate, setManufactureDate] = useState(lot?.manufactureDate ?? '');
   const [shelfLifeYears, setShelfLifeYears] = useState(lot?.shelfLifeMonths ? str(+(lot.shelfLifeMonths / 12).toFixed(2)) : '');
@@ -33,10 +55,20 @@ export function LotDialog({ item, controlType, lot, onClose }: Props) {
   const [capacityUnit, setCapacityUnit] = useState(lot?.capacityUnit ?? '');
   const [notes, setNotes] = useState(lot?.notes ?? '');
 
+  const count = parseNum(packageCount);
+  const size = parseNum(packageSize);
+  const tareValue = parseNum(tare);
+  const packaged = mode === 'packages';
   const years = parseNum(shelfLifeYears);
+  const total = packaged ? (count !== null && size !== null ? packagedQuantity(count, size) : null) : parseNum(quantity);
+
   const fields = {
     locationId,
-    quantity: parseNum(quantity) ?? 0,
+    quantity: total ?? 0,
+    packageCount: packaged ? count : null,
+    packageSize: packaged ? size : null,
+    packageName: packaged ? packageName.trim() || null : null,
+    packageTareGrams: packaged && tareValue !== null ? toGrams(tareValue, tareUnit) : null,
     expiryDate: expiryDate || null,
     manufactureDate: manufactureDate || null,
     shelfLifeMonths: years === null ? null : Math.round(years * 12),
@@ -46,6 +78,8 @@ export function LotDialog({ item, controlType, lot, onClose }: Props) {
     notes,
   };
   const computedDue = controlType === 'shelfLife' ? lotDueDate(fields, 'shelfLife') : null;
+  const fmt = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 3 });
+  const unit = item.unit || t('items.units');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -72,12 +106,52 @@ export function LotDialog({ item, controlType, lot, onClose }: Props) {
             ))}
           </select>
         </div>
-        <div className="field">
-          <label htmlFor="lot-qty">
-            {t('lots.quantity')} {item.unit && `(${item.unit})`}
-          </label>
-          <input id="lot-qty" className="input" inputMode="decimal" required value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-        </div>
+
+        <label className="check">
+          <input type="checkbox" checked={packaged} onChange={(e) => setMode(e.target.checked ? 'packages' : 'direct')} />
+          {t('lots.byPackages')}
+        </label>
+
+        {packaged ? (
+          <fieldset className="fieldset stack">
+            <legend>{t('lots.packagesLegend')}</legend>
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="lot-pkg-count">{t('lots.packageCount')}</label>
+                <input id="lot-pkg-count" className="input" inputMode="decimal" required value={packageCount} onChange={(e) => setPackageCount(e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="lot-pkg-size">{t('lots.packageSize', { unit })}</label>
+                <input id="lot-pkg-size" className="input" inputMode="decimal" required value={packageSize} onChange={(e) => setPackageSize(e.target.value)} />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="lot-pkg-name">{t('lots.packageName')}</label>
+              <input id="lot-pkg-name" className="input" placeholder={t('lots.packageNamePlaceholder')} value={packageName} onChange={(e) => setPackageName(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="lot-pkg-tare">{t('lots.packageTare')}</label>
+              <WeightInput
+                id="lot-pkg-tare"
+                value={tare}
+                unit={tareUnit}
+                onChange={(v, u) => {
+                  setTare(v);
+                  setTareUnit(u);
+                }}
+              />
+              <p className="hint">{t('lots.packageTareHint')}</p>
+            </div>
+            <p className="lot-total" aria-live="polite">
+              {total === null ? '—' : t('lots.total', { total: fmt.format(total), unit })}
+            </p>
+          </fieldset>
+        ) : (
+          <div className="field">
+            <label htmlFor="lot-qty">{t('lots.quantityIn', { unit })}</label>
+            <input id="lot-qty" className="input" inputMode="decimal" required value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+          </div>
+        )}
 
         {controlType === 'expiryDate' && (
           <div className="field">
@@ -130,7 +204,7 @@ export function LotDialog({ item, controlType, lot, onClose }: Props) {
               <Trash2 size={18} /> {t('common.delete')}
             </button>
           )}
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-primary" type="submit" disabled={total === null}>
             {t('common.save')}
           </button>
         </div>

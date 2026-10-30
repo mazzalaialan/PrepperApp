@@ -18,6 +18,7 @@ import { computeAlerts, upcomingNotifications } from './domain/alerts';
 import { missingSystemCategories, systemCategoryId } from './domain/categories';
 import { today } from './domain/dates';
 import { canMoveTo, depthFor, subtreeIds } from './domain/locations';
+import { normalizeLot } from './domain/stock';
 
 type ById<T> = Map<Id, T>;
 
@@ -111,7 +112,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         categories: toMap([...categories, ...missing]),
         locations: toMap(locations),
         items: toMap(items),
-        lots: toMap(lots),
+        lots: toMap(lots.map(normalizeLot)),
         stockMins: toMap(stockMins),
         attachments: toMap(attachments),
       });
