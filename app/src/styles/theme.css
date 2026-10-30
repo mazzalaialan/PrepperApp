@@ -1,0 +1,67 @@
+/*
+ * Tokens de diseño. Paleta derivada del logo (Vegvísir sobre azul noche).
+ * Los componentes usan solo variables; nunca colores directos.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #121a24;
+  --surface: #1b2633;
+  --surface-2: #243243;
+  --border: #314257;
+  --text: #e8e2d6;
+  --text-muted: #9aa7b6;
+  --accent: #c47d45; /* cobre */
+  --accent-strong: #d8925a;
+  --on-accent: #1a1006;
+  --ok: #6f9e4c; /* verde */
+  --info: #5f85ad; /* azul acero */
+  --warn: #d0a03c;
+  --danger: #b84a30; /* rojo óxido */
+  --focus: #e0a46f;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f3efe7;
+  --surface: #ffffff;
+  --surface-2: #ece6da;
+  --border: #d5cbb9;
+  --text: #1c2531;
+  --text-muted: #5b6878;
+  --accent: #9b5629;
+  --accent-strong: #84461d;
+  --on-accent: #ffffff;
+  --ok: #3f7124;
+  --info: #335d86;
+  --warn: #8a6200;
+  --danger: #a3361c;
+  --focus: #9b5629;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+/* Rojo nocturno: solo tonos rojos y poco brillo para preservar la visión nocturna. */
+:root[data-theme='red'] {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #120202;
+  --surface-2: #1d0404;
+  --border: #3a0a0a;
+  --text: #e0382a;
+  --text-muted: #9a2418;
+  --accent: #ff3b24;
+  --accent-strong: #ff5a45;
+  --on-accent: #000000;
+  --ok: #c93222;
+  --info: #b02a1c;
+  --warn: #e04a2c;
+  --danger: #ff2a12;
+  --focus: #ff5a45;
+  --shadow: none;
+}
+
+:root[data-theme='red'] img {
+  filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-50deg) brightness(0.6);
+}

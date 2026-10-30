@@ -1,0 +1,136 @@
+{
+  "app": {
+    "name": "VikArg Survival",
+    "motto": "Be ready so the unexpected never catches you off guard"
+  },
+  "common": {
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "copy": "Copy",
+    "copied": "Copied",
+    "print": "Print",
+    "saved": "Saved"
+  },
+  "nav": {
+    "home": "Home",
+    "inventory": "Inventory",
+    "field": "Field",
+    "library": "Library",
+    "settings": "Settings"
+  },
+  "sections": {
+    "inventory": "Inventory",
+    "field": "Field tools",
+    "library": "Library"
+  },
+  "home": {
+    "alertsTitle": "Alerts",
+    "alertsEmpty": "Expiry alerts will show up here once you add your inventory."
+  },
+  "modules": {
+    "inventory": { "title": "Items", "desc": "Stock, batches and expiry dates" },
+    "locations": { "title": "Locations", "desc": "Where everything is stored" },
+    "alerts": { "title": "Alerts", "desc": "Expiring items and worn-out filters" },
+    "backup": { "title": "Backup", "desc": "Export, import and transfer" },
+    "documents": { "title": "Documents", "desc": "Copies of personal documents" },
+    "recommendations": { "title": "Recommendations", "desc": "Calculator for your household" },
+    "compass": { "title": "Compass", "desc": "Magnetic and true heading" },
+    "inclinometer": { "title": "Inclinometer", "desc": "Slope angle and avalanche risk" },
+    "waypoints": { "title": "Waypoints", "desc": "Saved points and how to get back" },
+    "astronomy": { "title": "Sun & moon", "desc": "Sunrise, sunset and moon phases" },
+    "weather": { "title": "Weather", "desc": "Forecast when online" },
+    "maps": { "title": "Offline maps", "desc": "Downloaded areas with terrain" },
+    "starmap": { "title": "Star map", "desc": "Navigate by the stars" },
+    "library": { "title": "Manuals", "desc": "Offline survival library" }
+  },
+  "status": {
+    "soon": "Coming soon · {{phase}}",
+    "unavailable": "Not available on this device: missing {{caps}}",
+    "degraded": "Manual mode: no {{caps}}"
+  },
+  "capabilities": {
+    "geolocation": "GPS / location",
+    "orientation": "Compass",
+    "motion": "Accelerometer",
+    "camera": "Camera",
+    "barcode": "Barcode reader",
+    "notifications": "Notifications",
+    "periodicSync": "Daily background check",
+    "push": "Push notifications",
+    "webauthn": "Fingerprint / biometrics",
+    "opfs": "Large file storage",
+    "shareFiles": "File sharing",
+    "serviceWorker": "Offline support"
+  },
+  "setup": {
+    "welcome": "Welcome",
+    "intro": "Your data stays on this device only, and it is encrypted. Choose a password to protect it.",
+    "language": "Language",
+    "password": "Password",
+    "confirm": "Repeat password",
+    "hint": "At least {{min}} characters. Use a phrase you will remember.",
+    "tooShort": "The password must be at least {{min}} characters long.",
+    "mismatch": "The passwords don't match.",
+    "create": "Create vault",
+    "creating": "Encrypting…"
+  },
+  "recovery": {
+    "title": "Recovery key",
+    "intro": "If you forget your password, this key is the only way to recover your data. It is shown only once.",
+    "warning": "Write it down on paper or print it, and keep it somewhere safe. Without the password and this key, your data cannot be recovered.",
+    "confirm": "I have stored it somewhere safe"
+  },
+  "unlock": {
+    "title": "Unlock",
+    "password": "Password",
+    "submit": "Unlock",
+    "unlocking": "Checking…",
+    "wrong": "Wrong password.",
+    "useRecovery": "I forgot my password",
+    "recoveryTitle": "Use recovery key",
+    "recoveryKey": "Recovery key",
+    "wrongRecovery": "Wrong recovery key.",
+    "usePassword": "Use password",
+    "newPasswordTitle": "New password",
+    "newPasswordIntro": "You unlocked with your recovery key. Choose a new password."
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "language": "Language",
+    "theme": "Theme",
+    "units": "Units",
+    "security": "Security",
+    "autoLock": "Auto-lock",
+    "minutes": "{{count}} min",
+    "lockNow": "Lock now",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordChanged": "Password updated.",
+    "connections": "Connections",
+    "connectionsHint": "Optional. The app works the same without them.",
+    "serverUrl": "VikArg server",
+    "serverUrlHint": "For notifications and transfers. Empty = no server.",
+    "weatherUrl": "Weather source",
+    "device": "This device",
+    "deviceHint": "Features available on this hardware and browser.",
+    "storage": "Storage",
+    "storageUsed": "{{used}} used of {{quota}} available",
+    "storagePersistent": "Protected from automatic deletion",
+    "storageNotPersistent": "The browser may clear it when space runs low",
+    "storagePersist": "Protect",
+    "about": "About",
+    "version": "Version {{version}}"
+  },
+  "theme": { "dark": "Dark", "light": "Light", "red": "Red night" },
+  "units": { "metric": "Metric", "imperial": "Imperial" },
+  "language": { "es": "Español", "en": "English" },
+  "pwa": {
+    "updateAvailable": "A new version is available.",
+    "update": "Update",
+    "offlineReady": "Ready to use offline."
+  }
+}

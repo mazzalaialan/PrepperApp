@@ -1,0 +1,51 @@
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import { fileURLToPath, URL } from 'node:url';
+
+// En GitHub Pages la app vive en /<repo>/; el workflow de deploy define BASE_PATH.
+const base = process.env.BASE_PATH ?? '/';
+
+export default defineConfig({
+  base,
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
+  },
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
+  plugins: [
+    react(),
+    VitePWA({
+      // 'prompt': la app avisa que hay una versión nueva en lugar de recargar sola.
+      registerType: 'prompt',
+      includeAssets: ['favicon.svg', 'brand/*.png'],
+      manifest: {
+        name: 'VikArg Survival',
+        short_name: 'VikArg',
+        description: 'Hay que estar listo para que no te agarre un imprevisto.',
+        lang: 'es',
+        theme_color: '#141c27',
+        background_color: '#141c27',
+        display: 'standalone',
+        orientation: 'any',
+        start_url: '.',
+        scope: '.',
+        icons: [
+          { src: 'brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'brand/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'brand/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
+        navigateFallback: 'index.html',
+      },
+    }),
+  ],
+  test: {
+    environment: 'node',
+    setupFiles: ['src/test/setup.ts'],
+  },
+});
