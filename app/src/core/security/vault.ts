@@ -18,7 +18,8 @@ export interface VaultHeader {
   createdAt: string;
 }
 
-const HEADER_KEY = 'vault';
+export const VAULT_HEADER_KEY = 'vault';
+const HEADER_KEY = VAULT_HEADER_KEY;
 export const MIN_PASSWORD_LENGTH = 8;
 
 let iterations = PBKDF2_ITERATIONS;
@@ -28,7 +29,7 @@ export function setTestIterations(n: number): void {
   iterations = n;
 }
 
-async function readHeader(): Promise<VaultHeader | undefined> {
+export async function readHeader(): Promise<VaultHeader | undefined> {
   return (await db.meta.get(HEADER_KEY))?.value as VaultHeader | undefined;
 }
 

@@ -805,3 +805,7 @@ a.module-card {
 a.module-card:hover {
   border-color: var(--accent);
 }
+
+.file-input {
+  padding: 10px 14px;
+}

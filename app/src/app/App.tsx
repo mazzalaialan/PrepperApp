@@ -3,6 +3,7 @@ import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
+import { BackupPage } from '@/modules/backup/BackupPage';
 import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
 import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
 import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
@@ -29,6 +30,7 @@ const router = createHashRouter([
       { path: '/inventory/locations', element: <LocationsPage /> },
       { path: '/inventory/categories', element: <CategoriesPage /> },
       { path: '/inventory/alerts', element: <AlertsPage /> },
+      { path: '/inventory/backup', element: <BackupPage /> },
       { path: '/field', element: <SectionPage section="field" /> },
       { path: '/library', element: <SectionPage section="library" /> },
       { path: '/settings', element: <SettingsPage /> },
