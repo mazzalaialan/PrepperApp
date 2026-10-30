@@ -56,7 +56,10 @@ export function lotAlert(lot: Lot, config: AlertConfig, today: IsoDay): LotAlert
   if (config.controlType === 'capacity') {
     const pct = capacityPct(lot);
     if (pct === null || pct > config.alertCapacityPct) return null;
-    return { kind: pct === 0 ? 'capacityEmpty' : 'capacityLow', lotId: lot.id, itemId: lot.itemId, pct, notifyFrom: today };
+    // Sin historial no se sabe cuándo bajó del umbral: se usa la última edición del lote,
+    // que es estable (con `today` el aviso parecería nuevo todos los días).
+    const notifyFrom = lot.updatedAt.slice(0, 10) < today ? lot.updatedAt.slice(0, 10) : today;
+    return { kind: pct === 0 ? 'capacityEmpty' : 'capacityLow', lotId: lot.id, itemId: lot.itemId, pct, notifyFrom };
   }
 
   const dueDate = lotDueDate(lot, config.controlType);

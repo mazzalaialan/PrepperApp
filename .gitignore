@@ -12,3 +12,4 @@ Thumbs.db
 *.tsbuildinfo
 e2e-results/
 playwright-report/
+server/data/

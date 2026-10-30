@@ -1,0 +1,28 @@
+{
+  "name": "vikarg-server",
+  "private": true,
+  "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "description": "Servidor opcional y autoalojable de VikArg Survival: notificaciones push y transferencia de backups.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "dev": "node --watch src/main.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.1",
+    "@fastify/static": "^10.1.8",
+    "fastify": "^5.12.7",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/web-push": "^3.6.4",
+    "typescript": "^7.0.2"
+  }
+}
