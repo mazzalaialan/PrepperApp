@@ -38,6 +38,10 @@ npm run preview    # sirve el build (para probar la PWA y el modo offline)
 
 Para probar en un celular Android en la misma red: `npm run dev -- --host` y abrir la IP que muestra. Los sensores y la instalación como app requieren HTTPS; para eso usar el deploy de GitHub Pages.
 
+## Licencia
+
+[GPL-3.0-or-later](LICENSE). Podés usar, estudiar, modificar y redistribuir el código; las versiones modificadas que se distribuyan deben publicarse bajo la misma licencia.
+
 ## Deploy
 
 Cada push a `main` publica la app en GitHub Pages mediante [.github/workflows/deploy.yml](.github/workflows/deploy.yml). Hay que habilitarlo una vez en *Settings → Pages → Source: GitHub Actions*.
