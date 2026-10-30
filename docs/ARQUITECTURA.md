@@ -313,11 +313,14 @@ Un QR con los datos completos se descartó: un QR guarda ~2,9 KB y un inventario
 
 | Endpoint | Función |
 |---|---|
-| `GET /health` | Verificación desde la app |
-| `POST /push/subscribe` | Registra la suscripción push del dispositivo |
-| `PUT /push/alerts` | Recibe el índice de alertas (§5.3) |
-| Tarea diaria | Envía las notificaciones del día |
-| `POST /transfer` / `GET /transfer/:code` | Transferencia con código (§8.2) |
+| `GET /api/health` | Verificación desde la app; expone la clave pública VAPID |
+| `POST /api/devices` | Registra la suscripción push; devuelve id + token del dispositivo |
+| `PUT /api/devices/:id` | Reemplaza el índice de alertas (§5.3), zona horaria y hora de aviso |
+| `DELETE /api/devices/:id` · `POST /api/devices/:id/test` | Baja · notificación de prueba |
+| Tarea cada 10 min | Envía a cada dispositivo, a su hora local, solo las alertas nuevas o que vencen ese día |
+| `POST /api/transfers` / `GET /api/transfers/:code` | Transferencia con código de un solo uso (§8.2) |
+
+Implementación: Node 26 (TypeScript ejecutado sin build), Fastify y SQLite integrado (`node:sqlite`). Instalación: [SERVIDOR.md](SERVIDOR.md).
 | Estático (opcional) | Sirve la propia PWA y los paquetes de biblioteca: instalación 100% autónoma |
 | Mapas (opcional) | Sirve archivos PMTiles regionales con *range requests* para la descarga por área (§12) |
 

@@ -20,7 +20,8 @@ La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 |---|---|
 | `app/` | La PWA (TypeScript + React + Vite) |
 | `docs/` | Arquitectura y guías |
-| `server/` | Servidor opcional en Docker *(fase F2)* |
+| `server/` | Servidor opcional: notificaciones push y transferencia ([guía de instalación](docs/SERVIDOR.md)) |
+| `deploy/` | Docker Compose con HTTPS automático |
 | `tools/library-builder/` | Conversión de libros a paquetes de biblioteca *(fase F4)* |
 
 ## Desarrollo

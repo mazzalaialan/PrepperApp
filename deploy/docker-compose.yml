@@ -1,0 +1,36 @@
+# VikArg Survival autoalojado con HTTPS automático (Caddy + Let's Encrypt).
+# Uso: copiar .env.example a .env, completar DOMAIN y CONTACT_EMAIL, y correr
+#   docker compose up -d --build
+# Guía completa: docs/SERVIDOR.md
+
+services:
+  vikarg:
+    build:
+      context: ..
+    image: vikarg-survival:latest
+    restart: unless-stopped
+    environment:
+      VAPID_SUBJECT: mailto:${CONTACT_EMAIL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      TRANSFER_MAX_MB: ${TRANSFER_MAX_MB:-50}
+    volumes:
+      - vikarg-data:/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      CONTACT_EMAIL: ${CONTACT_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - vikarg
+
+volumes:
+  vikarg-data:
+  caddy-data:

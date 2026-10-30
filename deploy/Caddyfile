@@ -1,0 +1,12 @@
+{
+	email {$CONTACT_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+	# Los backups de transferencia pueden pesar decenas de MB.
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy vikarg:8080
+}

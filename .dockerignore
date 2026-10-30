@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/dev-dist
+app/e2e-results
+app/playwright-report
+server/data
+.git
+.github
+docs
+*.md

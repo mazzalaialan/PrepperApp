@@ -36,8 +36,37 @@ jobs:
         with:
           path: app/dist
 
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  # Construye la imagen autoalojable y verifica que arranca y sirve la app.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t vikarg-survival .
+      - run: |
+          docker run -d --name vikarg -p 8080:8080 vikarg-survival
+          for i in $(seq 1 30); do curl -fs http://localhost:8080/api/health && break; sleep 1; done
+          curl -fs http://localhost:8080/api/health | grep -q vapidPublicKey
+          curl -fs http://localhost:8080/ | grep -q "VikArg Survival"
+          docker logs vikarg
+
   deploy:
-    needs: build
+    needs: [build, server, docker]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

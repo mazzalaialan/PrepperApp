@@ -9,6 +9,7 @@ Thumbs.db
 !.vscode/extensions.json
 .env
 .env.*
+!.env.example
 *.tsbuildinfo
 e2e-results/
 playwright-report/
