@@ -18,8 +18,11 @@ export interface KeyValueRow<T = unknown> {
 export interface AlertIndexRow {
   lotId: string;
   itemName: string;
-  dueDate: IsoDay;
   kind: 'expiry' | 'capacity';
+  /** Solo vencimientos. */
+  dueDate: IsoDay | null;
+  /** Desde qué día corresponde notificar. */
+  notifyFrom: IsoDay;
 }
 
 export const ENTITY_TABLES = [
@@ -67,6 +70,10 @@ export class UserDb extends Dexie {
       alertIndex: 'lotId, dueDate',
       ...encrypted,
     });
+    // v2: el índice de alertas se consulta por fecha de aviso. Se regenera completo al desbloquear.
+    this.version(2)
+      .stores({ alertIndex: 'lotId, notifyFrom' })
+      .upgrade((tx) => tx.table('alertIndex').clear());
   }
 
   entityTable(name: EntityTable): Table<EncryptedRow, string> {

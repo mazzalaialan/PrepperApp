@@ -1,0 +1,152 @@
+import { describe, expect, it } from 'vitest';
+import { newEntity } from '@/core/model/entity';
+import type { Item, Location, Lot, StockMin } from '@/core/model/types';
+import { computeAlerts, effectiveConfig, lotDueDate, upcomingNotifications } from './alerts';
+import { buildSystemCategories, missingSystemCategories, systemCategoryId } from './categories';
+import { addDays, addMonths, daysBetween, today } from './dates';
+import { buildTree, canMoveTo, pathLabel } from './locations';
+import { quantityOf, stockShortages, weightAt } from './stock';
+
+const cats = buildSystemCategories();
+const catMap = new Map(cats.map((c) => [c.id, c]));
+const FOOD = systemCategoryId('food');
+const FILTERS = systemCategoryId('waterFilters');
+const ENERGY = systemCategoryId('energy');
+const CLOTHING = systemCategoryId('clothing');
+
+const item = (over: Partial<Item> = {}) =>
+  newEntity<Item>({
+    name: 'Atún',
+    categoryId: FOOD,
+    notes: '',
+    barcode: null,
+    unit: 'latas',
+    weightGrams: 170,
+    favorite: false,
+    controlType: null,
+    alertsEnabled: null,
+    alertLeadDays: null,
+    alertCapacityPct: null,
+    ...over,
+  });
+
+const lot = (itemId: string, over: Partial<Lot> = {}) =>
+  newEntity<Lot>({
+    itemId,
+    locationId: 'loc',
+    quantity: 1,
+    expiryDate: null,
+    manufactureDate: null,
+    shelfLifeMonths: null,
+    capacityTotal: null,
+    capacityRemaining: null,
+    capacityUnit: null,
+    notes: '',
+    ...over,
+  });
+
+const loc = (name: string, parentId: string | null, depth: number) =>
+  newEntity<Location>({ name, parentId, depth, notes: '', waypointId: null });
+
+describe('dates', () => {
+  it('suma días y meses con fin de mes', () => {
+    expect(addDays('2026-12-30', 3)).toBe('2027-01-02');
+    expect(addMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(addMonths('2028-01-31', 1)).toBe('2028-02-29');
+    expect(addMonths('2026-05-15', 60)).toBe('2031-05-15');
+    expect(daysBetween('2026-10-30', '2026-11-29')).toBe(30);
+  });
+
+  it('today usa la fecha local', () => {
+    expect(today(new Date(2026, 9, 30, 23, 59))).toBe('2026-10-30');
+  });
+});
+
+describe('categorías', () => {
+  it('tienen ids fijos y el tipo de control esperado', () => {
+    expect(catMap.get(FILTERS)?.controlType).toBe('capacity');
+    expect(catMap.get(ENERGY)?.controlType).toBe('shelfLife');
+    expect(catMap.get(CLOTHING)?.alertsEnabled).toBe(false);
+  });
+
+  it('detecta categorías del sistema faltantes', () => {
+    expect(missingSystemCategories(cats)).toEqual([]);
+    expect(missingSystemCategories(cats.slice(1)).map((c) => c.id)).toEqual([cats[0]!.id]);
+  });
+});
+
+describe('alertas', () => {
+  it('el artículo gana sobre la categoría', () => {
+    const food = catMap.get(FOOD)!;
+    expect(effectiveConfig(item(), food).alertLeadDays).toBe(30);
+    expect(effectiveConfig(item({ alertLeadDays: 90 }), food).alertLeadDays).toBe(90);
+    expect(effectiveConfig(item({ alertsEnabled: false }), food).alertsEnabled).toBe(false);
+  });
+
+  it('calcula vencimiento por vida útil', () => {
+    const l = lot('x', { manufactureDate: '2024-03-10', shelfLifeMonths: 60 });
+    expect(lotDueDate(l, 'shelfLife')).toBe('2029-03-10');
+  });
+
+  it('avisa dentro de la ventana, marca vencidos y ordena por urgencia', () => {
+    const tuna = item();
+    const filter = item({ name: 'Filtro', categoryId: FILTERS });
+    const jacket = item({ name: 'Campera', categoryId: CLOTHING });
+    const items = new Map([tuna, filter, jacket].map((i) => [i.id, i]));
+    const lots = [
+      lot(tuna.id, { expiryDate: '2027-06-01' }), // lejos: sin alerta
+      lot(tuna.id, { expiryDate: '2026-11-20' }), // dentro de 30 días
+      lot(tuna.id, { expiryDate: '2026-10-01' }), // vencido
+      lot(filter.id, { capacityTotal: 1000, capacityRemaining: 150 }), // 15% < 20%
+      lot(jacket.id, { expiryDate: '2026-01-01' }), // categoría sin alertas
+      lot(tuna.id, { expiryDate: '2026-10-01', quantity: 0 }), // sin stock: no avisa
+    ];
+    const alerts = computeAlerts({ lots, items, categories: catMap, today: '2026-10-30' });
+    expect(alerts.map((a) => a.kind)).toEqual(['expired', 'expiring', 'capacityLow']);
+    expect(alerts[0]?.daysLeft).toBe(-29);
+    expect(alerts[1]?.daysLeft).toBe(21);
+    expect(alerts[2]?.pct).toBe(15);
+  });
+
+  it('programa avisos futuros con la anticipación configurada', () => {
+    const tuna = item({ alertLeadDays: 10 });
+    const rows = upcomingNotifications({
+      lots: [lot(tuna.id, { expiryDate: '2027-06-01' })],
+      items: new Map([[tuna.id, tuna]]),
+      categories: catMap,
+    });
+    expect(rows).toEqual([expect.objectContaining({ itemName: 'Atún', dueDate: '2027-06-01', notifyFrom: '2027-05-22' })]);
+  });
+});
+
+describe('ubicaciones', () => {
+  const casa = loc('Casa', null, 1);
+  const sotano = loc('Sótano', casa.id, 2);
+  const estante = loc('Estante 3', sotano.id, 3);
+  const caja = loc('Caja A', estante.id, 4);
+  const auto = loc('Auto', null, 1);
+  const all = [casa, sotano, estante, caja, auto];
+  const byId = new Map(all.map((l) => [l.id, l]));
+
+  it('arma el árbol y la ruta', () => {
+    const tree = buildTree(all);
+    expect(tree.map((n) => n.location.name)).toEqual(['Auto', 'Casa']);
+    expect(pathLabel(caja.id, byId)).toBe('Casa › Sótano › Estante 3 › Caja A');
+  });
+
+  it('impide ciclos y superar 4 niveles', () => {
+    expect(canMoveTo(casa.id, caja.id, all)).toBe(false); // dentro de sí misma
+    expect(canMoveTo(sotano.id, auto.id, all)).toBe(true); // 1 + 3 niveles = 4
+    expect(canMoveTo(casa.id, auto.id, all)).toBe(false); // 1 + 4 = 5
+    expect(canMoveTo(caja.id, null, all)).toBe(true);
+  });
+
+  it('suma stock, mínimos y peso incluyendo sububicaciones', () => {
+    const tuna = item({ weightGrams: 200 });
+    const lots = [lot(tuna.id, { locationId: caja.id, quantity: 4 }), lot(tuna.id, { locationId: auto.id, quantity: 2 })];
+    expect(quantityOf(tuna.id, lots)).toBe(6);
+    const min = newEntity<StockMin>({ itemId: tuna.id, locationId: casa.id, minQuantity: 10 });
+    expect(stockShortages([min], lots, all)).toEqual([{ stockMin: min, current: 4, missing: 6 }]);
+    expect(weightAt(casa.id, lots, new Map([[tuna.id, tuna]]), all)).toBe(800);
+  });
+});
