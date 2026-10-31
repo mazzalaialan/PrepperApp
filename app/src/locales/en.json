@@ -352,7 +352,7 @@
     "dry": "No rain in the next 2 hours",
     "raining": "It's raining: {{amount}} in the next 2 hours",
     "soon": "Rain starts in about {{minutes}} min ({{amount}})",
-    "modelNote": "15-minute model forecast, not radar: timing is approximate.",
+    "modelNote": "Outside North America and Central Europe these 15-minute steps are estimated by splitting each hour's forecast (no high-resolution model or open radar): treat the timing as a rough guide, give or take an hour.",
     "statusDry": "No rain in sight",
     "statusRaining": "Raining now",
     "statusSoon": "Rain in about {{minutes}} min",

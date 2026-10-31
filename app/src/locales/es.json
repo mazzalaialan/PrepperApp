@@ -352,7 +352,7 @@
     "dry": "Sin lluvia en las próximas 2 horas",
     "raining": "Está lloviendo: {{amount}} en las próximas 2 horas",
     "soon": "Empieza a llover en unos {{minutes}} min ({{amount}})",
-    "modelNote": "Pronóstico de modelo cada 15 minutos, no radar: el horario es aproximado.",
+    "modelNote": "En Argentina estos cuartos de hora se estiman repartiendo el pronóstico de cada hora (no hay modelo de alta resolución ni radar abierto): tomá el horario como orientativo, con margen de una hora.",
     "statusDry": "Sin lluvia a la vista",
     "statusRaining": "Lloviendo ahora",
     "statusSoon": "Lluvia en unos {{minutes}} min",
