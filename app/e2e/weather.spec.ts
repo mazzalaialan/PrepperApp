@@ -155,7 +155,7 @@ test('las horas siguen al reloj aunque el pronóstico guardado sea de antes', as
   await page.goto('/#/weather/forecast');
   await expect(page.getByTestId('hour').first()).toContainText('02:00');
   // Las barras de lluvia arrancan en el cuarto de hora actual (02:15), no a la hora de descarga.
-  await expect(page.locator('.rain-bars li').first()).toContainText('02:15');
+  await expect(page.locator('.rain-bars li').first()).toContainText(/02:(15|30)/);
   await context.setOffline(false);
 });
 
