@@ -24,6 +24,34 @@ export function stockShortages(stockMins: StockMin[], lots: Lot[], locations: Lo
   });
 }
 
+/**
+ * Faltantes de stock mínimo para el índice de notificaciones. Solo lleva el
+ * nombre del artículo (no la ubicación: el índice va en claro). La fecha es el
+ * último cambio del mínimo o del stock contado, que es estable mientras nada
+ * cambie: así no se avisa de nuevo todos los días.
+ */
+export function minStockAlertRows(
+  shortages: StockShortage[],
+  lots: Lot[],
+  locations: Location[],
+  items: Map<Id, Item>,
+  today: (date?: Date) => string,
+): { lotId: string; itemName: string; notifyFrom: string }[] {
+  const todayStr = today();
+  return shortages.map(({ stockMin }) => {
+    const scope = subtreeIds(stockMin.locationId, locations);
+    const changedAt = active(lots)
+      .filter((l) => l.itemId === stockMin.itemId && scope.has(l.locationId))
+      .reduce((latest, l) => (l.updatedAt > latest ? l.updatedAt : latest), stockMin.updatedAt);
+    const changedOn = today(new Date(changedAt));
+    return {
+      lotId: `min:${stockMin.id}`,
+      itemName: (items.get(stockMin.itemId)?.name ?? '').slice(0, 200),
+      notifyFrom: changedOn < todayStr ? changedOn : todayStr,
+    };
+  });
+}
+
 /** Campos de envase de lotes guardados antes de que existieran. */
 const NO_PACKAGE = { packageCount: null, packageSize: null, packageName: null, packageTareGrams: null } as const;
 

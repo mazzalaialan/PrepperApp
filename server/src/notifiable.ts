@@ -7,7 +7,7 @@
 
 export interface NotifiableAlert {
   itemName: string;
-  kind: 'expiry' | 'capacity' | 'shortage';
+  kind: 'expiry' | 'capacity' | 'shortage' | 'minStock';
   dueDate: string | null;
   notifyFrom: string;
 }

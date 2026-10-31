@@ -23,6 +23,11 @@ describe('texto de notificaciones', () => {
     expect(body).toBe('Agua para tomar y cocinar: falta stock según tus recomendaciones');
   });
 
+  it('debajo del stock mínimo', () => {
+    const { body } = alertsNotification([{ itemName: 'Torniquete CAT', kind: 'minStock', dueDate: null }], 'es', '2026-11-02');
+    expect(body).toBe('Torniquete CAT: debajo del stock mínimo');
+  });
+
   it('en inglés', () => {
     const { title, body } = alertsNotification([{ itemName: 'Water', kind: 'expiry', dueDate: '2026-12-15' }], 'en', '2026-11-02');
     expect(title).toBe('1 alert in your inventory');

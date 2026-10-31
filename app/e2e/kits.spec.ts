@@ -59,6 +59,22 @@ test('botiquín de trauma: contenido, vencimientos y faltantes', async ({ page }
   await page.getByLabel('Mínimo', { exact: true }).fill('2');
   await page.getByRole('button', { name: 'Agregar mínimo' }).click();
 
+  // El faltante de mínimo queda en el índice de notificaciones (solo con el nombre, sin la ubicación).
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<{ lotId: string; itemName: string; kind: string }[]>((resolve) => {
+            const req = indexedDB.open('vikarg-user');
+            req.onsuccess = () => {
+              const get = req.result.transaction('alertIndex').objectStore('alertIndex').getAll();
+              get.onsuccess = () => resolve(get.result);
+            };
+          }),
+      ),
+    )
+    .toContainEqual(expect.objectContaining({ itemName: 'Torniquete CAT', kind: 'minStock', lotId: expect.stringMatching(/^min:/) }));
+
   await page.goto('/#/first-aid/kits');
   await expect(page.getByText('2 a revisar')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Para revisar' })).toBeVisible();

@@ -18,7 +18,7 @@ import { computeAlerts, upcomingNotifications } from './domain/alerts';
 import { missingSystemCategories, systemCategoryId } from './domain/categories';
 import { today } from './domain/dates';
 import { canMoveTo, depthFor, normalizeLocation, subtreeIds } from './domain/locations';
-import { normalizeLot } from './domain/stock';
+import { minStockAlertRows, normalizeLot, stockShortages } from './domain/stock';
 
 type ById<T> = Map<Id, T>;
 
@@ -90,6 +90,10 @@ export const useInventory = create<InventoryState>((set, get) => {
         rows.push({ lotId: a.lotId, itemName: items.get(a.itemId)?.name ?? '', kind: 'capacity', dueDate: null, notifyFrom: a.notifyFrom });
       }
     }
+    const { stockMins, locations } = get();
+    const locList = [...locations.values()];
+    const shortages = stockShortages([...stockMins.values()], lotList, locList);
+    for (const r of minStockAlertRows(shortages, lotList, locList, items, today)) rows.push({ ...r, kind: 'minStock', dueDate: null });
     for (const source of alertSources) rows.push(...source());
     await db.transaction('rw', db.alertIndex, async () => {
       await db.alertIndex.clear();
@@ -183,6 +187,8 @@ export const useInventory = create<InventoryState>((set, get) => {
         }
       }
       set({ locations });
+      // Mover una ubicación cambia qué stock cuenta para los mínimos de más arriba.
+      await syncAlertIndex();
     },
 
     async deleteLocation(id) {
@@ -237,6 +243,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         if (!existing) return;
         await repos.stockMins.remove(existing.id);
         set({ stockMins: without(get().stockMins, existing.id) });
+        await syncAlertIndex();
         return;
       }
       const saved = existing
@@ -244,6 +251,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         : newEntity<StockMin>({ itemId, locationId, minQuantity });
       await repos.stockMins.put(saved);
       set({ stockMins: withValue(get().stockMins, saved.id, saved) });
+      await syncAlertIndex();
     },
 
     async setItemPhoto(itemId, image) {

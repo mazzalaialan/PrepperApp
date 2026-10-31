@@ -97,6 +97,7 @@ describe('servidor', () => {
     assert.equal((await putAlerts(deviceId, token, [shortage])).statusCode, 204);
     await runScheduler(db, push, at('2026-11-02'));
     assert.deepEqual(push.sent[0]!.payload, { type: 'alerts', alerts: [{ itemName: 'Agua (faltan 108 L)', kind: 'shortage', dueDate: null }] });
+    assert.equal((await putAlerts(deviceId, token, [{ ...shortage, lotId: 'min:m1', kind: 'minStock' }])).statusCode, 204);
     assert.equal((await putAlerts(deviceId, token, [{ ...shortage, kind: 'otro' }])).statusCode, 400);
   });
 

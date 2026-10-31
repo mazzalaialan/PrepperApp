@@ -5,7 +5,7 @@ import { computeAlerts, effectiveConfig, lotDueDate, upcomingNotifications } fro
 import { buildSystemCategories, missingSystemCategories, systemCategoryId } from './categories';
 import { addDays, addMonths, daysBetween, today } from './dates';
 import { buildTree, canMoveTo, pathLabel } from './locations';
-import { itemWeightGrams, lotWeightGrams, normalizeLot, packagedQuantity, quantityOf, stockShortages, weightAt } from './stock';
+import { itemWeightGrams, lotWeightGrams, minStockAlertRows, normalizeLot, packagedQuantity, quantityOf, stockShortages, weightAt } from './stock';
 
 const cats = buildSystemCategories();
 const catMap = new Map(cats.map((c) => [c.id, c]));
@@ -178,5 +178,17 @@ describe('ubicaciones', () => {
     const min = newEntity<StockMin>({ itemId: tuna.id, locationId: casa.id, minQuantity: 10 });
     expect(stockShortages([min], lots, all)).toEqual([{ stockMin: min, current: 4, missing: 6 }]);
     expect(weightAt(casa.id, lots, new Map([[tuna.id, tuna]]), all)).toBe(800);
+  });
+
+  it('faltantes de mínimo para notificar: sin la ubicación y con la fecha del último cambio', () => {
+    const tuna = item();
+    const inBox = { ...lot(tuna.id, { locationId: caja.id, quantity: 4 }), updatedAt: '2026-10-20T12:00:00.000Z' };
+    const elsewhere = { ...lot(tuna.id, { locationId: auto.id, quantity: 2 }), updatedAt: '2026-10-29T12:00:00.000Z' };
+    const min = { ...newEntity<StockMin>({ itemId: tuna.id, locationId: casa.id, minQuantity: 10 }), updatedAt: '2026-10-01T12:00:00.000Z' };
+    const rows = minStockAlertRows(stockShortages([min], [inBox, elsewhere], all), [inBox, elsewhere], all, new Map([[tuna.id, tuna]]), (d) =>
+      d ? d.toISOString().slice(0, 10) : '2026-10-30',
+    );
+    // El lote del auto no cuenta para el mínimo de la casa: la fecha es la del lote de la caja.
+    expect(rows).toEqual([{ lotId: `min:${min.id}`, itemName: 'Atún', notifyFrom: '2026-10-20' }]);
   });
 });
