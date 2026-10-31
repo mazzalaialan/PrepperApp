@@ -1540,6 +1540,51 @@ a.module-card:hover {
   font-size: 0.8rem;
 }
 
+.hour-strip li {
+  min-width: 58px;
+}
+
+.hour-rain,
+.hour-wind {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hour-rain {
+  color: var(--text-muted);
+}
+
+.hour-rain[data-wet='true'] {
+  color: var(--info);
+  font-weight: 600;
+}
+
+.hour-gust {
+  font-size: 0.72rem !important;
+}
+
+.hour-legend svg,
+.day-row .list-sub svg {
+  vertical-align: -2px;
+}
+
+.wind-arrow {
+  flex: none;
+  color: var(--accent);
+}
+
+.list[data-trend='true'] .day-row {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.trend-title {
+  color: var(--text-muted);
+}
+
 .day-row {
   gap: 10px;
 }

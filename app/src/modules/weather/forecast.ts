@@ -24,7 +24,16 @@ export interface Forecast {
     windGusts: number;
     pressure: number;
   };
-  hourly: { time: string; temperature: number; precipProbability: number | null; code: number; windSpeed: number }[];
+  hourly: {
+    time: string;
+    temperature: number;
+    precipProbability: number | null;
+    code: number;
+    windSpeed: number;
+    /** De dónde viene el viento, grados (null en pronósticos guardados por versiones anteriores). */
+    windDirection: number | null;
+    windGusts: number | null;
+  }[];
   daily: {
     date: string;
     code: number;
@@ -34,6 +43,8 @@ export interface Forecast {
     precipProbability: number | null;
     windMax: number;
     gustMax: number;
+    /** Dirección predominante (de dónde viene). */
+    windDirection: number | null;
     uvMax: number | null;
   }[];
   /** Lluvia de las próximas 2 horas cada 15 min (vacío en pronósticos guardados por versiones anteriores). */
@@ -41,8 +52,13 @@ export interface Forecast {
 }
 
 const CURRENT = 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl';
-const HOURLY = 'temperature_2m,precipitation_probability,weather_code,wind_speed_10m';
-const DAILY = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max';
+const HOURLY = 'temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m';
+const DAILY =
+  'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max';
+
+/** Open-Meteo permite hasta 16 días; después del 7.º se muestran como tendencia (son menos confiables). */
+export const FORECAST_DAYS = 16;
+export const RELIABLE_DAYS = 7;
 
 export function forecastUrl(base: string, lat: number, lon: number): string {
   const params = new URLSearchParams({
@@ -52,7 +68,7 @@ export function forecastUrl(base: string, lat: number, lon: number): string {
     hourly: HOURLY,
     daily: DAILY,
     timezone: 'auto',
-    forecast_days: '7',
+    forecast_days: String(FORECAST_DAYS),
     ...nowcastParams(),
   });
   return `${base.replace(/\/+$/, '')}/v1/forecast?${params}`;
@@ -123,6 +139,8 @@ export function parseForecast(data: ApiResponse, now = new Date()): Forecast {
       precipProbability: opt(h.precipitation_probability?.[i]),
       code: num(h.weather_code![i]),
       windSpeed: num(h.wind_speed_10m![i]),
+      windDirection: opt(h.wind_direction_10m?.[i]),
+      windGusts: opt(h.wind_gusts_10m?.[i]),
     })),
     daily: (d.time ?? []).map((date, i) => ({
       date: String(date),
@@ -133,6 +151,7 @@ export function parseForecast(data: ApiResponse, now = new Date()): Forecast {
       precipProbability: opt(d.precipitation_probability_max?.[i]),
       windMax: num(d.wind_speed_10m_max![i]),
       gustMax: num(d.wind_gusts_10m_max![i]),
+      windDirection: opt(d.wind_direction_10m_dominant?.[i]),
       uvMax: opt(d.uv_index_max?.[i]),
     })),
     minutely15: parseSlots(data.minutely_15),

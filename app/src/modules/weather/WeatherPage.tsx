@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
+  ArrowUp,
   Cloud,
   CloudDrizzle,
   CloudFog,
@@ -25,7 +26,7 @@ import { useWaypoints } from '@/modules/waypoints/store';
 import { cachedForecast, placeKey, storeForecast } from './cache';
 import { RAIN_MM_PER_SLOT, rainOutlook, type RainSlot } from './nowcast';
 import { HERE_ID, useRainWatch } from './rainWatch';
-import { fetchForecast, kmhToMph, mmToInch, skyOf, toFahrenheit, warningsOf, WeatherError, type Forecast, type Sky } from './forecast';
+import { fetchForecast, kmhToMph, mmToInch, RELIABLE_DAYS, skyOf, toFahrenheit, warningsOf, WeatherError, type Forecast, type Sky } from './forecast';
 
 /** Con conexión, un pronóstico más viejo que esto se actualiza solo al abrir la pantalla. */
 const STALE_MS = 60 * 60_000;
@@ -55,8 +56,65 @@ function useUnits(system: UnitSystem, locale: string) {
   return {
     temp: (c: number) => `${n0.format(imperial ? toFahrenheit(c) : c)}°`,
     wind: (kmh: number) => (imperial ? `${n0.format(kmhToMph(kmh))} mph` : `${n0.format(kmh)} km/h`),
+    /** Solo el número (la unidad va en la leyenda, para que entre en cada hora). */
+    windValue: (kmh: number) => n0.format(imperial ? kmhToMph(kmh) : kmh),
+    windUnit: imperial ? 'mph' : 'km/h',
     rain: (mm: number) => (imperial ? `${n1.format(mmToInch(mm))} in` : `${n1.format(mm)} mm`),
   };
+}
+
+type Units = ReturnType<typeof useUnits>;
+
+/** Flecha hacia donde sopla el viento (el dato viene como "de dónde viene"). */
+function WindArrow({ from, size = 16 }: { from: number; size?: number }) {
+  const { t } = useTranslation();
+  return (
+    <ArrowUp
+      size={size}
+      className="wind-arrow"
+      style={{ transform: `rotate(${(from + 180) % 360}deg)` }}
+      role="img"
+      aria-label={t('weather.windFrom', { dir: t(`geo.cardinal.${cardinalOf(from)}`) })}
+    />
+  );
+}
+
+function DayList({
+  days,
+  offset,
+  dayLabel,
+  u,
+  trend = false,
+}: {
+  days: Forecast['daily'];
+  offset: number;
+  dayLabel: (iso: string, i: number) => string;
+  u: Units;
+  trend?: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ul className="list" data-trend={trend}>
+      {days.map((d, i) => (
+        <li key={d.date} className="list-row day-row" data-testid={trend ? 'trend-day' : 'day'}>
+          <span className="day-name">{dayLabel(d.date, i + offset)}</span>
+          <SkyIcon code={d.code} />
+          <span className="list-main">
+            <span className="list-title">
+              {u.temp(d.min)} / {u.temp(d.max)}
+            </span>
+            <span className="list-sub">
+              <Droplets size={13} aria-hidden /> {d.precipitation > 0 ? u.rain(d.precipitation) : t('weather.noRain')}
+              {d.precipProbability !== null && d.precipProbability > 0 && ` (${d.precipProbability}%)`}
+            </span>
+            <span className="list-sub">
+              {d.windDirection != null && <WindArrow from={d.windDirection} size={13} />} {t('weather.windDay', { speed: u.wind(d.windMax), gusts: u.wind(d.gustMax) })}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export function WeatherPage() {
@@ -110,7 +168,8 @@ export function WeatherPage() {
   const dayFmt = new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
   const dayLabel = (iso: string, i: number) => (i === 0 ? t('weather.today') : dayFmt.format(new Date(`${iso}T12:00:00Z`)));
   const hours = forecast ? forecast.hourly.filter((h) => h.time >= forecast.current.time.slice(0, 13)).slice(0, 24) : [];
-  const warnings = forecast ? warningsOf(forecast.daily) : [];
+  // Los avisos se calculan sobre los días confiables; la tendencia lejana generaría falsas alarmas.
+  const warnings = forecast ? warningsOf(forecast.daily.slice(0, RELIABLE_DAYS)) : [];
 
   return (
     <div className="stack">
@@ -186,39 +245,39 @@ export function WeatherPage() {
 
           <section className="card stack" aria-labelledby="hours-title">
             <h2 id="hours-title" className="section-title" style={{ margin: 0 }}>{t('weather.next24')}</h2>
+            <p className="hint hour-legend" style={{ margin: 0 }}>
+              <Droplets size={14} aria-hidden /> {t('weather.legendRain')} · <Wind size={14} aria-hidden /> {t('weather.legendWind', { unit: u.windUnit })}
+            </p>
             <ol className="hour-strip">
               {hours.map((h) => (
-                <li key={h.time}>
+                <li key={h.time} data-testid="hour">
                   <span className="hint">{h.time.slice(11, 16)}</span>
                   <SkyIcon code={h.code} />
                   <strong>{u.temp(h.temperature)}</strong>
-                  {h.precipProbability !== null && h.precipProbability > 0 && <span className="hint">{h.precipProbability}%</span>}
+                  <span className="hour-rain" data-wet={(h.precipProbability ?? 0) > 0} aria-label={t('weather.rainChance', { pct: h.precipProbability ?? 0 })}>
+                    <Droplets size={13} aria-hidden />
+                    {h.precipProbability ?? 0}%
+                  </span>
+                  <span className="hour-wind" aria-label={t('weather.windAria', { speed: u.windValue(h.windSpeed), gusts: h.windGusts === null ? '—' : u.windValue(h.windGusts), unit: u.windUnit })}>
+                    {h.windDirection !== null && <WindArrow from={h.windDirection} size={14} />}
+                    {u.windValue(h.windSpeed)}
+                  </span>
+                  {h.windGusts !== null && <span className="hint hour-gust">{t('weather.gustShort', { value: u.windValue(h.windGusts) })}</span>}
                 </li>
               ))}
             </ol>
           </section>
 
           <section className="card stack" aria-labelledby="days-title">
-            <h2 id="days-title" className="section-title" style={{ margin: 0 }}>{t('weather.next7')}</h2>
-            <ul className="list">
-              {forecast.daily.map((d, i) => (
-                <li key={d.date} className="list-row day-row">
-                  <span className="day-name">{dayLabel(d.date, i)}</span>
-                  <SkyIcon code={d.code} />
-                  <span className="list-main">
-                    <span className="list-title">
-                      {u.temp(d.min)} / {u.temp(d.max)}
-                    </span>
-                    <span className="list-sub">
-                      {d.precipitation > 0 ? u.rain(d.precipitation) : t('weather.noRain')}
-                      {d.precipProbability !== null && d.precipProbability > 0 && ` (${d.precipProbability}%)`}
-                      {' · '}
-                      {t('weather.gusts', { value: u.wind(d.gustMax) })}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <h2 id="days-title" className="section-title" style={{ margin: 0 }}>{t('weather.nextDays', { count: Math.min(RELIABLE_DAYS, forecast.daily.length) })}</h2>
+            <DayList days={forecast.daily.slice(0, RELIABLE_DAYS)} offset={0} dayLabel={dayLabel} u={u} />
+            {forecast.daily.length > RELIABLE_DAYS && (
+              <>
+                <h3 className="section-title trend-title" style={{ margin: '8px 0 0' }}>{t('weather.trend', { from: RELIABLE_DAYS + 1, to: forecast.daily.length })}</h3>
+                <p className="hint" style={{ margin: 0 }}>{t('weather.trendHint')}</p>
+                <DayList days={forecast.daily.slice(RELIABLE_DAYS)} offset={RELIABLE_DAYS} dayLabel={dayLabel} u={u} trend />
+              </>
+            )}
           </section>
           <p className="hint">{t('weather.source', { place: place.label })}</p>
         </>

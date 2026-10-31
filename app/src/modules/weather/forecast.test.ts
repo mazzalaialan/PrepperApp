@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { forecastUrl, parseForecast, skyOf, warningsOf, type Forecast } from './forecast';
 
 describe('forecastUrl', () => {
-  it('usa la URL configurada (con o sin barra final) y pide 7 días en la zona del lugar', () => {
+  it('usa la URL configurada (con o sin barra final) y pide 16 días en la zona del lugar', () => {
     const url = new URL(forecastUrl('https://clima.mio.ar/', -34.60372, -58.38159));
     expect(url.origin + url.pathname).toBe('https://clima.mio.ar/v1/forecast');
     expect(url.searchParams.get('latitude')).toBe('-34.6037');
     expect(url.searchParams.get('timezone')).toBe('auto');
-    expect(url.searchParams.get('forecast_days')).toBe('7');
+    expect(url.searchParams.get('forecast_days')).toBe('16');
   });
 });
 
@@ -39,6 +39,9 @@ describe('parseForecast', () => {
     expect(f.fetchedAt).toBe('2026-10-30T17:00:00.000Z');
     expect(f.current.temperature).toBe(22.5);
     expect(f.hourly[0]!.precipProbability).toBeNull();
+    // Pronósticos sin viento por hora (guardados por versiones anteriores) no rompen.
+    expect(f.hourly[0]!.windDirection).toBeNull();
+    expect(f.daily[0]!.windDirection).toBeNull();
     expect(f.daily[0]!.uvMax).toBe(7);
     expect(() => parseForecast({ ...api, current: { ...api.current, temperature_2m: 'x' as unknown as number } })).toThrow();
   });
@@ -46,7 +49,7 @@ describe('parseForecast', () => {
 
 describe('warningsOf', () => {
   const day = (over: Partial<Forecast['daily'][number]>): Forecast['daily'][number] => ({
-    date: '2026-11-01', code: 1, max: 25, min: 12, precipitation: 0, precipProbability: 0, windMax: 20, gustMax: 30, uvMax: 5, ...over,
+    date: '2026-11-01', code: 1, max: 25, min: 12, precipitation: 0, precipProbability: 0, windMax: 20, gustMax: 30, windDirection: null, uvMax: 5, ...over,
   });
 
   it('día tranquilo: sin avisos', () => {

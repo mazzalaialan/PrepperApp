@@ -10,7 +10,8 @@ function fakeForecast() {
   const pad = (n: number) => String(n).padStart(2, '0');
   const local = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
   const hours = Array.from({ length: 48 }, (_, i) => new Date(now.getTime() + (i - 2) * 3_600_000));
-  const days = Array.from({ length: 7 }, (_, i) => local(new Date(now.getTime() + i * 86_400_000)).slice(0, 10));
+  const days = Array.from({ length: 16 }, (_, i) => local(new Date(now.getTime() + i * 86_400_000)).slice(0, 10));
+  const rep = <T,>(first: T[], rest: T) => [...first, ...Array.from({ length: 16 - first.length }, () => rest)];
   // Intervalos de 15 min desde el actual: la lluvia arranca en el cuarto (dentro de 45 min).
   const slot0 = new Date(now);
   slot0.setMinutes(Math.floor(now.getMinutes() / 15) * 15, 0, 0);
@@ -31,17 +32,21 @@ function fakeForecast() {
       precipitation_probability: hours.map((_, i) => (i % 6) * 10),
       weather_code: hours.map((_, i) => (i % 12 === 0 ? 61 : 1)),
       wind_speed_10m: hours.map(() => 15),
+      wind_direction_10m: hours.map(() => 180), // del sur: la flecha apunta al norte
+      wind_gusts_10m: hours.map(() => 32),
     },
     daily: {
       time: days,
-      weather_code: [2, 95, 3, 61, 0, 1, 2],
-      temperature_2m_max: [24, 27, 22, 19, 25, 26, 28],
-      temperature_2m_min: [14, 17, 13, 11, 12, 13, 15],
-      precipitation_sum: [0, 42, 0, 6, 0, 0, 0],
-      precipitation_probability_max: [5, 90, 20, 70, 0, 0, 10],
-      wind_speed_10m_max: [20, 40, 18, 25, 12, 15, 22],
-      wind_gusts_10m_max: [35, 88, 30, 45, 25, 30, 40],
-      uv_index_max: [7, 4, 6, 3, 9, 8, 7],
+      weather_code: rep([2, 95, 3, 61, 0, 1, 2], 1),
+      temperature_2m_max: rep([24, 27, 22, 19, 25, 26, 28], 24),
+      temperature_2m_min: rep([14, 17, 13, 11, 12, 13, 15], 13),
+      precipitation_sum: rep([0, 42, 0, 6, 0, 0, 0], 0),
+      // Días lejanos con valores extremos: no deben generar avisos (es solo tendencia).
+      precipitation_probability_max: rep([5, 90, 20, 70, 0, 0, 10], 0),
+      wind_speed_10m_max: rep([20, 40, 18, 25, 12, 15, 22], 60),
+      wind_gusts_10m_max: rep([35, 88, 30, 45, 25, 30, 40], 120),
+      wind_direction_10m_dominant: rep([90, 200, 270, 180, 0, 45, 135], 220),
+      uv_index_max: rep([7, 4, 6, 3, 9, 8, 7], 5),
     },
   };
 }
@@ -71,6 +76,17 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await expect(page.getByText('Radiación UV muy alta (índice 9)')).toBeVisible();
   await expect(page.getByTestId('weather-updated')).toHaveText(/Actualizado (ahora|hace \d+ minutos?|este minuto)/);
   await expect(page.getByTestId('next-rain')).toHaveText('Empieza a llover en unos 45 min (3,7 mm)');
+  // Cada hora: gotita con la probabilidad y viento con dirección, velocidad y ráfagas.
+  const hour = page.getByTestId('hour').nth(1);
+  await expect(hour.getByLabel(/^Probabilidad de lluvia \d+ %$/)).toBeVisible();
+  await expect(hour.getByLabel('Viento 15 km/h, ráfagas 32 km/h')).toBeVisible();
+  await expect(hour.getByRole('img', { name: 'Viento del S' })).toBeVisible();
+  await expect(hour.getByText('r. 32')).toBeVisible();
+  // 16 días: 7 confiables y 9 como tendencia, sin avisos por los días lejanos.
+  await expect(page.getByTestId('day')).toHaveCount(7);
+  await expect(page.getByTestId('trend-day')).toHaveCount(9);
+  await expect(page.getByText(/Tendencia: días 8 a 16/)).toBeVisible();
+  await expect(page.getByText(/Ráfagas fuertes de hasta 120/)).toHaveCount(0);
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-16-weather.png`, fullPage: true });
   expect(requests).toBe(1);
 
