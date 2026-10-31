@@ -108,6 +108,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   # Una Release por versión, con el paquete portable; si ya existe, se reemplaza el archivo.
+  # Solo queda publicada la última: las anteriores se borran (sus tags quedan en el historial).
   release:
     needs: [deploy, portable]
     runs-on: ubuntu-latest
@@ -127,3 +128,6 @@ jobs:
               --notes "App: https://mazzalaialan.github.io/PrepperApp — Para usarla sin internet en una PC, descargá el paquete portable y seguí LEEME.txt."
           fi
           gh release upload "v$VERSION" vikarg-survival-portable-*.zip --repo "$GITHUB_REPOSITORY" --clobber
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' |
+            grep -vx "v$VERSION" |
+            while read -r tag; do gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes; done
