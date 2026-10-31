@@ -2216,3 +2216,7 @@ a.module-card:hover {
 .contact-row[data-off='true'] {
   opacity: 0.55;
 }
+.rpt-distance {
+  font-weight: 700;
+  color: var(--accent);
+}

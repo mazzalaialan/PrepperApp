@@ -138,6 +138,11 @@ export function RadioPage() {
   );
 }
 
+/** Siempre en km (lo que se usa para saber si llega la señal): "0,8 km", "12 km". */
+function formatKm(m: number, locale: string): string {
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: m < 10_000 ? 1 : 0 }).format(m / 1000)} km`;
+}
+
 /** Cuántas repetidoras cercanas se muestran (con un archivo de todo el país pueden ser cientos). */
 const REPEATERS_SHOWN = 25;
 
@@ -203,13 +208,16 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
                       {r.call}
                       {r.location && ` · ${r.location}`}
                     </span>
-                    <span className="list-sub">
-                      {[d !== null && t('radio.distance', { distance: formatDistance(d, i18n.language) }), r.mode, off && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}
-                    </span>
+                    <span className="list-sub">{[r.mode, off && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}</span>
                     {r.lat !== null && <MapLink address="" lat={r.lat} lon={r.lon} />}
                   </span>
                   <span className="contact-actions">
-                    <strong className="radio-freqs">{summary}</strong>
+                    <span className="radio-freqs">
+                      <strong>{summary}</strong>
+                      <span className="rpt-distance" data-testid="rpt-distance">
+                        {d !== null ? formatKm(d, i18n.language) : r.lat === null ? t('radio.repeaters.noPlace') : t('radio.repeaters.choosePlace')}
+                      </span>
+                    </span>
                     <CopyButton text={summary} label={t('radio.repeaters.copy', { call: r.call })} />
                   </span>
                 </li>

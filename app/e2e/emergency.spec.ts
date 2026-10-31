@@ -166,6 +166,9 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   const rpt = page.getByTestId('repeaters').locator('li');
   await expect(rpt.nth(0)).toContainText('LU8VCB · Bariloche');
   await expect(rpt.nth(0)).toContainText('147,120 MHz · +0,6 · T 123,0');
+  // La distancia, siempre en km.
+  await expect(rpt.nth(0).getByTestId('rpt-distance')).toHaveText(/^\d,\d km$/);
+  await expect(rpt.nth(2).getByTestId('rpt-distance')).toHaveText(/^\d{3,4} km$/);
   await expect(rpt.nth(1)).toContainText('LU5VAS · Esquel');
   await expect(rpt.nth(1)).toContainText('fuera de servicio');
   await expect(rpt.nth(2)).toContainText('LU2FCF · Rosario');
@@ -176,6 +179,7 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(page.getByTestId('repeaters-message')).toContainText('1 no traen ubicación');
   await expect(rpt).toHaveCount(4);
   await expect(rpt.nth(3)).toContainText('LU7DOT · Mar del Plata');
+  await expect(rpt.nth(3).getByTestId('rpt-distance')).toHaveText('sin ubicación');
 
   // Siguen ahí al volver (guardadas en el dispositivo) y se pueden borrar.
   await page.goto('/#/first-aid');

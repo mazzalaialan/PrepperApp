@@ -394,6 +394,8 @@
       "empty": "Import your area's repeaters from a file: they're saved on the device, work offline and are sorted by distance.",
       "count": "{{count}} saved · the {{shown}} nearest",
       "offAir": "off air",
+      "noPlace": "no location",
+      "choosePlace": "choose a place above",
       "copy": "Copy the details of {{call}}",
       "import": "Import file",
       "clear": "Delete all",

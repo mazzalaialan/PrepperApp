@@ -394,6 +394,8 @@
       "empty": "Importá las repetidoras de tu zona desde un archivo: se guardan en el dispositivo, funcionan sin conexión y se ordenan por cercanía.",
       "count": "{{count}} guardadas · las {{shown}} más cercanas",
       "offAir": "fuera de servicio",
+      "noPlace": "sin ubicación",
+      "choosePlace": "elegí un lugar arriba",
       "copy": "Copiar los datos de {{call}}",
       "import": "Importar archivo",
       "clear": "Borrar todas",
