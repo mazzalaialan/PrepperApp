@@ -164,6 +164,41 @@
     "capacityUnitPlaceholder": "L, usos…",
     "capacityRemaining": "Restante"
   },
+  "geo": {
+    "westLetter": "O",
+    "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SO", "W": "O", "NW": "NO" }
+  },
+  "gps": {
+    "searching": "Buscando señal GPS…",
+    "accuracy": "GPS con precisión de ±{{value}}",
+    "error": {
+      "denied": "No hay permiso para usar la ubicación. Habilitalo en los permisos del navegador.",
+      "unavailable": "No se pudo obtener la ubicación. Probá al aire libre, lejos de techos y paredes.",
+      "timeout": "El GPS tardó demasiado. Probá al aire libre.",
+      "unsupported": "Este dispositivo no tiene GPS."
+    }
+  },
+  "waypoints": {
+    "new": "Nuevo",
+    "markHere": "Marcar acá",
+    "defaultName": "Punto {{when}}",
+    "empty": "Todavía no guardaste puntos. Marcá tu casa, un refugio, una fuente de agua o el lugar donde dejaste el auto.",
+    "noGps": "Sin GPS: cargá los puntos escribiendo sus coordenadas.",
+    "notFound": "El punto no existe.",
+    "name": "Nombre",
+    "namePlaceholder": "Ej.: Refugio Sierra",
+    "coordinates": "Coordenadas",
+    "coordinatesHint": "Pegá las coordenadas de Google Maps o escribilas en grados, minutos y segundos (34°36'13\"S 58°22'54\"O).",
+    "coordinatesInvalid": "No reconozco esas coordenadas.",
+    "useMyPosition": "Usar mi ubicación actual",
+    "altitude": "Altitud ({{unit}})",
+    "notes": "Notas",
+    "copy": "Copiar coordenadas",
+    "confirmDelete": "¿Eliminar el punto \"{{name}}\"?",
+    "navigation": "Cómo llegar",
+    "distance": "Distancia",
+    "bearing": "Rumbo"
+  },
   "documents": {
     "new": "Nuevo documento",
     "search": "Buscar por título o etiqueta",

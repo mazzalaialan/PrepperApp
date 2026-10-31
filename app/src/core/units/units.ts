@@ -67,3 +67,18 @@ export function formatDistance(meters: number, system: UnitSystem, locale: strin
 export function formatAltitude(meters: number, system: UnitSystem, locale: string): string {
   return system === 'imperial' ? `${fmt(meters / METERS_PER_FOOT, locale, 0)} ft` : `${fmt(meters, locale, 0)} m`;
 }
+
+export function altitudeUnit(system: UnitSystem): 'm' | 'ft' {
+  return system === 'imperial' ? 'ft' : 'm';
+}
+
+/** Valor de altitud escrito en la unidad del sistema → metros. */
+export function altitudeToMeters(value: number, system: UnitSystem): number {
+  return system === 'imperial' ? value * METERS_PER_FOOT : value;
+}
+
+/** Metros → texto editable en la unidad del sistema. */
+export function altitudeForInput(meters: number | null, system: UnitSystem): string {
+  if (meters === null) return '';
+  return String(Math.round(system === 'imperial' ? meters / METERS_PER_FOOT : meters));
+}

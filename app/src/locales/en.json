@@ -164,6 +164,41 @@
     "capacityUnitPlaceholder": "L, uses…",
     "capacityRemaining": "Remaining"
   },
+  "geo": {
+    "westLetter": "W",
+    "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SW", "W": "W", "NW": "NW" }
+  },
+  "gps": {
+    "searching": "Searching for GPS signal…",
+    "accuracy": "GPS accurate to ±{{value}}",
+    "error": {
+      "denied": "Location permission denied. Enable it in the browser's site permissions.",
+      "unavailable": "Couldn't get your location. Try outdoors, away from roofs and walls.",
+      "timeout": "GPS took too long. Try outdoors.",
+      "unsupported": "This device has no GPS."
+    }
+  },
+  "waypoints": {
+    "new": "New",
+    "markHere": "Mark here",
+    "defaultName": "Point {{when}}",
+    "empty": "No saved points yet. Mark your home, a shelter, a water source or where you left the car.",
+    "noGps": "No GPS: add points by typing their coordinates.",
+    "notFound": "This point doesn't exist.",
+    "name": "Name",
+    "namePlaceholder": "E.g.: Sierra shelter",
+    "coordinates": "Coordinates",
+    "coordinatesHint": "Paste coordinates from Google Maps or type them in degrees, minutes and seconds (34°36'13\"S 58°22'54\"W).",
+    "coordinatesInvalid": "Those coordinates aren't recognized.",
+    "useMyPosition": "Use my current location",
+    "altitude": "Altitude ({{unit}})",
+    "notes": "Notes",
+    "copy": "Copy coordinates",
+    "confirmDelete": "Delete the point \"{{name}}\"?",
+    "navigation": "How to get there",
+    "distance": "Distance",
+    "bearing": "Bearing"
+  },
   "documents": {
     "new": "New document",
     "search": "Search by title or tag",

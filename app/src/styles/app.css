@@ -904,6 +904,40 @@ a.module-card:hover {
   gap: 8px;
 }
 
+/* ---------- GPS y navegación ---------- */
+
+.gps-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.gps-error {
+  color: var(--danger);
+}
+
+.nav-readout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.nav-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.nav-value {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- Documentos ---------- */
 
 .doc-thumb {

@@ -48,7 +48,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'recommendations', section: 'inventory', icon: Calculator, phase: 'F3', implemented: false },
   { id: 'compass', section: 'orientation', icon: Compass, phase: 'F3', implemented: false, requires: ['orientation'] },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, phase: 'F3', implemented: false, requires: ['motion'] },
-  { id: 'waypoints', section: 'orientation', icon: MapPin, phase: 'F3', implemented: false, degradesWithout: ['geolocation'] },
+  { id: 'waypoints', section: 'orientation', icon: MapPin, phase: 'F3', implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },
   { id: 'maps', section: 'orientation', icon: MapIcon, phase: 'F5', implemented: false, degradesWithout: ['geolocation'] },
   { id: 'starmap', section: 'orientation', icon: Sparkles, phase: 'F6', implemented: false, degradesWithout: ['orientation'] },
   { id: 'weather', section: 'weather', icon: CloudSun, phase: 'F3', implemented: false },
