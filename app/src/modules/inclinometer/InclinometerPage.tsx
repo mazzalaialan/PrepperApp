@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lock, LockOpen } from 'lucide-react';
-import { slopeZone } from '@/core/sensors/tilt';
+import { avalancheRisk, slopeZone } from '@/core/sensors/tilt';
 import { useTilt } from '@/core/sensors/useTilt';
 import { Segmented } from '@/ui/Segmented';
 
@@ -42,6 +42,9 @@ export function InclinometerPage() {
           <SlopeGauge angle={mode === 'surface' ? angle : Math.abs(angle)} />
           <p className="incl-value" data-testid="incl-angle">
             {fmt.format(mode === 'sight' ? angle : Math.abs(angle))}°
+          </p>
+          <p className="incl-risk" data-testid="incl-risk" data-risk={avalancheRisk(zone!)}>
+            {t('inclinometer.riskLabel')}: <strong>{t(`inclinometer.risk.${avalancheRisk(zone!)}`)}</strong>
           </p>
           <p className="incl-zone" data-testid="incl-zone">{t(`inclinometer.zone.${zone}`)}</p>
           <button className="btn" type="button" aria-pressed={held !== null} onClick={() => setHeld(held === null ? liveAngle : null)}>

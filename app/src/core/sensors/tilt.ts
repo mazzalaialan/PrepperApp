@@ -37,3 +37,14 @@ export function slopeZone(angle: number): SlopeZone {
   if (a <= 45) return 'avalanche';
   return 'steep';
 }
+
+export type AvalancheRisk = 'low' | 'moderate' | 'high';
+
+/**
+ * Riesgo por la pendiente del terreno. Nunca baja al aumentar la pendiente:
+ * por encima de 45° las placas grandes son menos frecuentes, pero mostrar
+ * "menos riesgo" en terreno más empinado sería una falsa seguridad.
+ */
+export function avalancheRisk(zone: SlopeZone): AvalancheRisk {
+  return zone === 'low' ? 'low' : zone === 'caution' ? 'moderate' : 'high';
+}

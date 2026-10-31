@@ -1139,7 +1139,25 @@ a.module-card:hover {
 }
 
 [data-zone='steep'] {
-  --zone: var(--accent);
+  --zone: var(--danger);
+}
+
+.incl-risk {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--zone);
+  color: #fff;
+  font-size: 1.15rem;
+  text-transform: none;
+}
+
+.incl-risk[data-risk='moderate'] {
+  color: #1b1b1b;
+}
+
+.incl-risk strong {
+  text-transform: uppercase;
 }
 
 .incl-card {

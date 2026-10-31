@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { slopeZone, tiltFromGravity } from './tilt';
+import { avalancheRisk, slopeZone, tiltFromGravity } from './tilt';
 
 const G = 9.81;
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -29,5 +29,12 @@ describe('tiltFromGravity', () => {
 describe('slopeZone', () => {
   it('zonas de avalancha', () => {
     expect([10, 27, 30, 38, 45, 50, -35].map(slopeZone)).toEqual(['low', 'caution', 'avalanche', 'avalanche', 'avalanche', 'steep', 'avalanche']);
+  });
+
+  it('el riesgo nunca baja al aumentar la pendiente', () => {
+    const order = { low: 0, moderate: 1, high: 2 };
+    const risks = Array.from({ length: 91 }, (_, a) => order[avalancheRisk(slopeZone(a))]);
+    expect(risks.every((r, i) => i === 0 || r >= risks[i - 1]!)).toBe(true);
+    expect([10, 27, 38, 60].map((a) => avalancheRisk(slopeZone(a)))).toEqual(['low', 'moderate', 'high', 'high']);
   });
 });

@@ -347,20 +347,22 @@
     "waiting": "Waiting for the phone's accelerometer…",
     "hold": "Hold reading",
     "release": "Measure again",
+    "riskLabel": "Avalanche risk",
+    "risk": { "low": "Low", "moderate": "Moderate", "high": "High" },
     "zone": {
       "low": "Low angle",
       "caution": "Close to avalanche terrain",
       "avalanche": "Typical avalanche terrain",
-      "steep": "Very steep"
+      "steep": "Very steep: frequent sluffs"
     },
-    "zonesTitle": "Slope and avalanches",
+    "zonesTitle": "Avalanche risk by slope",
     "legend": {
-      "low": "Under 25°: rarely releases, but an avalanche can run down from above.",
-      "caution": "25° to 30°: caution, close to the dangerous range.",
-      "avalanche": "30° to 45°: where the vast majority of avalanches release.",
-      "steep": "Over 45°: snow tends to sluff off often in smaller slides."
+      "low": "Low · under 25°: rarely releases, but an avalanche can run down from above.",
+      "caution": "Moderate · 25° to 30°: caution, close to the dangerous range.",
+      "avalanche": "High · 30° to 45°: where the vast majority of avalanches release.",
+      "steep": "High · over 45°: snow sluffs off often; it's still avalanche terrain."
     },
-    "disclaimer": "Approximate reading. It doesn't replace the avalanche forecast or training for snowy terrain."
+    "disclaimer": "This is the risk from the slope angle: actual danger also depends on the snowpack and weather. Approximate reading; it doesn't replace the avalanche forecast or training for snowy terrain."
   },
   "compass": {
     "roseLabel": "Compass rose",

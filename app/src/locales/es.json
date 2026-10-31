@@ -347,20 +347,22 @@
     "waiting": "Esperando el acelerómetro del celular…",
     "hold": "Fijar medida",
     "release": "Volver a medir",
+    "riskLabel": "Riesgo de avalancha",
+    "risk": { "low": "Bajo", "moderate": "Moderado", "high": "Alto" },
     "zone": {
       "low": "Pendiente baja",
       "caution": "Cerca del rango de avalanchas",
       "avalanche": "Rango típico de avalanchas",
-      "steep": "Muy empinada"
+      "steep": "Muy empinada: coladas frecuentes"
     },
-    "zonesTitle": "Pendiente y avalanchas",
+    "zonesTitle": "Riesgo de avalancha por pendiente",
     "legend": {
-      "low": "Menos de 25°: rara vez se desprende, pero puede llegar una avalancha de más arriba.",
-      "caution": "25° a 30°: precaución, cerca del rango peligroso.",
-      "avalanche": "30° a 45°: donde se desprende la gran mayoría de las avalanchas.",
-      "steep": "Más de 45°: la nieve suele descargarse seguido en coladas más chicas."
+      "low": "Bajo · menos de 25°: rara vez se desprende, pero puede llegar una avalancha de más arriba.",
+      "caution": "Moderado · 25° a 30°: precaución, cerca del rango peligroso.",
+      "avalanche": "Alto · 30° a 45°: donde se desprende la gran mayoría de las avalanchas.",
+      "steep": "Alto · más de 45°: la nieve suele descargarse seguido en coladas; sigue siendo terreno de avalanchas."
     },
-    "disclaimer": "Medida orientativa. No reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
+    "disclaimer": "Es el riesgo por la pendiente del terreno: el peligro real depende también del estado de la nieve y del clima. Medida orientativa; no reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
   },
   "compass": {
     "roseLabel": "Rosa de los vientos",

@@ -38,6 +38,7 @@ test('inclinómetro: zonas de avalancha, fijar medida y modo apuntando', async (
   await tiltForward(page, 38);
   await expect(page.getByTestId('incl-angle')).toHaveText('38°');
   await expect(page.getByTestId('incl-zone')).toHaveText('Rango típico de avalanchas');
+  await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Alto');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-17-inclinometer.png`, fullPage: true });
 
   // Fijar: la medida queda aunque el celular se mueva.
@@ -48,10 +49,12 @@ test('inclinómetro: zonas de avalancha, fijar medida y modo apuntando', async (
   await page.getByRole('button', { name: 'Volver a medir' }).click();
   await expect(page.getByTestId('incl-angle')).toHaveText('10°');
   await expect(page.getByTestId('incl-zone')).toHaveText('Pendiente baja');
+  await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Bajo');
 
   // Apuntando hacia abajo de la pendiente: elevación negativa.
   await page.getByRole('button', { name: 'Apuntando' }).click();
   await tiltForward(page, -27);
   await expect(page.getByTestId('incl-angle')).toHaveText('-27°');
   await expect(page.getByTestId('incl-zone')).toHaveText('Cerca del rango de avalanchas');
+  await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Moderado');
 });
