@@ -80,6 +80,16 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await page.getByRole('link', { name: /Clima/ }).click();
   await expect(page.getByTestId('weather-temp')).toHaveText('21°');
   await expect(page.getByText('Parcialmente nublado · sensación 20°')).toBeVisible();
+  // Ahora: flecha y dirección completa del viento, y cada valor con el color de su nivel.
+  await expect(page.getByTestId('weather-temp')).toHaveAttribute('title', 'Agradable');
+  const wind = page.getByTestId('now-wind');
+  await expect(wind).toContainText('SE (Sudeste)');
+  await expect(wind.getByRole('img', { name: 'Viento del SE' })).toBeVisible();
+  await expect(page.getByTestId('now-wind-speed')).toHaveAttribute('title', 'Viento leve');
+  await expect(page.getByTestId('now-gusts')).toHaveAttribute('title', 'Viento moderado');
+  await expect(page.getByTestId('now-humidity')).toHaveAttribute('title', 'Aire húmedo');
+  await expect(page.getByTestId('now-pressure')).toHaveText('1013 hPa · normal');
+  await expect(page.getByTestId('now-pressure')).toHaveAttribute('data-scale', '3');
   await expect(page.getByText('Tormenta eléctrica')).toBeVisible();
   await expect(page.getByText('Ráfagas fuertes de hasta 88 km/h')).toBeVisible();
   await expect(page.getByText('Lluvia intensa: 42 mm')).toBeVisible();

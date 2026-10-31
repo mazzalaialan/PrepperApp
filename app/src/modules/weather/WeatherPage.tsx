@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Droplets, Gauge, RefreshCw, TriangleAlert, Wind } from 'lucide-react';
+import { ArrowDown, ArrowUp, Droplets, Gauge, Minus, RefreshCw, TriangleAlert, Wind } from 'lucide-react';
 import { cardinalOf } from '@/core/geo/geo';
 import { useSettings } from '@/core/settings/settings';
 import type { UnitSystem } from '@/core/units/units';
@@ -11,7 +11,8 @@ import { cachedForecast, placeKey, storeForecast } from './cache';
 import { RAIN_MM_PER_SLOT, rainOutlook, type RainSlot } from './nowcast';
 import { HERE_ID, useRainWatch } from './rainWatch';
 import { fetchForecast, HOURLY_DETAIL_DAYS, mmToInch, placeNow, RELIABLE_DAYS, skyOf, warningsOf, WeatherError, type Forecast } from './forecast';
-import { DayHoursDialog, DayList, DayPeriodsDialog, HourStripItem, SkyIcon, useUnits } from './parts';
+import { humidityLevel, pressureLevel, tempLevel, windLevel, type ScaleColor } from './levels';
+import { DayHoursDialog, DayList, DayPeriodsDialog, HourStripItem, SkyIcon, useUnits, WindArrow, type Units } from './parts';
 
 /**
  * Con conexión, un pronóstico más viejo que esto se vuelve a descargar (al
@@ -116,28 +117,7 @@ export function WeatherPage() {
         <p className="empty">{t('sky.needPlace')}</p>
       ) : !forecast ? null : (
         <>
-          <section className="card weather-now" aria-label={t('weather.now')}>
-            <SkyIcon code={forecast.current.code} size={56} />
-            <div>
-              <p className="weather-temp" data-testid="weather-temp">{u.temp(forecast.current.temperature)}</p>
-              <p className="hint" style={{ margin: 0 }}>
-                {t(`weather.sky.${skyOf(forecast.current.code)}`)} · {t('weather.feelsLike', { temp: u.temp(forecast.current.apparent) })}
-              </p>
-            </div>
-            <ul className="weather-facts">
-              <li>
-                <Wind size={16} aria-hidden /> {u.wind(forecast.current.windSpeed)} {t(`geo.cardinal.${cardinalOf(forecast.current.windDirection)}`)}
-                {' · '}
-                {t('weather.gusts', { value: u.wind(forecast.current.windGusts) })}
-              </li>
-              <li>
-                <Droplets size={16} aria-hidden /> {t('weather.humidity', { pct: Math.round(forecast.current.humidity) })}
-              </li>
-              <li>
-                <Gauge size={16} aria-hidden /> {t('weather.pressure', { hpa: Math.round(forecast.current.pressure) })}
-              </li>
-            </ul>
-          </section>
+          <CurrentConditions current={forecast.current} u={u} />
 
           {forecast.minutely15 && forecast.minutely15.length > 0 && (
             <NextRain now={nowLocal} slots={forecast.minutely15} system={system} />
@@ -286,6 +266,70 @@ function RainAlertsSettings() {
       )}
       {(here || watched.length > 0) && permission !== 'granted' && <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.enableNotifications')}</p>}
       <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.whileOpen')}</p>
+    </section>
+  );
+}
+
+/** Valor coloreado según su nivel; el nombre del nivel queda en el tooltip y para el lector de pantalla. */
+function Lvl({ color, label, children, testId }: { color: ScaleColor; label: string; children: ReactNode; testId?: string }) {
+  return (
+    <span className="lvl" data-scale={color} title={label} data-testid={testId}>
+      {children}
+      <span className="sr-only"> ({label})</span>
+    </span>
+  );
+}
+
+function CurrentConditions({ current, u }: { current: Forecast['current']; u: Units }) {
+  const { t } = useTranslation();
+  const temp = tempLevel(current.temperature);
+  const feels = tempLevel(current.apparent);
+  const wind = windLevel(current.windSpeed);
+  const gusts = windLevel(current.windGusts);
+  const humidity = humidityLevel(current.humidity);
+  const pressure = pressureLevel(current.pressure);
+  const dir = cardinalOf(current.windDirection);
+  const PressureIcon = pressure.trend === 'up' ? ArrowUp : pressure.trend === 'down' ? ArrowDown : Minus;
+
+  return (
+    <section className="card weather-now" aria-label={t('weather.now')}>
+      <SkyIcon code={current.code} size={56} />
+      <div>
+        <p className="weather-temp lvl" data-scale={temp.color} title={t(`weather.level.temp.${temp.key}`)} data-testid="weather-temp">
+          {u.temp(current.temperature)}
+        </p>
+        <p className="hint" style={{ margin: 0 }}>
+          {t(`weather.sky.${skyOf(current.code)}`)} ·{' '}
+          <Lvl color={feels.color} label={t(`weather.level.temp.${feels.key}`)}>
+            {t('weather.feelsLike', { temp: u.temp(current.apparent) })}
+          </Lvl>
+        </p>
+      </div>
+      <ul className="weather-facts">
+        <li data-testid="now-wind">
+          <WindArrow from={current.windDirection} size={18} />{' '}
+          <Lvl color={wind.color} label={t(`weather.level.wind.${wind.key}`)} testId="now-wind-speed">
+            {u.wind(current.windSpeed)}
+          </Lvl>{' '}
+          {t(`geo.cardinal.${dir}`)} ({t(`geo.cardinalLong.${dir}`)})
+          {' · '}
+          <Lvl color={gusts.color} label={t(`weather.level.wind.${gusts.key}`)} testId="now-gusts">
+            {t('weather.gusts', { value: u.wind(current.windGusts) })}
+          </Lvl>
+        </li>
+        <li>
+          <Droplets size={16} aria-hidden />{' '}
+          <Lvl color={humidity.color} label={t(`weather.level.humidity.${humidity.key}`)} testId="now-humidity">
+            {t('weather.humidity', { pct: Math.round(current.humidity) })}
+          </Lvl>
+        </li>
+        <li>
+          <Gauge size={16} aria-hidden />{' '}
+          <span className="lvl" data-scale={pressure.color} title={t(`weather.level.pressure.${pressure.key}`)} data-testid="now-pressure">
+            <PressureIcon size={16} aria-hidden /> {t('weather.pressure', { hpa: Math.round(current.pressure) })} · {t(`weather.pressureShort.${pressure.key}`)}
+          </span>
+        </li>
+      </ul>
     </section>
   );
 }

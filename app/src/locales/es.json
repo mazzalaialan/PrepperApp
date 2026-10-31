@@ -282,6 +282,13 @@
     "gusts": "ráfagas {{value}}",
     "humidity": "Humedad {{pct}} %",
     "pressure": "{{hpa}} hPa",
+    "level": {
+      "temp": { "freezing": "Helada", "cold": "Frío", "mild": "Agradable", "warm": "Cálido", "hot": "Caluroso", "extreme": "Calor extremo" },
+      "wind": { "light": "Viento leve", "moderate": "Viento moderado", "strong": "Viento fuerte", "gale": "Temporal" },
+      "humidity": { "dry": "Aire seco", "comfortable": "Humedad confortable", "humid": "Aire húmedo", "veryHumid": "Muy húmedo" },
+      "pressure": { "veryLow": "Presión muy baja: posible temporal", "low": "Presión baja: puede desmejorar", "normal": "Presión normal", "high": "Presión alta: tiempo estable" }
+    },
+    "pressureShort": { "veryLow": "muy baja", "low": "baja", "normal": "normal", "high": "alta" },
     "today": "Hoy",
     "noRain": "sin lluvia",
     "next24": "Próximas 24 horas",
@@ -585,7 +592,8 @@
   },
   "geo": {
     "westLetter": "O",
-    "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SO", "W": "O", "NW": "NO" }
+    "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SO", "W": "O", "NW": "NO" },
+    "cardinalLong": { "N": "Norte", "NE": "Noreste", "E": "Este", "SE": "Sudeste", "S": "Sur", "SW": "Sudoeste", "W": "Oeste", "NW": "Noroeste" }
   },
   "gps": {
     "searching": "Buscando señal GPS…",

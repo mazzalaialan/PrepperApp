@@ -1897,3 +1897,13 @@ a.module-card:hover {
   transition: none !important;
   scroll-behavior: auto !important;
 }
+
+/* Valores coloreados por nivel (clima). */
+.lvl[data-scale='1'] { color: var(--scale-1); }
+.lvl[data-scale='2'] { color: var(--scale-2); }
+.lvl[data-scale='3'] { color: var(--scale-3); }
+.lvl[data-scale='4'] { color: var(--scale-4); }
+.lvl[data-scale='5'] { color: var(--scale-5); }
+.lvl[data-scale='6'] { color: var(--scale-6); }
+.weather-facts .lvl { font-weight: 600; }
+.weather-facts .wind-arrow { vertical-align: -4px; }

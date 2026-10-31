@@ -282,6 +282,13 @@
     "gusts": "gusts {{value}}",
     "humidity": "Humidity {{pct}}%",
     "pressure": "{{hpa}} hPa",
+    "level": {
+      "temp": { "freezing": "Freezing", "cold": "Cold", "mild": "Pleasant", "warm": "Warm", "hot": "Hot", "extreme": "Extreme heat" },
+      "wind": { "light": "Light wind", "moderate": "Moderate wind", "strong": "Strong wind", "gale": "Gale" },
+      "humidity": { "dry": "Dry air", "comfortable": "Comfortable humidity", "humid": "Humid air", "veryHumid": "Very humid" },
+      "pressure": { "veryLow": "Very low pressure: possible storm", "low": "Low pressure: weather may worsen", "normal": "Normal pressure", "high": "High pressure: stable weather" }
+    },
+    "pressureShort": { "veryLow": "very low", "low": "low", "normal": "normal", "high": "high" },
     "today": "Today",
     "noRain": "no rain",
     "next24": "Next 24 hours",
@@ -585,7 +592,8 @@
   },
   "geo": {
     "westLetter": "W",
-    "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SW", "W": "W", "NW": "NW" }
+    "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SW", "W": "W", "NW": "NW" },
+    "cardinalLong": { "N": "North", "NE": "Northeast", "E": "East", "SE": "Southeast", "S": "South", "SW": "Southwest", "W": "West", "NW": "Northwest" }
   },
   "gps": {
     "searching": "Searching for GPS signal…",

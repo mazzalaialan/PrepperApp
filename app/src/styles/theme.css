@@ -21,6 +21,13 @@
   --danger: #b84a30; /* rojo óxido */
   --focus: #e0a46f;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  /* Escala de valores (clima): hielo, frío, normal, atención, alto, extremo. */
+  --scale-1: #8fd0ee;
+  --scale-2: #6c9fdb;
+  --scale-3: #7fb85a;
+  --scale-4: #dcb740;
+  --scale-5: #e7843f;
+  --scale-6: #ec5a3e;
 }
 
 :root[data-theme='light'] {
@@ -40,6 +47,12 @@
   --danger: #a3361c;
   --focus: #9b5629;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  --scale-1: #1b7aa3;
+  --scale-2: #2c5c9c;
+  --scale-3: #3f7124;
+  --scale-4: #8a6200;
+  --scale-5: #b0501a;
+  --scale-6: #a8261b;
 }
 
 /*
@@ -64,6 +77,12 @@
   --danger: #b04a32;
   --focus: #cf8b52;
   --shadow: none;
+  --scale-1: #7cb9d6;
+  --scale-2: #5f8fc6;
+  --scale-3: #6fa24f;
+  --scale-4: #c4a33a;
+  --scale-5: #cf7639;
+  --scale-6: #d35038;
 }
 
 /* Rojo nocturno: solo tonos rojos y poco brillo para preservar la visión nocturna. */
@@ -84,6 +103,13 @@
   --danger: #ff2a12;
   --focus: #ff5a45;
   --shadow: none;
+  /* En rojo nocturno la escala va por brillo: más intenso = más extremo. */
+  --scale-1: #8a2014;
+  --scale-2: #a3271a;
+  --scale-3: #b72d1e;
+  --scale-4: #cf3724;
+  --scale-5: #e6442c;
+  --scale-6: #ff2a12;
 }
 
 :root[data-theme='red'] img {
