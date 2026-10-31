@@ -3,8 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { FileText, Plus, Search } from 'lucide-react';
 import type { Attachment } from '@/core/model/types';
+import { daysBetween, today } from '@/modules/inventory/domain/dates';
 import { normalize } from '@/modules/inventory/selectors';
 import { useBlobUrl } from '@/ui/useBlobUrl';
+import { DocumentExpiryBadge } from './DocumentExpiryList';
+import { DOCUMENT_LEAD_DAYS } from './expiry';
 import { documentPages, useDocuments } from './store';
 
 function Thumb({ page }: { page: Attachment | undefined }) {
@@ -23,6 +26,8 @@ export function DocumentsPage() {
   const documents = useDocuments((s) => s.documents);
   const pages = useDocuments((s) => s.pages);
   const [query, setQuery] = useState('');
+  const todayStr = today();
+  const dateFmt = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
   const rows = useMemo(() => {
     const q = normalize(query.trim());
@@ -54,20 +59,25 @@ export function DocumentsPage() {
         <p className="empty">{documents.size === 0 ? t('documents.empty') : t('documents.noResults')}</p>
       ) : (
         <ul className="list">
-          {rows.map(({ doc, pages }) => (
-            <li key={doc.id}>
-              <Link className="list-row" to={`/documents/${doc.id}`}>
-                <Thumb page={pages[0]} />
-                <span className="list-main">
-                  <span className="list-title">{doc.title}</span>
-                  <span className="list-sub">
-                    {t('documents.photoCount', { count: pages.length })}
-                    {doc.tags.length > 0 && ` · ${doc.tags.join(', ')}`}
+          {rows.map(({ doc, pages }) => {
+            const daysLeft = doc.expiryDate ? daysBetween(todayStr, doc.expiryDate) : null;
+            return (
+              <li key={doc.id}>
+                <Link className="list-row" to={`/documents/${doc.id}`}>
+                  <Thumb page={pages[0]} />
+                  <span className="list-main">
+                    <span className="list-title">{doc.title}</span>
+                    <span className="list-sub">
+                      {t('documents.photoCount', { count: pages.length })}
+                      {doc.expiryDate && ` · ${t('documents.expiresOn', { date: dateFmt.format(new Date(`${doc.expiryDate}T00:00:00Z`)) })}`}
+                      {doc.tags.length > 0 && ` · ${doc.tags.join(', ')}`}
+                    </span>
                   </span>
-                </span>
-              </Link>
-            </li>
-          ))}
+                  {daysLeft !== null && daysLeft <= DOCUMENT_LEAD_DAYS && <DocumentExpiryBadge daysLeft={daysLeft} />}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </>

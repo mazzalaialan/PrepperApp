@@ -31,7 +31,29 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   await expect(page.getByText('Guardá el documento para agregarle fotos.')).toBeVisible();
   await page.getByLabel('Título').fill('DNI de Ana');
   await page.getByLabel('Etiquetas').fill('identidad, familia, identidad');
+  // Vence en 30 días: ya está dentro de los 60 de aviso.
+  const due = new Date();
+  due.setDate(due.getDate() + 30);
+  const dueDay = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`;
+  await expect(page.getByText('Te avisamos 60 días antes')).toBeVisible();
+  await page.getByLabel('Vencimiento').fill(dueDay);
   await page.getByRole('button', { name: 'Guardar' }).click();
+
+  // Queda en el índice de notificaciones, avisando desde 60 días antes.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<{ lotId: string; itemName: string; kind: string; dueDate: string }[]>((resolve) => {
+            const req = indexedDB.open('vikarg-user');
+            req.onsuccess = () => {
+              const get = req.result.transaction('alertIndex').objectStore('alertIndex').getAll();
+              get.onsuccess = () => resolve(get.result);
+            };
+          }),
+      ),
+    )
+    .toContainEqual(expect.objectContaining({ itemName: 'DNI de Ana', kind: 'expiry', dueDate: dueDay, lotId: expect.stringMatching(/^doc:/) }));
 
   await page.getByTestId('doc-files').setInputFiles(files);
   await expect(page.getByRole('button', { name: /^Foto \d$/ })).toHaveCount(3);
@@ -65,7 +87,8 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   // Listado: búsqueda por etiqueta (sin duplicados) y cantidad de fotos.
   await page.goto('/#/documents');
   await page.getByPlaceholder('Buscar por título o etiqueta').fill('famil');
-  await expect(page.getByText('2 fotos · identidad, familia')).toBeVisible();
+  await expect(page.getByText(/^2 fotos · vence el .+ · identidad, familia$/)).toBeVisible();
+  await expect(page.getByText('Vence en 30 días')).toBeVisible();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-09-documents.png`, fullPage: true });
 
   // Sobrevive al bloqueo.
@@ -75,4 +98,9 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   await page.goto('/#/documents');
   await page.getByRole('link', { name: /DNI de Ana/ }).click();
   await expect(page.getByRole('button', { name: /^Foto \d$/ })).toHaveCount(2);
+  await expect(page.getByLabel('Vencimiento')).toHaveValue(dueDay);
+
+  // También aparece en las alertas de Inicio.
+  await page.goto('/#/');
+  await expect(page.getByRole('link', { name: /DNI de Ana.*Vence en 30 días/ })).toBeVisible();
 });

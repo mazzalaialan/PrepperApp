@@ -632,6 +632,9 @@
     "tags": "Tags",
     "tagsPlaceholder": "Comma separated: identity, family",
     "notes": "Notes",
+    "expiry": "Expiry date",
+    "expiryHint": "Optional. We'll remind you {{days}} days ahead, so there's time to book an appointment and renew it.",
+    "expiresOn": "expires {{date}}",
     "saveFirst": "Save the document to add photos.",
     "confirmDelete": "Delete \"{{name}}\" and all its photos?",
     "photos": "Photos",
@@ -683,7 +686,8 @@
     "allGood": "All good: nothing expiring soon and no shortages.",
     "lotsTitle": "Expiry and capacity",
     "shortagesTitle": "Below minimum stock",
-    "recommendationsTitle": "Short of your recommendations"
+    "recommendationsTitle": "Short of your recommendations",
+    "documentsTitle": "Documents expiring soon"
   },
   "locations": {
     "new": "New location",

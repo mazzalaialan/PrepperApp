@@ -16,7 +16,7 @@ export interface KeyValueRow<T = unknown> {
 
 /** Índice mínimo de alertas, en claro a propósito (ver ARQUITECTURA §5.3). */
 export interface AlertIndexRow {
-  /** Id del lote, `rec:<id de regla>` (faltante de recomendaciones) o `min:<id de mínimo>` (debajo del stock mínimo). */
+  /** Id del lote, `rec:<id de regla>` (faltante de recomendaciones) o `min:<id de mínimo>` (debajo del stock mínimo) o `doc:<id>` (vencimiento de un documento). */
   lotId: string;
   itemName: string;
   kind: 'expiry' | 'capacity' | 'shortage' | 'minStock';

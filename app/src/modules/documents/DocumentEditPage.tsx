@@ -8,10 +8,11 @@ import { newEntity } from '@/core/model/entity';
 import type { Attachment, PersonalDocument } from '@/core/model/types';
 import { Dialog } from '@/ui/Dialog';
 import { useBlobUrl } from '@/ui/useBlobUrl';
+import { DOCUMENT_LEAD_DAYS } from './expiry';
 import { documentPages, useDocuments } from './store';
 
 function emptyDocument(): PersonalDocument {
-  return newEntity<PersonalDocument>({ title: '', notes: '', tags: [] });
+  return newEntity<PersonalDocument>({ title: '', notes: '', tags: [], expiryDate: null });
 }
 
 /** "dni, Familia , ,viaje" → ["dni", "Familia", "viaje"] */
@@ -78,6 +79,11 @@ function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
         <div className="field">
           <label htmlFor="title">{t('documents.titleLabel')}</label>
           <input id="title" className="input" required value={draft.title} onChange={(e) => set({ title: e.target.value })} autoFocus={isNew} placeholder={t('documents.titlePlaceholder')} />
+        </div>
+        <div className="field">
+          <label htmlFor="expiry">{t('documents.expiry')}</label>
+          <input id="expiry" className="input" type="date" value={draft.expiryDate ?? ''} onChange={(e) => set({ expiryDate: e.target.value || null })} />
+          <p className="hint">{t('documents.expiryHint', { days: DOCUMENT_LEAD_DAYS })}</p>
         </div>
         <div className="field">
           <label htmlFor="tags">{t('documents.tags')}</label>

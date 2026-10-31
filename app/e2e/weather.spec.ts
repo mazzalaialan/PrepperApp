@@ -5,8 +5,7 @@ const PASSWORD = 'prueba-segura-123';
 test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'] });
 
 /** Respuesta de Open-Meteo armada a partir de la hora actual (como hace el servicio real). */
-function fakeForecast() {
-  const now = new Date();
+function fakeForecast(now = new Date()) {
   const pad = (n: number) => String(n).padStart(2, '0');
   const local = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
   // 8 días por hora, desde la medianoche de hoy (como el servicio real).
@@ -157,8 +156,10 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
 
 test('las horas siguen al reloj aunque el pronóstico guardado sea de antes', async ({ page, context }) => {
   // Se descarga a la 01:10; después se pierde la conexión y el reloj sigue hasta las 02:25.
-  await page.clock.install({ time: new Date('2026-10-31T04:10:00Z') }); // 01:10 en Buenos Aires
-  await context.route('https://api.open-meteo.com/v1/forecast**', (route) => route.fulfill({ json: fakeForecast() }));
+  const downloadedAt = new Date('2026-10-31T04:10:00Z'); // 01:10 en Buenos Aires
+  await page.clock.install({ time: downloadedAt });
+  // El pronóstico se arma a la hora del reloj de la prueba, no a la real (si caen el mismo día, se mezclan).
+  await context.route('https://api.open-meteo.com/v1/forecast**', (route) => route.fulfill({ json: fakeForecast(downloadedAt) }));
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Repetir contraseña').fill(PASSWORD);

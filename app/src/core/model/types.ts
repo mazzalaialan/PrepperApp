@@ -98,6 +98,8 @@ export interface PersonalDocument extends BaseEntity {
   title: string;
   notes: string;
   tags: string[];
+  /** Vencimiento del documento (DNI, pasaporte, licencia…). Ausente en los guardados antes de 0.7.4. */
+  expiryDate?: IsoDay | null;
 }
 
 export type AttachmentOwner = 'item' | 'document' | 'location' | 'waypoint' | 'medicalProfile';

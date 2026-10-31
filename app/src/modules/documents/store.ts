@@ -4,6 +4,8 @@ import type { CompressedImage } from '@/core/images/compress';
 import { newEntity, touch } from '@/core/model/entity';
 import type { Attachment, Id, PersonalDocument } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
+import { registerAlertSource, useInventory } from '@/modules/inventory/store';
+import { documentAlertRows } from './expiry';
 
 type ById<T> = Map<Id, T>;
 
@@ -102,6 +104,19 @@ export const useDocuments = create<DocumentsState>((set, get) => {
       await putPage({ ...other, order: page.order });
     },
   };
+});
+
+/** Cada cambio en los documentos actualiza las alertas (y las notificaciones). */
+useDocuments.subscribe((state, prev) => {
+  if (state.loaded && (state.documents !== prev.documents || !prev.loaded)) {
+    void useInventory.getState().refreshAlertIndex();
+  }
+});
+
+/** Vencimientos de documentos en el índice de alertas, con 60 días de anticipación. */
+registerAlertSource(() => {
+  const { loaded, documents } = useDocuments.getState();
+  return loaded ? documentAlertRows(documents.values()) : [];
 });
 
 onSessionChange(() => {

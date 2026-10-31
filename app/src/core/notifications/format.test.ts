@@ -14,7 +14,7 @@ describe('texto de notificaciones', () => {
       'es',
       '2026-11-02',
     );
-    expect(title).toBe('5 alertas en tu inventario');
+    expect(title).toBe('5 alertas pendientes');
     expect(body.split('\n')).toEqual(['Filtro: por agotarse', 'Atún: vencido', 'Pilas: vence hoy', 'y 2 más']);
   });
 
@@ -30,7 +30,7 @@ describe('texto de notificaciones', () => {
 
   it('en inglés', () => {
     const { title, body } = alertsNotification([{ itemName: 'Water', kind: 'expiry', dueDate: '2026-12-15' }], 'en', '2026-11-02');
-    expect(title).toBe('1 alert in your inventory');
+    expect(title).toBe('1 pending alert');
     expect(body).toBe('Water: expires Dec 15');
   });
 });

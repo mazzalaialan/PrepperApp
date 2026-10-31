@@ -632,6 +632,9 @@
     "tags": "Etiquetas",
     "tagsPlaceholder": "Separadas por comas: identidad, familia",
     "notes": "Notas",
+    "expiry": "Vencimiento",
+    "expiryHint": "Opcional. Te avisamos {{days}} días antes, para que llegues a sacar turno y hacer el trámite.",
+    "expiresOn": "vence el {{date}}",
     "saveFirst": "Guardá el documento para agregarle fotos.",
     "confirmDelete": "¿Eliminar \"{{name}}\" con todas sus fotos?",
     "photos": "Fotos",
@@ -683,7 +686,8 @@
     "allGood": "Todo en orden: no hay vencimientos próximos ni faltantes.",
     "lotsTitle": "Vencimientos y capacidad",
     "shortagesTitle": "Debajo del stock mínimo",
-    "recommendationsTitle": "Faltantes según tus recomendaciones"
+    "recommendationsTitle": "Faltantes según tus recomendaciones",
+    "documentsTitle": "Documentos por vencer"
   },
   "locations": {
     "new": "Nueva ubicación",

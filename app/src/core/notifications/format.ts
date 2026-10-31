@@ -13,7 +13,7 @@ type Lang = 'es' | 'en';
 
 const TEXT = {
   es: {
-    title: (n: number) => (n === 1 ? '1 alerta en tu inventario' : `${n} alertas en tu inventario`),
+    title: (n: number) => (n === 1 ? '1 alerta pendiente' : `${n} alertas pendientes`),
     expired: 'vencido',
     today: 'vence hoy',
     on: (d: string) => `vence el ${d}`,
@@ -25,7 +25,7 @@ const TEXT = {
     testBody: 'Las notificaciones funcionan correctamente.',
   },
   en: {
-    title: (n: number) => (n === 1 ? '1 alert in your inventory' : `${n} alerts in your inventory`),
+    title: (n: number) => (n === 1 ? '1 pending alert' : `${n} pending alerts`),
     expired: 'expired',
     today: 'expires today',
     on: (d: string) => `expires ${d}`,

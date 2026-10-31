@@ -364,7 +364,7 @@ Navegación en el celular: Inicio, Botiquín, Documentos, Orientación, Meteorol
 | Alertas | §6 | — |
 | Fotos | Cámara o archivo → WebP, máx. 1280 px, calidad ~0,75 | Archivo desde disco |
 | Códigos de barras | Escaneo para buscar o crear artículos | Carga manual |
-| Documentos | Documentos personales con N fotos | — |
+| Documentos | Documentos personales con N fotos y vencimiento opcional: avisa 60 días antes (turnos y trámites), en Inicio, Alertas y notificaciones (`doc:<id>` en el índice, tipo `expiry`) | — |
 | Recomendaciones | Calculadora según grupo familiar y reglas del usuario | — |
 | Brújula | Rumbo magnético y verdadero (WMM); integrada con mapas y estrellas | Deshabilitada |
 | Inclinómetro | Pendiente en grados; resalta 30–45° como zona de riesgo de avalancha, con aviso de que es orientativo | Deshabilitado |
@@ -514,7 +514,7 @@ Detalle de las capas de tiempo:
 | **F2 — Servidor** | Docker, push programado, código de transferencia, aviso diario en segundo plano |
 | **F3 — Orientación, meteorología y botiquín** | Orientación: brújula, inclinómetro, GPS y waypoints con "ir al punto" (realidad aumentada con cámara y brújula). Meteorología: clima, sol y luna. Botiquín: botiquines por tipo y ficha médica. Documentos. Recomendaciones |
 | **F4 — Biblioteca** | Visor, búsqueda, paquetes, importación y herramienta de conversión |
-| **F5 — Mapas** | Orientación: descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía. Meteorología: mapa base de AR, CL y UY con capas de tiempo y peligros naturales (§12.4) |
+| **F5 — Mapas** | Orientación: descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía. **Importar rutas GPX** (a validar: tracks, rutas y waypoints del archivo): lo importado queda como un conjunto propio, separado de "Mis waypoints" y "Mis rutas"; sus puntos no se mezclan con los del usuario salvo que él copie uno a mano, se muestran como capa que se activa o desactiva y se borran juntos. Meteorología: mapa base de AR, CL y UY con capas de tiempo y peligros naturales (§12.4) |
 | **F6 — Mapa estelar** | Dos vistas: cielo completo (cúpula, gira con la brújula o a mano) y "apuntar al cielo" (realidad aumentada con la orientación del celular, con puntos cardinales, escala de acimut y círculos de altura; en PC se arrastra). 5.044 estrellas hasta magnitud 6, 88 constelaciones en español, Sol, Luna y planetas. Guía para encontrar el Sur (Cruz del Sur y Punteros) o el Norte (Osa Mayor y Polar) según el hemisferio, búsqueda de astros, fecha y hora, rojo nocturno. Datos de d3-celestial (BSD-3), generados con `tools/sky-data`. Vía Láctea pendiente (~150 KB simplificada) |
 | **F7 — Huerta: calendario** | Gráfico con la época del año actual y una línea de tiempo de qué se puede sembrar, trasplantar y cosechar, con datos del INTA por zona (a terminar de analizar) |
 | **F8 — Huerta: canteros** | Fase exclusiva. Carga de canteros y macetas (tamaño, horas de sol), recomendaciones de qué plantar según sol, época y zona, y seguimiento de cada planta con sus tareas. Referencia: https://huerta.diariodeljardin.com/planear/ (a terminar de analizar) |
