@@ -83,7 +83,8 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await expect(page.getByText('Lluvia intensa: 42 mm')).toBeVisible();
   await expect(page.getByText('Radiación UV muy alta (índice 9)')).toBeVisible();
   await expect(page.getByTestId('weather-updated')).toHaveText(/Actualizado (ahora|hace \d+ minutos?|este minuto)/);
-  await expect(page.getByTestId('next-rain')).toHaveText('Empieza a llover en unos 45 min (3,7 mm)');
+  // Se cuenta desde la hora real (no la de descarga): entre 30 y 45 minutos según cuándo corra la prueba.
+  await expect(page.getByTestId('next-rain')).toHaveText(/^Empieza a llover en unos (30|35|40|45) min \(3,7 mm\)$/);
   // Cada hora: gotita con la probabilidad y viento con dirección, velocidad y ráfagas.
   const hour = page.getByTestId('hour').nth(1);
   await expect(hour.getByLabel(/^Probabilidad de lluvia \d+ %$/)).toBeVisible();
