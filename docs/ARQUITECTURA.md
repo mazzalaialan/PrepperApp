@@ -437,7 +437,27 @@ Es un **módulo de la sección Meteorología**, separado de los mapas de Orienta
 - **Mapa base muy simple:** solo el contorno de **Argentina, Chile y Uruguay** con provincias y regiones. Viene incluido en la app (Natural Earth, dominio público, simplificado, unos cientos de KB), así que funciona sin conexión y no necesita descargar zonas ni teselas. Por eso puede hacerse antes de F5.
 - **Capas:** son opcionales, cada una se activa por separado y solo funciona con conexión. Muestran la hora de los datos; sin conexión queda lo último descargado. Los avisos con la app cerrada, por distancia a los waypoints con aviso activado, los hace el servidor propio. Nada de esto son alertas oficiales.
 
-| Capa | Fuentes candidatas (a confirmar) | Viabilidad |
+**Estado (v0.8, sin servidor):** implementado en `modules/weathermap/`. Mapa base propio (`tools/geo-data/build.mjs`: Natural Earth 1:10m simplificado, 60 provincias/regiones/departamentos + Malvinas + vecinos, 61 capitales, 104 volcanes del Smithsonian; ~70 KB comprimido) en proyección Web Mercator, la misma de las imágenes, para superponerlas sin reproyectar. Canvas con arrastre, pellizco, rueda, pantalla completa y tocar para ver el detalle. Fuentes verificadas en 2026-10 (todas abiertas, sin clave y con CORS, salvo donde se indica):
+
+| Capa | Fuente | Estado |
+|---|---|---|
+| Satélite (nubes de tormenta) | GOES‑19 infrarrojo banda 13 (NASA GIBS, WMS EPSG:3857). Cada 10 min, ~45 min de demora; se busca la última imagen con pedidos de 16×16 px (si falta responde un PNG vacío). Animación de 2 h (13 imágenes) | ✅ |
+| Radar de lluvia | RainViewer (13 imágenes, 2 h, teselas hasta zoom 7). En Argentina solo cubre el noreste: no publica los radares del SMN | ✅ (cobertura limitada) |
+| Clima por zona | Open-Meteo, una consulta con las 61 capitales: temperatura, lluvia o viento con los colores de nivel | ✅ |
+| Sismos | USGS, M2,5+ de la última semana, color por antigüedad | ✅ |
+| Alertas de desastres | GDACS (ONU y Comisión Europea): ciclones tropicales/huracanes, inundaciones, sequías, incendios forestales y erupciones, con nivel verde/naranja/rojo | ✅ |
+| Focos de calor | VIIRS NOAA‑20 375 m (NASA GIBS), por día (hoy y ayer); llama por grupo de focos (se agrupan los píxeles de la imagen). El producto de fuego de GOES es una imagen opaca y no sirve como capa | ✅ |
+| Volcanes | Smithsonian GVP, incluido en la app (su servicio no tiene CORS) | ✅ |
+| Rayos | GOES‑19 GLM (NOAA), procesado en el servidor | Pendiente: servidor |
+| Tornados y alertas oficiales | No hay detección pública de tornados en tiempo real (solo radar y reportes). Las alertas del SMN (tormentas fuertes, viento, etc.) se publican en CAP/RSS sin CORS (`ssl.smn.gob.ar/CAP/AR.php`): las leerá el servidor | Pendiente: servidor |
+| FIRMS (focos con clave) | NASA FIRMS, pide clave | Opcional en el servidor |
+| Nivel de alerta volcánica | SERNAGEOMIN (Chile) y OAVV/SEGEMAR (AR) publican reportes, no datos | Pendiente |
+
+Sin conexión: se ven el mapa, los volcanes, los waypoints y lo último guardado de sismos, alertas y clima por zona (cifrado, `weathermap-cache`). Con ahorro de batería, satélite y radar muestran solo la última imagen (sin animación).
+
+Análisis inicial de candidatos (referencia):
+
+| Capa | Fuentes candidatas | Viabilidad |
 |---|---|---|
 | Clima por provincia | Open-Meteo con varias coordenadas en una consulta | Alta |
 | Tormentas animadas (radar) | Ver abajo | Depende de la fuente |

@@ -27,6 +27,7 @@ import { RouteEditPage } from '@/modules/waypoints/RouteEditPage';
 import { RouteGoPage } from '@/modules/waypoints/RouteGoPage';
 import { RoutesPage } from '@/modules/waypoints/RoutesPage';
 import { WeatherPage } from '@/modules/weather/WeatherPage';
+import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
 import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
 import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
 import { HomePage } from './pages/HomePage';
@@ -75,6 +76,7 @@ const router = createHashRouter([
       { path: '/weather', element: <SectionPage section="weather" /> },
       { path: '/weather/sky', element: <AstronomyPage /> },
       { path: '/weather/forecast', element: <WeatherPage /> },
+      { path: '/weather/map', element: <WeatherMapPage /> },
       { path: '/garden', element: <SectionPage section="garden" /> },
       // Ruta de la sección "Campo" (v0.3), dividida en Orientación y Meteorología.
       { path: '/field', element: <Navigate to="/orientation" replace /> },

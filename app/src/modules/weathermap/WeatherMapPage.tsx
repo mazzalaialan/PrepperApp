@@ -1,0 +1,491 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, ExternalLink, Locate, Minus, Pause, Play, Plus, RefreshCw, Scan } from 'lucide-react';
+import { currentPosition } from '@/core/geo/useGeolocation';
+import { useBatterySaver } from '@/core/power/saver';
+import { useSettings, type WeatherMapLayers, type WeatherMapValue } from '@/core/settings/settings';
+import { useUnits } from '@/modules/weather/parts';
+import { useWaypoints } from '@/modules/waypoints/store';
+import { FullscreenStage } from '@/ui/FullscreenStage';
+import { loadGeoData, type GeoData } from './geo';
+import { preload } from './images';
+import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
+import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, viewBBox, zoomAt, type Size, type View } from './projection';
+import {
+  fetchHazards,
+  fetchQuakes,
+  fetchRadarFrames,
+  fetchZoneWeather,
+  FIRE_LAYER,
+  fireDays,
+  FRAME_COUNT,
+  frameTimes,
+  gibsUrl,
+  isoMinute,
+  latestGibsTime,
+  RADAR_MAX_ZOOM,
+  radarTileUrl,
+  readMapCache,
+  SATELLITE_LAYER,
+  writeMapCache,
+  type Hazard,
+  type Quake,
+  type RadarFrames,
+  type ZoneWeather,
+} from './sources';
+
+/** Las capas con datos de internet se renuevan si tienen más de esto. */
+const STALE_MS = 10 * 60_000;
+const FRAME_MS = 700;
+/** Se piden las imágenes de satélite cuando la vista deja de moverse. */
+const SETTLE_MS = 500;
+const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'waypoints'];
+const VALUES: WeatherMapValue[] = ['temp', 'rain', 'wind'];
+type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards';
+
+export function WeatherMapPage() {
+  const { t, i18n } = useTranslation();
+  const layers = useSettings((s) => s.settings.weatherMapLayers);
+  const zoneValue = useSettings((s) => s.settings.weatherMapValue);
+  const base = useSettings((s) => s.settings.weatherUrl);
+  const system = useSettings((s) => s.settings.units);
+  const update = useSettings((s) => s.update);
+  const saver = useBatterySaver();
+  const u = useUnits(system, i18n.language);
+  const waypointMap = useWaypoints((s) => s.waypoints);
+
+  const [geo, setGeo] = useState<GeoData | null>(null);
+  const [view, setView] = useState<View | null>(null);
+  const [size, setSize] = useState<Size | null>(null);
+  /** Vista con la que se piden las imágenes (la última quieta). */
+  const [request, setRequest] = useState<{ view: View; size: Size } | null>(null);
+  const [selected, setSelected] = useState<MapFeature | null>(null);
+  const [version, setVersion] = useState(0);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [now, setNow] = useState(() => Date.now());
+
+  const [quakes, setQuakes] = useState<{ fetchedAt: string; items: Quake[] } | null>(null);
+  const [hazards, setHazards] = useState<{ fetchedAt: string; items: Hazard[] } | null>(null);
+  const [zones, setZones] = useState<{ fetchedAt: string; items: ZoneWeather[] } | null>(null);
+  const [satTimes, setSatTimes] = useState<Date[] | null>(null);
+  const [radar, setRadar] = useState<RadarFrames | null>(null);
+  const [errors, setErrors] = useState<Set<SourceKey>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [frame, setFrame] = useState(FRAME_COUNT - 1);
+  const [playing, setPlaying] = useState(false);
+  const [here, setHere] = useState<{ lon: number; lat: number } | null>(null);
+
+  useEffect(() => {
+    void loadGeoData().then(setGeo);
+    void readMapCache().then((cache) => {
+      if (cache.quakes) setQuakes(cache.quakes);
+      if (cache.hazards) setHazards(cache.hazards);
+      if (cache.zones) setZones(cache.zones);
+    });
+    const onLine = () => setOnline(navigator.onLine);
+    window.addEventListener('online', onLine);
+    window.addEventListener('offline', onLine);
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => {
+      window.removeEventListener('online', onLine);
+      window.removeEventListener('offline', onLine);
+      clearInterval(timer);
+    };
+  }, []);
+
+  const handleView = useCallback((v: View, s: Size) => {
+    setView(v);
+    setSize(s);
+  }, []);
+
+  useEffect(() => {
+    if (!view || !size) return;
+    const timer = setTimeout(() => setRequest({ view, size }), SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [view, size]);
+
+  const fail = (key: SourceKey, failed: boolean) =>
+    setErrors((prev) => {
+      const next = new Set(prev);
+      if (failed) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+
+  /** Descarga lo que está prendido; con `force`, aunque lo guardado sea reciente. */
+  const refresh = useCallback(
+    async (force: boolean) => {
+      if (!navigator.onLine || !geo) return;
+      const stale = (at: string | undefined) => force || !at || Date.now() - Date.parse(at) > STALE_MS;
+      setLoading(true);
+      const jobs: Promise<unknown>[] = [];
+      if (layers.earthquakes && stale(quakes?.fetchedAt)) {
+        jobs.push(
+          fetchQuakes().then(
+            async (items) => {
+              const entry = { fetchedAt: new Date().toISOString(), items };
+              setQuakes(entry);
+              fail('earthquakes', false);
+              await writeMapCache({ quakes: entry });
+            },
+            () => fail('earthquakes', true),
+          ),
+        );
+      }
+      if (layers.regionWeather && stale(zones?.fetchedAt)) {
+        jobs.push(
+          fetchZoneWeather(base, geo.capitals).then(
+            async (items) => {
+              const entry = { fetchedAt: new Date().toISOString(), items };
+              setZones(entry);
+              fail('zoneWeather', false);
+              await writeMapCache({ zones: entry });
+            },
+            () => fail('zoneWeather', true),
+          ),
+        );
+      }
+      if (layers.satellite) {
+        jobs.push(
+          latestGibsTime(SATELLITE_LAYER).then(
+            (latest) => {
+              setSatTimes(frameTimes(latest, saver ? 1 : FRAME_COUNT));
+              fail('satellite', false);
+            },
+            () => fail('satellite', true),
+          ),
+        );
+      }
+      if (layers.hazards && stale(hazards?.fetchedAt)) {
+        jobs.push(
+          fetchHazards().then(
+            async (items) => {
+              const entry = { fetchedAt: new Date().toISOString(), items };
+              setHazards(entry);
+              fail('hazards', false);
+              await writeMapCache({ hazards: entry });
+            },
+            () => fail('hazards', true),
+          ),
+        );
+      }
+      if (layers.radar) {
+        jobs.push(
+          fetchRadarFrames().then(
+            (frames) => {
+              setRadar(saver ? { ...frames, frames: frames.frames.slice(-1) } : frames);
+              fail('radar', false);
+            },
+            () => fail('radar', true),
+          ),
+        );
+      }
+      await Promise.all(jobs);
+      setLoading(false);
+      setFrame(FRAME_COUNT - 1);
+    },
+    // Las marcas de tiempo se leen en el momento; no deben reiniciar la descarga.
+    [geo, layers, base, saver],
+  );
+
+  // Al abrir, al prender una capa y cada 10 minutos.
+  useEffect(() => {
+    void refresh(false);
+    const timer = setInterval(() => void refresh(false), STALE_MS);
+    return () => clearInterval(timer);
+  }, [refresh, online]);
+
+  // Mi ubicación, una sola lectura (el GPS gasta batería).
+  useEffect(() => {
+    if (!layers.waypoints) return;
+    currentPosition().then(
+      (fix) => setHere({ lon: fix.lon, lat: fix.lat }),
+      () => setHere(null),
+    );
+  }, [layers.waypoints]);
+
+  const radarZoom = request ? tileZoom(request.view, RADAR_MAX_ZOOM) : 0;
+  const radarTiles = useMemo(() => (request ? tilesFor(request.view, request.size, radarZoom) : []), [request, radarZoom]);
+  const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+  const frameCount = Math.max(satTimes?.length ?? 1, radar?.frames.length ?? 1);
+  const idx = (len: number) => Math.round((Math.min(frame, frameCount - 1) * (len - 1)) / Math.max(1, frameCount - 1));
+
+  // Imágenes de toda la animación para la vista quieta; cada una que llega redibuja.
+  useEffect(() => {
+    if (!request || !online) return;
+    let cancelled = false;
+    const urls: string[] = [];
+    if (layers.satellite && satTimes) for (const time of [...satTimes].reverse()) urls.push(gibsUrl(SATELLITE_LAYER, isoMinute(time), request.view, request.size, ratio));
+    if (layers.fires) for (const day of fireDays()) urls.push(gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio));
+    if (layers.radar && radar)
+      for (const f of [...radar.frames].reverse()) for (const tile of radarTiles) urls.push(radarTileUrl(radar.host, f.path, tile.z, tile.x, tile.y));
+    void (async () => {
+      for (const url of urls) {
+        if (cancelled) return;
+        if (await preload(url)) setVersion((v) => v + 1);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [request, satTimes, radar, radarTiles, layers.satellite, layers.fires, layers.radar, online, ratio]);
+
+  useEffect(() => {
+    if (!playing || frameCount < 2) return;
+    const timer = setInterval(() => setFrame((f) => (f + 1) % frameCount), FRAME_MS);
+    return () => clearInterval(timer);
+  }, [playing, frameCount]);
+
+  const overlays: Overlay[] = [];
+  if (request) {
+    const bbox = viewBBox(request.view, request.size);
+    if (layers.satellite && satTimes?.length) {
+      overlays.push({ url: gibsUrl(SATELLITE_LAYER, isoMinute(satTimes[idx(satTimes.length)]!), request.view, request.size, ratio), bbox, opacity: 0.75 });
+    }
+    if (layers.radar && radar?.frames.length) {
+      const f = radar.frames[idx(radar.frames.length)]!;
+      for (const tile of radarTiles) overlays.push({ url: radarTileUrl(radar.host, f.path, tile.z, tile.x, tile.y), bbox: tileBBox(tile.x, tile.y, tile.z), opacity: 0.85 });
+    }
+    if (layers.fires) for (const day of fireDays()) overlays.push({ url: gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio), bbox, opacity: 1, fire: true });
+  }
+
+  const waypoints = useMemo(
+    () => (layers.waypoints ? [...waypointMap.values()].map((w) => ({ id: w.id, name: w.name, lon: w.lon, lat: w.lat })) : null),
+    [layers.waypoints, waypointMap],
+  );
+
+  const timeFmt = new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' });
+  const setLayer = (key: keyof WeatherMapLayers, on: boolean) => void update({ weatherMapLayers: { ...layers, [key]: on } });
+  const zoom = (factor: number) => view && size && setView(zoomAt(view, size, factor));
+  const animated = !saver && frameCount > 1 && (layers.satellite || layers.radar);
+  const satTime = satTimes?.[idx(satTimes.length)];
+  const radarTime = radar?.frames[idx(radar.frames.length)]?.time;
+
+  return (
+    <div className="stack">
+      <div className="page-head">
+        <Link className="icon-btn" to="/weather" aria-label={t('common.back')}>
+          <ArrowLeft size={22} />
+        </Link>
+        <h1 className="page-title" style={{ flex: 1 }}>{t('weatherMap.title')}</h1>
+        <button className="btn" type="button" onClick={() => void refresh(true)} disabled={!online || loading} aria-label={t('weather.refresh')}>
+          <RefreshCw size={18} />
+        </button>
+      </div>
+
+      {!online && <p className="hint" role="status">{t('weatherMap.offline')}</p>}
+      {errors.size > 0 && (
+        <p className="hint" role="status" data-testid="map-errors">
+          {t('weatherMap.failed', { sources: [...errors].map((k) => t(`weatherMap.source.${k}`)).join(', ') })}
+        </p>
+      )}
+
+      <FullscreenStage className="wmap" overlay={<MapTimes sat={layers.satellite ? satTime : undefined} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />}>
+        {geo ? (
+          <MapCanvas
+            geo={geo}
+            view={view}
+            onView={handleView}
+            overlays={overlays}
+            zones={layers.regionWeather ? (zones?.items ?? null) : null}
+            zoneValue={zoneValue}
+            quakes={layers.earthquakes ? (quakes?.items ?? null) : null}
+            hazards={layers.hazards ? (hazards?.items ?? null) : null}
+            volcanoes={layers.volcanoes ? geo.volcanoes : null}
+            waypoints={waypoints}
+            here={layers.waypoints ? here : null}
+            selected={selected}
+            onSelect={setSelected}
+            version={version}
+            format={{ temp: u.temp, wind: u.windValue, rain: u.rain }}
+            now={now}
+          />
+        ) : (
+          <p className="hint">{t('weatherMap.loading')}</p>
+        )}
+        <div className="wmap-zoom">
+          <button className="icon-btn" type="button" onClick={() => zoom(1.5)} aria-label={t('weatherMap.zoomIn')}>
+            <Plus size={20} />
+          </button>
+          <button className="icon-btn" type="button" onClick={() => zoom(1 / 1.5)} aria-label={t('weatherMap.zoomOut')}>
+            <Minus size={20} />
+          </button>
+          <button className="icon-btn" type="button" onClick={() => size && setView(fitBounds(REGION_BOUNDS, size))} aria-label={t('weatherMap.reset')}>
+            <Scan size={20} />
+          </button>
+          {here && (
+            <button
+              className="icon-btn"
+              type="button"
+              onClick={() => size && setView(fitBounds({ west: here.lon - 2, east: here.lon + 2, south: here.lat - 1.6, north: here.lat + 1.6 }, size))}
+              aria-label={t('weatherMap.goHere')}
+            >
+              <Locate size={20} />
+            </button>
+          )}
+        </div>
+        {/* Dentro del mapa: también se usa en pantalla completa. */}
+        {animated && (
+          <div className="wmap-timeline">
+            <button className="icon-btn" type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? t('weatherMap.pause') : t('weatherMap.play')}>
+              {playing ? <Pause size={20} /> : <Play size={20} />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={frameCount - 1}
+              value={Math.min(frame, frameCount - 1)}
+              onChange={(e) => {
+                setPlaying(false);
+                setFrame(Number(e.target.value));
+              }}
+              aria-label={t('weatherMap.timeline')}
+            />
+          </div>
+        )}
+      </FullscreenStage>
+
+      <MapTimes sat={layers.satellite ? satTime : undefined} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />
+
+      {selected && <FeatureCard feature={selected} u={u} now={now} onClose={() => setSelected(null)} />}
+
+      <section className="card stack" aria-labelledby="wmap-layers">
+        <h2 id="wmap-layers" className="section-title" style={{ margin: 0 }}>{t('weatherMap.layers')}</h2>
+        <div className="chips" role="group" aria-label={t('weatherMap.layers')}>
+          {LAYER_KEYS.map((key) => (
+            <button key={key} type="button" className="chip" aria-pressed={layers[key]} onClick={() => setLayer(key, !layers[key])}>
+              {t(`weatherMap.layer.${key}`)}
+            </button>
+          ))}
+          <button type="button" className="chip" disabled title={t('weatherMap.needsServer')}>
+            {t('weatherMap.layer.lightning')}
+          </button>
+        </div>
+        {layers.regionWeather && (
+          <div className="chips" role="group" aria-label={t('weatherMap.zoneValue')}>
+            {VALUES.map((v) => (
+              <button key={v} type="button" className="chip" aria-pressed={zoneValue === v} onClick={() => void update({ weatherMapValue: v })}>
+                {t(`weatherMap.value.${v}`)}
+              </button>
+            ))}
+          </div>
+        )}
+        <Legend layers={layers} zoneValue={zoneValue} windUnit={u.windUnit} />
+      </section>
+
+      <p className="hint">{t('weatherMap.disclaimer')}</p>
+    </div>
+  );
+}
+
+function MapTimes({ sat, radar, fmt }: { sat: Date | undefined; radar: Date | undefined; fmt: Intl.DateTimeFormat }) {
+  const { t } = useTranslation();
+  if (!sat && !radar) return null;
+  return (
+    <p className="hint wmap-times" data-testid="map-times">
+      {[sat && t('weatherMap.satelliteAt', { time: fmt.format(sat) }), radar && t('weatherMap.radarAt', { time: fmt.format(radar) })].filter(Boolean).join(' · ')}
+    </p>
+  );
+}
+
+function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zoneValue: WeatherMapValue; windUnit: string }) {
+  const { t } = useTranslation();
+  const items: [boolean, string, string][] = [
+    [layers.regionWeather && zoneValue === 'wind', 'wind', t('weatherMap.legend.wind', { unit: windUnit })],
+    [layers.satellite, 'satellite', t('weatherMap.legend.satellite')],
+    [layers.radar, 'radar', t('weatherMap.legend.radar')],
+    [layers.earthquakes, 'quake', t('weatherMap.legend.earthquakes')],
+    [layers.hazards, 'hazard', t('weatherMap.legend.hazards')],
+    [layers.volcanoes, 'volcano', t('weatherMap.legend.volcanoes')],
+    [layers.fires, 'fire', t('weatherMap.legend.fires')],
+  ];
+  const shown = items.filter(([on]) => on);
+  if (shown.length === 0) return null;
+  return (
+    <ul className="wmap-legend">
+      {shown.map(([, key, text]) => (
+        <li key={key}>
+          <span className={`wmap-swatch wmap-swatch-${key}`} aria-hidden /> {text}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FeatureCard({ feature, u, now, onClose }: { feature: MapFeature; u: ReturnType<typeof useUnits>; now: number; onClose: () => void }) {
+  const { t, i18n } = useTranslation();
+  const n1 = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
+  const when = new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  let title = '';
+  let lines: string[] = [];
+  let link: string | null = null;
+  switch (feature.kind) {
+    case 'quake': {
+      const q = feature.item;
+      title = t('weatherMap.quakeTitle', { mag: n1.format(q.mag) });
+      const hours = Math.round((now - q.time) / 3_600_000);
+      lines = [q.place, `${when.format(new Date(q.time))} · ${t('weatherMap.hoursAgo', { count: hours })}`, t('weatherMap.depth', { km: Math.round(q.depthKm) })];
+      link = q.url;
+      break;
+    }
+    case 'hazard': {
+      const h = feature.item;
+      const day = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short' });
+      title = h.name;
+      lines = [
+        `${t(`weatherMap.hazardType.${h.type}`)} · ${t(`weatherMap.hazardLevel.${h.level}`)}`,
+        t('weatherMap.hazardDates', { from: day.format(new Date(h.from)), to: day.format(new Date(h.to)) }),
+        h.severity,
+      ].filter(Boolean);
+      link = h.url;
+      break;
+    }
+    case 'volcano': {
+      const v = feature.item;
+      title = v.name;
+      lines = [
+        [v.type, v.country].filter(Boolean).join(' · '),
+        v.elevation !== null ? t('weatherMap.elevation', { value: u.altitude(v.elevation) }) : '',
+        v.lastEruption === null
+          ? t('weatherMap.eruptionUnknown')
+          : t('weatherMap.lastEruption', { year: v.lastEruption < 0 ? t('weatherMap.bce', { year: -v.lastEruption }) : v.lastEruption }),
+      ].filter(Boolean);
+      link = `https://volcano.si.edu/volcano.cfm?vn=${v.id}`;
+      break;
+    }
+    case 'zone': {
+      const z = feature.item;
+      title = z.name;
+      lines = [
+        `${u.temp(z.temp)} · ${z.precip > 0 ? u.rain(z.precip) : t('weather.noRain')}`,
+        `${t('weatherMap.windLine', { speed: u.wind(z.windSpeed), gusts: u.wind(z.gusts) })}`,
+      ];
+      break;
+    }
+    case 'waypoint':
+      title = feature.item.name;
+      lines = [t('weatherMap.myWaypoint')];
+      break;
+  }
+  return (
+    <section className="card stack" data-testid="map-feature" aria-live="polite">
+      <div className="row-between">
+        <h2 className="section-title" style={{ margin: 0 }}>{title}</h2>
+        <button className="btn" type="button" onClick={onClose}>
+          {t('common.close')}
+        </button>
+      </div>
+      {lines.map((l) => (
+        <p key={l} className="hint" style={{ margin: 0 }}>
+          {l}
+        </p>
+      ))}
+      {link && (
+        <a href={link} target="_blank" rel="noreferrer">
+          <ExternalLink size={14} aria-hidden /> {t('weatherMap.moreInfo')}
+        </a>
+      )}
+    </section>
+  );
+}

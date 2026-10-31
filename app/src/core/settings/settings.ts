@@ -42,7 +42,25 @@ export interface Settings {
   /** Prender el rojo nocturno al abrir el mapa estelar. */
   starmapRed: boolean;
   starmapLayers: StarmapLayers;
+  weatherMapLayers: WeatherMapLayers;
+  /** Qué dato del clima se dibuja en cada provincia. */
+  weatherMapValue: WeatherMapValue;
 }
+
+/** Capas del Mapa de Meteorología. Las que usan internet solo se descargan si están prendidas. */
+export interface WeatherMapLayers {
+  satellite: boolean;
+  radar: boolean;
+  regionWeather: boolean;
+  earthquakes: boolean;
+  /** Alertas de GDACS: ciclones, inundaciones, sequías, incendios forestales y erupciones. */
+  hazards: boolean;
+  fires: boolean;
+  volcanoes: boolean;
+  waypoints: boolean;
+}
+
+export type WeatherMapValue = 'temp' | 'rain' | 'wind';
 
 export type NorthReference = 'true' | 'magnetic';
 export type RedSchedule = 'off' | 'custom' | 'dusk';
@@ -83,6 +101,8 @@ export const DEFAULT_SETTINGS: Settings = {
   duskPlace: null,
   starmapRed: true,
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
+  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true },
+  weatherMapValue: 'temp',
 };
 
 const SETTINGS_KEY = 'app';
@@ -106,6 +126,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
         ...stored,
         // Capas nuevas del mapa estelar aparecen activadas aunque ya haya preferencias guardadas.
         starmapLayers: { ...DEFAULT_SETTINGS.starmapLayers, ...stored?.starmapLayers },
+        weatherMapLayers: { ...DEFAULT_SETTINGS.weatherMapLayers, ...stored?.weatherMapLayers },
       },
       loaded: true,
     });

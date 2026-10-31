@@ -1,0 +1,492 @@
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import type { WeatherMapValue } from '@/core/settings/settings';
+import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels';
+import type { GeoData, Volcano } from './geo';
+import { fitBounds, pan, project, REGION_BOUNDS, zoomAt, type Size, type View } from './projection';
+import { readyImage } from './images';
+import type { Hazard, HazardLevel, Quake, ZoneWeather } from './sources';
+
+/** Imagen georreferenciada (satélite, tesela de radar, focos de calor), en metros Mercator. */
+export interface Overlay {
+  url: string;
+  bbox: { minX: number; minY: number; maxX: number; maxY: number };
+  opacity: number;
+  /** Focos de calor: además de los puntos, se marca cada grupo con una llama. */
+  fire?: boolean;
+}
+
+export interface MapWaypoint {
+  id: string;
+  name: string;
+  lon: number;
+  lat: number;
+}
+
+export type MapFeature =
+  | { kind: 'quake'; item: Quake }
+  | { kind: 'hazard'; item: Hazard }
+  | { kind: 'volcano'; item: Volcano }
+  | { kind: 'zone'; item: ZoneWeather }
+  | { kind: 'waypoint'; item: MapWaypoint };
+
+interface Props {
+  geo: GeoData;
+  view: View | null;
+  onView: (view: View, size: Size) => void;
+  overlays: Overlay[];
+  zones: ZoneWeather[] | null;
+  zoneValue: WeatherMapValue;
+  quakes: Quake[] | null;
+  hazards: Hazard[] | null;
+  volcanoes: Volcano[] | null;
+  waypoints: MapWaypoint[] | null;
+  here: { lon: number; lat: number } | null;
+  selected: MapFeature | null;
+  onSelect: (feature: MapFeature | null) => void;
+  /** Cambia cuando termina de bajar una imagen: hay que redibujar. */
+  version: number;
+  format: { temp: (c: number) => string; wind: (kmh: number) => string; rain: (mm: number) => string };
+  now: number;
+}
+
+const HIT_PX = 18;
+const TAP_SLOP_PX = 6;
+
+function cssVars(): Record<string, string> {
+  const s = getComputedStyle(document.documentElement);
+  const v = (name: string) => s.getPropertyValue(name).trim();
+  return {
+    bg: v('--bg'),
+    surface: v('--surface'),
+    surface2: v('--surface-2'),
+    border: v('--border'),
+    text: v('--text'),
+    muted: v('--text-muted'),
+    accent: v('--accent'),
+    info: v('--info'),
+    ...Object.fromEntries([1, 2, 3, 4, 5, 6].map((n) => [`s${n}`, v(`--scale-${n}`)])),
+  };
+}
+
+const scaleColor = (c: Record<string, string>, color: ScaleColor | null, fallback: string) => (color ? c[`s${color}`]! : fallback);
+
+/** Niveles de GDACS: verde (seguimiento), naranja, rojo. */
+const HAZARD_COLOR: Record<HazardLevel, ScaleColor> = { Green: 3, Orange: 5, Red: 6 };
+/** Ícono de cada tipo, que se entiende sin leer la leyenda. */
+export const HAZARD_ICON: Record<Hazard['type'], string> = { TC: '🌀', FL: '🌊', DR: '🏜️', WF: '🔥', VO: '🌋' };
+const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+
+/** Tamaño (px de la imagen) de la celda en la que se agrupan los focos de calor cercanos. */
+const FIRE_CELL_PX = 64;
+/** Píxeles rojos mínimos para marcar la celda (cada foco ocupa unos 20–25 px: ~4 focos juntos). Uno aislado queda solo como punto. */
+const FIRE_MIN_PX = 90;
+const fireCache = new WeakMap<HTMLImageElement, { x: number; y: number }[]>();
+
+/**
+ * Los focos vienen como imagen (puntos rojos): se agrupan los píxeles por
+ * celda y se devuelve el centro de cada grupo, en metros Mercator, para
+ * dibujar una llama por grupo y no una por píxel.
+ */
+function fireClusters(img: HTMLImageElement, bbox: Overlay['bbox']): { x: number; y: number }[] {
+  const hit = fireCache.get(img);
+  if (hit) return hit;
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const octx = off.getContext('2d', { willReadFrequently: true });
+  let points: { x: number; y: number }[] = [];
+  if (octx && w > 0 && h > 0) {
+    octx.drawImage(img, 0, 0);
+    try {
+      const data = octx.getImageData(0, 0, w, h).data;
+      const cells = new Map<number, { sx: number; sy: number; n: number }>();
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          if (data[i + 3]! < 100 || data[i]! < 150 || data[i + 1]! > 150) continue;
+          const key = Math.floor(y / FIRE_CELL_PX) * 100_000 + Math.floor(x / FIRE_CELL_PX);
+          const cell = cells.get(key) ?? { sx: 0, sy: 0, n: 0 };
+          cell.sx += x;
+          cell.sy += y;
+          cell.n++;
+          cells.set(key, cell);
+        }
+      }
+      points = [...cells.values()].filter((c) => c.n >= FIRE_MIN_PX).map((c) => ({
+        x: bbox.minX + ((c.sx / c.n + 0.5) / w) * (bbox.maxX - bbox.minX),
+        y: bbox.maxY - ((c.sy / c.n + 0.5) / h) * (bbox.maxY - bbox.minY),
+      }));
+    } catch {
+      // Imagen sin permiso de lectura (CORS): quedan solo los puntos.
+    }
+  }
+  fireCache.set(img, points);
+  return points;
+}
+
+export function quakeRadius(mag: number): number {
+  return 3 + Math.max(0, mag - 2.5) * 3;
+}
+
+/** Color por antigüedad: último día, últimos 3 días, la semana. */
+export function quakeAge(time: number, now: number): ScaleColor {
+  const hours = (now - time) / 3_600_000;
+  return hours < 24 ? 6 : hours < 72 ? 5 : 4;
+}
+
+export function MapCanvas(props: Props) {
+  const { view, onView, onSelect } = props;
+  const wrap = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [size, setSize] = useState<Size | null>(null);
+
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry!.contentRect;
+      if (width > 0 && height > 0) setSize({ width: Math.round(width), height: Math.round(height) });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Primera vista (o al cambiar mucho el tamaño): los tres países completos.
+  useEffect(() => {
+    if (size && !view) onView(fitBounds(REGION_BOUNDS, size), size);
+    else if (size && view) onView(view, size);
+    // Solo cuando cambia el tamaño.
+  }, [size]);
+
+  useEffect(() => {
+    if (size && view && canvas.current) draw(canvas.current, size, view, props);
+  });
+
+  // ---------- Gestos: arrastrar, pellizcar, rueda y tocar ----------
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{ startX: number; startY: number; moved: boolean; pinch: number | null }>({ startX: 0, startY: 0, moved: false, pinch: null });
+  const local = (e: { clientX: number; clientY: number }) => {
+    const r = canvas.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  function onPointerDown(e: ReactPointerEvent<HTMLCanvasElement>) {
+    canvas.current!.setPointerCapture(e.pointerId);
+    const p = local(e);
+    pointers.current.set(e.pointerId, p);
+    if (pointers.current.size === 1) gesture.current = { startX: p.x, startY: p.y, moved: false, pinch: null };
+    else gesture.current.moved = true;
+  }
+
+  function onPointerMove(e: ReactPointerEvent<HTMLCanvasElement>) {
+    const prev = pointers.current.get(e.pointerId);
+    if (!prev || !view || !size) return;
+    const p = local(e);
+    pointers.current.set(e.pointerId, p);
+    const g = gesture.current;
+    if (Math.hypot(p.x - g.startX, p.y - g.startY) > TAP_SLOP_PX) g.moved = true;
+    if (pointers.current.size === 1) {
+      onView(pan(view, p.x - prev.x, p.y - prev.y), size);
+    } else if (pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a!.x - b!.x, a!.y - b!.y);
+      if (g.pinch) onView(zoomAt(view, size, dist / g.pinch, (a!.x + b!.x) / 2, (a!.y + b!.y) / 2), size);
+      g.pinch = dist;
+    }
+  }
+
+  function onPointerUp(e: ReactPointerEvent<HTMLCanvasElement>) {
+    const p = local(e);
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) gesture.current.pinch = null;
+    if (pointers.current.size === 0 && !gesture.current.moved && view && size) onSelect(hitTest(p.x, p.y, size, view, props));
+  }
+
+  useEffect(() => {
+    const el = canvas.current;
+    if (!el || !view || !size) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const p = local(e);
+      onView(zoomAt(view, size, e.deltaY < 0 ? 1.25 : 0.8, p.x, p.y), size);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [view, size, onView]);
+
+  return (
+    <div className="wmap-canvas" ref={wrap}>
+      <canvas
+        ref={canvas}
+        data-testid="weather-map"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      />
+    </div>
+  );
+}
+
+function hitTest(x: number, y: number, size: Size, view: View, p: Props): MapFeature | null {
+  let best: { d: number; f: MapFeature } | null = null;
+  const consider = (lon: number, lat: number, f: MapFeature, extra = 0) => {
+    const s = project(lon, lat, view, size);
+    const d = Math.hypot(s.x - x, s.y - y) - extra;
+    if (d <= HIT_PX && (!best || d < best.d)) best = { d, f };
+  };
+  p.waypoints?.forEach((w) => consider(w.lon, w.lat, { kind: 'waypoint', item: w }));
+  p.quakes?.forEach((q) => consider(q.lon, q.lat, { kind: 'quake', item: q }, quakeRadius(q.mag) / 2));
+  p.hazards?.forEach((h) => consider(h.lon, h.lat, { kind: 'hazard', item: h }, 4));
+  p.volcanoes?.forEach((v) => consider(v.lon, v.lat, { kind: 'volcano', item: v }));
+  p.zones?.forEach((z) => consider(z.lon, z.lat, { kind: 'zone', item: z }));
+  return (best as { f: MapFeature } | null)?.f ?? null;
+}
+
+function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props) {
+  const dpr = window.devicePixelRatio || 1;
+  if (el.width !== Math.round(size.width * dpr) || el.height !== Math.round(size.height * dpr)) {
+    el.width = Math.round(size.width * dpr);
+    el.height = Math.round(size.height * dpr);
+    el.style.width = `${size.width}px`;
+    el.style.height = `${size.height}px`;
+  }
+  const ctx = el.getContext('2d');
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const c = cssVars();
+  const proj = (lon: number, lat: number) => project(lon, lat, view, size);
+
+  const path = (rings: number[][]) => {
+    ctx.beginPath();
+    for (const ring of rings) {
+      for (let i = 0; i < ring.length; i += 2) {
+        const s = proj(ring[i]!, ring[i + 1]!);
+        if (i === 0) ctx.moveTo(s.x, s.y);
+        else ctx.lineTo(s.x, s.y);
+      }
+      ctx.closePath();
+    }
+  };
+
+  // Mar, vecinos y nuestras regiones.
+  ctx.fillStyle = c.bg!;
+  ctx.fillRect(0, 0, size.width, size.height);
+  ctx.fillStyle = c.surface2!;
+  for (const n of p.geo.neighbors) {
+    path(n.rings);
+    ctx.fill();
+  }
+  ctx.fillStyle = c.surface!;
+  for (const r of p.geo.regions) {
+    path(r.rings);
+    ctx.fill();
+  }
+
+  // Imágenes (satélite, radar, fuego), con la posición que tenían al pedirlas.
+  for (const o of p.overlays) {
+    const img = readyImage(o.url);
+    if (!img) continue;
+    const tl = { x: size.width / 2 + (o.bbox.minX - view.cx) * view.scale, y: size.height / 2 - (o.bbox.maxY - view.cy) * view.scale };
+    const w = (o.bbox.maxX - o.bbox.minX) * view.scale;
+    const h = (o.bbox.maxY - o.bbox.minY) * view.scale;
+    ctx.globalAlpha = o.opacity;
+    ctx.drawImage(img, tl.x, tl.y, w, h);
+  }
+  ctx.globalAlpha = 1;
+
+  // Límites encima de las imágenes, para no perder la referencia.
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = c.muted!;
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 0.7;
+  for (const n of p.geo.neighbors) {
+    path(n.rings);
+    ctx.stroke();
+  }
+  for (const r of p.geo.regions) {
+    path(r.rings);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // Contorno de cada país, más marcado.
+  ctx.strokeStyle = c.text!;
+  ctx.lineWidth = 1.2;
+  ctx.globalAlpha = 0.55;
+  for (const country of ['AR', 'CL', 'UY'] as const) {
+    for (const r of p.geo.regions.filter((g) => g.country === country)) {
+      path(r.rings);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  const labels: { x: number; y: number; w: number; h: number }[] = [];
+  const free = (x: number, y: number, w: number, h: number) => {
+    if (x < 0 || y < 0 || x + w > size.width || y + h > size.height) return false;
+    if (labels.some((l) => x < l.x + l.w && x + w > l.x && y < l.y + l.h && y + h > l.y)) return false;
+    labels.push({ x, y, w, h });
+    return true;
+  };
+  const text = (s: string, x: number, y: number, color: string, bold = false, align: 'center' | 'left' = 'center') => {
+    ctx.font = `${bold ? '600 ' : ''}12px system-ui, sans-serif`;
+    const w = ctx.measureText(s).width;
+    const left = align === 'center' ? x - w / 2 : x;
+    if (!free(left - 2, y - 9, w + 4, 14)) return false;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = c.bg!;
+    ctx.strokeText(s, left, y + 3);
+    ctx.fillStyle = color;
+    ctx.fillText(s, left, y + 3);
+    return true;
+  };
+
+  // Lo seleccionado se marca primero, para que su etiqueta no quede tapada.
+  const sel = p.selected;
+  if (sel) {
+    const s = proj(sel.item.lon, sel.item.lat);
+    ctx.strokeStyle = c.accent!;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Volcanes: triángulo; los que tuvieron erupciones desde 1900, más visibles.
+  for (const v of p.volcanoes ?? []) {
+    const s = proj(v.lon, v.lat);
+    const recent = v.lastEruption !== null && v.lastEruption >= 1900;
+    ctx.fillStyle = recent ? c.s5! : c.muted!;
+    ctx.strokeStyle = c.bg!;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y - 6);
+    ctx.lineTo(s.x + 5, s.y + 4);
+    ctx.lineTo(s.x - 5, s.y + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Sismos: tamaño por magnitud, color por antigüedad; los más nuevos encima.
+  for (const q of [...(p.quakes ?? [])].reverse()) {
+    const s = proj(q.lon, q.lat);
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = c[`s${quakeAge(q.time, p.now)}`]!;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, quakeRadius(q.mag), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = c.bg!;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Alertas de GDACS: cuadrado con la letra del tipo, color por nivel de alerta.
+  for (const h of p.hazards ?? []) {
+    const s = proj(h.lon, h.lat);
+    ctx.fillStyle = c[`s${HAZARD_COLOR[h.level]}`]!;
+    ctx.strokeStyle = c.bg!;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(s.x - 9, s.y - 9, 18, 18, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.font = `12px ${EMOJI_FONT}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(HAZARD_ICON[h.type], s.x, s.y + 4.5);
+    ctx.textAlign = 'start';
+    labels.push({ x: s.x - 9, y: s.y - 9, w: 18, h: 18 });
+  }
+
+  // Una llama por grupo de focos de calor (los puntos solos no se entienden).
+  for (const o of p.overlays) {
+    const img = o.fire ? readyImage(o.url) : null;
+    if (!img) continue;
+    ctx.font = `14px ${EMOJI_FONT}`;
+    ctx.textAlign = 'center';
+    for (const m of fireClusters(img, o.bbox)) {
+      const s = { x: size.width / 2 + (m.x - view.cx) * view.scale, y: size.height / 2 - (m.y - view.cy) * view.scale };
+      if (free(s.x - 8, s.y - 18, 16, 16)) ctx.fillText('🔥', s.x, s.y - 4);
+    }
+    ctx.textAlign = 'start';
+  }
+
+  // Clima por zona, de las capitales nacionales hacia el resto (si no hay lugar, se omite).
+  const zones = [...(p.zones ?? [])].sort((a, b) => Number(isNational(b, p.geo)) - Number(isNational(a, p.geo)));
+  for (const z of zones) {
+    const s = proj(z.lon, z.lat);
+    if (p.zoneValue === 'temp') {
+      text(p.format.temp(z.temp), s.x, s.y, scaleColor(c, tempLevel(z.temp).color, c.text!), true);
+    } else if (p.zoneValue === 'rain') {
+      if (z.precip > 0) text(p.format.rain(z.precip), s.x, s.y, c.s2!, true);
+      else {
+        ctx.fillStyle = c.muted!;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      // Solo el número (la unidad va en la leyenda): con "km/h" en cada zona el mapa se satura.
+      const color = scaleColor(c, windLevel(z.windSpeed).color, c.text!);
+      if (text(`   ${p.format.wind(z.windSpeed)}`, s.x, s.y, color, true)) {
+        // Flecha hacia donde sopla (el dato dice de dónde viene).
+        const w = ctx.measureText(`   ${p.format.wind(z.windSpeed)}`).width;
+        arrow(ctx, s.x - w / 2 + 5, s.y, ((z.windDir + 180) % 360) * (Math.PI / 180), color);
+      }
+    }
+  }
+
+  // Mis waypoints y mi ubicación.
+  for (const w of p.waypoints ?? []) {
+    const s = proj(w.lon, w.lat);
+    ctx.fillStyle = c.accent!;
+    ctx.strokeStyle = c.bg!;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y - 6);
+    ctx.lineTo(s.x + 6, s.y);
+    ctx.lineTo(s.x, s.y + 6);
+    ctx.lineTo(s.x - 6, s.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    text(w.name, s.x + 9, s.y, c.text!, false, 'left');
+  }
+  if (p.here) {
+    const s = proj(p.here.lon, p.here.lat);
+    ctx.fillStyle = c.info!;
+    ctx.strokeStyle = c.text!;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
+function isNational(z: ZoneWeather, geo: GeoData): boolean {
+  return geo.capitals.some((c) => c.national && c.name === z.name);
+}
+
+function arrow(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, color: string) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 6);
+  ctx.lineTo(0, -4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, -7);
+  ctx.lineTo(4, -2);
+  ctx.lineTo(-4, -2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
