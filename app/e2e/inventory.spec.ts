@@ -34,6 +34,17 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await expect(page.getByText('Las alertas de vencimiento aparecerán acá')).toBeVisible();
   await shot(page, '03-home-empty');
 
+  // Secciones
+  await page.getByRole('link', { name: 'Orientación' }).click();
+  await expect(page.getByRole('heading', { name: 'Orientación' })).toBeVisible();
+  await expect(page.getByText('Brújula', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Meteo' }).click();
+  await expect(page.getByRole('heading', { name: 'Meteorología' })).toBeVisible();
+  await expect(page.getByText('Sol y luna')).toBeVisible();
+  await page.getByRole('link', { name: 'Huerta' }).click();
+  await expect(page.getByText('Próximamente · F7')).toBeVisible();
+  await shot(page, '03b-garden');
+
   // Ubicaciones
   await page.goto('/#/inventory/locations');
   await page.getByRole('button', { name: 'Nueva ubicación' }).click();

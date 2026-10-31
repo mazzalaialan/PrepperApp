@@ -5,7 +5,7 @@ import { moduleStatus, type ModuleDef } from './registry';
 const allCaps = (value: boolean) => Object.fromEntries(CAPABILITIES.map((c) => [c, value])) as CapabilityMap;
 
 const mod = (over: Partial<ModuleDef>): ModuleDef =>
-  ({ id: 'x', section: 'field', icon: () => null, phase: 'F3', implemented: true, ...over }) as ModuleDef;
+  ({ id: 'x', section: 'orientation', icon: () => null, phase: 'F3', implemented: true, ...over }) as ModuleDef;
 
 describe('moduleStatus', () => {
   it('disponible con todas las capacidades', () => {

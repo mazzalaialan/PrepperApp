@@ -330,6 +330,18 @@ El servidor nunca ve datos del inventario, salvo el índice de alertas. Los back
 
 ## 10. Módulos
 
+La app se organiza en cinco secciones:
+
+| Sección | Módulos |
+|---|---|
+| Inventario | Artículos, ubicaciones, alertas, categorías, documentos, recomendaciones, backup |
+| Orientación | Brújula, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
+| Meteorología | Clima, sol y luna |
+| Huerta y cultivo | A definir (F7) |
+| Biblioteca | Manuales |
+
+Ajustes se abre desde la barra superior.
+
 | Módulo | Descripción | Sin sensor / sin red |
 |---|---|---|
 | Inventario | Artículos, lotes, categorías, stock mínimo, favoritos, búsqueda, peso total por ubicación | — |
@@ -347,6 +359,7 @@ El servidor nunca ve datos del inventario, salvo el índice de alertas. Los back
 | Clima | Pronóstico descargado y cacheado; muestra "actualizado hace X" | Último dato guardado |
 | Mapa estelar | Carta del cielo orientada con la brújula; estrellas hasta mag. ~5,5, constelaciones, planetas; Cruz del Sur destacada para hallar el sur | Rotación manual |
 | Biblioteca | §11 | — |
+| Huerta | A definir (F7) | — |
 | Backup | §8 | — |
 | Ajustes | Idioma, unidades, tema, seguridad, servidor, espejos | — |
 
@@ -460,10 +473,11 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 | **F0 — Base** | Proyecto, PWA instalable, temas, i18n, base de datos, cifrado y desbloqueo, ajustes, detección de capacidades |
 | **F1 — Inventario** | Categorías, ubicaciones, artículos, lotes, stock mínimo, favoritos, fotos, códigos de barras, alertas en la app, backup y restauración |
 | **F2 — Servidor** | Docker, push programado, código de transferencia, aviso diario en segundo plano |
-| **F3 — Campo** | Brújula, inclinómetro, GPS y waypoints, astronomía, clima, documentos, recomendaciones |
+| **F3 — Orientación y meteorología** | Orientación: brújula, inclinómetro, GPS y waypoints. Meteorología: clima, sol y luna. Inventario: documentos, recomendaciones |
 | **F4 — Biblioteca** | Visor, búsqueda, paquetes, importación y herramienta de conversión |
 | **F5 — Mapas** | Descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía |
 | **F6 — Mapa estelar** | Carta del cielo orientada por brújula |
+| **F7 — Huerta y cultivo** | Alcance a definir antes de empezar la fase |
 
 ---
 

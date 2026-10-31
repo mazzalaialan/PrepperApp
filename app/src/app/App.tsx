@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { createHashRouter, RouterProvider } from 'react-router-dom';
+import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
@@ -32,7 +32,11 @@ const router = createHashRouter([
       { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/inventory/backup', element: <BackupPage /> },
       { path: '/transfer', element: <BackupPage /> },
-      { path: '/field', element: <SectionPage section="field" /> },
+      { path: '/orientation', element: <SectionPage section="orientation" /> },
+      { path: '/weather', element: <SectionPage section="weather" /> },
+      { path: '/garden', element: <SectionPage section="garden" /> },
+      // Ruta de la sección "Campo" (v0.3), dividida en Orientación y Meteorología.
+      { path: '/field', element: <Navigate to="/orientation" replace /> },
       { path: '/library', element: <SectionPage section="library" /> },
       { path: '/settings', element: <SettingsPage /> },
     ],

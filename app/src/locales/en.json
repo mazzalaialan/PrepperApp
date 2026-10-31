@@ -19,13 +19,17 @@
   "nav": {
     "home": "Home",
     "inventory": "Inventory",
-    "field": "Field",
+    "orientation": "Navigate",
+    "weather": "Weather",
+    "garden": "Garden",
     "library": "Library",
     "settings": "Settings"
   },
   "sections": {
     "inventory": "Inventory",
-    "field": "Field tools",
+    "orientation": "Orientation",
+    "weather": "Weather",
+    "garden": "Garden & crops",
     "library": "Library"
   },
   "home": {
@@ -50,6 +54,7 @@
     "weather": { "title": "Weather", "desc": "Forecast when online" },
     "maps": { "title": "Offline maps", "desc": "Downloaded areas with terrain" },
     "starmap": { "title": "Star map", "desc": "Navigate by the stars" },
+    "garden": { "title": "Garden", "desc": "Grow your own food" },
     "library": { "title": "Manuals", "desc": "Offline survival library" }
   },
   "status": {

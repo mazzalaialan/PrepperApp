@@ -1,12 +1,15 @@
+import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BellRing, CircleCheck } from 'lucide-react';
 import { AlertList, ShortageList } from '@/modules/inventory/components/AlertList';
 import { useAlerts, useShortages } from '@/modules/inventory/selectors';
 import { useInventory } from '@/modules/inventory/store';
+import type { Section } from '@/modules/registry';
 import { ModuleGrid } from '@/ui/ModuleGrid';
 
 const HOME_ALERT_LIMIT = 5;
+const SECTIONS: Section[] = ['inventory', 'orientation', 'weather', 'garden', 'library'];
 
 function AlertSummary() {
   const { t } = useTranslation();
@@ -47,12 +50,12 @@ export function HomePage() {
   return (
     <>
       <AlertSummary />
-      <h2 className="section-title">{t('sections.inventory')}</h2>
-      <ModuleGrid section="inventory" />
-      <h2 className="section-title">{t('sections.field')}</h2>
-      <ModuleGrid section="field" />
-      <h2 className="section-title">{t('sections.library')}</h2>
-      <ModuleGrid section="library" />
+      {SECTIONS.map((section) => (
+        <Fragment key={section}>
+          <h2 className="section-title">{t(`sections.${section}`)}</h2>
+          <ModuleGrid section={section} />
+        </Fragment>
+      ))}
     </>
   );
 }

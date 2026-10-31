@@ -5,6 +5,7 @@ import type { EntityTable } from '@/core/model/types';
 import { setDek } from '@/core/security/session';
 import { VAULT_HEADER_KEY, readHeader, type VaultHeader } from '@/core/security/vault';
 import type { Settings } from '@/core/settings/settings';
+import { today } from '@/modules/inventory/domain/dates';
 
 /**
  * Backup `.vikarg` (ARQUITECTURA §8.1). Las filas viajan tal como están en la
@@ -146,7 +147,7 @@ export async function lastBackupAt(): Promise<string | null> {
 }
 
 export function backupFileName(date = new Date()): string {
-  return `vikarg-backup-${date.toISOString().slice(0, 10)}${BACKUP_EXTENSION}`;
+  return `vikarg-backup-${today(date)}${BACKUP_EXTENSION}`;
 }
 
 // ---------- leer ----------

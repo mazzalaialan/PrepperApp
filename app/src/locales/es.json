@@ -19,13 +19,17 @@
   "nav": {
     "home": "Inicio",
     "inventory": "Inventario",
-    "field": "Campo",
+    "orientation": "Orientación",
+    "weather": "Meteo",
+    "garden": "Huerta",
     "library": "Biblioteca",
     "settings": "Ajustes"
   },
   "sections": {
     "inventory": "Inventario",
-    "field": "Herramientas de campo",
+    "orientation": "Orientación",
+    "weather": "Meteorología",
+    "garden": "Huerta y cultivo",
     "library": "Biblioteca"
   },
   "home": {
@@ -50,6 +54,7 @@
     "weather": { "title": "Clima", "desc": "Pronóstico cuando hay conexión" },
     "maps": { "title": "Mapas offline", "desc": "Zonas descargadas con relieve" },
     "starmap": { "title": "Mapa estelar", "desc": "Orientación por las estrellas" },
+    "garden": { "title": "Huerta", "desc": "Cultivos para autoabastecerse" },
     "library": { "title": "Manuales", "desc": "Biblioteca de supervivencia offline" }
   },
   "status": {

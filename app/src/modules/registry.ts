@@ -12,14 +12,15 @@ import {
   Moon,
   Package,
   Sparkles,
+  Sprout,
   Tags,
   Triangle,
   Warehouse,
 } from 'lucide-react';
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
-export type Section = 'inventory' | 'field' | 'library';
-export type Phase = 'F1' | 'F3' | 'F4' | 'F5' | 'F6';
+export type Section = 'inventory' | 'orientation' | 'weather' | 'garden' | 'library';
+export type Phase = 'F1' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7';
 
 export interface ModuleDef {
   id: string;
@@ -45,13 +46,14 @@ export const MODULES: ModuleDef[] = [
   { id: 'backup', section: 'inventory', icon: Archive, phase: 'F1', implemented: true, path: '/inventory/backup' },
   { id: 'documents', section: 'inventory', icon: FileText, phase: 'F3', implemented: false },
   { id: 'recommendations', section: 'inventory', icon: Calculator, phase: 'F3', implemented: false },
-  { id: 'compass', section: 'field', icon: Compass, phase: 'F3', implemented: false, requires: ['orientation'] },
-  { id: 'inclinometer', section: 'field', icon: Triangle, phase: 'F3', implemented: false, requires: ['motion'] },
-  { id: 'waypoints', section: 'field', icon: MapPin, phase: 'F3', implemented: false, degradesWithout: ['geolocation'] },
-  { id: 'astronomy', section: 'field', icon: Moon, phase: 'F3', implemented: false, degradesWithout: ['geolocation'] },
-  { id: 'weather', section: 'field', icon: CloudSun, phase: 'F3', implemented: false },
-  { id: 'maps', section: 'field', icon: MapIcon, phase: 'F5', implemented: false, degradesWithout: ['geolocation'] },
-  { id: 'starmap', section: 'field', icon: Sparkles, phase: 'F6', implemented: false, degradesWithout: ['orientation'] },
+  { id: 'compass', section: 'orientation', icon: Compass, phase: 'F3', implemented: false, requires: ['orientation'] },
+  { id: 'inclinometer', section: 'orientation', icon: Triangle, phase: 'F3', implemented: false, requires: ['motion'] },
+  { id: 'waypoints', section: 'orientation', icon: MapPin, phase: 'F3', implemented: false, degradesWithout: ['geolocation'] },
+  { id: 'maps', section: 'orientation', icon: MapIcon, phase: 'F5', implemented: false, degradesWithout: ['geolocation'] },
+  { id: 'starmap', section: 'orientation', icon: Sparkles, phase: 'F6', implemented: false, degradesWithout: ['orientation'] },
+  { id: 'weather', section: 'weather', icon: CloudSun, phase: 'F3', implemented: false },
+  { id: 'astronomy', section: 'weather', icon: Moon, phase: 'F3', implemented: false, degradesWithout: ['geolocation'] },
+  { id: 'garden', section: 'garden', icon: Sprout, phase: 'F7', implemented: false },
   { id: 'library', section: 'library', icon: BookOpen, phase: 'F4', implemented: false },
 ];
 

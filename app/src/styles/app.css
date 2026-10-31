@@ -317,15 +317,17 @@ a {
 
 .bottomnav a {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   padding: 8px 0;
   min-height: 60px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-muted);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .bottomnav a.active {

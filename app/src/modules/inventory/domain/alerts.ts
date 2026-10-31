@@ -1,5 +1,5 @@
 import type { AlertConfig, Category, Id, IsoDay, Item, Lot } from '@/core/model/types';
-import { addDays, addMonths, daysBetween } from './dates';
+import { addDays, addMonths, daysBetween, today as localDay } from './dates';
 
 /** Herencia de configuración: artículo → categoría (ARQUITECTURA §6.2). */
 export function effectiveConfig(item: Item, category: Category | undefined): AlertConfig {
@@ -58,7 +58,8 @@ export function lotAlert(lot: Lot, config: AlertConfig, today: IsoDay): LotAlert
     if (pct === null || pct > config.alertCapacityPct) return null;
     // Sin historial no se sabe cuándo bajó del umbral: se usa la última edición del lote,
     // que es estable (con `today` el aviso parecería nuevo todos los días).
-    const notifyFrom = lot.updatedAt.slice(0, 10) < today ? lot.updatedAt.slice(0, 10) : today;
+    const editedOn = localDay(new Date(lot.updatedAt));
+    const notifyFrom = editedOn < today ? editedOn : today;
     return { kind: pct === 0 ? 'capacityEmpty' : 'capacityLow', lotId: lot.id, itemId: lot.itemId, pct, notifyFrom };
   }
 

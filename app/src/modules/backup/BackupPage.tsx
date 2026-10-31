@@ -42,7 +42,7 @@ export function BackupPage() {
     }
   }
 
-  const daysAgo = last ? daysBetween(last.slice(0, 10), today()) : null;
+  const daysAgo = last ? daysBetween(today(new Date(last)), today()) : null;
 
   return (
     <div className="stack">

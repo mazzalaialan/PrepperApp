@@ -1,16 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet } from 'react-router-dom';
-import { BookOpen, Compass, House, Lock, Package, Settings } from 'lucide-react';
+import { Link, NavLink, Outlet } from 'react-router-dom';
+import { BookOpen, CloudSun, Compass, House, Lock, Package, Settings, Sprout } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
 import { BrandMark } from '@/ui/Brand';
 import { UpdatePrompt } from './UpdatePrompt';
 
+// Ajustes va en la barra superior: seis destinos es el máximo que entra en un celular.
 const NAV = [
   { to: '/', key: 'home', icon: House },
   { to: '/inventory', key: 'inventory', icon: Package },
-  { to: '/field', key: 'field', icon: Compass },
+  { to: '/orientation', key: 'orientation', icon: Compass },
+  { to: '/weather', key: 'weather', icon: CloudSun },
+  { to: '/garden', key: 'garden', icon: Sprout },
   { to: '/library', key: 'library', icon: BookOpen },
-  { to: '/settings', key: 'settings', icon: Settings },
 ] as const;
 
 export function Shell() {
@@ -31,6 +33,9 @@ export function Shell() {
         <header className="topbar">
           <BrandMark />
           <h1>{t('app.name')}</h1>
+          <Link className="icon-btn" to="/settings" aria-label={t('nav.settings')} title={t('nav.settings')}>
+            <Settings size={22} />
+          </Link>
           <button className="icon-btn" type="button" onClick={lock} aria-label={t('settings.lockNow')} title={t('settings.lockNow')}>
             <Lock size={22} />
           </button>
