@@ -461,6 +461,15 @@
       "saturn": "Saturn"
     }
   },
+  "portable": {
+    "isPortable": "You're using the portable package (offline). It doesn't update itself: when there's a new version, download it and replace the folder's contents. Your data is kept.",
+    "newVersion": "A new portable package version is available: {{version}}",
+    "howTo": "Download it and replace the folder's contents; your data is kept.",
+    "checking": "Checking…",
+    "upToDate": "You have the latest version.",
+    "error": "Couldn't check (offline?).",
+    "check": "Check for updates"
+  },
   "fullscreen": {
     "enter": "Full screen",
     "exit": "Exit full screen"

@@ -461,6 +461,15 @@
       "saturn": "Saturno"
     }
   },
+  "portable": {
+    "isPortable": "Estás usando el paquete portable (sin internet). No se actualiza solo: cuando haya una versión nueva, descargala y reemplazá el contenido de la carpeta. Tus datos se mantienen.",
+    "newVersion": "Hay una versión nueva del paquete portable: {{version}}",
+    "howTo": "Descargala y reemplazá el contenido de la carpeta; tus datos se mantienen.",
+    "checking": "Buscando…",
+    "upToDate": "Tenés la última versión.",
+    "error": "No se pudo consultar (¿sin conexión?).",
+    "check": "Buscar actualizaciones"
+  },
   "fullscreen": {
     "enter": "Pantalla completa",
     "exit": "Salir de pantalla completa"

@@ -48,8 +48,11 @@ TUS DATOS
 
 ACTUALIZAR
 ----------
-Descargá el paquete nuevo y reemplazá el contenido de la carpeta. La próxima vez que
-abras la app te va a ofrecer la versión nueva. Tus datos se mantienen.
+Cuando la computadora tiene internet, la app revisa una vez por día si hay una versión
+nueva del paquete y lo avisa arriba de todo (también se puede buscar a mano en
+Ajustes > Acerca de). Para actualizar: descargá el paquete nuevo y reemplazá el
+contenido de la carpeta. La próxima vez que abras la app te va a ofrecer la versión
+nueva. Tus datos se mantienen.
 
 
 Licencia GPL-3.0-or-later. Código fuente: https://github.com/mazzalaialan/PrepperApp

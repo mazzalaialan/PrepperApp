@@ -19,6 +19,7 @@ import { BrandMark } from '@/ui/Brand';
 import { Dialog } from '@/ui/Dialog';
 import { RainNotices } from '@/modules/weather/RainNotices';
 import { useRainWatcher } from '@/modules/weather/rainWatch';
+import { PortableUpdateNotice } from './PortableUpdateNotice';
 import { UpdatePrompt } from './UpdatePrompt';
 
 // En el celular entran seis botones: cinco secciones y "Más" con el resto.
@@ -97,6 +98,7 @@ export function Shell() {
             <Lock size={22} />
           </button>
         </header>
+        <PortableUpdateNotice />
         <RainNotices />
         <main className="content">
           <Outlet />

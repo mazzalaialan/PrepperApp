@@ -88,6 +88,8 @@ jobs:
           DIR="VikArg-Survival-$VERSION"
           mkdir "$DIR"
           cp -r app/dist "$DIR/app"
+          # Marca que la app usa para saber que es el paquete portable (y avisar versiones nuevas).
+          echo '{"portable":true}' > "$DIR/app/portable.json"
           cp portable/* "$DIR/"
           chmod +x "$DIR/iniciar.sh" "$DIR/servidor.py"
           zip -rq "vikarg-survival-portable-$VERSION.zip" "$DIR"

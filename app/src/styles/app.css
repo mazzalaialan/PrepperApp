@@ -1741,6 +1741,22 @@ a.module-card:hover {
   font-weight: 600;
 }
 
+.update-notice {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.update-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.update-text .hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
 .day-name {
   flex: none;
   width: 72px;

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Crosshair, Lock, X } from 'lucide-react';
+import { Check, Crosshair, Lock, RefreshCw, X } from 'lucide-react';
+import { newerRelease, usePortableUpdate } from '@/core/portable/update';
 import { CAPABILITIES, useCapabilities } from '@/core/capabilities/capabilities';
 import { WrongSecretError } from '@/core/crypto/crypto';
 import { setLanguage } from '@/core/i18n/i18n';
@@ -86,8 +87,40 @@ export function SettingsPage() {
         <h2 className="section-title" style={{ marginTop: 0 }}>{t('settings.about')}</h2>
         <p style={{ margin: 0 }}>{t('app.name')}</p>
         <p className="hint">{t('settings.version', { version: __APP_VERSION__ })}</p>
+        <PortableUpdateCheck />
         <p className="hint" style={{ fontStyle: 'italic' }}>{t('app.motto')}</p>
       </section>
+    </div>
+  );
+}
+
+/** Solo en el paquete portable: buscar versiones nuevas a mano. */
+function PortableUpdateCheck() {
+  const { t } = useTranslation();
+  const { portable, latest, checking, error, checkedAt, check } = usePortableUpdate();
+  if (!portable) return null;
+  const newer = newerRelease(latest, __APP_VERSION__);
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <p className="hint" style={{ margin: 0 }}>{t('portable.isPortable')}</p>
+      <p style={{ margin: 0 }} data-testid="portable-status">
+        {checking ? (
+          t('portable.checking')
+        ) : error ? (
+          t('portable.error')
+        ) : newer ? (
+          <a href={newer.downloadUrl} target="_blank" rel="noreferrer">
+            {t('portable.newVersion', { version: newer.version })}
+          </a>
+        ) : checkedAt ? (
+          t('portable.upToDate')
+        ) : null}
+      </p>
+      <div>
+        <button className="btn" type="button" onClick={() => void check(true)} disabled={checking}>
+          <RefreshCw size={18} /> {t('portable.check')}
+        </button>
+      </div>
     </div>
   );
 }

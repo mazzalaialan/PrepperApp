@@ -4,6 +4,7 @@ import { App } from './app/App';
 import { useCapabilities } from './core/capabilities/capabilities';
 import { initI18n } from './core/i18n/i18n';
 import { scheduleAlertSync } from './core/notifications/notifications';
+import { usePortableUpdate } from './core/portable/update';
 import { onAlertIndexChange } from './modules/inventory/store';
 import { useVault } from './core/security/useVault';
 import { useSettings } from './core/settings/settings';
@@ -16,6 +17,8 @@ async function bootstrap() {
   document.documentElement.lang = language;
   // La detección de sensores tarda ~1,5 s: no bloquea el arranque.
   void useCapabilities.getState().detect();
+  // Solo el paquete portable busca versiones nuevas (la versión de internet se actualiza sola).
+  void usePortableUpdate.getState().init();
   // Con servidor configurado, cada cambio de alertas se le envía (agrupado).
   onAlertIndexChange(scheduleAlertSync);
   await useVault.getState().refresh();
