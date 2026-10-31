@@ -45,7 +45,7 @@ async function setup(page: Page) {
 
 test('brújula: norte verdadero con declinación y magnético', async ({ page }) => {
   await setup(page);
-  await page.getByRole('link', { name: 'Orientación' }).click();
+  await page.getByRole('link', { name: 'Orientación', exact: true }).click();
   await page.getByRole('link', { name: /Brújula/ }).click();
 
   // Celular acostado apuntando al norte magnético: el norte verdadero está ~9,5° al este.

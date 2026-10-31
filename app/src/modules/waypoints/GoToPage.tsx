@@ -54,7 +54,9 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
   const canAr = (caps?.camera && caps.orientation) ?? false;
-  const [cameraOn, setCameraOn] = useState(canAr);
+  // `null` = automático: prendida si el dispositivo puede (la detección de sensores tarda un instante).
+  const [cameraChoice, setCameraOn] = useState<boolean | null>(null);
+  const cameraOn = cameraChoice ?? canAr;
 
   const distance = fix ? distanceMeters(fix, target) : null;
   const trueBearing = fix ? bearingDeg(fix, target) : null;

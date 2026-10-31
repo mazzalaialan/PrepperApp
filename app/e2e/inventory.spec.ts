@@ -35,7 +35,7 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await shot(page, '03-home-empty');
 
   // Secciones
-  await page.getByRole('link', { name: 'Orientación' }).click();
+  await page.getByRole('link', { name: 'Orientación', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Orientación' })).toBeVisible();
   await expect(page.getByText('Brújula', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Botiquín' }).click();

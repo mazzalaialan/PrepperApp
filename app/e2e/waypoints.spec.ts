@@ -14,7 +14,7 @@ test('waypoints: marcar acá, cargar por coordenadas y cómo llegar', async ({ p
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Orientación' }).click();
+  await page.getByRole('link', { name: 'Orientación', exact: true }).click();
   await page.getByRole('link', { name: /Waypoints/ }).click();
   await expect(page.getByText('Todavía no guardaste puntos')).toBeVisible();
 

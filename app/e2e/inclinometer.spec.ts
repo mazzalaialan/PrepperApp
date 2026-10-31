@@ -32,7 +32,7 @@ test('inclinómetro: zonas de avalancha, fijar medida y modo apuntando', async (
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Orientación' }).click();
+  await page.getByRole('link', { name: 'Orientación', exact: true }).click();
   await page.getByRole('link', { name: /Inclinómetro/ }).click();
 
   await tiltForward(page, 38);

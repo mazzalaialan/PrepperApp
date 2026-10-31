@@ -1124,6 +1124,54 @@ a.module-card:hover {
   right: 8px;
 }
 
+/* ---------- Mapa estelar ---------- */
+
+.sky-stage {
+  position: relative;
+  height: min(68dvh, 720px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #05070d;
+  touch-action: none;
+  user-select: none;
+}
+
+.sky-canvas {
+  display: block;
+}
+
+.sky-zoom {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sky-zoom .icon-btn {
+  background: rgb(0 0 0 / 0.5);
+  color: #ddd;
+}
+
+.sky-time {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.sky-pointing {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sky-target-info {
+  margin: 0;
+  font-weight: 600;
+}
+
 /* ---------- Recomendaciones ---------- */
 
 .rule-card {
