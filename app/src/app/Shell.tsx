@@ -25,14 +25,14 @@ import { UpdatePrompt } from './UpdatePrompt';
 // En pantallas anchas el riel lateral muestra todas. Ajustes va en la barra superior.
 const NAV = [
   { to: '/', key: 'home', icon: House },
-  { to: '/inventory', key: 'inventory', icon: Package },
   { to: '/first-aid', key: 'firstAid', icon: BriefcaseMedical },
   { to: '/documents', key: 'documents', icon: FileText },
   { to: '/orientation', key: 'orientation', icon: Compass },
+  { to: '/weather', key: 'weather', icon: CloudSun },
 ] as const;
 
 const MORE = [
-  { to: '/weather', key: 'weather', icon: CloudSun },
+  { to: '/inventory', key: 'inventory', icon: Package },
   { to: '/garden', key: 'garden', icon: Sprout },
   { to: '/library', key: 'library', icon: BookOpen },
 ] as const;

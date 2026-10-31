@@ -5,7 +5,8 @@ import { useCapability } from '@/core/capabilities/capabilities';
 import { CARDINALS, cardinalOf } from '@/core/geo/geo';
 import { declinationAt, orientationFrom } from '@/core/sensors/heading';
 import { useDeviceAngles } from '@/core/sensors/useDeviceAngles';
-import { useSettings, type Theme } from '@/core/settings/settings';
+import { useSettings, type StarmapLayers } from '@/core/settings/settings';
+import { useEffectiveTheme, useThemeOverride } from '@/core/settings/theme';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { Segmented } from '@/ui/Segmented';
 import { buildScene, loadSkyData, type SkyData } from './scene';
@@ -36,16 +37,17 @@ export function StarMapPage() {
   const { t, i18n } = useTranslation();
   const hasCompass = useCapability('orientation');
   const { place, picker } = usePlacePicker();
-  const theme = useSettings((s) => s.settings.theme);
+  const baseTheme = useSettings((s) => s.settings.theme);
+  const autoRed = useSettings((s) => s.settings.starmapRed);
+  const layers = useSettings((s) => s.settings.starmapLayers);
   const updateSettings = useSettings((s) => s.update);
-  const previousTheme = useRef<Theme>(theme === 'red' ? 'dark' : theme);
+  const theme = useEffectiveTheme();
+  const setThemeOverride = useThemeOverride((s) => s.setOverride);
 
   const [data, setData] = useState<SkyData | null>(null);
   const [mode, setMode] = useState<Mode>('dome');
   const [custom, setCustom] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
-  const [showConstellations, setShowConstellations] = useState(true);
-  const [showGuide, setShowGuide] = useState(true);
   const [followCompass, setFollowCompass] = useState(true);
   const [manualView, setManualView] = useState<Horizontal | null>(null);
   const [domeTop, setDomeTop] = useState<number | null>(null);
@@ -58,6 +60,12 @@ export function StarMapPage() {
   useEffect(() => {
     void loadSkyData().then(setData);
   }, []);
+
+  // Rojo nocturno al entrar (si está activada la opción); al salir vuelve el tema de siempre.
+  useEffect(() => {
+    if (useSettings.getState().settings.starmapRed) setThemeOverride('red');
+    return () => setThemeOverride(null);
+  }, [setThemeOverride]);
 
   // "Ahora" avanza solo; con una fecha elegida, el cielo queda fijo.
   useEffect(() => {
@@ -151,13 +159,13 @@ export function StarMapPage() {
     }
   }
 
-  function toggleRed() {
-    if (theme === 'red') void updateSettings({ theme: previousTheme.current });
-    else {
-      previousTheme.current = theme;
-      void updateSettings({ theme: 'red' });
-    }
+  /** Solo para esta pantalla: apagarlo gana también sobre el rojo automático por horario. */
+  function setRed(on: boolean) {
+    setThemeOverride(on ? 'red' : baseTheme === 'red' ? 'dark' : baseTheme);
   }
+
+  const setLayer = (key: keyof StarmapLayers, on: boolean) => void updateSettings({ starmapLayers: { ...layers, [key]: on } });
+  const LAYER_KEYS: (keyof StarmapLayers)[] = ['constellationLines', 'constellationNames', 'starNames', 'planets', 'guide', 'grid'];
 
   const fmtDeg = (n: number) => `${Math.round(n)}°`;
 
@@ -190,7 +198,7 @@ export function StarMapPage() {
             onPointerUp={() => (drag.current = null)}
             onPointerCancel={() => (drag.current = null)}
           >
-            <SkyCanvas scene={scene} view={view} red={theme === 'red'} showConstellations={showConstellations} showGuide={showGuide} target={skyTarget} labels={labels} />
+            <SkyCanvas scene={scene} view={view} red={theme === 'red'} layers={layers} target={skyTarget} labels={labels} />
             {mode === 'camera' && (
               <div className="sky-zoom">
                 <button className="icon-btn" type="button" onClick={() => setFov(Math.max(MIN_FOV, fov - 10))} aria-label={t('starmap.zoomIn')}>
@@ -270,24 +278,36 @@ export function StarMapPage() {
                 +1 h
               </button>
             </div>
-            <label className="check">
-              <input type="checkbox" checked={showGuide} onChange={(e) => setShowGuide(e.target.checked)} />
-              {south ? t('starmap.guideSouth') : t('starmap.guideNorth')}
-            </label>
-            {showGuide && <p className="hint" style={{ margin: 0 }}>{south ? t('starmap.guideSouthHint') : t('starmap.guideNorthHint')}</p>}
-            <label className="check">
-              <input type="checkbox" checked={showConstellations} onChange={(e) => setShowConstellations(e.target.checked)} />
-              {t('starmap.constellations')}
-            </label>
             {hasCompass && mode === 'dome' && (
               <label className="check">
                 <input type="checkbox" checked={followCompass} onChange={(e) => setFollowCompass(e.target.checked)} />
                 {t('starmap.followCompass')}
               </label>
             )}
+          </section>
+
+          <section className="card stack" aria-labelledby="layers-title">
+            <h2 id="layers-title" className="section-title" style={{ margin: 0 }}>{t('starmap.layers')}</h2>
+            <div className="chips" role="group" aria-label={t('starmap.layers')}>
+              {LAYER_KEYS.map((key) => (
+                <button key={key} type="button" className="chip" aria-pressed={layers[key]} onClick={() => setLayer(key, !layers[key])}>
+                  {key === 'guide' ? (south ? t('starmap.layer.guideSouth') : t('starmap.layer.guideNorth')) : t(`starmap.layer.${key}`)}
+                </button>
+              ))}
+            </div>
+            <p className="hint" style={{ margin: 0 }}>{t('starmap.layersHint')}</p>
+            {layers.guide && <p className="hint" style={{ margin: 0 }}>{south ? t('starmap.guideSouthHint') : t('starmap.guideNorthHint')}</p>}
+          </section>
+
+          <section className="card stack" aria-labelledby="night-title">
+            <h2 id="night-title" className="section-title" style={{ margin: 0 }}>{t('starmap.night')}</h2>
             <label className="check">
-              <input type="checkbox" checked={theme === 'red'} onChange={toggleRed} />
+              <input type="checkbox" checked={theme === 'red'} onChange={(e) => setRed(e.target.checked)} />
               {t('starmap.red')}
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={autoRed} onChange={(e) => void updateSettings({ starmapRed: e.target.checked })} />
+              {t('starmap.redOnOpen')}
             </label>
           </section>
         </>

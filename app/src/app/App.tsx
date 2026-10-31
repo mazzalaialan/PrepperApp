@@ -3,6 +3,7 @@ import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
+import { useEffectiveTheme } from '@/core/settings/theme';
 import { AstronomyPage } from '@/modules/astronomy/AstronomyPage';
 import { BackupPage } from '@/modules/backup/BackupPage';
 import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
@@ -91,7 +92,8 @@ function useApplyTheme(theme: Theme) {
 
 export function App() {
   const { status, setupInProgress, pendingRecoveryKey, mustChangePassword } = useVault();
-  const { theme, autoLockMinutes } = useSettings((s) => s.settings);
+  const autoLockMinutes = useSettings((s) => s.settings.autoLockMinutes);
+  const theme = useEffectiveTheme();
 
   useApplyTheme(theme);
   useAutoLock(autoLockMinutes);

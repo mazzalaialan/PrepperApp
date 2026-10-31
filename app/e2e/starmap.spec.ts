@@ -29,11 +29,17 @@ test('mapa estelar: cielo completo, guía al Sur, búsqueda, hora y rojo nocturn
   await page.getByRole('link', { name: /Mapa estelar/ }).click();
   await expect(page.getByTestId('sky-canvas')).toBeVisible();
 
+  // Al entrar se prende el rojo nocturno; se puede apagar.
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'red');
+  await page.getByLabel('Rojo nocturno (no encandila)').uncheck();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
   // Una noche de otoño en Buenos Aires: la Cruz del Sur alta en el cielo.
   await page.getByLabel('Fecha y hora').fill('2026-05-15T22:00');
-  await expect(page.getByLabel('Guía para encontrar el Sur')).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Guía al Sur' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText(/Prolongá el eje largo de la Cruz del Sur/)).toBeVisible();
-  expect(await litPixels(page)).toBeGreaterThan(500);
+  const full = await litPixels(page);
+  expect(full).toBeGreaterThan(500);
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-19-starmap-dome.png`, fullPage: true });
 
   // Buscar un astro.
@@ -48,11 +54,53 @@ test('mapa estelar: cielo completo, guía al Sur, búsqueda, hora y rojo nocturn
   await page.getByRole('button', { name: 'Ahora', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Ahora', exact: true })).toBeDisabled();
 
-  // Rojo nocturno: cambia el tema de toda la app y se puede volver.
+  // Capas: apagar constelaciones y la guía despeja la pantalla, y se recuerda.
+  await page.getByLabel('Fecha y hora').fill('2026-05-15T22:00');
+  await page.getByRole('button', { name: 'Constelaciones', exact: true }).click();
+  await page.getByRole('button', { name: 'Guía al Sur' }).click();
+  await expect(page.getByText(/Prolongá el eje largo/)).toHaveCount(0);
+  await expect.poll(() => litPixels(page)).toBeLessThan(full);
+
+  // Rojo prendido a mano y, al salir del mapa, vuelve el tema de siempre.
   await page.getByLabel('Rojo nocturno (no encandila)').check();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'red');
-  await page.getByLabel('Rojo nocturno (no encandila)').uncheck();
+  await page.getByRole('link', { name: 'Inicio' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  // Sin el rojo automático al abrir, entra con el tema normal; las capas quedaron como se dejaron.
+  await page.goto('/#/orientation/starmap');
+  await page.getByLabel('Prender el rojo nocturno al abrir el mapa estelar').uncheck();
+  await page.getByRole('link', { name: 'Inicio' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.getByRole('link', { name: 'Orientación', exact: true }).click();
+  await page.getByRole('link', { name: /Mapa estelar/ }).click();
+  await expect(page.getByTestId('sky-canvas')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByRole('button', { name: 'Constelaciones', exact: true })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('rojo nocturno automático: horario fijo y al anochecer', async ({ page }) => {
+  // 30/10/2026 20:30 en Buenos Aires: ya terminó el crepúsculo civil (~19:47).
+  await page.clock.setFixedTime(new Date('2026-10-30T23:30:00Z'));
+  await setup(page);
+  await page.goto('/#/settings');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  await page.getByRole('button', { name: 'Horario' }).click();
+  await page.getByLabel('Desde').fill('20:00');
+  await page.getByLabel('Hasta').fill('06:00');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'red');
+  await page.getByLabel('Desde').fill('21:00');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  await page.getByRole('button', { name: 'Al anochecer' }).click();
+  await expect(page.getByTestId('dusk-place')).toHaveText('Se calcula el anochecer para tu zona (aprox. -34,5, -58,5).');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'red');
+
+  // Se mantiene con la app bloqueada (el tema no depende de los datos cifrados).
+  await page.getByRole('button', { name: 'Bloquear ahora' }).first().click();
+  await expect(page.getByRole('button', { name: 'Desbloquear' })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'red');
 });
 
 test('mapa estelar: apuntar al cielo con la brújula del celular', async ({ page }, testInfo) => {

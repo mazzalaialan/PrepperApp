@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Lock, X } from 'lucide-react';
+import { Check, Crosshair, Lock, X } from 'lucide-react';
 import { CAPABILITIES, useCapabilities } from '@/core/capabilities/capabilities';
 import { WrongSecretError } from '@/core/crypto/crypto';
 import { setLanguage } from '@/core/i18n/i18n';
@@ -12,7 +12,9 @@ import {
   changePassword,
   unlockWithPassword,
 } from '@/core/security/vault';
-import { AUTO_LOCK_OPTIONS, LANGUAGES, THEMES, useSettings, type Settings } from '@/core/settings/settings';
+import { currentPosition, GeoPositionError } from '@/core/geo/useGeolocation';
+import { AUTO_LOCK_OPTIONS, LANGUAGES, THEMES, useSettings, type RedSchedule, type Settings } from '@/core/settings/settings';
+import { roundForDusk } from '@/core/settings/theme';
 import { Segmented } from '@/ui/Segmented';
 import { NotificationsSection } from './NotificationsSection';
 
@@ -43,6 +45,7 @@ export function SettingsPage() {
           options={THEMES.map((th) => ({ value: th, label: t(`theme.${th}`) }))}
           onChange={(theme) => void update({ theme })}
         />
+        <RedScheduleFields settings={settings} onSave={update} />
         <Segmented
           label={t('settings.units')}
           value={settings.units}
@@ -86,6 +89,73 @@ export function SettingsPage() {
         <p className="hint" style={{ fontStyle: 'italic' }}>{t('app.motto')}</p>
       </section>
     </div>
+  );
+}
+
+/** Rojo nocturno automático: desactivado, horario fijo o desde el anochecer (con ubicación aproximada). */
+function RedScheduleFields({ settings, onSave }: { settings: Settings; onSave: (c: Partial<Settings>) => Promise<void> }) {
+  const { t, i18n } = useTranslation();
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fmt = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
+
+  async function locate() {
+    setLocating(true);
+    setError(null);
+    try {
+      const fix = await currentPosition();
+      await onSave({ duskPlace: roundForDusk(fix.lat, fix.lon) });
+    } catch (e) {
+      setError(t(`gps.error.${e instanceof GeoPositionError ? e.code : 'unavailable'}`));
+    } finally {
+      setLocating(false);
+    }
+  }
+
+  async function choose(redSchedule: RedSchedule) {
+    await onSave({ redSchedule });
+    if (redSchedule === 'dusk' && !settings.duskPlace) await locate();
+  }
+
+  return (
+    <>
+      <Segmented<RedSchedule>
+        label={t('settings.redSchedule')}
+        value={settings.redSchedule}
+        options={(['off', 'custom', 'dusk'] as const).map((v) => ({ value: v, label: t(`settings.redScheduleOptions.${v}`) }))}
+        onChange={(v) => void choose(v)}
+      />
+      {settings.redSchedule === 'custom' && (
+        <div className="grid-2">
+          <div className="field">
+            <label htmlFor="red-from">{t('settings.redFrom')}</label>
+            <input id="red-from" className="input" type="time" value={settings.redFrom} onChange={(e) => e.target.value && void onSave({ redFrom: e.target.value })} />
+          </div>
+          <div className="field">
+            <label htmlFor="red-to">{t('settings.redTo')}</label>
+            <input id="red-to" className="input" type="time" value={settings.redTo} onChange={(e) => e.target.value && void onSave({ redTo: e.target.value })} />
+          </div>
+        </div>
+      )}
+      {settings.redSchedule === 'dusk' && (
+        <div className="stack" style={{ gap: 8 }}>
+          <p className="hint" style={{ margin: 0 }} data-testid="dusk-place">
+            {settings.duskPlace
+              ? t('settings.duskPlace', { lat: fmt.format(settings.duskPlace.lat), lon: fmt.format(settings.duskPlace.lon) })
+              : locating
+                ? t('gps.searching')
+                : t('settings.duskNoPlace')}
+          </p>
+          {error && <p className="error" role="alert">{error}</p>}
+          <div>
+            <button className="btn" type="button" onClick={() => void locate()} disabled={locating}>
+              <Crosshair size={18} /> {t('settings.duskUpdate')}
+            </button>
+          </div>
+        </div>
+      )}
+      {settings.redSchedule !== 'off' && <p className="hint" style={{ margin: 0 }}>{t('settings.redScheduleHint')}</p>}
+    </>
   );
 }
 

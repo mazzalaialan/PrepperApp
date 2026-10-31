@@ -41,18 +41,20 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await page.getByRole('link', { name: 'Botiquín' }).click();
   await expect(page.getByRole('heading', { name: 'Botiquín' })).toBeVisible();
   await expect(page.getByText('Ficha médica')).toBeVisible();
-  // En el celular, Meteo y Huerta están en "Más"; en pantallas anchas, en el riel.
+  await page.getByRole('link', { name: 'Meteo' }).click();
+  await expect(page.getByRole('heading', { name: 'Meteorología' })).toBeVisible();
+  await expect(page.getByText('Sol y luna')).toBeVisible();
+  // En el celular, Inventario, Huerta y Biblioteca están en "Más"; en pantallas anchas, en el riel.
   const more = page.getByRole('button', { name: 'Más' });
   if (await more.isVisible()) {
     await more.click();
-    await page.getByRole('dialog').getByRole('link', { name: 'Meteorología' }).click();
-  } else {
-    await page.getByRole('link', { name: 'Meteo' }).click();
-  }
-  await expect(page.getByRole('heading', { name: 'Meteorología' })).toBeVisible();
-  await expect(page.getByText('Sol y luna')).toBeVisible();
-  if (await more.isVisible()) {
+    await page.getByRole('dialog').getByRole('link', { name: 'Inventario' }).click();
     await expect(more).toHaveClass(/active/);
+  } else {
+    await page.getByRole('link', { name: 'Inventario', exact: true }).click();
+  }
+  await expect(page.getByRole('heading', { name: 'Inventario' })).toBeVisible();
+  if (await more.isVisible()) {
     await more.click();
     await page.getByRole('dialog').getByRole('link', { name: 'Huerta y cultivo' }).click();
   } else {

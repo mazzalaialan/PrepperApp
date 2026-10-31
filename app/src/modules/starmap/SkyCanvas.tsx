@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { horizontalToVector, offscreenDirection, projectCamera, projectDome, vectorToHorizontal, type Camera, type PlanetId, type Vec3 } from './sky';
+import type { StarmapLayers } from '@/core/settings/settings';
 import type { Scene } from './scene';
 
 export type SkyView = { kind: 'dome'; top: number } | { kind: 'camera'; camera: Camera };
@@ -13,8 +14,7 @@ interface Props {
   scene: Scene;
   view: SkyView;
   red: boolean;
-  showConstellations: boolean;
-  showGuide: boolean;
+  layers: StarmapLayers;
   target: SkyTarget | null;
   /** Nombres de planetas y puntos cardinales ya traducidos. */
   labels: { planets: Record<PlanetId, string>; cardinals: string[]; pole: string; horizonPoint: string };
@@ -40,7 +40,7 @@ function starColor(bv: number): string {
 }
 
 /** Carta del cielo en canvas: cúpula completa o vista de cámara. */
-export function SkyCanvas({ scene, view, red, showConstellations, showGuide, target, labels }: Props) {
+export function SkyCanvas({ scene, view, red, layers, target, labels }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
@@ -62,8 +62,8 @@ export function SkyCanvas({ scene, view, red, showConstellations, showGuide, tar
     el.height = Math.round(size.h * dpr);
     const ctx = el.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    draw(ctx, size.w, size.h, { scene, view, red, showConstellations, showGuide, target, labels });
-  }, [size, scene, view, red, showConstellations, showGuide, target, labels]);
+    draw(ctx, size.w, size.h, { scene, view, red, layers, target, labels });
+  }, [size, scene, view, red, layers, target, labels]);
 
   return <canvas ref={canvas} className="sky-canvas" data-testid="sky-canvas" style={{ width: size.w, height: size.h }} />;
 }
@@ -97,13 +97,14 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, p: Props) {
     ctx.stroke();
   } else {
     polyline(ctx, Array.from({ length: 73 }, (_, i) => horizontalToVector({ az: i * 5, alt: 0 })), project);
-    drawDegreeScale(ctx, project, view.camera.fov, tint);
+    if (p.layers.grid) drawDegreeScale(ctx, project, view.camera.fov, tint);
   }
+  const layers = p.layers;
   ctx.font = 'bold 15px system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   // Con la guía activa, el punto cardinal del polo lo marca la guía ("SUR"/"NORTE"): no se repite.
-  const guideCardinal = p.showGuide ? (scene.hemisphere === 'south' ? 4 : 0) : -1;
+  const guideCardinal = layers.guide ? (scene.hemisphere === 'south' ? 4 : 0) : -1;
   p.labels.cardinals.forEach((label, i) => {
     if (i === guideCardinal) return;
     const pt = project(horizontalToVector({ az: i * 45, alt: view.kind === 'dome' ? 0 : 1.5 }));
@@ -115,20 +116,20 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, p: Props) {
     ctx.fillText(label, pt.x + dx, pt.y + dy);
   });
 
-  if (p.showConstellations) {
+  if (layers.constellationLines) {
     ctx.strokeStyle = tint('rgba(110, 150, 220, 0.45)', 0.35);
     ctx.lineWidth = 1;
     // Lo que está bajo el horizonte no se ve: el trazo se corta ahí.
     const aboveHorizon = (v: Vec3) => (v[2] < -0.005 ? null : project(v));
     for (const c of scene.constellations) for (const line of c.lines) polyline(ctx, line, aboveHorizon);
-    // En el cielo completo los 88 nombres se pisan entre sí: solo se escriben al apuntar a una porción.
-    if (view.kind === 'camera') {
-      ctx.fillStyle = tint('rgba(140, 170, 230, 0.75)', 0.55);
-      ctx.font = '11px system-ui, sans-serif';
-      for (const c of scene.constellations) {
-        const pt = project(c.center);
-        if (pt && vectorToHorizontal(c.center).alt > 0) ctx.fillText(c.name, pt.x, pt.y);
-      }
+  }
+  // En el cielo completo los 88 nombres se pisan entre sí: solo se escriben al apuntar a una porción.
+  if (layers.constellationNames && view.kind === 'camera') {
+    ctx.fillStyle = tint('rgba(140, 170, 230, 0.75)', 0.55);
+    ctx.font = '11px system-ui, sans-serif';
+    for (const c of scene.constellations) {
+      const pt = project(c.center);
+      if (pt && vectorToHorizontal(c.center).alt > 0) ctx.fillText(c.name, pt.x, pt.y);
     }
   }
 
@@ -150,14 +151,14 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, p: Props) {
   ctx.font = '11px system-ui, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillStyle = tint('rgba(235, 235, 245, 0.85)', 0.8);
-  for (const s of scene.stars) {
+  for (const s of layers.starNames ? scene.stars : []) {
     if (!s.name || s.mag > nameLimit || s.v[2] < 0) continue;
     const pt = project(s.v);
     if (pt) ctx.fillText(s.name, pt.x + 5, pt.y - 6);
   }
 
   // Sol, Luna y planetas.
-  for (const planet of scene.planets) {
+  for (const planet of layers.planets ? scene.planets : []) {
     if (planet.v[2] < -0.02) continue;
     const pt = project(planet.v);
     if (!pt) continue;
@@ -170,7 +171,7 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, p: Props) {
     ctx.fillText(p.labels.planets[planet.id], pt.x + r + 4, pt.y);
   }
 
-  if (p.showGuide) {
+  if (layers.guide) {
     ctx.strokeStyle = tint('#e8a33d');
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 5]);

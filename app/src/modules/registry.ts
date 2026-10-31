@@ -25,7 +25,7 @@ import {
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
-export const SECTIONS = ['inventory', 'firstAid', 'documents', 'orientation', 'weather', 'garden', 'library'] as const;
+export const SECTIONS = ['firstAid', 'documents', 'orientation', 'weather', 'inventory', 'garden', 'library'] as const;
 export type Section = (typeof SECTIONS)[number];
 export type Phase = 'F1' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7' | 'F8';
 

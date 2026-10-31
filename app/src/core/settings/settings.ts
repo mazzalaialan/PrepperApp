@@ -28,9 +28,33 @@ export interface Settings {
   placeWaypointId: string | null;
   /** Avisar si va a llover donde estoy (GPS con la app abierta; última ubicación conocida en segundo plano). */
   rainAlertsHere: boolean;
+  /** Rojo nocturno automático: nunca, en un horario fijo o desde el anochecer hasta el amanecer. */
+  redSchedule: RedSchedule;
+  /** Horario fijo, "HH:MM" (si `redFrom` > `redTo`, cruza la medianoche). */
+  redFrom: string;
+  redTo: string;
+  /**
+   * Ubicación aproximada para calcular el anochecer, redondeada a 0,5° (~50 km):
+   * se guarda en claro porque el tema se aplica incluso con la app bloqueada.
+   */
+  duskPlace: { lat: number; lon: number } | null;
+  /** Prender el rojo nocturno al abrir el mapa estelar. */
+  starmapRed: boolean;
+  starmapLayers: StarmapLayers;
 }
 
 export type NorthReference = 'true' | 'magnetic';
+export type RedSchedule = 'off' | 'custom' | 'dusk';
+
+export interface StarmapLayers {
+  constellationLines: boolean;
+  constellationNames: boolean;
+  starNames: boolean;
+  planets: boolean;
+  guide: boolean;
+  /** Escala de acimut y círculos de altura (vista de cámara). */
+  grid: boolean;
+}
 
 export const LANGUAGES: Language[] = ['es', 'en'];
 export const THEMES: Theme[] = ['dark', 'light', 'red'];
@@ -52,6 +76,12 @@ export const DEFAULT_SETTINGS: Settings = {
   northReference: 'true',
   placeWaypointId: null,
   rainAlertsHere: false,
+  redSchedule: 'off',
+  redFrom: '21:00',
+  redTo: '07:00',
+  duskPlace: null,
+  starmapRed: true,
+  starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
 };
 
 const SETTINGS_KEY = 'app';
@@ -69,7 +99,15 @@ export const useSettings = create<SettingsState>((set, get) => ({
   async load() {
     const stored = (await db.settings.get(SETTINGS_KEY))?.value as Partial<Settings> | undefined;
     // Mezclar con los valores por defecto permite agregar ajustes nuevos sin migración.
-    set({ settings: { ...DEFAULT_SETTINGS, ...stored }, loaded: true });
+    set({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        ...stored,
+        // Capas nuevas del mapa estelar aparecen activadas aunque ya haya preferencias guardadas.
+        starmapLayers: { ...DEFAULT_SETTINGS.starmapLayers, ...stored?.starmapLayers },
+      },
+      loaded: true,
+    });
   },
   async update(changes) {
     const settings = { ...get().settings, ...changes };
