@@ -330,17 +330,25 @@ El servidor nunca ve datos del inventario, salvo el índice de alertas. Los back
 
 ## 10. Módulos
 
-La app se organiza en cinco secciones:
+La app se organiza en siete secciones:
 
 | Sección | Módulos |
 |---|---|
-| Inventario | Artículos, ubicaciones, alertas, categorías, documentos, recomendaciones, backup |
+| Inventario | Artículos, ubicaciones, alertas, categorías, recomendaciones, backup |
+| Botiquín | Botiquines por tipo, ficha médica familiar, guías de primeros auxilios (F4) |
+| Documentos | Documentos personales con N fotos |
 | Orientación | Brújula, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
 | Meteorología | Clima, sol y luna |
 | Huerta y cultivo | A definir (F7) |
 | Biblioteca | Manuales |
 
-Ajustes se abre desde la barra superior.
+Navegación en el celular: Inicio, Inventario, Botiquín, Documentos, Orientación y "Más" (Meteorología, Huerta, Biblioteca). En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior.
+
+**Botiquines.** Un botiquín es una ubicación del inventario con `kitType` (`general`, `trauma`, `bleeding`, `anaphylaxis`, `burns`, `other`): físicamente es una caja o mochila que puede estar en la casa, el auto o la mochila de escape. Su contenido son lotes del inventario (se cargan una vez); lo que falta sale del stock mínimo por ubicación. La sección muestra los vencimientos de todo lo que está en botiquines o en la categoría Botiquín.
+
+**Ficha médica** (`MedicalProfile`, cifrada): nombre, fecha de nacimiento, grupo sanguíneo, alergias, enfermedades, medicación habitual (nombre, dosis, cuándo), contacto de emergencia, médico / obra social y notas.
+
+**Guías de primeros auxilios:** se organizan por problema (trauma, sangrado profuso, anafilaxia, quemaduras…) y su contenido sale de manuales reconocidos de la Biblioteca (F4); la app no redacta indicaciones médicas propias.
 
 | Módulo | Descripción | Sin sensor / sin red |
 |---|---|---|
@@ -473,7 +481,7 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 | **F0 — Base** | Proyecto, PWA instalable, temas, i18n, base de datos, cifrado y desbloqueo, ajustes, detección de capacidades |
 | **F1 — Inventario** | Categorías, ubicaciones, artículos, lotes, stock mínimo, favoritos, fotos, códigos de barras, alertas en la app, backup y restauración |
 | **F2 — Servidor** | Docker, push programado, código de transferencia, aviso diario en segundo plano |
-| **F3 — Orientación y meteorología** | Orientación: brújula, inclinómetro, GPS y waypoints. Meteorología: clima, sol y luna. Inventario: documentos, recomendaciones |
+| **F3 — Orientación, meteorología y botiquín** | Orientación: brújula, inclinómetro, GPS y waypoints con "ir al punto" (realidad aumentada con cámara y brújula). Meteorología: clima, sol y luna. Botiquín: botiquines por tipo y ficha médica. Documentos. Recomendaciones |
 | **F4 — Biblioteca** | Visor, búsqueda, paquetes, importación y herramienta de conversión |
 | **F5 — Mapas** | Descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía |
 | **F6 — Mapa estelar** | Carta del cielo orientada por brújula |

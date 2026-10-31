@@ -8,6 +8,8 @@ import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
 import { DocumentsPage } from '@/modules/documents/DocumentsPage';
 import { KitPage } from '@/modules/firstAid/KitPage';
 import { KitsPage } from '@/modules/firstAid/KitsPage';
+import { MedicalEditPage } from '@/modules/firstAid/MedicalEditPage';
+import { MedicalPage } from '@/modules/firstAid/MedicalPage';
 import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
 import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
 import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
@@ -40,6 +42,8 @@ const router = createHashRouter([
       { path: '/first-aid', element: <SectionPage section="firstAid" /> },
       { path: '/first-aid/kits', element: <KitsPage /> },
       { path: '/first-aid/kits/:id', element: <KitPage /> },
+      { path: '/first-aid/medical', element: <MedicalPage /> },
+      { path: '/first-aid/medical/:id', element: <MedicalEditPage /> },
       { path: '/documents', element: <DocumentsPage /> },
       { path: '/documents/:id', element: <DocumentEditPage /> },
       { path: '/transfer', element: <BackupPage /> },

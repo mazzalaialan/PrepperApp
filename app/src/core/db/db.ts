@@ -25,7 +25,8 @@ export interface AlertIndexRow {
   notifyFrom: IsoDay;
 }
 
-export const ENTITY_TABLES = [
+/** Tablas de la versión 1 del esquema: no se modifica (las nuevas van en su propia versión). */
+const V1_ENTITY_TABLES = [
   'categories',
   'locations',
   'items',
@@ -37,6 +38,8 @@ export const ENTITY_TABLES = [
   'householdMembers',
   'recommendationRules',
 ] as const satisfies readonly EntityTable[];
+
+export const ENTITY_TABLES = [...V1_ENTITY_TABLES, 'medicalProfiles'] as const satisfies readonly EntityTable[];
 
 /** Binarios cifrados (fotos), separados para no cargarlos a memoria al desbloquear. */
 export interface BlobRow extends Sealed {
@@ -58,11 +61,12 @@ export class UserDb extends Dexie {
   waypoints!: Table<EncryptedRow, string>;
   householdMembers!: Table<EncryptedRow, string>;
   recommendationRules!: Table<EncryptedRow, string>;
+  medicalProfiles!: Table<EncryptedRow, string>;
 
   constructor(name = 'vikarg-user') {
     super(name);
     // Cada cambio de esquema es una versión nueva con su migración; nunca se edita una versión publicada.
-    const encrypted = Object.fromEntries(ENTITY_TABLES.map((t) => [t, 'id, updatedAt']));
+    const encrypted = Object.fromEntries(V1_ENTITY_TABLES.map((t) => [t, 'id, updatedAt']));
     this.version(1).stores({
       meta: 'key',
       settings: 'key',
@@ -74,6 +78,8 @@ export class UserDb extends Dexie {
     this.version(2)
       .stores({ alertIndex: 'lotId, notifyFrom' })
       .upgrade((tx) => tx.table('alertIndex').clear());
+    // v3: fichas médicas.
+    this.version(3).stores({ medicalProfiles: 'id, updatedAt' });
   }
 
   entityTable(name: EntityTable): Table<EncryptedRow, string> {

@@ -138,6 +138,27 @@ export interface RecommendationRule extends BaseEntity {
   memberIds: Id[];
 }
 
+export interface Medication {
+  name: string;
+  dose: string;
+  /** Cuándo se toma (texto libre: "cada 8 h", "en ayunas"). */
+  schedule: string;
+}
+
+/** Ficha médica de una persona del grupo familiar. */
+export interface MedicalProfile extends BaseEntity {
+  name: string;
+  birthDate: IsoDay | null;
+  /** "A+", "0-", etc.; vacío si no se sabe. */
+  bloodType: string;
+  allergies: string;
+  conditions: string;
+  medications: Medication[];
+  emergencyContact: string;
+  doctor: string;
+  notes: string;
+}
+
 /** Mapa de tabla → tipo de entidad. Agregar una entidad = agregarla acá y en db.ts. */
 export interface EntityMap {
   categories: Category;
@@ -150,6 +171,7 @@ export interface EntityMap {
   waypoints: Waypoint;
   householdMembers: HouseholdMember;
   recommendationRules: RecommendationRule;
+  medicalProfiles: MedicalProfile;
 }
 
 export type EntityTable = keyof EntityMap;

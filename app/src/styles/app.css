@@ -956,6 +956,45 @@ a.module-card:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Ficha médica ---------- */
+
+.allergy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.med-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.med-row .input:not(:first-of-type) {
+  grid-column: 1;
+}
+
+.med-row .icon-btn {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (min-width: 640px) {
+  .med-row {
+    grid-template-columns: 2fr 1fr 1fr auto;
+  }
+
+  .med-row .input:not(:first-of-type) {
+    grid-column: auto;
+  }
+
+  .med-row .icon-btn {
+    grid-column: 4;
+  }
+}
+
 /* ---------- Documentos ---------- */
 
 .doc-thumb {
