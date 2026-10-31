@@ -237,6 +237,48 @@
     "notes": "Notes",
     "notesPlaceholder": "Surgeries, vaccines, other useful details"
   },
+  "weather": {
+    "loading": "Downloading forecast…",
+    "updated": "Updated {{ago}}",
+    "refresh": "Refresh",
+    "showingCached": "Showing the last saved forecast.",
+    "error": {
+      "offline": "Offline: the forecast downloads when there's internet.",
+      "unreachable": "Couldn't reach the weather service.",
+      "invalid-response": "The weather service sent an unexpected response. Check the weather source in Settings."
+    },
+    "now": "Now",
+    "feelsLike": "feels like {{temp}}",
+    "gusts": "gusts {{value}}",
+    "humidity": "Humidity {{pct}}%",
+    "pressure": "{{hpa}} hPa",
+    "today": "Today",
+    "noRain": "no rain",
+    "next24": "Next 24 hours",
+    "next7": "Next 7 days",
+    "warningsTitle": "Heads up",
+    "warningsNote": "Warnings computed by the app from the forecast; they are not official alerts.",
+    "warning": {
+      "storm": "Thunderstorm",
+      "gusts": "Strong gusts up to {{value}}",
+      "heavyRain": "Heavy rain: {{value}}",
+      "snow": "Snow",
+      "frost": "Frost: low of {{value}}",
+      "heat": "Extreme heat: high of {{value}}",
+      "uv": "Very high UV (index {{value}})"
+    },
+    "sky": {
+      "clear": "Clear",
+      "partly": "Partly cloudy",
+      "cloudy": "Cloudy",
+      "fog": "Fog",
+      "drizzle": "Drizzle",
+      "rain": "Rain",
+      "snow": "Snow",
+      "storm": "Thunderstorm"
+    },
+    "source": "Open-Meteo forecast for {{place}}. Saved on this device to view offline."
+  },
   "place": {
     "label": "Place",
     "myLocation": "My location (GPS)",

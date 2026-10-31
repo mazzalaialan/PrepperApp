@@ -237,6 +237,48 @@
     "notes": "Notas",
     "notesPlaceholder": "Cirugías, vacunas, otros datos útiles"
   },
+  "weather": {
+    "loading": "Descargando pronóstico…",
+    "updated": "Actualizado {{ago}}",
+    "refresh": "Actualizar",
+    "showingCached": "Se muestra el último pronóstico guardado.",
+    "error": {
+      "offline": "Sin conexión: el pronóstico se descarga cuando haya internet.",
+      "unreachable": "No se pudo conectar con el servicio de clima.",
+      "invalid-response": "El servicio de clima respondió algo que no se entiende. Revisá la fuente de clima en Ajustes."
+    },
+    "now": "Ahora",
+    "feelsLike": "sensación {{temp}}",
+    "gusts": "ráfagas {{value}}",
+    "humidity": "Humedad {{pct}} %",
+    "pressure": "{{hpa}} hPa",
+    "today": "Hoy",
+    "noRain": "sin lluvia",
+    "next24": "Próximas 24 horas",
+    "next7": "Próximos 7 días",
+    "warningsTitle": "Atención",
+    "warningsNote": "Avisos calculados por la app a partir del pronóstico, no son alertas oficiales.",
+    "warning": {
+      "storm": "Tormenta eléctrica",
+      "gusts": "Ráfagas fuertes de hasta {{value}}",
+      "heavyRain": "Lluvia intensa: {{value}}",
+      "snow": "Nieve",
+      "frost": "Helada: mínima de {{value}}",
+      "heat": "Calor extremo: máxima de {{value}}",
+      "uv": "Radiación UV muy alta (índice {{value}})"
+    },
+    "sky": {
+      "clear": "Despejado",
+      "partly": "Parcialmente nublado",
+      "cloudy": "Nublado",
+      "fog": "Niebla",
+      "drizzle": "Llovizna",
+      "rain": "Lluvia",
+      "snow": "Nieve",
+      "storm": "Tormenta"
+    },
+    "source": "Pronóstico de Open-Meteo para {{place}}. Se guarda en el dispositivo para verlo sin conexión."
+  },
   "place": {
     "label": "Lugar",
     "myLocation": "Mi ubicación (GPS)",
