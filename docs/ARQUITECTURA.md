@@ -440,7 +440,8 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 |---|---|
 | PWA en GitHub Pages | Canal principal |
 | PWA servida por el servidor Docker propio | Alternativa autónoma |
-| APK (TWA, generado con Bubblewrap) en GitHub Releases | Opcional |
+| Paquete portable para PC (GitHub Releases, uno por versión) | App compilada + servidor local (`Iniciar VikArg.bat` con PowerShell en Windows, Python en Linux/Mac) en `localhost:47613`, puerto fijo porque los datos del navegador van por dirección. Para PCs sin internet o en pendrive |
+| App Android nativa (APK con la app incluida) | **Decisión futura, no cercana.** Permitiría instalar en un celular sin internet (el APK se pasa por cable o Bluetooth) y usar el GPS en segundo plano. Una PWA no puede servirse a un celular desde otra PC por Wi-Fi: Chrome solo habilita cifrado y modo offline en HTTPS o `localhost` |
 | Google Play Store | **Descartado por ahora**: agrega dependencia de Google (cuenta, verificación, revisión, 12 testers × 14 días) sin aportar funcionalidad. Se puede sumar más adelante sin cambiar la arquitectura |
 
 ---

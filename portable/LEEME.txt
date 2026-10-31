@@ -1,0 +1,55 @@
+VikArg Survival - paquete portable
+=================================
+
+Para usar la app en una PC SIN INTERNET. Se puede llevar en un pendrive.
+
+
+WINDOWS
+-------
+1. Descomprimí el paquete en una carpeta (por ejemplo, en el pendrive o en Documentos).
+2. Doble clic en "Iniciar VikArg.bat".
+3. Se abre una ventana negra y el navegador con la app en http://localhost:47613
+   Dejá la ventana negra abierta mientras uses la app; para terminar, cerrala.
+
+Si Windows muestra "Windows protegió su PC", tocá "Más información" y "Ejecutar de todas formas".
+No hace falta instalar nada: usa PowerShell, que viene con Windows.
+
+
+LINUX Y MAC
+-----------
+1. Descomprimí el paquete.
+2. En una terminal, dentro de la carpeta:  ./iniciar.sh
+   (o:  python3 servidor.py)
+3. Se abre el navegador con la app en http://127.0.0.1:47613
+   Para terminar: Ctrl+C en la terminal.
+
+Necesita Python 3, que viene en casi todas las distribuciones de Linux y en Mac.
+
+
+INSTALARLA COMO APP
+-------------------
+Con la app abierta en Chrome o Edge, usá "Instalar VikArg Survival" (ícono en la
+barra de direcciones). Una vez instalada abre desde su propio ícono y funciona sin
+internet incluso sin este servidor... siempre que no borres los datos del navegador.
+Para estar seguro, abrila siempre con "Iniciar VikArg".
+
+
+TUS DATOS
+---------
+- Los datos (inventario, documentos, waypoints...) quedan guardados y cifrados en
+  el navegador de ESA computadora, no en esta carpeta. Borrar o actualizar la
+  carpeta no los borra.
+- El navegador separa los datos por dirección: esta versión local
+  (localhost:47613) no ve los datos de la versión de internet
+  (mazzalaialan.github.io). Para pasarlos de una a otra, o a otra computadora:
+  Inventario > Backup > Exportar, y Restaurar en el otro lado.
+- Hacé backups seguido y guardalos en otro lugar (pendrive, otra PC).
+
+
+ACTUALIZAR
+----------
+Descargá el paquete nuevo y reemplazá el contenido de la carpeta. La próxima vez que
+abras la app te va a ofrecer la versión nueva. Tus datos se mantienen.
+
+
+Licencia GPL-3.0-or-later. Código fuente: https://github.com/mazzalaialan/PrepperApp

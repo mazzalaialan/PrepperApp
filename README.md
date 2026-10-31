@@ -6,6 +6,11 @@ App de preparacionismo **offline-first** para Android y PC: inventario con venci
 
 Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y funciona sin internet.
 
+## Usarla sin internet
+
+- **Celular o PC con internet una vez:** abrila y usá "Instalar app" en Chrome o Edge. Queda guardada y funciona sin conexión.
+- **PC sin internet:** descargá el **paquete portable** de la [última versión](https://github.com/mazzalaialan/PrepperApp/releases/latest), descomprimilo (sirve en un pendrive) y abrí `Iniciar VikArg.bat` (Windows) o `iniciar.sh` (Linux/Mac). Instrucciones en el `LEEME.txt` del paquete.
+
 ## Principios
 
 - **Offline-first:** todo lo que puede funcionar sin conexión, funciona sin conexión.
@@ -22,6 +27,7 @@ La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 | `docs/` | Arquitectura y guías |
 | `server/` | Servidor opcional: notificaciones push y transferencia ([guía de instalación](docs/SERVIDOR.md)) |
 | `deploy/` | Docker Compose con HTTPS automático |
+| `portable/` | Lanzadores del paquete para usar la app sin internet en una PC |
 | `tools/library-builder/` | Conversión de libros a paquetes de biblioteca *(fase F4)* |
 
 ## Desarrollo

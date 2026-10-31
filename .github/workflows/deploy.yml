@@ -65,8 +65,40 @@ jobs:
           curl -fs http://localhost:8080/ | grep -q "VikArg Survival"
           docker logs vikarg
 
+  # Paquete para usar la app sin internet en una PC (ver portable/LEEME.txt).
+  portable:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.pack.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+        working-directory: app
+      # Sin BASE_PATH: se sirve en la raíz de localhost:47613.
+      - run: npm run build
+        working-directory: app
+      - id: pack
+        run: |
+          VERSION=$(node -p "require('./app/package.json').version")
+          DIR="VikArg-Survival-$VERSION"
+          mkdir "$DIR"
+          cp -r app/dist "$DIR/app"
+          cp portable/* "$DIR/"
+          chmod +x "$DIR/iniciar.sh" "$DIR/servidor.py"
+          zip -rq "vikarg-survival-portable-$VERSION.zip" "$DIR"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portable
+          path: vikarg-survival-portable-*.zip
+
   deploy:
-    needs: [build, server, docker]
+    needs: [build, server, docker, portable]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -74,3 +106,24 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Una Release por versión, con el paquete portable; si ya existe, se reemplaza el archivo.
+  release:
+    needs: [deploy, portable]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.portable.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: portable
+      - run: |
+          if ! gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "VikArg Survival $VERSION" \
+              --notes "App: https://mazzalaialan.github.io/PrepperApp — Para usarla sin internet en una PC, descargá el paquete portable y seguí LEEME.txt."
+          fi
+          gh release upload "v$VERSION" vikarg-survival-portable-*.zip --repo "$GITHUB_REPOSITORY" --clobber

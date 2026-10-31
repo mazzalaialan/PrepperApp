@@ -1,1 +1,5 @@
 ﻿* text=auto eol=lf
+# Archivos que se abren en Windows desde el paquete portable.
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+portable/LEEME.txt text eol=crlf
