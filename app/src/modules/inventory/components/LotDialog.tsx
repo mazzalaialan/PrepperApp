@@ -17,6 +17,8 @@ interface Props {
   item: Item;
   controlType: ControlType;
   lot: Lot | null;
+  /** Ubicación preseleccionada para un lote nuevo (ej.: al cargar desde un botiquín). */
+  defaultLocationId?: string;
   onClose: () => void;
 }
 
@@ -24,7 +26,7 @@ type Mode = 'packages' | 'direct';
 
 const str = numToInput;
 
-export function LotDialog({ item, controlType, lot, onClose }: Props) {
+export function LotDialog({ item, controlType, lot, defaultLocationId, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const { saveLot, deleteLot, lots } = useInventory();
   const units = useSettings((s) => s.settings.units);
@@ -40,7 +42,7 @@ export function LotDialog({ item, controlType, lot, onClose }: Props) {
   const tareInitial = weightForInput(template?.packageTareGrams ?? null, units);
 
   const [mode, setMode] = useState<Mode>(template && isPackaged(template) ? 'packages' : 'direct');
-  const [locationId, setLocationId] = useState(lot?.locationId ?? locationOptions[0]?.id ?? '');
+  const [locationId, setLocationId] = useState(lot?.locationId ?? defaultLocationId ?? locationOptions[0]?.id ?? '');
   const [quantity, setQuantity] = useState(str(lot?.quantity ?? 1));
   const [packageCount, setPackageCount] = useState(lot ? str(lot.packageCount) : '1');
   const [packageSize, setPackageSize] = useState(str(template?.packageSize ?? null));

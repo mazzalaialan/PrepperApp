@@ -50,7 +50,7 @@ const lot = (itemId: string, over: Partial<Lot> = {}) =>
   });
 
 const loc = (name: string, parentId: string | null, depth: number) =>
-  newEntity<Location>({ name, parentId, depth, notes: '', waypointId: null });
+  newEntity<Location>({ name, parentId, depth, notes: '', waypointId: null, kitType: null });
 
 describe('dates', () => {
   it('suma días y meses con fin de mes', () => {

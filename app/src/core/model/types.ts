@@ -38,12 +38,18 @@ export interface Category extends BaseEntity, AlertConfig {
 
 export const MAX_LOCATION_DEPTH = 4;
 
+/** Botiquines específicos por problema; "other" para los que arme el usuario. */
+export const KIT_TYPES = ['general', 'trauma', 'bleeding', 'anaphylaxis', 'burns', 'other'] as const;
+export type KitType = (typeof KIT_TYPES)[number];
+
 export interface Location extends BaseEntity {
   parentId: Id | null;
   depth: number; // 1..MAX_LOCATION_DEPTH
   name: string;
   notes: string;
   waypointId: Id | null;
+  /** Si no es `null`, la ubicación es un botiquín (una caja o mochila) de ese tipo. */
+  kitType: KitType | null;
 }
 
 export interface Item extends BaseEntity {

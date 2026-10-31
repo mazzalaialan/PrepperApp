@@ -69,6 +69,11 @@ export function canMoveTo(id: Id, newParentId: Id | null, locations: Location[])
   return parent.depth + subtreeHeight(id, locations) <= MAX_LOCATION_DEPTH;
 }
 
+/** Completa los campos que una versión anterior no guardaba. */
+export function normalizeLocation(location: Location): Location {
+  return { ...location, kitType: location.kitType ?? null };
+}
+
 export function depthFor(parentId: Id | null, byId: Map<Id, Location>): number {
   return parentId ? (byId.get(parentId)?.depth ?? 0) + 1 : 1;
 }

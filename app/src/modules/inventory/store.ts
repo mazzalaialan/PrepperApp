@@ -17,7 +17,7 @@ import { isUnlocked, onSessionChange } from '@/core/security/session';
 import { computeAlerts, upcomingNotifications } from './domain/alerts';
 import { missingSystemCategories, systemCategoryId } from './domain/categories';
 import { today } from './domain/dates';
-import { canMoveTo, depthFor, subtreeIds } from './domain/locations';
+import { canMoveTo, depthFor, normalizeLocation, subtreeIds } from './domain/locations';
 import { normalizeLot } from './domain/stock';
 
 type ById<T> = Map<Id, T>;
@@ -111,7 +111,7 @@ export const useInventory = create<InventoryState>((set, get) => {
       set({
         loaded: true,
         categories: toMap([...categories, ...missing]),
-        locations: toMap(locations),
+        locations: toMap(locations.map(normalizeLocation)),
         items: toMap(items),
         lots: toMap(lots.map(normalizeLot)),
         stockMins: toMap(stockMins),

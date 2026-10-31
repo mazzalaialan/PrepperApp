@@ -172,6 +172,34 @@
     "capacityUnitPlaceholder": "L, usos…",
     "capacityRemaining": "Restante"
   },
+  "kits": {
+    "new": "Nuevo botiquín",
+    "edit": "Editar botiquín",
+    "typeLabel": "¿Es un botiquín?",
+    "notAKit": "No, es una ubicación común",
+    "types": {
+      "general": "Botiquín general",
+      "trauma": "Trauma",
+      "bleeding": "Sangrado profuso",
+      "anaphylaxis": "Shock anafiláctico",
+      "burns": "Quemaduras",
+      "other": "Otro botiquín"
+    },
+    "empty": "Todavía no armaste botiquines. Cada botiquín es una caja o mochila con su tipo (trauma, sangrado, anafilaxia…) y puede estar en cualquier lugar: la casa, el auto, la mochila de escape.",
+    "toReview": "Para revisar",
+    "problems_one": "{{count}} a revisar",
+    "problems_other": "{{count}} a revisar",
+    "notFound": "El botiquín no existe.",
+    "missing": "Falta",
+    "contents": "Contenido",
+    "emptyKit": "El botiquín está vacío. Agregá lo que tiene adentro con su vencimiento.",
+    "add": "Agregar",
+    "item": "Artículo",
+    "newItem": "— Artículo nuevo —",
+    "itemPlaceholder": "Ej.: Torniquete CAT",
+    "unitPlaceholder": "Ej.: unidades",
+    "minHint": "Para que avise lo que falta, poné el stock mínimo de cada artículo en este botiquín desde la ficha del artículo."
+  },
   "geo": {
     "westLetter": "O",
     "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SO", "W": "O", "NW": "NO" }

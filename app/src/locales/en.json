@@ -172,6 +172,34 @@
     "capacityUnitPlaceholder": "L, uses…",
     "capacityRemaining": "Remaining"
   },
+  "kits": {
+    "new": "New kit",
+    "edit": "Edit kit",
+    "typeLabel": "Is it a first aid kit?",
+    "notAKit": "No, a regular location",
+    "types": {
+      "general": "General first aid kit",
+      "trauma": "Trauma",
+      "bleeding": "Severe bleeding",
+      "anaphylaxis": "Anaphylactic shock",
+      "burns": "Burns",
+      "other": "Other kit"
+    },
+    "empty": "No kits yet. Each kit is a box or bag with a type (trauma, bleeding, anaphylaxis…) and can live anywhere: home, car, bug-out bag.",
+    "toReview": "To review",
+    "problems_one": "{{count}} to review",
+    "problems_other": "{{count}} to review",
+    "notFound": "This kit doesn't exist.",
+    "missing": "Missing",
+    "contents": "Contents",
+    "emptyKit": "The kit is empty. Add what's inside with its expiry date.",
+    "add": "Add",
+    "item": "Item",
+    "newItem": "— New item —",
+    "itemPlaceholder": "E.g.: CAT tourniquet",
+    "unitPlaceholder": "E.g.: units",
+    "minHint": "To get warned about missing supplies, set each item's minimum stock for this kit from the item page."
+  },
   "geo": {
     "westLetter": "W",
     "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SW", "W": "W", "NW": "NW" }

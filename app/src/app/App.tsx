@@ -6,6 +6,8 @@ import { useSettings, type Theme } from '@/core/settings/settings';
 import { BackupPage } from '@/modules/backup/BackupPage';
 import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
 import { DocumentsPage } from '@/modules/documents/DocumentsPage';
+import { KitPage } from '@/modules/firstAid/KitPage';
+import { KitsPage } from '@/modules/firstAid/KitsPage';
 import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
 import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
 import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
@@ -36,6 +38,8 @@ const router = createHashRouter([
       { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/inventory/backup', element: <BackupPage /> },
       { path: '/first-aid', element: <SectionPage section="firstAid" /> },
+      { path: '/first-aid/kits', element: <KitsPage /> },
+      { path: '/first-aid/kits/:id', element: <KitPage /> },
       { path: '/documents', element: <DocumentsPage /> },
       { path: '/documents/:id', element: <DocumentEditPage /> },
       { path: '/transfer', element: <BackupPage /> },

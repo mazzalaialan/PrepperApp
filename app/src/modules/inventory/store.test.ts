@@ -11,7 +11,7 @@ setTestIterations(1_000);
 const inv = () => useInventory.getState();
 
 const location = (name: string, parentId: string | null = null) =>
-  newEntity<Location>({ name, parentId, depth: 0, notes: '', waypointId: null });
+  newEntity<Location>({ name, parentId, depth: 0, notes: '', waypointId: null, kitType: null });
 
 const item = (over: Partial<Item> = {}) =>
   newEntity<Item>({

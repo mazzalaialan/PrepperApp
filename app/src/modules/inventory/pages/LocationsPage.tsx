@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
-import { MAX_LOCATION_DEPTH, type Id, type Location } from '@/core/model/types';
+import { KIT_TYPES, MAX_LOCATION_DEPTH, type Id, type KitType, type Location } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatWeight } from '@/core/units/units';
 import { Dialog } from '@/ui/Dialog';
@@ -21,7 +21,7 @@ export function LocationsPage() {
   const [editing, setEditing] = useState<Editing>(null);
 
   const startNew = (parentId: Id | null) =>
-    setEditing({ location: newEntity<Location>({ name: '', parentId, depth: 0, notes: '', waypointId: null }), isNew: true });
+    setEditing({ location: newEntity<Location>({ name: '', parentId, depth: 0, notes: '', waypointId: null, kitType: null }), isNew: true });
 
   return (
     <>
@@ -103,13 +103,26 @@ function TreeNode({ node, onEdit, onAddChild }: { node: LocationNode; onEdit: (l
   );
 }
 
-function LocationDialog({ location, isNew, onClose }: { location: Location; isNew: boolean; onClose: () => void }) {
+export function LocationDialog({
+  location,
+  isNew,
+  onClose,
+  onDeleted,
+  title,
+}: {
+  location: Location;
+  isNew: boolean;
+  onClose: () => void;
+  onDeleted?: () => void;
+  title?: string;
+}) {
   const { t } = useTranslation();
   const { saveLocation, deleteLocation, locations } = useInventory();
   const options = useLocationOptions();
   const [name, setName] = useState(location.name);
   const [parentId, setParentId] = useState(location.parentId ?? '');
   const [notes, setNotes] = useState(location.notes);
+  const [kitType, setKitType] = useState<KitType | ''>(location.kitType ?? '');
   const [error, setError] = useState<string | null>(null);
 
   // Una ubicación nueva puede colgar de cualquier nivel menor a 4; una existente, de donde no rompa el árbol.
@@ -120,7 +133,7 @@ function LocationDialog({ location, isNew, onClose }: { location: Location; isNe
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await saveLocation({ ...location, name: name.trim(), parentId: parentId || null, notes });
+    await saveLocation({ ...location, name: name.trim(), parentId: parentId || null, notes, kitType: kitType || null });
     onClose();
   }
 
@@ -129,6 +142,7 @@ function LocationDialog({ location, isNew, onClose }: { location: Location; isNe
     try {
       await deleteLocation(location.id);
       onClose();
+      onDeleted?.();
     } catch (err) {
       if (err instanceof InventoryError && err.code === 'location-not-empty') setError(t('locations.notEmpty'));
       else throw err;
@@ -136,7 +150,7 @@ function LocationDialog({ location, isNew, onClose }: { location: Location; isNe
   }
 
   return (
-    <Dialog title={isNew ? t('locations.new') : t('locations.edit')} onClose={onClose}>
+    <Dialog title={title ?? (isNew ? t('locations.new') : t('locations.edit'))} onClose={onClose}>
       <form className="stack" onSubmit={handleSubmit}>
         <div className="field">
           <label htmlFor="loc-name">{t('locations.name')}</label>
@@ -149,6 +163,17 @@ function LocationDialog({ location, isNew, onClose }: { location: Location; isNe
             {validParents.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="loc-kit">{t('kits.typeLabel')}</label>
+          <select id="loc-kit" className="select" value={kitType} onChange={(e) => setKitType(e.target.value as KitType | '')}>
+            <option value="">{t('kits.notAKit')}</option>
+            {KIT_TYPES.map((k) => (
+              <option key={k} value={k}>
+                {t(`kits.types.${k}`)}
               </option>
             ))}
           </select>
