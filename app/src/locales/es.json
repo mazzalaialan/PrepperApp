@@ -235,6 +235,34 @@
     "notes": "Notas",
     "notesPlaceholder": "Cirugías, vacunas, otros datos útiles"
   },
+  "compass": {
+    "roseLabel": "Rosa de los vientos",
+    "waiting": "Esperando la brújula del celular…",
+    "flat": "Rumbo hacia donde apunta la parte de arriba del celular.",
+    "upright": "Rumbo hacia donde mira la cámara.",
+    "reference": "Norte",
+    "trueNorth": "Verdadero",
+    "magneticNorth": "Magnético",
+    "declination": "Declinación en tu ubicación: {{value}}° {{dir}} (modelo WMM 2025).",
+    "noDeclination": "Sin ubicación no se puede corregir la declinación: la brújula muestra el norte magnético.",
+    "calibrate": "Si el rumbo salta o no coincide, calibrá la brújula moviendo el celular en forma de 8, lejos de metales e imanes."
+  },
+  "goto": {
+    "button": "Ir a este punto",
+    "title": "Ir a {{name}}",
+    "cameraOn": "Ver con la cámara",
+    "cameraOff": "Apagar la cámara",
+    "raisePhone": "Pará el celular frente a vos para verlo con la cámara.",
+    "straight": "Seguí derecho",
+    "turnRight": "Girá {{degrees}}° a la derecha",
+    "turnLeft": "Girá {{degrees}}° a la izquierda",
+    "arrived": "Llegaste",
+    "noCompass": "Este dispositivo no tiene brújula: usá una brújula de mano y seguí el rumbo indicado.",
+    "cameraError": {
+      "denied": "No hay permiso para usar la cámara. Habilitalo en los permisos del navegador o apagá la cámara.",
+      "unavailable": "No se pudo abrir la cámara."
+    }
+  },
   "geo": {
     "westLetter": "O",
     "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SO", "W": "O", "NW": "NO" }

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Copy, Crosshair, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, Crosshair, Navigation, Trash2 } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, formatDecimal, formatDms, parseCoordinates } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
@@ -105,7 +105,14 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('waypoints.new')}</h1>
       </div>
 
-      {stored && hasGps && <NavigationCard target={stored} />}
+      {stored && hasGps && (
+        <>
+          <Link className="btn btn-primary btn-block" to={`/orientation/waypoints/${stored.id}/go`}>
+            <Navigation size={20} /> {t('goto.button')}
+          </Link>
+          <NavigationCard target={stored} />
+        </>
+      )}
 
       <form className="card stack" onSubmit={handleSubmit}>
         <div className="field">

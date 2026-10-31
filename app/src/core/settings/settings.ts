@@ -19,7 +19,11 @@ export interface Settings {
   notificationsEnabled: boolean;
   /** Hora local (0–23) a partir de la cual el servidor envía el aviso del día. */
   notifyHour: number;
+  /** Referencia de la brújula: norte verdadero (corrige la declinación) o magnético. */
+  northReference: NorthReference;
 }
+
+export type NorthReference = 'true' | 'magnetic';
 
 export const LANGUAGES: Language[] = ['es', 'en'];
 export const THEMES: Theme[] = ['dark', 'light', 'red'];
@@ -38,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weatherUrl: 'https://api.open-meteo.com',
   notificationsEnabled: false,
   notifyHour: 9,
+  northReference: 'true',
 };
 
 const SETTINGS_KEY = 'app';

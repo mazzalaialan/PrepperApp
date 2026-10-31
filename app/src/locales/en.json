@@ -235,6 +235,34 @@
     "notes": "Notes",
     "notesPlaceholder": "Surgeries, vaccines, other useful details"
   },
+  "compass": {
+    "roseLabel": "Compass rose",
+    "waiting": "Waiting for the phone's compass…",
+    "flat": "Heading of the top of the phone.",
+    "upright": "Heading the camera is facing.",
+    "reference": "North",
+    "trueNorth": "True",
+    "magneticNorth": "Magnetic",
+    "declination": "Declination at your location: {{value}}° {{dir}} (WMM 2025 model).",
+    "noDeclination": "Without your location declination can't be corrected: the compass shows magnetic north.",
+    "calibrate": "If the heading jumps or looks wrong, calibrate by moving the phone in a figure 8, away from metal and magnets."
+  },
+  "goto": {
+    "button": "Go to this point",
+    "title": "Go to {{name}}",
+    "cameraOn": "View with camera",
+    "cameraOff": "Turn camera off",
+    "raisePhone": "Hold the phone upright in front of you to see it through the camera.",
+    "straight": "Keep going straight",
+    "turnRight": "Turn {{degrees}}° right",
+    "turnLeft": "Turn {{degrees}}° left",
+    "arrived": "You've arrived",
+    "noCompass": "This device has no compass: use a hand compass and follow the bearing shown.",
+    "cameraError": {
+      "denied": "Camera permission denied. Enable it in the browser's site permissions or turn the camera off.",
+      "unavailable": "Couldn't open the camera."
+    }
+  },
   "geo": {
     "westLetter": "W",
     "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SW", "W": "W", "NW": "NW" }

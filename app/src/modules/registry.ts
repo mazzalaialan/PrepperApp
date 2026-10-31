@@ -54,7 +54,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'medical', section: 'firstAid', icon: HeartPulse, phase: 'F3', implemented: true, path: '/first-aid/medical' },
   { id: 'firstAidGuides', section: 'firstAid', icon: BookHeart, phase: 'F4', implemented: false },
   { id: 'documents', section: 'documents', icon: FileText, phase: 'F3', implemented: true, path: '/documents' },
-  { id: 'compass', section: 'orientation', icon: Compass, phase: 'F3', implemented: false, requires: ['orientation'] },
+  { id: 'compass', section: 'orientation', icon: Compass, phase: 'F3', implemented: true, path: '/orientation/compass', requires: ['orientation'] },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, phase: 'F3', implemented: false, requires: ['motion'] },
   { id: 'waypoints', section: 'orientation', icon: MapPin, phase: 'F3', implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },
   { id: 'maps', section: 'orientation', icon: MapIcon, phase: 'F5', implemented: false, degradesWithout: ['geolocation'] },
