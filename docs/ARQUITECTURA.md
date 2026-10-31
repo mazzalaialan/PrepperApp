@@ -432,8 +432,21 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 - Sin conexión, el mapa muestra las zonas descargadas sobre un **contorno mundial liviano** incluido en la app (~1 MB), que también sirve para elegir un punto en el mapa (ej.: para astronomía).
 - Capas propias: waypoints, zonas offline, posición GPS y rumbo de la brújula.
 
-### 12.4 Capas de tiempo (pedido para F5, a analizar al llegar)
-Opcionales, se activan desde el mapa y solo funcionan con conexión; muestran la hora de los datos.
+### 12.4 Mapa de Meteorología (tiempo y peligros naturales)
+Es un **módulo de la sección Meteorología**, separado de los mapas de Orientación, aunque reutiliza sus funciones (proyección, dibujo, capas).
+- **Mapa base muy simple:** solo el contorno de **Argentina, Chile y Uruguay** con provincias y regiones. Viene incluido en la app (Natural Earth, dominio público, simplificado, unos cientos de KB), así que funciona sin conexión y no necesita descargar zonas ni teselas. Por eso puede hacerse antes de F5.
+- **Capas:** son opcionales, cada una se activa por separado y solo funciona con conexión. Muestran la hora de los datos; sin conexión queda lo último descargado. Los avisos con la app cerrada, por distancia a los waypoints con aviso activado, los hace el servidor propio. Nada de esto son alertas oficiales.
+
+| Capa | Fuentes candidatas (a confirmar) | Viabilidad |
+|---|---|---|
+| Clima por provincia | Open-Meteo con varias coordenadas en una consulta | Alta |
+| Tormentas animadas (radar) | Ver abajo | Depende de la fuente |
+| Rayos | GOES‑19 GLM (NOAA), procesado en el servidor | Alta, requiere servidor |
+| Terremotos | USGS (GeoJSON en tiempo real, dominio público); INPRES (AR) y CSN (Chile) para precisión local | Alta |
+| Incendios | NASA FIRMS (focos de calor, clave gratuita); producto de incendios de GOES‑19 (cada 10 min, misma fuente que los rayos); reportes del SNMF (AR) | Alta |
+| Volcanes | Ubicación: Smithsonian GVP. Nivel de alerta: SERNAGEOMIN (Chile) y OAVV/SEGEMAR (AR). Ceniza: VAAC Buenos Aires (SMN) | Media: varias publican reportes y no datos estructurados |
+
+Detalle de las capas de tiempo:
 1. **Clima del país o por provincia:** temperatura, lluvia y viento sobre el mapa.
    - *Opción A, propia y simple:* consultar Open-Meteo en una grilla de puntos (o en las capitales y centros de cada provincia, en una sola consulta con varias coordenadas) y dibujar valores o colores por provincia. Usa la fuente que ya está configurada y se autoaloja igual.
    - *Opción B:* capas de imagen de terceros. Se evalúan condiciones y disponibilidad.
