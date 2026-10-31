@@ -80,16 +80,22 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await page.getByRole('link', { name: /Clima/ }).click();
   await expect(page.getByTestId('weather-temp')).toHaveText('21°');
   await expect(page.getByText('Parcialmente nublado · sensación 20°')).toBeVisible();
-  // Ahora: flecha y dirección completa del viento, y cada valor con el color de su nivel.
-  await expect(page.getByTestId('weather-temp')).toHaveAttribute('title', 'Agradable');
-  const wind = page.getByTestId('now-wind');
-  await expect(wind).toContainText('SE (Sudeste)');
-  await expect(wind.getByRole('img', { name: 'Viento del SE' })).toBeVisible();
-  await expect(page.getByTestId('now-wind-speed')).toHaveAttribute('title', 'Viento leve');
+  // Ahora: solo se colorea lo que merece atención; lo normal queda con el color común.
+  await expect(page.getByTestId('now-temp')).toHaveAttribute('title', 'Agradable');
+  await expect(page.getByTestId('now-temp')).not.toHaveAttribute('data-scale');
+  // Flecha, velocidad y dirección completa del viento van juntas, del mismo color.
+  const windSpeed = page.getByTestId('now-wind-speed');
+  await expect(windSpeed).toHaveText(/18 km\/h SE \(Sudeste\)/);
+  await expect(windSpeed).toHaveAttribute('title', 'Viento leve');
+  await expect(windSpeed).not.toHaveAttribute('data-scale');
+  const arrow = windSpeed.getByRole('img', { name: 'Viento del SE' });
+  expect(await arrow.evaluate((el) => getComputedStyle(el).color)).toBe(await windSpeed.evaluate((el) => getComputedStyle(el).color));
   await expect(page.getByTestId('now-gusts')).toHaveAttribute('title', 'Viento moderado');
+  await expect(page.getByTestId('now-gusts')).toHaveAttribute('data-scale', '4');
   await expect(page.getByTestId('now-humidity')).toHaveAttribute('title', 'Aire húmedo');
+  await expect(page.getByTestId('now-humidity')).toHaveAttribute('data-scale', '1');
   await expect(page.getByTestId('now-pressure')).toHaveText('1013 hPa · normal');
-  await expect(page.getByTestId('now-pressure')).toHaveAttribute('data-scale', '3');
+  await expect(page.getByTestId('now-pressure')).not.toHaveAttribute('data-scale');
   await expect(page.getByText('Tormenta eléctrica')).toBeVisible();
   await expect(page.getByText('Ráfagas fuertes de hasta 88 km/h')).toBeVisible();
   await expect(page.getByText('Lluvia intensa: 42 mm')).toBeVisible();
@@ -111,6 +117,8 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await expect(page.locator('button[data-testid="trend-day"]')).toHaveCount(0);
 
   // Día 5: resumen por madrugada, mañana, tarde y noche.
+  // La página no se ensancha (en el celular, el texto oculto de los valores coloreados no se escapa de la tira por hora).
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByTestId('day').nth(4).click();
   const periods = page.getByRole('dialog');
   await expect(periods.getByText('A esta distancia el pronóstico por hora no es confiable')).toBeVisible();

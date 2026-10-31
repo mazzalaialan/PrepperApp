@@ -327,7 +327,7 @@
     "windAria": "Wind {{speed}} {{unit}}, gusts {{gusts}} {{unit}}",
     "gustShort": "g. {{value}}",
     "windFrom": "Wind from the {{dir}}",
-    "windDay": "wind {{speed}} · gusts {{gusts}}",
+    "windDayWind": "wind {{speed}}",
     "warningsTitle": "Heads up",
     "warningsNote": "Warnings computed by the app from the forecast; they are not official alerts.",
     "warning": {

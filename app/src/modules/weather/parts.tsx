@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowUp,
@@ -36,6 +37,7 @@ import {
   type PeriodSummary,
   type Sky,
 } from './forecast';
+import { humidityLevel, tempLevel, windLevel } from './levels';
 
 /**
  * Piezas del pronóstico. Cada dato lleva un ícono o una sigla (ST, HR, r.)
@@ -94,6 +96,36 @@ export function WindArrow({ from, size = 16 }: { from: number; size?: number }) 
   );
 }
 
+const LEVELS = { temp: tempLevel, wind: windLevel, humidity: humidityLevel };
+
+/**
+ * Valor con el color de su nivel (`kind` dice qué escala; las ráfagas usan la del viento).
+ * Lo normal queda sin color; si hay color, el nombre del nivel va en el tooltip y para el lector.
+ */
+export function Lvl({
+  kind,
+  value,
+  children,
+  className,
+  testId,
+}: {
+  kind: keyof typeof LEVELS;
+  value: number;
+  children: ReactNode;
+  className?: string;
+  testId?: string;
+}) {
+  const { t } = useTranslation();
+  const level = LEVELS[kind](value);
+  const label = t(`weather.level.${kind}.${level.key}`);
+  return (
+    <span className={className ? `lvl ${className}` : 'lvl'} data-scale={level.color ?? undefined} title={label} data-testid={testId}>
+      {children}
+      {level.color !== null && <span className="sr-only"> ({label})</span>}
+    </span>
+  );
+}
+
 type Hour = Forecast['hourly'][number];
 
 /** Hora en la tira de las próximas 24 h: lo esencial. */
@@ -103,10 +135,18 @@ export function HourStripItem({ h, u }: { h: Hour; u: Units }) {
     <li data-testid="hour">
       <span className="hint">{h.time.slice(11, 16)}</span>
       <SkyIcon code={h.code} />
-      <strong>{u.temp(h.temperature)}</strong>
+      <strong>
+        <Lvl kind="temp" value={h.temperature}>{u.temp(h.temperature)}</Lvl>
+      </strong>
       {/* Todas las columnas tienen las mismas filas: si no hay dato va "–", para que el viento de una hora
           quede a la misma altura que el de otra con lluvia. */}
-      {h.apparent !== null ? <span className="hour-meta">{t('weather.feelsShort', { temp: u.temp(h.apparent) })}</span> : <Empty />}
+      {h.apparent !== null ? (
+        <Lvl kind="temp" value={h.apparent} className="hour-meta">
+          {t('weather.feelsShort', { temp: u.temp(h.apparent) })}
+        </Lvl>
+      ) : (
+        <Empty />
+      )}
       <RainChance h={h} />
       {h.precipitation !== null && h.precipitation > 0 ? (
         <span className="hour-meta hour-wet">
@@ -116,7 +156,13 @@ export function HourStripItem({ h, u }: { h: Hour; u: Units }) {
         <Empty />
       )}
       <WindValue h={h} u={u} />
-      {h.windGusts !== null ? <span className="hint hour-gust">{t('weather.gustShort', { value: u.windValue(h.windGusts) })}</span> : <Empty />}
+      {h.windGusts !== null ? (
+        <Lvl kind="wind" value={h.windGusts} className="hint hour-gust">
+          {t('weather.gustShort', { value: u.windValue(h.windGusts) })}
+        </Lvl>
+      ) : (
+        <Empty />
+      )}
     </li>
   );
 }
@@ -143,7 +189,8 @@ function WindValue({ h, u }: { h: Hour; u: Units }) {
   const { t } = useTranslation();
   return (
     <span
-      className="hour-wind"
+      className="hour-wind lvl"
+      data-scale={windLevel(h.windSpeed).color ?? undefined}
       aria-label={t('weather.windAria', { speed: u.windValue(h.windSpeed), gusts: h.windGusts === null ? '—' : u.windValue(h.windGusts), unit: u.windUnit })}
     >
       {h.windDirection !== null && <WindArrow from={h.windDirection} size={14} />}
@@ -163,8 +210,16 @@ function HourDetailRow({ h, u }: { h: Hour; u: Units }) {
       <SkyIcon code={h.code} size={26} />
       <div className="hour-row-facts">
         <span className="fact">
-          <Thermometer size={14} aria-hidden /> <strong>{u.temp(h.temperature)}</strong>
-          {h.apparent !== null && <> · {t('weather.feelsShort', { temp: u.temp(h.apparent) })}</>}
+          <Thermometer size={14} aria-hidden />{' '}
+          <strong>
+            <Lvl kind="temp" value={h.temperature}>{u.temp(h.temperature)}</Lvl>
+          </strong>
+          {h.apparent !== null && (
+            <>
+              {' · '}
+              <Lvl kind="temp" value={h.apparent}>{t('weather.feelsShort', { temp: u.temp(h.apparent) })}</Lvl>
+            </>
+          )}
         </span>
         <span className="fact">
           <RainChance h={h} />
@@ -177,7 +232,12 @@ function HourDetailRow({ h, u }: { h: Hour; u: Units }) {
         )}
         <span className="fact">
           <Wind size={14} aria-hidden /> <WindValue h={h} u={u} /> {u.windUnit}
-          {h.windGusts !== null && <> · {t('weather.gustShort', { value: u.windValue(h.windGusts) })}</>}
+          {h.windGusts !== null && (
+            <>
+              {' · '}
+              <Lvl kind="wind" value={h.windGusts}>{t('weather.gustShort', { value: u.windValue(h.windGusts) })}</Lvl>
+            </>
+          )}
         </span>
         {h.cloudCover !== null && (
           <span className="fact" aria-label={t('weather.cloudAria', { pct: Math.round(h.cloudCover) })}>
@@ -190,7 +250,11 @@ function HourDetailRow({ h, u }: { h: Hour; u: Units }) {
             {fog && <> · {t('weather.fog')}</>}
           </span>
         )}
-        {h.humidity !== null && <span className="fact">{t('weather.humidityShort', { pct: Math.round(h.humidity) })}</span>}
+        {h.humidity !== null && (
+          <Lvl kind="humidity" value={h.humidity} className="fact">
+            {t('weather.humidityShort', { pct: Math.round(h.humidity) })}
+          </Lvl>
+        )}
         {risk && (
           <span className="fact" data-risk={risk} aria-label={t('weather.stormAria', { risk: t(`weather.stormRisk.${risk}`) })}>
             <Zap size={14} aria-hidden /> {t(`weather.stormRisk.${risk}`)}
@@ -264,7 +328,10 @@ function PeriodRow({ p, u }: { p: PeriodSummary; u: Units }) {
       <SkyIcon code={p.code} size={26} />
       <div className="hour-row-facts">
         <span className="fact">
-          <Thermometer size={14} aria-hidden /> <strong>{u.temp(p.min)} / {u.temp(p.max)}</strong>
+          <Thermometer size={14} aria-hidden />{' '}
+          <strong>
+            <Lvl kind="temp" value={p.min}>{u.temp(p.min)}</Lvl> / <Lvl kind="temp" value={p.max}>{u.temp(p.max)}</Lvl>
+          </strong>
         </span>
         <span className="fact" aria-label={t('weather.rainChance', { pct: p.precipProbability ?? 0 })}>
           <Droplets size={14} aria-hidden /> {p.precipProbability ?? 0}%{p.precipitation > 0 && <> · {u.rain(p.precipitation)}</>}
@@ -275,9 +342,17 @@ function PeriodRow({ p, u }: { p: PeriodSummary; u: Units }) {
           </span>
         )}
         <span className="fact">
-          <Wind size={14} aria-hidden /> {p.windDirection !== null && <WindArrow from={p.windDirection} size={14} />}
-          {u.wind(p.windSpeed)}
-          {p.windGusts !== null && <> · {t('weather.gustShort', { value: u.windValue(p.windGusts) })}</>}
+          <Wind size={14} aria-hidden />{' '}
+          <Lvl kind="wind" value={p.windSpeed}>
+            {p.windDirection !== null && <WindArrow from={p.windDirection} size={14} />}
+            {u.wind(p.windSpeed)}
+          </Lvl>
+          {p.windGusts !== null && (
+            <>
+              {' · '}
+              <Lvl kind="wind" value={p.windGusts}>{t('weather.gustShort', { value: u.windValue(p.windGusts) })}</Lvl>
+            </>
+          )}
         </span>
         {fog && (
           <span className="fact" data-fog="true" aria-label={t('weather.visibilityAria', { value: u.visibility(p.visibility!) })}>
@@ -349,15 +424,19 @@ export function DayList({
             <SkyIcon code={d.code} />
             <span className="list-main">
               <span className="list-title">
-                {u.temp(d.min)} / {u.temp(d.max)}
+                <Lvl kind="temp" value={d.min}>{u.temp(d.min)}</Lvl> / <Lvl kind="temp" value={d.max}>{u.temp(d.max)}</Lvl>
               </span>
               <span className="list-sub">
                 <Droplets size={13} aria-hidden /> {d.precipitation > 0 ? u.rain(d.precipitation) : t('weather.noRain')}
                 {d.precipProbability !== null && d.precipProbability > 0 && ` (${d.precipProbability}%)`}
               </span>
               <span className="list-sub">
-                {d.windDirection != null && <WindArrow from={d.windDirection} size={13} />}{' '}
-                {t('weather.windDay', { speed: u.wind(d.windMax), gusts: u.wind(d.gustMax) })}
+                <Lvl kind="wind" value={d.windMax}>
+                  {d.windDirection != null && <WindArrow from={d.windDirection} size={13} />}{' '}
+                  {t('weather.windDayWind', { speed: u.wind(d.windMax) })}
+                </Lvl>
+                {' · '}
+                <Lvl kind="wind" value={d.gustMax}>{t('weather.gusts', { value: u.wind(d.gustMax) })}</Lvl>
               </span>
             </span>
           </>

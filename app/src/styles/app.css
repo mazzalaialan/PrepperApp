@@ -1905,5 +1905,9 @@ a.module-card:hover {
 .lvl[data-scale='4'] { color: var(--scale-4); }
 .lvl[data-scale='5'] { color: var(--scale-5); }
 .lvl[data-scale='6'] { color: var(--scale-6); }
-.weather-facts .lvl { font-weight: 600; }
+/* Solo lo que tiene color se destaca; la flecha del viento toma el color de su valor. */
+.lvl[data-scale] { font-weight: 600; }
+/* Contiene su texto oculto (.sr-only es absoluto): si no, dentro de la tira por hora se escapa del scroll y ensancha la página. */
+.lvl { position: relative; }
+.lvl .wind-arrow { color: inherit; }
 .weather-facts .wind-arrow { vertical-align: -4px; }

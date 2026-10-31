@@ -327,7 +327,7 @@
     "windAria": "Viento {{speed}} {{unit}}, ráfagas {{gusts}} {{unit}}",
     "gustShort": "r. {{value}}",
     "windFrom": "Viento del {{dir}}",
-    "windDay": "viento {{speed}} · ráfagas {{gusts}}",
+    "windDayWind": "viento {{speed}}",
     "warningsTitle": "Atención",
     "warningsNote": "Avisos calculados por la app a partir del pronóstico, no son alertas oficiales.",
     "warning": {
