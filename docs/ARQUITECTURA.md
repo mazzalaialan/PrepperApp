@@ -432,6 +432,16 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 - Sin conexión, el mapa muestra las zonas descargadas sobre un **contorno mundial liviano** incluido en la app (~1 MB), que también sirve para elegir un punto en el mapa (ej.: para astronomía).
 - Capas propias: waypoints, zonas offline, posición GPS y rumbo de la brújula.
 
+### 12.4 Capas de tiempo (pedido para F5, a analizar al llegar)
+Opcionales, se activan desde el mapa y solo funcionan con conexión; muestran la hora de los datos.
+1. **Clima del país o por provincia:** temperatura, lluvia y viento sobre el mapa.
+   - *Opción A, propia y simple:* consultar Open-Meteo en una grilla de puntos (o en las capitales y centros de cada provincia, en una sola consulta con varias coordenadas) y dibujar valores o colores por provincia. Usa la fuente que ya está configurada y se autoaloja igual.
+   - *Opción B:* capas de imagen de terceros. Se evalúan condiciones y disponibilidad.
+2. **Tormentas animadas (radar):** dibujo de las tormentas con colores por intensidad y "fotos" cada 10–15 minutos durante las últimas 2 horas, en animación.
+   - *Lo difícil es la fuente, no el dibujo:* la animación sobre MapLibre es simple; lo que falta es un radar abierto y estable para Argentina.
+   - *Candidatos:* RainViewer (gratis, pero en 2026 limitado a zoom 7, nivel provincia, y sin predicción); radares del SMN (SINARAME), sin servicio público documentado, a consultar; imágenes infrarrojas de GOES‑19 (NASA GIBS, gratis, cada 10 minutos), que muestran las nubes de tormenta pero no la lluvia; lluvia pronosticada por Open-Meteo cada 15 minutos sobre una grilla, que es modelo y no observación.
+   - *Decisión pendiente en F5:* según lo que esté disponible, radar real donde exista y satélite o modelo como respaldo, siempre aclarando qué se está viendo.
+
 ---
 
 ## 13. Distribución

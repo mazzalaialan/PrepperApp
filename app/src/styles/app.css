@@ -1124,6 +1124,93 @@ a.module-card:hover {
   right: 8px;
 }
 
+/* ---------- Inclinómetro ---------- */
+
+[data-zone='low'] {
+  --zone: var(--ok);
+}
+
+[data-zone='caution'] {
+  --zone: var(--warn);
+}
+
+[data-zone='avalanche'] {
+  --zone: var(--danger);
+}
+
+[data-zone='steep'] {
+  --zone: var(--accent);
+}
+
+.incl-card {
+  align-items: center;
+  border-color: var(--zone);
+  text-align: center;
+}
+
+.incl-gauge {
+  width: min(100%, 280px);
+}
+
+.incl-arc {
+  fill: none;
+  stroke: var(--zone);
+  stroke-width: 10;
+}
+
+.incl-needle {
+  stroke: var(--text);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.incl-needle-hub {
+  fill: var(--text);
+}
+
+.incl-ground {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.incl-value {
+  margin: 0;
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.incl-zone {
+  margin: 0;
+  color: var(--zone);
+  font-weight: 700;
+}
+
+.incl-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.incl-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.incl-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--zone);
+}
+
 /* ---------- Sol y luna ---------- */
 
 .sr-only {

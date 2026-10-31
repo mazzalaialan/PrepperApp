@@ -17,6 +17,7 @@ import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
 import { ItemsPage } from '@/modules/inventory/pages/ItemsPage';
 import { LocationsPage } from '@/modules/inventory/pages/LocationsPage';
 import { CompassPage } from '@/modules/compass/CompassPage';
+import { InclinometerPage } from '@/modules/inclinometer/InclinometerPage';
 import { GoToPage } from '@/modules/waypoints/GoToPage';
 import { RouteEditPage } from '@/modules/waypoints/RouteEditPage';
 import { RouteGoPage } from '@/modules/waypoints/RouteGoPage';
@@ -59,6 +60,7 @@ const router = createHashRouter([
       { path: '/orientation/waypoints/:id', element: <WaypointEditPage /> },
       { path: '/orientation/waypoints/:id/go', element: <GoToPage /> },
       { path: '/orientation/compass', element: <CompassPage /> },
+      { path: '/orientation/inclinometer', element: <InclinometerPage /> },
       { path: '/orientation/routes', element: <RoutesPage /> },
       { path: '/orientation/routes/:id', element: <RouteEditPage /> },
       { path: '/orientation/routes/:id/go/:step', element: <RouteGoPage /> },

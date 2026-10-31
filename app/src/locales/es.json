@@ -338,6 +338,30 @@
     },
     "timesNote": "Calculado sin conexión para {{place}}. Horarios en la hora de este dispositivo."
   },
+  "inclinometer": {
+    "mode": "Cómo medir",
+    "surface": "Apoyado",
+    "sight": "Apuntando",
+    "surfaceHint": "Apoyá el celular sobre la pendiente (o sobre un bastón apoyado en ella) en la dirección en que baja.",
+    "sightHint": "Desde abajo o desde enfrente, mirá a lo largo del borde superior del celular hasta alinearlo con la pendiente. Así se mide sin pisarla.",
+    "waiting": "Esperando el acelerómetro del celular…",
+    "hold": "Fijar medida",
+    "release": "Volver a medir",
+    "zone": {
+      "low": "Pendiente baja",
+      "caution": "Cerca del rango de avalanchas",
+      "avalanche": "Rango típico de avalanchas",
+      "steep": "Muy empinada"
+    },
+    "zonesTitle": "Pendiente y avalanchas",
+    "legend": {
+      "low": "Menos de 25°: rara vez se desprende, pero puede llegar una avalancha de más arriba.",
+      "caution": "25° a 30°: precaución, cerca del rango peligroso.",
+      "avalanche": "30° a 45°: donde se desprende la gran mayoría de las avalanchas.",
+      "steep": "Más de 45°: la nieve suele descargarse seguido en coladas más chicas."
+    },
+    "disclaimer": "Medida orientativa. No reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
+  },
   "compass": {
     "roseLabel": "Rosa de los vientos",
     "waiting": "Esperando la brújula del celular…",

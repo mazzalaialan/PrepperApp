@@ -338,6 +338,30 @@
     },
     "timesNote": "Calculated offline for {{place}}. Times shown in this device's time zone."
   },
+  "inclinometer": {
+    "mode": "How to measure",
+    "surface": "Resting",
+    "sight": "Sighting",
+    "surfaceHint": "Lay the phone on the slope (or on a pole resting on it) along the fall line.",
+    "sightHint": "From below or across, sight along the phone's top edge until it lines up with the slope. This measures without stepping on it.",
+    "waiting": "Waiting for the phone's accelerometer…",
+    "hold": "Hold reading",
+    "release": "Measure again",
+    "zone": {
+      "low": "Low angle",
+      "caution": "Close to avalanche terrain",
+      "avalanche": "Typical avalanche terrain",
+      "steep": "Very steep"
+    },
+    "zonesTitle": "Slope and avalanches",
+    "legend": {
+      "low": "Under 25°: rarely releases, but an avalanche can run down from above.",
+      "caution": "25° to 30°: caution, close to the dangerous range.",
+      "avalanche": "30° to 45°: where the vast majority of avalanches release.",
+      "steep": "Over 45°: snow tends to sluff off often in smaller slides."
+    },
+    "disclaimer": "Approximate reading. It doesn't replace the avalanche forecast or training for snowy terrain."
+  },
   "compass": {
     "roseLabel": "Compass rose",
     "waiting": "Waiting for the phone's compass…",
