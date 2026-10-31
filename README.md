@@ -1,4 +1,4 @@
-# VikArg Survival
+# VikArg Prepping Tools
 
 > *Hay que estar listo para que no te agarre un imprevisto.*
 

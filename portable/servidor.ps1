@@ -1,4 +1,4 @@
-# VikArg Survival - servidor local para usar la app sin internet (Windows).
+# VikArg Prepping Tools - servidor local para usar la app sin internet (Windows).
 # Usa solo PowerShell, que viene con Windows: no hace falta instalar nada.
 # Sirve la carpeta "app" en http://localhost:47613 y abre el navegador.
 #
@@ -47,7 +47,7 @@ try {
 }
 
 Write-Host ''
-Write-Host '  VikArg Survival esta funcionando en' $Url
+Write-Host '  VikArg Prepping Tools esta funcionando en' $Url
 Write-Host '  Deja esta ventana abierta mientras uses la app. Para terminar, cerrala.'
 Write-Host ''
 if (-not $NoBrowser) { Start-Process $Url }

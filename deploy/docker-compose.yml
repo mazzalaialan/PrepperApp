@@ -1,4 +1,4 @@
-# VikArg Survival autoalojado con HTTPS automático (Caddy + Let's Encrypt).
+# VikArg Prepping Tools autoalojado con HTTPS automático (Caddy + Let's Encrypt).
 # Uso: copiar .env.example a .env, completar DOMAIN y CONTACT_EMAIL, y correr
 #   docker compose up -d --build
 # Guía completa: docs/SERVIDOR.md

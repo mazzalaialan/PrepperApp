@@ -21,7 +21,7 @@ const TEXT = {
     shortage: 'falta stock según tus recomendaciones',
     minStock: 'debajo del stock mínimo',
     more: (n: number) => `y ${n} más`,
-    testTitle: 'VikArg Survival',
+    testTitle: 'VikArg Prepping Tools',
     testBody: 'Las notificaciones funcionan correctamente.',
   },
   en: {
@@ -33,7 +33,7 @@ const TEXT = {
     shortage: 'short of your recommended stock',
     minStock: 'below minimum stock',
     more: (n: number) => `and ${n} more`,
-    testTitle: 'VikArg Survival',
+    testTitle: 'VikArg Prepping Tools',
     testBody: 'Notifications are working.',
   },
 } as const;

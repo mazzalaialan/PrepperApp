@@ -1,4 +1,4 @@
-# VikArg Survival — Documento de Arquitectura
+# VikArg Prepping Tools — Documento de Arquitectura
 
 > *"Hay que estar listo para que no te agarre un imprevisto".*
 
@@ -471,7 +471,7 @@ Detalle de las capas de tiempo:
 
 ## 14. Diseño e interfaz
 
-- **Identidad:** VikArg Survival. Paleta derivada del logo (Vegvísir sobre azul noche):
+- **Identidad:** VikArg Prepping Tools. Paleta derivada del logo (Vegvísir sobre azul noche):
   | Token | Uso | Referencia |
   |---|---|---|
   | `--bg` | Fondo | Azul noche |

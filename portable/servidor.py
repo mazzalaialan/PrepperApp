@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""VikArg Survival - servidor local para usar la app sin internet (Linux y Mac).
+"""VikArg Prepping Tools - servidor local para usar la app sin internet (Linux y Mac).
 
 Sirve la carpeta "app" en http://127.0.0.1:47613 y abre el navegador.
 Solo usa la biblioteca estándar de Python 3.
@@ -46,7 +46,7 @@ def main():
         server = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), functools.partial(Handler, directory=ROOT))
     except OSError:
         sys.exit(f"El puerto {PORT} está ocupado. Si VikArg ya está abierto, usá esa ventana.")
-    print(f"\n  VikArg Survival está funcionando en {URL}")
+    print(f"\n  VikArg Prepping Tools está funcionando en {URL}")
     print("  Dejá esta terminal abierta mientras uses la app. Para terminar: Ctrl+C.\n")
     webbrowser.open(URL)
     try:

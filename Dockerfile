@@ -1,4 +1,4 @@
-# Imagen única de VikArg Survival: servidor (push + transferencias) que además
+# Imagen única de VikArg Prepping Tools: servidor (push + transferencias) que además
 # sirve la propia PWA, para una instalación 100% autónoma. Ver docs/SERVIDOR.md.
 
 # ---------- 1. Build de la PWA ----------
