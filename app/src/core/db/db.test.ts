@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
-import { ageOn } from '@/modules/firstAid/medicalStore';
+import { ageOn, monthsSince, normalizeProfile } from '@/modules/firstAid/medicalStore';
+import type { MedicalProfile } from '@/core/model/types';
 import { UserDb } from './db';
 
 describe('migraciones', () => {
@@ -21,6 +22,20 @@ describe('migraciones', () => {
     await upgraded.medicalProfiles.put({ id: 'p', updatedAt: 'x', deletedAt: null, iv: new Uint8Array(12), ct: new ArrayBuffer(4) });
     expect(await upgraded.medicalProfiles.count()).toBe(1);
     upgraded.close();
+  });
+});
+
+describe('fichas de mascotas', () => {
+  it('meses desde una fecha', () => {
+    expect(monthsSince('2026-10-05', '2026-10-31')).toBe(0);
+    expect(monthsSince('2026-03-10', '2026-10-31')).toBe(7);
+    expect(monthsSince('2026-03-31', '2026-10-30')).toBe(6);
+    expect(monthsSince('2026-12-01', '2026-10-31')).toBe(0); // fecha futura: no negativo
+  });
+
+  it('las fichas anteriores a las mascotas son de personas', () => {
+    const old = { id: 'p', name: 'Ana' } as unknown as MedicalProfile;
+    expect(normalizeProfile(old)).toMatchObject({ kind: 'person', pet: null });
   });
 });
 

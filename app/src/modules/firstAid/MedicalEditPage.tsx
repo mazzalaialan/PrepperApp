@@ -3,14 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
-import type { Medication, MedicalProfile } from '@/core/model/types';
+import type { Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
+import { today } from '@/modules/inventory/domain/dates';
+import { Segmented } from '@/ui/Segmented';
 import { SinglePhoto } from '@/ui/SinglePhoto';
-import { useMedical } from './medicalStore';
+import { emptyPetHealth, monthsSince, useMedical } from './medicalStore';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
 function emptyProfile(): MedicalProfile {
   return newEntity<MedicalProfile>({
+    kind: 'person',
+    pet: null,
     name: '',
     birthDate: null,
     bloodType: '',
@@ -58,7 +62,7 @@ function ProfilePhoto({ profileId, name }: { profileId: string; name: string }) 
 function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   const [initial] = useState(() => stored ?? emptyProfile());
   const isNew = !stored;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { saveProfile, deleteProfile } = useMedical();
   const [draft, setDraft] = useState(initial);
@@ -70,12 +74,19 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   };
   const setMed = (index: number, changes: Partial<Medication>) =>
     set({ medications: draft.medications.map((m, i) => (i === index ? { ...m, ...changes } : m)) });
+  const isPet = draft.kind === 'pet';
+  const pet = draft.pet ?? emptyPetHealth();
+  const setPet = (changes: Partial<PetHealth>) => set({ pet: { ...pet, ...changes } });
+  // Al pasar a mascota se crean sus datos; si se vuelve a persona, se descartan al guardar.
+  const setKind = (kind: ProfileKind) => set({ kind, pet: kind === 'pet' ? (draft.pet ?? emptyPetHealth()) : draft.pet });
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     await saveProfile({
       ...draft,
       name: draft.name.trim(),
+      pet: isPet ? { ...pet, speciesOther: pet.species === 'other' ? pet.speciesOther.trim() : '' } : null,
+      bloodType: isPet ? '' : draft.bloodType,
       // Las filas de medicación vacías no se guardan.
       medications: draft.medications
         .map((m) => ({ name: m.name.trim(), dose: m.dose.trim(), schedule: m.schedule.trim() }))
@@ -91,16 +102,30 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     navigate('/first-aid/medical', { replace: true });
   }
 
+  // En mascotas algunos textos cambian ("Veterinario" en lugar de "Médico / obra social").
+  const label = (key: string) => t(isPet && i18n.exists(`medical.pet.${key}`) ? `medical.pet.${key}` : `medical.${key}`);
   const text = (key: 'allergies' | 'conditions' | 'emergencyContact' | 'doctor' | 'notes', multiline = true) => (
     <div className="field">
-      <label htmlFor={key}>{t(`medical.${key}`)}</label>
+      <label htmlFor={key}>{label(key)}</label>
       {multiline ? (
-        <textarea id={key} className="input textarea" value={draft[key]} onChange={(e) => set({ [key]: e.target.value })} placeholder={t(`medical.${key}Placeholder`)} />
+        <textarea id={key} className="input textarea" value={draft[key]} onChange={(e) => set({ [key]: e.target.value })} placeholder={label(`${key}Placeholder`)} />
       ) : (
-        <input id={key} className="input" value={draft[key]} onChange={(e) => set({ [key]: e.target.value })} placeholder={t(`medical.${key}Placeholder`)} />
+        <input id={key} className="input" value={draft[key]} onChange={(e) => set({ [key]: e.target.value })} placeholder={label(`${key}Placeholder`)} />
       )}
     </div>
   );
+  const todayStr = today();
+  const petDate = (key: 'lastRabiesVaccine' | 'lastSpeciesVaccine' | 'lastDeworming' | 'lastFleaTreatment', labelText: string) => (
+    <div className="field">
+      <label htmlFor={key}>{labelText}</label>
+      <input id={key} className="input" type="date" max={todayStr} value={pet[key] ?? ''} onChange={(e) => setPet({ [key]: e.target.value || null })} />
+      {pet[key] && <p className="hint" style={{ margin: 0 }}>{ago(pet[key]!)}</p>}
+    </div>
+  );
+  const ago = (day: string) => {
+    const months = monthsSince(day, todayStr);
+    return months === 0 ? t('medical.pet.thisMonth') : t('medical.pet.monthsAgo', { count: months });
+  };
 
   return (
     <div className="stack">
@@ -115,30 +140,86 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
 
       <form className="stack" onSubmit={handleSubmit}>
         <section className="card stack">
+          <Segmented<ProfileKind>
+            label={t('medical.kind')}
+            value={draft.kind}
+            options={[
+              { value: 'person', label: t('medical.kinds.person') },
+              { value: 'pet', label: t('medical.kinds.pet') },
+            ]}
+            onChange={setKind}
+          />
           <div className="field">
             <label htmlFor="name">{t('medical.name')}</label>
             <input id="name" className="input" required value={draft.name} onChange={(e) => set({ name: e.target.value })} autoFocus={isNew} />
           </div>
+          {isPet && (
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="species">{t('medical.pet.species')}</label>
+                <select id="species" className="select" value={pet.species} onChange={(e) => setPet({ species: e.target.value as PetSpecies })}>
+                  {(['dog', 'cat', 'other'] as const).map((s) => (
+                    <option key={s} value={s}>
+                      {t(`medical.pet.speciesOptions.${s}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {pet.species === 'other' && (
+                <div className="field">
+                  <label htmlFor="species-other">{t('medical.pet.speciesOther')}</label>
+                  <input id="species-other" className="input" value={pet.speciesOther} onChange={(e) => setPet({ speciesOther: e.target.value })} placeholder={t('medical.pet.speciesOtherPlaceholder')} />
+                </div>
+              )}
+            </div>
+          )}
           <div className="grid-2">
             <div className="field">
               <label htmlFor="birth">{t('medical.birthDate')}</label>
               <input id="birth" className="input" type="date" value={draft.birthDate ?? ''} onChange={(e) => set({ birthDate: e.target.value || null })} />
             </div>
-            <div className="field">
-              <label htmlFor="blood">{t('medical.bloodType')}</label>
-              <select id="blood" className="select" value={draft.bloodType} onChange={(e) => set({ bloodType: e.target.value })}>
-                <option value="">{t('medical.unknown')}</option>
-                {BLOOD_TYPES.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!isPet && (
+              <div className="field">
+                <label htmlFor="blood">{t('medical.bloodType')}</label>
+                <select id="blood" className="select" value={draft.bloodType} onChange={(e) => set({ bloodType: e.target.value })}>
+                  <option value="">{t('medical.unknown')}</option>
+                  {BLOOD_TYPES.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           {text('allergies')}
           {text('conditions')}
         </section>
+
+        {isPet && (
+          <section className="card stack" aria-labelledby="pet-health-title">
+            <h2 id="pet-health-title" className="section-title" style={{ margin: 0 }}>{t('medical.pet.healthTitle')}</h2>
+            <div className="grid-2">
+              {petDate('lastRabiesVaccine', t('medical.pet.lastRabiesVaccine'))}
+              {petDate('lastSpeciesVaccine', t(`medical.pet.lastSpeciesVaccine.${pet.species}`))}
+              {petDate('lastDeworming', t('medical.pet.lastDeworming'))}
+              {petDate('lastFleaTreatment', t('medical.pet.lastFleaTreatment'))}
+            </div>
+            <div className="field">
+              <label htmlFor="neutered">{t('medical.pet.neutered')}</label>
+              <select
+                id="neutered"
+                className="select"
+                value={pet.neutered === null ? '' : pet.neutered ? 'yes' : 'no'}
+                onChange={(e) => setPet({ neutered: e.target.value === '' ? null : e.target.value === 'yes' })}
+              >
+                <option value="">{t('medical.unknown')}</option>
+                <option value="yes">{t('medical.pet.yes')}</option>
+                <option value="no">{t('medical.pet.no')}</option>
+              </select>
+            </div>
+          </section>
+        )}
 
         <section className="card stack">
           <h2 className="section-title" style={{ margin: 0 }}>{t('medical.medications')}</h2>

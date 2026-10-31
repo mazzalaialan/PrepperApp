@@ -164,12 +164,14 @@ export function RestoreForm({ replacesData, initialTransfer, onDone }: Props) {
 
       {backup && (
         <>
-          <p className="hint">
-            {t('backup.summary', {
-              date: fmtDate(backup.manifest.createdAt),
-              items: backup.manifest.counts.items ?? 0,
-              locations: backup.manifest.counts.locations ?? 0,
-            })}
+          <p className="hint" data-testid="backup-summary">
+            {[
+              t('backup.summary', { date: fmtDate(backup.manifest.createdAt) }),
+              // Todo lo que trae (las tablas vacías no se nombran).
+              ...Object.entries(backup.manifest.counts)
+                .filter(([, n]) => (n ?? 0) > 0)
+                .map(([table, n]) => t('backup.count', { what: t(`backup.tables.${table}`), count: n })),
+            ].join(' · ')}
           </p>
           <div className="field">
             <label htmlFor="backup-secret">{t(kind === 'password' ? 'backup.passwordAtExport' : 'unlock.recoveryKey')}</label>

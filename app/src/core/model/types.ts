@@ -155,8 +155,12 @@ export interface Medication {
   schedule: string;
 }
 
-/** Ficha médica de una persona del grupo familiar. */
+export type ProfileKind = 'person' | 'pet';
+export type PetSpecies = 'dog' | 'cat' | 'other';
+
+/** Ficha médica de una persona o una mascota del grupo familiar. */
 export interface MedicalProfile extends BaseEntity {
+  kind: ProfileKind;
   name: string;
   birthDate: IsoDay | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
@@ -165,8 +169,24 @@ export interface MedicalProfile extends BaseEntity {
   conditions: string;
   medications: Medication[];
   emergencyContact: string;
+  /** Médico y obra social; en mascotas, veterinario. */
   doctor: string;
   notes: string;
+  /** Solo mascotas (en personas quedan en `null`). */
+  pet: PetHealth | null;
+}
+
+export interface PetHealth {
+  species: PetSpecies;
+  /** Especie escrita si es "other" (ej.: conejo). */
+  speciesOther: string;
+  lastRabiesVaccine: IsoDay | null;
+  /** Séxtuple/polivalente en perros, triple felina en gatos. */
+  lastSpeciesVaccine: IsoDay | null;
+  lastDeworming: IsoDay | null;
+  /** `null` = no se sabe. */
+  neutered: boolean | null;
+  lastFleaTreatment: IsoDay | null;
 }
 
 /** Mapa de tabla → tipo de entidad. Agregar una entidad = agregarla acá y en db.ts. */

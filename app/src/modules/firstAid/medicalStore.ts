@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { blobStore, repos } from '@/core/db/repository';
 import type { CompressedImage } from '@/core/images/compress';
 import { newEntity, touch } from '@/core/model/entity';
-import type { Attachment, Id, MedicalProfile } from '@/core/model/types';
+import type { Attachment, Id, MedicalProfile, PetHealth } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
 
 interface MedicalState {
@@ -27,7 +27,7 @@ export const useMedical = create<MedicalState>((set, get) => ({
     const [profiles, attachments] = await Promise.all([repos.medicalProfiles.loadAll(), repos.attachments.loadAll()]);
     set({
       loaded: true,
-      profiles: new Map(profiles.map((p) => [p.id, p])),
+      profiles: new Map(profiles.map((p) => [p.id, normalizeProfile(p)])),
       photos: new Map(attachments.filter((a) => a.ownerType === 'medicalProfile').map((a) => [a.ownerId, a])),
     });
   },
@@ -85,6 +85,22 @@ onSessionChange(() => {
     useMedical.getState().clear();
   }
 });
+
+/** Las fichas anteriores a v0.7.2 eran todas de personas. */
+export function normalizeProfile(p: MedicalProfile): MedicalProfile {
+  return { ...p, kind: p.kind ?? 'person', pet: p.pet ?? null };
+}
+
+export function emptyPetHealth(): PetHealth {
+  return { species: 'dog', speciesOther: '', lastRabiesVaccine: null, lastSpeciesVaccine: null, lastDeworming: null, neutered: null, lastFleaTreatment: null };
+}
+
+/** Meses completos entre una fecha y hoy (para "hace 3 meses"). */
+export function monthsSince(day: string, today: string): number {
+  const [y1, m1, d1] = day.split('-').map(Number);
+  const [y2, m2, d2] = today.split('-').map(Number);
+  return Math.max(0, (y2! - y1!) * 12 + (m2! - m1!) - (d2! < d1! ? 1 : 0));
+}
 
 /** Edad en años cumplidos a una fecha dada. */
 export function ageOn(birthDate: string, today: string): number {

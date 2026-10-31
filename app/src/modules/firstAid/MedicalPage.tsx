@@ -1,19 +1,20 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { HeartPulse, Plus, TriangleAlert } from 'lucide-react';
+import { HeartPulse, PawPrint, Plus, TriangleAlert } from 'lucide-react';
 import type { Attachment } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
 import { useBlobUrl } from '@/ui/useBlobUrl';
-import { ageOn, useMedical } from './medicalStore';
+import { ageOn, monthsSince, useMedical } from './medicalStore';
 
-function Avatar({ photo }: { photo: Attachment | undefined }) {
+function Avatar({ photo, pet }: { photo: Attachment | undefined; pet: boolean }) {
   const url = useBlobUrl(photo?.id, photo?.mime);
+  const Icon = pet ? PawPrint : HeartPulse;
   return url ? (
     <img className="avatar" src={url} alt="" />
   ) : (
     <span className="avatar avatar-empty">
-      <HeartPulse size={22} aria-hidden />
+      <Icon size={22} aria-hidden />
     </span>
   );
 }
@@ -27,6 +28,10 @@ export function MedicalPage() {
     [profiles, i18n.language],
   );
   const todayStr = today();
+  const monthsLabel = (day: string) => {
+    const m = monthsSince(day, todayStr);
+    return m === 0 ? t('medical.pet.thisMonth') : t('medical.pet.monthsAgo', { count: m });
+  };
 
   return (
     <>
@@ -42,15 +47,18 @@ export function MedicalPage() {
       ) : (
         <ul className="list">
           {rows.map((p) => {
+            const species = p.pet ? (p.pet.species === 'other' && p.pet.speciesOther ? p.pet.speciesOther : t(`medical.pet.speciesOptions.${p.pet.species}`)) : null;
             const facts = [
+              species,
               p.birthDate ? t('medical.age', { count: ageOn(p.birthDate, todayStr) }) : null,
+              p.pet?.lastRabiesVaccine ? t('medical.pet.rabiesShort', { ago: monthsLabel(p.pet.lastRabiesVaccine) }) : null,
               p.bloodType ? t('medical.bloodShort', { type: p.bloodType }) : null,
               p.medications.length ? t('medical.medCount', { count: p.medications.length }) : null,
             ].filter(Boolean);
             return (
               <li key={p.id}>
                 <Link className="list-row" to={`/first-aid/medical/${p.id}`}>
-                  <Avatar photo={photos.get(p.id)} />
+                  <Avatar photo={photos.get(p.id)} pet={p.kind === 'pet'} />
                   <span className="list-main">
                     <span className="list-title">{p.name}</span>
                     {facts.length > 0 && <span className="list-sub">{facts.join(' · ')}</span>}
