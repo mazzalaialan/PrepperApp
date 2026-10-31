@@ -15,6 +15,7 @@ import { MedicalEditPage } from '@/modules/firstAid/MedicalEditPage';
 import { MedicalPage } from '@/modules/firstAid/MedicalPage';
 import { ContactEditPage } from '@/modules/emergency/ContactEditPage';
 import { ContactsPage } from '@/modules/emergency/ContactsPage';
+import { FrequencyEditPage } from '@/modules/emergency/FrequencyEditPage';
 import { MyLocationPage } from '@/modules/emergency/MyLocationPage';
 import { NearbyPage } from '@/modules/emergency/NearbyPage';
 import { RadioPage } from '@/modules/emergency/RadioPage';
@@ -73,6 +74,7 @@ const router = createHashRouter([
       { path: '/first-aid/contacts/:id', element: <ContactEditPage /> },
       { path: '/first-aid/location', element: <MyLocationPage /> },
       { path: '/first-aid/radio', element: <RadioPage /> },
+      { path: '/first-aid/radio/:id', element: <FrequencyEditPage /> },
       { path: '/documents', element: <DocumentsPage /> },
       { path: '/documents/:id', element: <DocumentEditPage /> },
       { path: '/transfer', element: <BackupPage /> },

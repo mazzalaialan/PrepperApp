@@ -89,7 +89,8 @@ a {
   gap: 6px;
 }
 
-.field label {
+.field label,
+.field .field-label {
   font-size: 0.9rem;
   color: var(--text-muted);
 }

@@ -134,7 +134,8 @@ export interface Route extends BaseEntity {
   notes: string;
 }
 
-export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other';
+/** `radio`: frecuencia guardada por el usuario (p. ej. la que le dieron en un refugio). */
+export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other' | 'radio';
 
 /** Contacto de emergencia: comisaría, bomberos, hospital, médico, familiar… */
 export interface EmergencyContact extends BaseEntity {
@@ -149,6 +150,10 @@ export interface EmergencyContact extends BaseEntity {
   notes: string;
   /** De dónde salió (búsqueda de cercanos): para saber qué tan confiable es. */
   source: string | null;
+  /** Solo frecuencias de radio (ausentes en los contactos guardados antes de 0.10). */
+  frequency?: string;
+  /** Tono (CTCSS/DCS), canal u otro dato para sintonizar. */
+  tone?: string;
 }
 
 export interface HouseholdMember extends BaseEntity {

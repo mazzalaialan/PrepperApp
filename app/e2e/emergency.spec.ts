@@ -129,4 +129,28 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(stations.locator('li').first()).toContainText('FM 95,5');
   await expect(page.getByText('156,800 MHz')).toBeVisible();
   await expect(page.getByText(/No se incluyen frecuencias de Gendarmería/)).toBeVisible();
+
+  // Una frecuencia que me dieron en el refugio, con el lugar donde estoy.
+  await page.getByRole('link', { name: 'Agregar frecuencia' }).click();
+  await page.getByLabel('Nombre').fill('Refugio Frey');
+  await page.getByLabel('Frecuencia', { exact: true }).fill('147,450 MHz');
+  await page.getByLabel('Tono, canal u otro dato (opcional)').fill('tono 88,5 Hz');
+  await page.getByLabel('Notas').fill('Escuchan de 8 a 20 h');
+  await page.getByRole('button', { name: 'Usar mi ubicación actual' }).click();
+  await expect(page.getByTestId('freq-place')).toContainText('41°08′');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  const mine = page.getByTestId('my-frequencies');
+  await expect(mine).toContainText('Refugio Frey');
+  await expect(mine).toContainText('147,450 MHz');
+  await expect(mine).toContainText('tono 88,5 Hz · a 0 m');
+  await expect(mine).toContainText('Escuchan de 8 a 20 h');
+  // No se mezcla con los contactos.
+  await page.goto('/#/first-aid/contacts');
+  await expect(page.getByText('Todavía no guardaste contactos.')).toBeVisible();
+  // Editar.
+  await page.goto('/#/first-aid/radio');
+  await page.getByRole('link', { name: 'Editar Refugio Frey' }).click();
+  await page.getByLabel('Frecuencia', { exact: true }).fill('147,460 MHz');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByTestId('my-frequencies')).toContainText('147,460 MHz');
 });

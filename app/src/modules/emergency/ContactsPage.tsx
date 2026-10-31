@@ -9,7 +9,11 @@ import { useContacts } from './store';
 export function ContactsPage() {
   const { t, i18n } = useTranslation();
   const contacts = useContacts((s) => s.contacts);
-  const mine = useMemo(() => [...contacts.values()].sort((a, b) => a.name.localeCompare(b.name, i18n.language)), [contacts, i18n.language]);
+  // Las frecuencias de radio se ven en Radio.
+  const mine = useMemo(
+    () => [...contacts.values()].filter((c) => c.kind !== 'radio').sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
+    [contacts, i18n.language],
+  );
 
   return (
     <div className="stack">
