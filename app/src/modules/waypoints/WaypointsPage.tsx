@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, MapPinPlus, Plus } from 'lucide-react';
+import { MapPin, MapPinPlus, Navigation, Plus, Route as RouteIcon } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { distanceMeters } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
@@ -58,7 +58,10 @@ export function WaypointsPage() {
   return (
     <>
       <div className="page-head">
-        <h1 className="page-title">{t('modules.waypoints.title')}</h1>
+        <h1 className="page-title" style={{ flex: 1 }}>{t('modules.waypoints.title')}</h1>
+        <Link className="btn" to="/orientation/routes">
+          <RouteIcon size={20} /> {t('modules.routes.title')}
+        </Link>
         <Link className="btn" to="/orientation/waypoints/new">
           <Plus size={20} /> {t('waypoints.new')}
         </Link>
@@ -81,7 +84,7 @@ export function WaypointsPage() {
       ) : (
         <ul className="list" style={{ marginTop: 16 }}>
           {rows.map((wp) => (
-            <li key={wp.id}>
+            <li key={wp.id} className="list-item-actions">
               <Link className="list-row" to={`/orientation/waypoints/${wp.id}`}>
                 <MapPin size={22} aria-hidden style={{ color: 'var(--accent)', flex: 'none' }} />
                 <span className="list-main">
@@ -89,6 +92,11 @@ export function WaypointsPage() {
                   {fix && <span className="list-sub">{distanceLabel(fix, wp)}</span>}
                 </span>
               </Link>
+              {hasGps && (
+                <Link className="btn go-btn" to={`/orientation/waypoints/${wp.id}/go`} aria-label={t('goto.title', { name: wp.name })}>
+                  <Navigation size={20} /> {t('goto.short')}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

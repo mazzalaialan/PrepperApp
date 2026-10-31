@@ -39,7 +39,7 @@ const V1_ENTITY_TABLES = [
   'recommendationRules',
 ] as const satisfies readonly EntityTable[];
 
-export const ENTITY_TABLES = [...V1_ENTITY_TABLES, 'medicalProfiles'] as const satisfies readonly EntityTable[];
+export const ENTITY_TABLES = [...V1_ENTITY_TABLES, 'medicalProfiles', 'routes'] as const satisfies readonly EntityTable[];
 
 /** Binarios cifrados (fotos), separados para no cargarlos a memoria al desbloquear. */
 export interface BlobRow extends Sealed {
@@ -62,6 +62,7 @@ export class UserDb extends Dexie {
   householdMembers!: Table<EncryptedRow, string>;
   recommendationRules!: Table<EncryptedRow, string>;
   medicalProfiles!: Table<EncryptedRow, string>;
+  routes!: Table<EncryptedRow, string>;
 
   constructor(name = 'vikarg-user') {
     super(name);
@@ -78,8 +79,8 @@ export class UserDb extends Dexie {
     this.version(2)
       .stores({ alertIndex: 'lotId, notifyFrom' })
       .upgrade((tx) => tx.table('alertIndex').clear());
-    // v3: fichas médicas.
-    this.version(3).stores({ medicalProfiles: 'id, updatedAt' });
+    // v3: fichas médicas y rutas de waypoints.
+    this.version(3).stores({ medicalProfiles: 'id, updatedAt', routes: 'id, updatedAt' });
   }
 
   entityTable(name: EntityTable): Table<EncryptedRow, string> {

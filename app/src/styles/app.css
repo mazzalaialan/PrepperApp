@@ -956,6 +956,37 @@ a.module-card:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.list-item-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.list-item-actions .list-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.go-btn {
+  flex: none;
+}
+
+.route-points .list-row {
+  padding-right: 4px;
+}
+
+.route-index {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
 /* ---------- Brújula e "ir al punto" ---------- */
 
 .compass-readout {

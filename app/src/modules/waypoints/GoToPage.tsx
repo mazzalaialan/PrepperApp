@@ -33,10 +33,20 @@ export function GoToPage() {
       </p>
     );
   }
-  return <GoTo target={target} />;
+  return <GoTo target={target} backTo={`/orientation/waypoints/${target.id}`} />;
 }
 
-function GoTo({ target }: { target: Waypoint }) {
+/** Recorrido de una ruta: en qué punto va y cómo pasar al siguiente. */
+export interface RouteStep {
+  name: string;
+  step: number;
+  total: number;
+  next: Waypoint | undefined;
+  onPrev: (() => void) | null;
+  onNext: (() => void) | null;
+}
+
+export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: string; route?: RouteStep }) {
   const { t, i18n } = useTranslation();
   const caps = useCapabilities((s) => s.caps);
   const units = useSettings((s) => s.settings.units);
@@ -57,10 +67,17 @@ function GoTo({ target }: { target: Waypoint }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to={`/orientation/waypoints/${target.id}`} aria-label={t('common.back')}>
+        <Link className="icon-btn" to={backTo} aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="page-title" style={{ flex: 1 }}>{t('goto.title', { name: target.name })}</h1>
+        <div style={{ flex: 1 }}>
+          <h1 className="page-title" style={{ marginBottom: 0 }}>{t('goto.title', { name: target.name })}</h1>
+          {route && (
+            <p className="hint" style={{ margin: 0 }} data-testid="route-step">
+              {t('routes.stepOf', { route: route.name, step: route.step, total: route.total })}
+            </p>
+          )}
+        </div>
         {canAr && (
           <button className="icon-btn" type="button" aria-pressed={cameraOn} onClick={() => setCameraOn(!cameraOn)} aria-label={cameraOn ? t('goto.cameraOff') : t('goto.cameraOn')} title={cameraOn ? t('goto.cameraOff') : t('goto.cameraOn')}>
             {cameraOn ? <CameraOff size={22} /> : <Camera size={22} />}
@@ -79,9 +96,20 @@ function GoTo({ target }: { target: Waypoint }) {
         </div>
       </section>
 
+      {route && (
+        <div className="row-between">
+          <button className="btn" type="button" onClick={route.onPrev ?? undefined} disabled={!route.onPrev}>
+            <ChevronLeft size={18} /> {t('routes.previous')}
+          </button>
+          <button className={arrived ? 'btn btn-primary' : 'btn'} type="button" onClick={route.onNext ?? undefined} disabled={!route.onNext}>
+            {route.next ? t('routes.nextPoint', { name: route.next.name }) : t('routes.lastPoint')} <ChevronRight size={18} />
+          </button>
+        </div>
+      )}
+
       {arrived ? (
         <p className="goto-arrived" role="status">
-          <CircleCheck size={28} aria-hidden /> {t('goto.arrived')}
+          <CircleCheck size={28} aria-hidden /> {route && !route.next ? t('routes.finished') : t('goto.arrived')}
         </p>
       ) : !caps?.orientation ? (
         <p className="hint">{t('goto.noCompass')}</p>

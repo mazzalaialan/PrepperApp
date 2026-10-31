@@ -122,6 +122,14 @@ export interface Waypoint extends BaseEntity {
   notes: string;
 }
 
+/** Lista ordenada de waypoints con nombre (ej.: "Evacuación al refugio"). */
+export interface Route extends BaseEntity {
+  name: string;
+  /** En orden de recorrido; un punto puede repetirse (ida y vuelta). */
+  waypointIds: Id[];
+  notes: string;
+}
+
 export interface HouseholdMember extends BaseEntity {
   label: string;
   count: number;
@@ -172,6 +180,7 @@ export interface EntityMap {
   householdMembers: HouseholdMember;
   recommendationRules: RecommendationRule;
   medicalProfiles: MedicalProfile;
+  routes: Route;
 }
 
 export type EntityTable = keyof EntityMap;

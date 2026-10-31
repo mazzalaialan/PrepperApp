@@ -54,6 +54,7 @@ export const repos = {
   householdMembers: new Repository('householdMembers'),
   recommendationRules: new Repository('recommendationRules'),
   medicalProfiles: new Repository('medicalProfiles'),
+  routes: new Repository('routes'),
 } satisfies { [K in EntityTable]: Repository<K> };
 
 /** Binarios cifrados (fotos), leídos bajo demanda. */
