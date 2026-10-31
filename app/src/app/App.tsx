@@ -17,6 +17,7 @@ import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
 import { ItemsPage } from '@/modules/inventory/pages/ItemsPage';
 import { LocationsPage } from '@/modules/inventory/pages/LocationsPage';
 import { CompassPage } from '@/modules/compass/CompassPage';
+import { RecommendationsPage } from '@/modules/recommendations/RecommendationsPage';
 import { InclinometerPage } from '@/modules/inclinometer/InclinometerPage';
 import { GoToPage } from '@/modules/waypoints/GoToPage';
 import { RouteEditPage } from '@/modules/waypoints/RouteEditPage';
@@ -47,6 +48,7 @@ const router = createHashRouter([
       { path: '/inventory/categories', element: <CategoriesPage /> },
       { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/inventory/backup', element: <BackupPage /> },
+      { path: '/inventory/recommendations', element: <RecommendationsPage /> },
       { path: '/first-aid', element: <SectionPage section="firstAid" /> },
       { path: '/first-aid/kits', element: <KitsPage /> },
       { path: '/first-aid/kits/:id', element: <KitPage /> },

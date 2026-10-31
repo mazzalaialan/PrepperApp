@@ -1124,6 +1124,37 @@ a.module-card:hover {
   right: 8px;
 }
 
+/* ---------- Recomendaciones ---------- */
+
+.rule-card {
+  align-items: flex-start;
+}
+
+.progress {
+  display: block;
+  height: 8px;
+  margin: 6px 0 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.progress-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--warn);
+}
+
+.progress-bar[data-done='true'] {
+  background: var(--ok);
+}
+
+.rule-missing {
+  color: var(--warn);
+  font-weight: 600;
+}
+
 /* ---------- Inclinómetro ---------- */
 
 [data-zone='low'] {
