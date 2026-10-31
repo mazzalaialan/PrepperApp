@@ -428,6 +428,10 @@
       "saturn": "Saturn"
     }
   },
+  "fullscreen": {
+    "enter": "Full screen",
+    "exit": "Exit full screen"
+  },
   "inclinometer": {
     "mode": "How to measure",
     "surface": "Resting",

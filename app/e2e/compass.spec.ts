@@ -93,6 +93,16 @@ test('ir al punto: flecha con el celular acostado y realidad aumentada parado', 
   await page.waitForTimeout(500); // que la cámara falsa muestre imagen
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-13-ar.png` });
 
+  // Pantalla completa: la cámara ocupa toda la pantalla, con los datos encima.
+  await page.getByRole('button', { name: 'Pantalla completa' }).click();
+  await expect(page.locator('.fs-overlay')).toContainText(/Refugio · 1,\d+ km/);
+  await expect(page.locator('.fs-overlay')).toContainText('Seguí derecho');
+  const viewport = page.viewportSize()!;
+  await expect.poll(async () => (await page.locator('.ar-view').boundingBox())!.height).toBeGreaterThanOrEqual(viewport.height - 2);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-13b-ar-fullscreen.png` });
+  await page.getByRole('button', { name: 'Salir de pantalla completa' }).click();
+  await expect(page.locator('.fs-overlay')).toHaveCount(0);
+
   // De espaldas al punto: indicador al costado para girar.
   await setOrientation(page, (360 - magneticToTarget + 180) % 360, 90);
   await expect(page.getByTestId('ar-edge')).toBeVisible();

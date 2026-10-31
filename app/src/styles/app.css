@@ -1124,6 +1124,59 @@ a.module-card:hover {
   right: 8px;
 }
 
+/* ---------- Pantalla completa (realidad aumentada) ---------- */
+
+.fs-stage {
+  position: relative;
+}
+
+.fs-stage[data-fullscreen='true'] {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100dvh;
+  max-height: none;
+  border-radius: 0;
+}
+
+.fs-toggle {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: 8px;
+  z-index: 2;
+  background: rgb(0 0 0 / 0.5);
+  color: #eee;
+}
+
+.fs-overlay {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+  right: 64px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.fs-overlay .fs-big {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+[data-theme='red'] .fs-overlay,
+[data-theme='red'] .fs-toggle,
+[data-theme='red'] .sky-zoom .icon-btn {
+  color: #ff5a40;
+}
+
 /* ---------- Mapa estelar ---------- */
 
 .sky-stage {
@@ -1143,7 +1196,7 @@ a.module-card:hover {
 .sky-zoom {
   position: absolute;
   right: 8px;
-  bottom: 8px;
+  bottom: max(8px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 4px;

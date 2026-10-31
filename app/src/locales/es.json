@@ -428,6 +428,10 @@
       "saturn": "Saturno"
     }
   },
+  "fullscreen": {
+    "enter": "Pantalla completa",
+    "exit": "Salir de pantalla completa"
+  },
   "inclinometer": {
     "mode": "Cómo medir",
     "surface": "Apoyado",

@@ -12,6 +12,7 @@ import { useHeading, type Heading } from '@/core/sensors/useHeading';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
 import { CompassRose } from '@/modules/compass/CompassRose';
+import { FullscreenStage } from '@/ui/FullscreenStage';
 import { GpsStatus, useFormatBearing } from './components';
 import { useWaypoints } from './store';
 
@@ -168,8 +169,27 @@ function ArView({ target, heading, turn, distanceLabel }: { target: Waypoint; he
 
   if (error) return <p className="error">{t(`goto.cameraError.${error}`)}</p>;
 
+  const turnText =
+    turn === null
+      ? null
+      : Math.abs(turn) <= ON_COURSE_DEG
+        ? t('goto.straight')
+        : turn > 0
+          ? t('goto.turnRight', { degrees: Math.round(turn) })
+          : t('goto.turnLeft', { degrees: Math.round(-turn) });
+
   return (
-    <div className="ar-view">
+    <FullscreenStage
+      className="ar-view"
+      overlay={
+        <>
+          <span className="fs-big">
+            {target.name} · {distanceLabel}
+          </span>
+          {turnText && <span>{turnText}</span>}
+        </>
+      }
+    >
       <video ref={video} className="ar-video" playsInline muted />
       <div className="ar-horizon" style={{ top: `${y}%` }} />
       {inView ? (
@@ -189,6 +209,6 @@ function ArView({ target, heading, turn, distanceLabel }: { target: Waypoint; he
           </div>
         )
       )}
-    </div>
+    </FullscreenStage>
   );
 }

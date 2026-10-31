@@ -8,6 +8,7 @@ import { useDeviceAngles } from '@/core/sensors/useDeviceAngles';
 import { useSettings, type StarmapLayers } from '@/core/settings/settings';
 import { useEffectiveTheme, useThemeOverride } from '@/core/settings/theme';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
+import { FullscreenStage } from '@/ui/FullscreenStage';
 import { Segmented } from '@/ui/Segmented';
 import { buildScene, loadSkyData, type SkyData } from './scene';
 import { cameraFromDevice, cameraLookingAt, PLANETS, vectorToHorizontal, type Camera, type Horizontal, type PlanetId, type Vec3 } from './sky';
@@ -168,6 +169,15 @@ export function StarMapPage() {
   const LAYER_KEYS: (keyof StarmapLayers)[] = ['constellationLines', 'constellationNames', 'starNames', 'planets', 'guide', 'grid'];
 
   const fmtDeg = (n: number) => `${Math.round(n)}°`;
+  const looking = view.kind === 'camera' ? vectorToHorizontal(view.camera.forward) : null;
+  const pointing =
+    looking && t('starmap.pointing', { az: fmtDeg(looking.az), dir: t(`geo.cardinal.${cardinalOf(looking.az)}`), alt: fmtDeg(looking.alt) });
+  const targetLine =
+    target && targetPos
+      ? targetPos.alt > 0
+        ? t('starmap.where', { name: target.label, az: fmtDeg(targetPos.az), dir: t(`geo.cardinal.${cardinalOf(targetPos.az)}`), alt: fmtDeg(targetPos.alt) })
+        : t('starmap.belowHorizon', { name: target.label })
+      : null;
 
   return (
     <div className="stack">
@@ -190,13 +200,19 @@ export function StarMapPage() {
         <p className="empty">{data ? t('sky.needPlace') : t('starmap.loading')}</p>
       ) : (
         <>
-          <div
+          <FullscreenStage
             className="sky-stage"
             data-mode={mode}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={() => (drag.current = null)}
             onPointerCancel={() => (drag.current = null)}
+            overlay={
+              <>
+                {pointing && <span className="fs-big">{pointing}</span>}
+                {targetLine && <span>{targetLine}</span>}
+              </>
+            }
           >
             <SkyCanvas scene={scene} view={view} red={theme === 'red'} layers={layers} target={skyTarget} labels={labels} />
             {mode === 'camera' && (
@@ -209,13 +225,10 @@ export function StarMapPage() {
                 </button>
               </div>
             )}
-          </div>
-          {view.kind === 'camera' && (
+          </FullscreenStage>
+          {pointing && (
             <p className="sky-pointing" data-testid="sky-pointing">
-              {(() => {
-                const looking = vectorToHorizontal(view.camera.forward);
-                return t('starmap.pointing', { az: fmtDeg(looking.az), dir: t(`geo.cardinal.${cardinalOf(looking.az)}`), alt: fmtDeg(looking.alt) });
-              })()}
+              {pointing}
             </p>
           )}
           <p className="hint" style={{ margin: 0 }} data-testid="sky-hint">
@@ -246,11 +259,9 @@ export function StarMapPage() {
                 <option key={x.key} value={x.label} />
               ))}
             </datalist>
-            {target && targetPos && (
+            {targetLine && (
               <p className="sky-target-info" data-testid="sky-target">
-                {targetPos.alt > 0
-                  ? t('starmap.where', { name: target.label, az: fmtDeg(targetPos.az), dir: t(`geo.cardinal.${cardinalOf(targetPos.az)}`), alt: fmtDeg(targetPos.alt) })
-                  : t('starmap.belowHorizon', { name: target.label })}
+                {targetLine}
               </p>
             )}
           </section>

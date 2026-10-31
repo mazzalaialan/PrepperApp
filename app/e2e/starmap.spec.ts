@@ -121,5 +121,15 @@ test('mapa estelar: apuntar al cielo con la brújula del celular', async ({ page
   expect(await litPixels(page)).toBeGreaterThan(200);
   await page.getByLabel('Buscar un astro').fill('Acrux');
   await expect(page.getByTestId('sky-target')).toHaveText(/^Acrux: acimut/);
+
+  // Pantalla completa con hacia dónde se mira y el astro buscado encima.
+  await page.getByRole('button', { name: 'Pantalla completa' }).click();
+  await expect(page.locator('.fs-overlay')).toContainText(/Mirando a 1(79|80|81)° \(S\)/);
+  await expect(page.locator('.fs-overlay')).toContainText(/Acrux: acimut/);
+  const viewport = page.viewportSize()!;
+  await expect.poll(async () => (await page.locator('.sky-stage').boundingBox())!.height).toBeGreaterThanOrEqual(viewport.height - 2);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-20b-starmap-fullscreen.png` });
+  await page.getByRole('button', { name: 'Salir de pantalla completa' }).click();
+  await expect(page.locator('.fs-overlay')).toHaveCount(0);
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-20-starmap-camera.png`, fullPage: true });
 });
