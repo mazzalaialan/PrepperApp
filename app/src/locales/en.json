@@ -237,6 +237,47 @@
     "notes": "Notes",
     "notesPlaceholder": "Surgeries, vaccines, other useful details"
   },
+  "place": {
+    "label": "Place",
+    "myLocation": "My location (GPS)",
+    "manual": "Type coordinates…",
+    "manualHint": "Paste or type coordinates. To use them often, save them as a waypoint."
+  },
+  "sky": {
+    "date": "Date",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "needPlace": "Choose a place to calculate sun and moon.",
+    "sun": "Sun",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "polar": { "day": "The sun doesn't set all day", "night": "The sun doesn't rise all day" },
+    "duration": "{{h}} h {{m}} min",
+    "daylight": "Daylight: {{duration}}",
+    "solarNoon": "solar noon {{time}}",
+    "twilight": "Twilight",
+    "dawn": "Starts",
+    "dusk": "Ends",
+    "civil": "Civil",
+    "nautical": "Nautical",
+    "astronomical": "Astronomical",
+    "twilightHint": "Civil: enough light to move without a flashlight. Nautical: the horizon is visible. Astronomical: full darkness.",
+    "moon": "Moon",
+    "illumination": "{{pct}}% illuminated",
+    "moonrise": "rises {{time}}",
+    "moonset": "sets {{time}}",
+    "phases": {
+      "new": "New moon",
+      "waxingCrescent": "Waxing crescent",
+      "firstQuarter": "First quarter",
+      "waxingGibbous": "Waxing gibbous",
+      "full": "Full moon",
+      "waningGibbous": "Waning gibbous",
+      "lastQuarter": "Last quarter",
+      "waningCrescent": "Waning crescent"
+    },
+    "timesNote": "Calculated offline for {{place}}. Times shown in this device's time zone."
+  },
   "compass": {
     "roseLabel": "Compass rose",
     "waiting": "Waiting for the phone's compass…",

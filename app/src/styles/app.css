@@ -1124,6 +1124,89 @@ a.module-card:hover {
   right: 8px;
 }
 
+/* ---------- Sol y luna ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-nav-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.day-nav-label .hint {
+  display: block;
+  margin: 0;
+}
+
+.day-nav-label .hint::first-letter {
+  text-transform: uppercase;
+}
+
+.section-title svg {
+  vertical-align: -2px;
+}
+
+.nav-label svg {
+  vertical-align: -3px;
+}
+
+.sky-big {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.sky-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.sky-table th,
+.sky-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.sky-table thead th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.moon-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.moon-dark {
+  fill: var(--surface-2);
+  stroke: var(--border);
+}
+
+.moon-lit {
+  fill: #e8e2cf;
+}
+
 /* ---------- Ficha médica ---------- */
 
 .avatar {

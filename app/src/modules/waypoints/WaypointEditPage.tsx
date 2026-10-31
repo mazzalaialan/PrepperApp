@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Copy, Crosshair, Navigation, Trash2 } from 'lucide-react';
-import { useCapabilities } from '@/core/capabilities/capabilities';
+import { useCapability } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, formatDecimal, formatDms, parseCoordinates } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
@@ -37,7 +37,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   const navigate = useNavigate();
   const units = useSettings((s) => s.settings.units);
   const { saveWaypoint, deleteWaypoint } = useWaypoints();
-  const hasGps = useCapabilities((s) => s.caps?.geolocation ?? false);
+  const hasGps = useCapability('geolocation');
 
   const [name, setName] = useState(initial.name);
   const [coords, setCoords] = useState(stored ? formatDecimal(stored) : '');

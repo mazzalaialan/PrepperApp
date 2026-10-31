@@ -3,6 +3,7 @@ import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
+import { AstronomyPage } from '@/modules/astronomy/AstronomyPage';
 import { BackupPage } from '@/modules/backup/BackupPage';
 import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
 import { DocumentsPage } from '@/modules/documents/DocumentsPage';
@@ -61,6 +62,7 @@ const router = createHashRouter([
       { path: '/orientation/routes/:id', element: <RouteEditPage /> },
       { path: '/orientation/routes/:id/go/:step', element: <RouteGoPage /> },
       { path: '/weather', element: <SectionPage section="weather" /> },
+      { path: '/weather/sky', element: <AstronomyPage /> },
       { path: '/garden', element: <SectionPage section="garden" /> },
       // Ruta de la sección "Campo" (v0.3), dividida en Orientación y Meteorología.
       { path: '/field', element: <Navigate to="/orientation" replace /> },

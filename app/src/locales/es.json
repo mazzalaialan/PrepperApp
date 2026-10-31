@@ -237,6 +237,47 @@
     "notes": "Notas",
     "notesPlaceholder": "Cirugías, vacunas, otros datos útiles"
   },
+  "place": {
+    "label": "Lugar",
+    "myLocation": "Mi ubicación (GPS)",
+    "manual": "Escribir coordenadas…",
+    "manualHint": "Pegá o escribí coordenadas. Para usarlas seguido, guardalas como waypoint."
+  },
+  "sky": {
+    "date": "Fecha",
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "needPlace": "Elegí un lugar para calcular el sol y la luna.",
+    "sun": "Sol",
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer",
+    "polar": { "day": "El sol no se pone en todo el día", "night": "El sol no sale en todo el día" },
+    "duration": "{{h}} h {{m}} min",
+    "daylight": "Luz del día: {{duration}}",
+    "solarNoon": "mediodía solar {{time}}",
+    "twilight": "Crepúsculo",
+    "dawn": "Empieza",
+    "dusk": "Termina",
+    "civil": "Civil",
+    "nautical": "Náutico",
+    "astronomical": "Astronómico",
+    "twilightHint": "Civil: hay luz para moverse sin linterna. Náutico: se distingue el horizonte. Astronómico: noche cerrada.",
+    "moon": "Luna",
+    "illumination": "Iluminada {{pct}} %",
+    "moonrise": "sale {{time}}",
+    "moonset": "se pone {{time}}",
+    "phases": {
+      "new": "Luna nueva",
+      "waxingCrescent": "Creciente",
+      "firstQuarter": "Cuarto creciente",
+      "waxingGibbous": "Creciente gibosa",
+      "full": "Luna llena",
+      "waningGibbous": "Menguante gibosa",
+      "lastQuarter": "Cuarto menguante",
+      "waningCrescent": "Menguante"
+    },
+    "timesNote": "Calculado sin conexión para {{place}}. Horarios en la hora de este dispositivo."
+  },
   "compass": {
     "roseLabel": "Rosa de los vientos",
     "waiting": "Esperando la brújula del celular…",

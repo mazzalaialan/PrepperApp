@@ -21,6 +21,11 @@ export interface Settings {
   notifyHour: number;
   /** Referencia de la brújula: norte verdadero (corrige la declinación) o magnético. */
   northReference: NorthReference;
+  /**
+   * Lugar para sol, luna y clima: un waypoint guardado (solo su id; las
+   * coordenadas quedan cifradas) o `null` para usar el GPS.
+   */
+  placeWaypointId: string | null;
 }
 
 export type NorthReference = 'true' | 'magnetic';
@@ -43,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notificationsEnabled: false,
   notifyHour: 9,
   northReference: 'true',
+  placeWaypointId: null,
 };
 
 const SETTINGS_KEY = 'app';

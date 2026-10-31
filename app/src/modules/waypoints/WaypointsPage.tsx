@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, MapPinPlus, Navigation, Plus, Route as RouteIcon } from 'lucide-react';
-import { useCapabilities } from '@/core/capabilities/capabilities';
+import { useCapability } from '@/core/capabilities/capabilities';
 import { distanceMeters } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
@@ -17,7 +17,7 @@ export function WaypointsPage() {
   const navigate = useNavigate();
   const waypoints = useWaypoints((s) => s.waypoints);
   const saveWaypoint = useWaypoints((s) => s.saveWaypoint);
-  const hasGps = useCapabilities((s) => s.caps?.geolocation ?? false);
+  const hasGps = useCapability('geolocation');
   const { fix, error } = useGeolocation(hasGps);
   const distanceLabel = useDistanceLabel();
   const [marking, setMarking] = useState(false);

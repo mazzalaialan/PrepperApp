@@ -62,7 +62,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'maps', section: 'orientation', icon: MapIcon, phase: 'F5', implemented: false, degradesWithout: ['geolocation'] },
   { id: 'starmap', section: 'orientation', icon: Sparkles, phase: 'F6', implemented: false, degradesWithout: ['orientation'] },
   { id: 'weather', section: 'weather', icon: CloudSun, phase: 'F3', implemented: false },
-  { id: 'astronomy', section: 'weather', icon: Moon, phase: 'F3', implemented: false, degradesWithout: ['geolocation'] },
+  { id: 'astronomy', section: 'weather', icon: Moon, phase: 'F3', implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },
   { id: 'garden', section: 'garden', icon: Sprout, phase: 'F7', implemented: false },
   { id: 'library', section: 'library', icon: BookOpen, phase: 'F4', implemented: false },
 ];

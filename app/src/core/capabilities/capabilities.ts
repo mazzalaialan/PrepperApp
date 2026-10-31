@@ -107,3 +107,12 @@ export const useCapabilities = create<CapabilitiesState>((set) => ({
     set({ caps: await detectCapabilities() });
   },
 }));
+
+/**
+ * Una capacidad puntual. Mientras dura la detección (las de sensores tardan
+ * hasta 1,5 s) responde lo que se sabe al instante: el GPS existe si el
+ * navegador lo expone; el resto se asume ausente hasta confirmarlo.
+ */
+export function useCapability(name: Capability): boolean {
+  return useCapabilities((s) => s.caps?.[name] ?? (name === 'geolocation' && 'geolocation' in navigator));
+}

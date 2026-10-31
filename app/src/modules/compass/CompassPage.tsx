@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useCapabilities } from '@/core/capabilities/capabilities';
+import { useCapability } from '@/core/capabilities/capabilities';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings, type NorthReference } from '@/core/settings/settings';
@@ -9,7 +9,7 @@ import { CompassRose } from './CompassRose';
 
 export function CompassPage() {
   const { t, i18n } = useTranslation();
-  const hasGps = useCapabilities((s) => s.caps?.geolocation ?? false);
+  const hasGps = useCapability('geolocation');
   const { fix } = useGeolocation(hasGps);
   const heading = useHeading(fix);
   const formatBearing = useFormatBearing();
