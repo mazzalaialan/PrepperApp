@@ -2213,3 +2213,6 @@ a.module-card:hover {
 .contact-row > .phone-actions {
   margin-left: auto;
 }
+.contact-row[data-off='true'] {
+  opacity: 0.55;
+}

@@ -153,4 +153,35 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await page.getByLabel('Frecuencia', { exact: true }).fill('147,460 MHz');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByTestId('my-frequencies')).toContainText('147,460 MHz');
+
+  // Repetidoras: un CSV con ubicación (estilo RepeaterBook) se ordena por cercanía.
+  const csv = [
+    'Output Freq,Input Freq,Offset,Uplink Tone,Call,Location,Lat,Long,Op Status,Mode',
+    '146.970,146.370,-0.600,100.0,LU2FCF,Rosario,-32.9468,-60.6393,On-Air,FM',
+    '147.120,147.720,+0.600,123.0,LU8VCB,Bariloche,-41.14,-71.30,On-Air,FM',
+    '438.500,433.500,-5.000,,LU5VAS,Esquel,-42.91,-71.32,Off-Air,DMR',
+  ].join('\n');
+  await page.getByTestId('repeaters-file').setInputFiles({ name: 'repeaterbook.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(page.getByTestId('repeaters-message')).toHaveText('Se importaron 3 repetidoras.');
+  const rpt = page.getByTestId('repeaters').locator('li');
+  await expect(rpt.nth(0)).toContainText('LU8VCB · Bariloche');
+  await expect(rpt.nth(0)).toContainText('147,120 MHz · +0,6 · T 123,0');
+  await expect(rpt.nth(1)).toContainText('LU5VAS · Esquel');
+  await expect(rpt.nth(1)).toContainText('fuera de servicio');
+  await expect(rpt.nth(2)).toContainText('LU2FCF · Rosario');
+
+  // Un CSV de CHIRP (sin coordenadas) se suma al final y avisa.
+  const chirp = 'Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,Mode,Comment\n0,LU7DOT,145.210000,-,0.600000,Tone,88.5,FM,Mar del Plata\n';
+  await page.getByTestId('repeaters-file').setInputFiles({ name: 'chirp.csv', mimeType: 'text/csv', buffer: Buffer.from(chirp) });
+  await expect(page.getByTestId('repeaters-message')).toContainText('1 no traen ubicación');
+  await expect(rpt).toHaveCount(4);
+  await expect(rpt.nth(3)).toContainText('LU7DOT · Mar del Plata');
+
+  // Siguen ahí al volver (guardadas en el dispositivo) y se pueden borrar.
+  await page.goto('/#/first-aid');
+  await page.goto('/#/first-aid/radio');
+  await expect(rpt).toHaveCount(4);
+  page.once('dialog', (d) => void d.accept());
+  await page.getByRole('button', { name: 'Borrar todas' }).click();
+  await expect(page.getByTestId('repeaters')).toHaveCount(0);
 });
