@@ -165,7 +165,13 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(page.getByTestId('repeaters-message')).toHaveText('Se importaron 3 repetidoras.');
   const rpt = page.getByTestId('repeaters').locator('li');
   await expect(rpt.nth(0)).toContainText('LU8VCB · Bariloche');
-  await expect(rpt.nth(0)).toContainText('147,120 MHz · +0,6 · T 123,0');
+  const details = rpt.nth(0).getByTestId('rpt-details');
+  await expect(details).toContainText('Escuchás en 147,120 MHz');
+  await expect(details).toContainText('Transmitís en 147,720 MHz (+0,6 MHz)');
+  await expect(details).toContainText('Subtono para abrirla: 123,0 Hz (CTCSS)');
+  await expect(rpt.nth(1).getByTestId('rpt-details')).toContainText('Modo digital');
+  await page.getByText('¿Qué significa cada dato?').click();
+  await expect(page.getByText(/Un tono grave que tu equipo manda/)).toBeVisible();
   // La distancia, siempre en km.
   await expect(rpt.nth(0).getByTestId('rpt-distance')).toHaveText(/^\d,\d km$/);
   await expect(rpt.nth(2).getByTestId('rpt-distance')).toHaveText(/^\d{3,4} km$/);

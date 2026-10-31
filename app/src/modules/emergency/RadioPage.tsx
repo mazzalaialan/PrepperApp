@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
@@ -6,7 +6,7 @@ import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { loadEmergencyData, nearestRadio, type EmergencyData } from './data';
 import { CopyButton, formatDistance, MapLink } from './parts';
-import { loadRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type RepeaterList } from './repeaters';
+import { loadRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
 
 /**
@@ -208,12 +208,11 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
                       {r.call}
                       {r.location && ` · ${r.location}`}
                     </span>
-                    <span className="list-sub">{[r.mode, off && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}</span>
+                    <RepeaterDetails r={r} off={off} />
                     {r.lat !== null && <MapLink address="" lat={r.lat} lon={r.lon} />}
                   </span>
                   <span className="contact-actions">
                     <span className="radio-freqs">
-                      <strong>{summary}</strong>
                       <span className="rpt-distance" data-testid="rpt-distance">
                         {d !== null ? formatKm(d, i18n.language) : r.lat === null ? t('radio.repeaters.noPlace') : t('radio.repeaters.choosePlace')}
                       </span>
@@ -224,6 +223,17 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
               );
             })}
           </ul>
+          <details className="rpt-help">
+            <summary>{t('radio.repeaters.help.title')}</summary>
+            <dl>
+              {(['output', 'input', 'offset', 'tone', 'mode'] as const).map((k) => (
+                <Fragment key={k}>
+                  <dt>{t(`radio.repeaters.help.${k}.term`)}</dt>
+                  <dd>{t(`radio.repeaters.help.${k}.text`)}</dd>
+                </Fragment>
+              ))}
+            </dl>
+          </details>
         </>
       )}
       {message && (
@@ -256,5 +266,36 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
       <p className="hint" style={{ margin: 0 }}>{t('radio.repeaters.howTo')}</p>
       <p className="hint" style={{ margin: 0 }}>{t('radio.repeaters.attribution')}</p>
     </section>
+  );
+}
+/** Cada dato con su nombre: qué frecuencia escuchás, en cuál transmitís y qué subtono abre la repetidora. */
+function RepeaterDetails({ r, off }: { r: Repeater; off: boolean }) {
+  const { t, i18n } = useTranslation();
+  const mhz = (n: number) => new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 3, maximumFractionDigits: 4 }).format(n);
+  const offsetText = (n: number) =>
+    `${n > 0 ? '+' : '−'}${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 3 }).format(Math.abs(n))} MHz`;
+  const toneText = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const digital = /dmr|d-?star|c4fm|fusion|p25|nxdn|m17/i.test(r.mode);
+  return (
+    <span className="rpt-details" data-testid="rpt-details">
+      <span>
+        {t('radio.repeaters.listen')} <strong>{mhz(r.output)} MHz</strong>
+      </span>
+      <span>
+        {r.offset
+          ? t('radio.repeaters.transmit', { freq: `${mhz(r.output + r.offset)} MHz`, offset: offsetText(r.offset) })
+          : t('radio.repeaters.simplex')}
+      </span>
+      <span>
+        {r.tone
+          ? t('radio.repeaters.tone', { tone: toneText.format(r.tone) })
+          : digital
+            ? t('radio.repeaters.toneDigital')
+            : t('radio.repeaters.toneNone')}
+      </span>
+      {(r.mode || off) && (
+        <span className="list-sub">{[r.mode && t('radio.repeaters.mode', { mode: r.mode }), off && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}</span>
+      )}
+    </span>
   );
 }

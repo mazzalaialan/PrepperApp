@@ -2220,3 +2220,30 @@ a.module-card:hover {
   font-weight: 700;
   color: var(--accent);
 }
+.rpt-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9rem;
+}
+
+.rpt-help summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.rpt-help dl {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.rpt-help dt {
+  font-weight: 600;
+}
+
+.rpt-help dd {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
