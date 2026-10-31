@@ -9,7 +9,10 @@ function fakeForecast() {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const local = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
-  const hours = Array.from({ length: 48 }, (_, i) => new Date(now.getTime() + (i - 2) * 3_600_000));
+  // 8 días por hora, desde la medianoche de hoy (como el servicio real).
+  const midnight = new Date(now);
+  midnight.setHours(0, 0, 0, 0);
+  const hours = Array.from({ length: 24 * 8 }, (_, i) => new Date(midnight.getTime() + i * 3_600_000));
   const days = Array.from({ length: 16 }, (_, i) => local(new Date(now.getTime() + i * 86_400_000)).slice(0, 10));
   const rep = <T,>(first: T[], rest: T) => [...first, ...Array.from({ length: 16 - first.length }, () => rest)];
   // Intervalos de 15 min desde el actual: la lluvia arranca en el cuarto (dentro de 45 min).
@@ -94,9 +97,28 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   // 16 días: 7 confiables y 9 como tendencia, sin avisos por los días lejanos.
   await expect(page.getByTestId('day')).toHaveCount(7);
   await expect(page.getByTestId('trend-day')).toHaveCount(9);
+  // Los días de tendencia no tienen detalle (no se pueden tocar).
+  await expect(page.getByRole('button').filter({ has: page.getByTestId('trend-day') })).toHaveCount(0);
+  await expect(page.locator('button[data-testid="trend-day"]')).toHaveCount(0);
+
+  // Día 5: resumen por madrugada, mañana, tarde y noche.
+  await page.getByTestId('day').nth(4).click();
+  const periods = page.getByRole('dialog');
+  await expect(periods.getByText('A esta distancia el pronóstico por hora no es confiable')).toBeVisible();
+  await expect(periods.getByTestId('period')).toHaveCount(4);
+  await expect(periods.getByTestId('period').nth(0)).toContainText('Madrugada');
+  await expect(periods.getByTestId('period').nth(3)).toContainText('Noche');
+  await expect(periods.getByTestId('hour-detail')).toHaveCount(0);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-16c-weather-periods.png` });
+  await periods.getByRole('button', { name: 'Cerrar' }).click();
   await expect(page.getByText(/Tendencia: días 8 a 16/)).toBeVisible();
   await expect(page.getByText(/Ráfagas fuertes de hasta 120/)).toHaveCount(0);
   await expect(hour.getByText(/^\d+° ST$/)).toBeVisible();
+  // Filas alineadas: el viento queda a la misma altura en una hora con lluvia y en otra sin.
+  const windTops = await page.getByTestId('hour').evaluateAll((items) =>
+    items.slice(0, 12).map((li) => Math.round(li.querySelector('.hour-wind')!.getBoundingClientRect().top)),
+  );
+  expect(new Set(windTops).size).toBe(1);
 
   // Detalle de un día, hora por hora, con cada dato identificado.
   await page.getByTestId('day').first().click();
@@ -155,7 +177,8 @@ test('las horas siguen al reloj aunque el pronóstico guardado sea de antes', as
   await page.goto('/#/weather/forecast');
   await expect(page.getByTestId('hour').first()).toContainText('02:00');
   // Las barras de lluvia arrancan en el cuarto de hora actual (02:15), no a la hora de descarga.
-  await expect(page.locator('.rain-bars li').first()).toContainText(/02:(15|30)/);
+  // (El minuto exacto depende de cuánto tarde la prueba: lo que importa es que no quede en la 1.)
+  await expect(page.locator('.rain-bars li').first()).toContainText(/0[23]:\d\d/);
   await context.setOffline(false);
 });
 

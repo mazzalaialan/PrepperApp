@@ -1576,6 +1576,20 @@ a.module-card:hover {
   color: var(--text-muted);
 }
 
+/* Filas de la tira por hora: misma altura en todas las columnas, haya dato o no. */
+.hour-strip li > * {
+  min-height: 1.1rem;
+  line-height: 1.1rem;
+}
+
+.hour-strip li > .sky-icon {
+  min-height: 24px;
+}
+
+.hour-empty {
+  opacity: 0.4;
+}
+
 .hour-wet {
   display: inline-flex;
   align-items: center;
@@ -1632,6 +1646,10 @@ a.module-card:hover {
 .hour-row-time {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.period-row {
+  grid-template-columns: 84px 30px 1fr;
 }
 
 .hour-row-facts {

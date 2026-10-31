@@ -10,8 +10,8 @@ import { useWaypoints } from '@/modules/waypoints/store';
 import { cachedForecast, placeKey, storeForecast } from './cache';
 import { RAIN_MM_PER_SLOT, rainOutlook, type RainSlot } from './nowcast';
 import { HERE_ID, useRainWatch } from './rainWatch';
-import { fetchForecast, mmToInch, placeNow, RELIABLE_DAYS, skyOf, warningsOf, WeatherError, type Forecast } from './forecast';
-import { DayHoursDialog, DayList, HourStripItem, SkyIcon, useUnits } from './parts';
+import { fetchForecast, HOURLY_DETAIL_DAYS, mmToInch, placeNow, RELIABLE_DAYS, skyOf, warningsOf, WeatherError, type Forecast } from './forecast';
+import { DayHoursDialog, DayList, DayPeriodsDialog, HourStripItem, SkyIcon, useUnits } from './parts';
 
 /**
  * Con conexión, un pronóstico más viejo que esto se vuelve a descargar (al
@@ -29,7 +29,7 @@ export function WeatherPage() {
   const [forecast, setForecast] = useState<Forecast | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<WeatherError['code'] | null>(null);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{ date: string; index: number } | null>(null);
   const longDayFmt = new Intl.DateTimeFormat(i18n.language, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
 
   const lat = place?.lat ?? null;
@@ -177,23 +177,28 @@ export function WeatherPage() {
           <section className="card stack" aria-labelledby="days-title">
             <h2 id="days-title" className="section-title" style={{ margin: 0 }}>{t('weather.nextDays', { count: Math.min(RELIABLE_DAYS, forecast.daily.length) })}</h2>
             <p className="hint" style={{ margin: 0 }}>{t('weather.tapDay')}</p>
-            <DayList days={forecast.daily.slice(0, RELIABLE_DAYS)} offset={0} dayLabel={dayLabel} u={u} onSelect={setSelectedDay} />
+            <DayList days={forecast.daily.slice(0, RELIABLE_DAYS)} offset={0} dayLabel={dayLabel} u={u} onSelect={(date, index) => setSelectedDay({ date, index })} />
             {forecast.daily.length > RELIABLE_DAYS && (
               <>
                 <h3 className="section-title trend-title" style={{ margin: '8px 0 0' }}>{t('weather.trend', { from: RELIABLE_DAYS + 1, to: forecast.daily.length })}</h3>
                 <p className="hint" style={{ margin: 0 }}>{t('weather.trendHint')}</p>
-                <DayList days={forecast.daily.slice(RELIABLE_DAYS)} offset={RELIABLE_DAYS} dayLabel={dayLabel} u={u} onSelect={setSelectedDay} trend />
+                <DayList days={forecast.daily.slice(RELIABLE_DAYS)} offset={RELIABLE_DAYS} dayLabel={dayLabel} u={u} trend />
               </>
             )}
           </section>
-          {selectedDay && (
-            <DayHoursDialog
-              title={longDayFmt.format(new Date(`${selectedDay}T12:00:00Z`))}
-              hours={forecast.hourly.filter((h) => h.time.startsWith(selectedDay))}
-              u={u}
-              onClose={() => setSelectedDay(null)}
-            />
-          )}
+          {selectedDay &&
+            (() => {
+              // Días 1 a 3: hora por hora; 4 a 7: por períodos del día.
+              const Detail = selectedDay.index < HOURLY_DETAIL_DAYS ? DayHoursDialog : DayPeriodsDialog;
+              return (
+                <Detail
+                  title={longDayFmt.format(new Date(`${selectedDay.date}T12:00:00Z`))}
+                  hours={forecast.hourly.filter((h) => h.time.startsWith(selectedDay.date))}
+                  u={u}
+                  onClose={() => setSelectedDay(null)}
+                />
+              );
+            })()}
           <p className="hint">{t('weather.source', { place: place.label })}</p>
         </>
       )}

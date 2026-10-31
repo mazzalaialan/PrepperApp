@@ -22,7 +22,20 @@ import {
 import { cardinalOf } from '@/core/geo/geo';
 import type { UnitSystem } from '@/core/units/units';
 import { Dialog } from '@/ui/Dialog';
-import { FOG_VISIBILITY_M, kmhToMph, metersToFeet, metersToMiles, mmToInch, skyOf, stormRisk, toFahrenheit, type Forecast, type Sky } from './forecast';
+import {
+  FOG_VISIBILITY_M,
+  kmhToMph,
+  metersToFeet,
+  metersToMiles,
+  mmToInch,
+  periodSummaries,
+  skyOf,
+  stormRisk,
+  toFahrenheit,
+  type Forecast,
+  type PeriodSummary,
+  type Sky,
+} from './forecast';
 
 /**
  * Piezas del pronóstico. Cada dato lleva un ícono o una sigla (ST, HR, r.)
@@ -91,16 +104,28 @@ export function HourStripItem({ h, u }: { h: Hour; u: Units }) {
       <span className="hint">{h.time.slice(11, 16)}</span>
       <SkyIcon code={h.code} />
       <strong>{u.temp(h.temperature)}</strong>
-      {h.apparent !== null && <span className="hour-meta">{t('weather.feelsShort', { temp: u.temp(h.apparent) })}</span>}
+      {/* Todas las columnas tienen las mismas filas: si no hay dato va "–", para que el viento de una hora
+          quede a la misma altura que el de otra con lluvia. */}
+      {h.apparent !== null ? <span className="hour-meta">{t('weather.feelsShort', { temp: u.temp(h.apparent) })}</span> : <Empty />}
       <RainChance h={h} />
-      {h.precipitation !== null && h.precipitation > 0 && (
+      {h.precipitation !== null && h.precipitation > 0 ? (
         <span className="hour-meta hour-wet">
           <CloudRain size={12} aria-hidden /> {u.rain(h.precipitation)}
         </span>
+      ) : (
+        <Empty />
       )}
       <WindValue h={h} u={u} />
-      {h.windGusts !== null && <span className="hint hour-gust">{t('weather.gustShort', { value: u.windValue(h.windGusts) })}</span>}
+      {h.windGusts !== null ? <span className="hint hour-gust">{t('weather.gustShort', { value: u.windValue(h.windGusts) })}</span> : <Empty />}
     </li>
+  );
+}
+
+function Empty() {
+  return (
+    <span className="hour-meta hour-empty" aria-hidden>
+      –
+    </span>
   );
 }
 
@@ -228,7 +253,77 @@ export function DayHoursDialog({ title, hours, u, onClose }: { title: string; ho
   );
 }
 
-/** Lista de días; tocando uno se abre su detalle por hora. */
+/** Un período del día (madrugada, mañana, tarde, noche) resumido. */
+function PeriodRow({ p, u }: { p: PeriodSummary; u: Units }) {
+  const { t } = useTranslation();
+  const fog = p.visibility !== null && p.visibility < FOG_VISIBILITY_M;
+  const risk = p.cape === null ? null : stormRisk(p.cape);
+  return (
+    <li className="hour-row period-row" data-testid="period">
+      <span className="hour-row-time">{t(`weather.period.${p.period}`)}</span>
+      <SkyIcon code={p.code} size={26} />
+      <div className="hour-row-facts">
+        <span className="fact">
+          <Thermometer size={14} aria-hidden /> <strong>{u.temp(p.min)} / {u.temp(p.max)}</strong>
+        </span>
+        <span className="fact" aria-label={t('weather.rainChance', { pct: p.precipProbability ?? 0 })}>
+          <Droplets size={14} aria-hidden /> {p.precipProbability ?? 0}%{p.precipitation > 0 && <> · {u.rain(p.precipitation)}</>}
+        </span>
+        {p.snowfall > 0 && (
+          <span className="fact" aria-label={t('weather.snowAria', { value: u.snow(p.snowfall) })}>
+            <Snowflake size={14} aria-hidden /> {u.snow(p.snowfall)}
+          </span>
+        )}
+        <span className="fact">
+          <Wind size={14} aria-hidden /> {p.windDirection !== null && <WindArrow from={p.windDirection} size={14} />}
+          {u.wind(p.windSpeed)}
+          {p.windGusts !== null && <> · {t('weather.gustShort', { value: u.windValue(p.windGusts) })}</>}
+        </span>
+        {fog && (
+          <span className="fact" data-fog="true" aria-label={t('weather.visibilityAria', { value: u.visibility(p.visibility!) })}>
+            <Eye size={14} aria-hidden /> {t('weather.fog')}
+          </span>
+        )}
+        {risk && risk !== 'low' && (
+          <span className="fact" data-risk={risk} aria-label={t('weather.stormAria', { risk: t(`weather.stormRisk.${risk}`) })}>
+            <Zap size={14} aria-hidden /> {t(`weather.stormRisk.${risk}`)}
+          </span>
+        )}
+        {p.freezingLevel !== null && (
+          <span className="fact" aria-label={t('weather.freezingAria', { value: u.altitude(p.freezingLevel) })}>
+            <Mountain size={14} aria-hidden /> {t('weather.freezingShort', { value: u.altitude(p.freezingLevel) })}
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/** Detalle de un día por períodos (días 4 a 7: el detalle por hora sería falsa precisión). */
+export function DayPeriodsDialog({ title, hours, u, onClose }: { title: string; hours: Hour[]; u: Units; onClose: () => void }) {
+  const { t } = useTranslation();
+  const periods = periodSummaries(hours);
+  return (
+    <Dialog title={title} onClose={onClose}>
+      <p className="hint" style={{ margin: 0 }}>{t('weather.periodsHint')}</p>
+      <Legend u={u} />
+      {periods.length === 0 ? (
+        <p className="hint">{t('weather.noHours')}</p>
+      ) : (
+        <ol className="hour-rows">
+          {periods.map((p) => (
+            <PeriodRow key={p.period} p={p} u={u} />
+          ))}
+        </ol>
+      )}
+    </Dialog>
+  );
+}
+
+/**
+ * Lista de días. Los que tienen detalle (por hora o por períodos) se pueden
+ * tocar; los de tendencia (8 a 16) no.
+ */
 export function DayList({
   days,
   offset,
@@ -241,15 +336,15 @@ export function DayList({
   offset: number;
   dayLabel: (iso: string, i: number) => string;
   u: Units;
-  onSelect: (date: string) => void;
+  onSelect?: (date: string, index: number) => void;
   trend?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <ul className="list" data-trend={trend}>
-      {days.map((d, i) => (
-        <li key={d.date}>
-          <button className="list-row day-row" type="button" data-testid={trend ? 'trend-day' : 'day'} onClick={() => onSelect(d.date)}>
+      {days.map((d, i) => {
+        const body = (
+          <>
             <span className="day-name">{dayLabel(d.date, i + offset)}</span>
             <SkyIcon code={d.code} />
             <span className="list-main">
@@ -265,10 +360,23 @@ export function DayList({
                 {t('weather.windDay', { speed: u.wind(d.windMax), gusts: u.wind(d.gustMax) })}
               </span>
             </span>
-            <ChevronRight size={18} aria-hidden />
-          </button>
-        </li>
-      ))}
+          </>
+        );
+        return (
+          <li key={d.date}>
+            {onSelect ? (
+              <button className="list-row day-row" type="button" data-testid="day" onClick={() => onSelect(d.date, i + offset)}>
+                {body}
+                <ChevronRight size={18} aria-hidden />
+              </button>
+            ) : (
+              <div className="list-row day-row" data-testid={trend ? 'trend-day' : 'day'}>
+                {body}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

@@ -276,6 +276,93 @@ export function placeNow(timezone: string, now = new Date()): string {
   }
 }
 
+/** Días con detalle por hora (hoy y los 2 siguientes); hasta el 7.º, por períodos del día; después, sin detalle. */
+export const HOURLY_DETAIL_DAYS = 3;
+
+export type DayPeriod = 'night' | 'morning' | 'afternoon' | 'evening';
+
+/** Madrugada 0–6, mañana 6–12, tarde 12–18, noche 18–24. */
+export const PERIODS: { id: DayPeriod; from: number; to: number }[] = [
+  { id: 'night', from: 0, to: 6 },
+  { id: 'morning', from: 6, to: 12 },
+  { id: 'afternoon', from: 12, to: 18 },
+  { id: 'evening', from: 18, to: 24 },
+];
+
+export interface PeriodSummary {
+  period: DayPeriod;
+  /** Cielo representativo: lo más significativo que dure al menos 2 horas (lluvia antes que nubes). */
+  code: number;
+  min: number;
+  max: number;
+  precipProbability: number | null;
+  /** mm y cm totales del período. */
+  precipitation: number;
+  snowfall: number;
+  windSpeed: number;
+  windGusts: number | null;
+  /** Dirección predominante (promedio vectorial), de dónde viene. */
+  windDirection: number | null;
+  cape: number | null;
+  /** Visibilidad mínima (para saber si hubo niebla). */
+  visibility: number | null;
+  /** Isoterma de 0° más baja. */
+  freezingLevel: number | null;
+}
+
+const SKY_RANK: Record<Sky, number> = { clear: 0, partly: 1, cloudy: 2, fog: 3, drizzle: 4, rain: 5, snow: 6, storm: 7 };
+
+function representativeCode(codes: number[]): number {
+  const counts = new Map<number, number>();
+  for (const c of codes) counts.set(c, (counts.get(c) ?? 0) + 1);
+  // Lo más significativo que dure 2 horas o más; si nada dura tanto, lo más frecuente.
+  const lasting = [...counts].filter(([, n]) => n >= 2).map(([c]) => c);
+  if (lasting.length) return lasting.reduce((a, b) => (SKY_RANK[skyOf(b)] > SKY_RANK[skyOf(a)] ? b : a));
+  return [...counts].reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+}
+
+/** Resumen de las horas de un día en madrugada, mañana, tarde y noche (períodos sin datos se omiten). */
+export function periodSummaries(hours: Forecast['hourly']): PeriodSummary[] {
+  return PERIODS.flatMap(({ id, from, to }) => {
+    const hs = hours.filter((h) => {
+      const hour = Number(h.time.slice(11, 13));
+      return hour >= from && hour < to;
+    });
+    if (hs.length === 0) return [];
+    const nums = (pick: (h: Forecast['hourly'][number]) => number | null) => hs.map(pick).filter((v): v is number => v !== null);
+    const maxOf = (xs: number[]) => (xs.length ? Math.max(...xs) : null);
+    const minOf = (xs: number[]) => (xs.length ? Math.min(...xs) : null);
+    const sum = (xs: number[]) => Math.round(xs.reduce((a, b) => a + b, 0) * 10) / 10;
+    // Dirección predominante: promedio de vectores ponderado por la velocidad.
+    let e = 0;
+    let n = 0;
+    for (const h of hs) {
+      if (h.windDirection === null) continue;
+      const r = (h.windDirection * Math.PI) / 180;
+      e += Math.sin(r) * Math.max(1, h.windSpeed);
+      n += Math.cos(r) * Math.max(1, h.windSpeed);
+    }
+    const direction = e === 0 && n === 0 ? null : ((Math.atan2(e, n) * 180) / Math.PI + 360) % 360;
+    return [
+      {
+        period: id,
+        code: representativeCode(hs.map((h) => h.code)),
+        min: Math.min(...hs.map((h) => h.temperature)),
+        max: Math.max(...hs.map((h) => h.temperature)),
+        precipProbability: maxOf(nums((h) => h.precipProbability)),
+        precipitation: sum(nums((h) => h.precipitation)),
+        snowfall: sum(nums((h) => h.snowfall)),
+        windSpeed: Math.max(...hs.map((h) => h.windSpeed)),
+        windGusts: maxOf(nums((h) => h.windGusts)),
+        windDirection: direction,
+        cape: maxOf(nums((h) => h.cape)),
+        visibility: minOf(nums((h) => h.visibility)),
+        freezingLevel: minOf(nums((h) => h.freezingLevel)),
+      },
+    ];
+  });
+}
+
 export type StormRisk = 'low' | 'moderate' | 'high' | 'veryHigh';
 
 /** Riesgo de tormenta a partir del CAPE (umbrales habituales en meteorología operativa). */

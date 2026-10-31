@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { forecastUrl, parseForecast, placeNow, skyOf, stormRisk, warningsOf, type Forecast } from './forecast';
+import { forecastUrl, parseForecast, periodSummaries, placeNow, skyOf, stormRisk, warningsOf, type Forecast } from './forecast';
 
 describe('forecastUrl', () => {
   it('usa la URL configurada (con o sin barra final) y pide 16 días en la zona del lugar', () => {
@@ -8,6 +8,50 @@ describe('forecastUrl', () => {
     expect(url.searchParams.get('latitude')).toBe('-34.6037');
     expect(url.searchParams.get('timezone')).toBe('auto');
     expect(url.searchParams.get('forecast_days')).toBe('16');
+  });
+});
+
+describe('periodSummaries', () => {
+  const hour = (h: number, over: Partial<Forecast['hourly'][number]> = {}): Forecast['hourly'][number] => ({
+    time: `2026-11-04T${String(h).padStart(2, '0')}:00`,
+    temperature: 10 + h,
+    precipProbability: 0,
+    code: 1,
+    windSpeed: 10,
+    windDirection: 180,
+    windGusts: 20,
+    apparent: null,
+    humidity: 60,
+    precipitation: 0,
+    snowfall: 0,
+    cloudCover: 30,
+    visibility: 20_000,
+    cape: 50,
+    freezingLevel: 3000,
+    ...over,
+  });
+
+  it('madrugada, mañana, tarde y noche con mínimos, máximos y totales', () => {
+    const hours = Array.from({ length: 24 }, (_, h) =>
+      hour(h, h >= 13 && h <= 15 ? { code: 61, precipProbability: 70, precipitation: 2.5, cape: 1200 } : h === 3 ? { visibility: 400 } : {}),
+    );
+    const [night, morning, afternoon, evening] = periodSummaries(hours);
+    expect(night).toMatchObject({ period: 'night', min: 10, max: 15, visibility: 400 });
+    expect(morning).toMatchObject({ period: 'morning', code: 1, precipitation: 0 });
+    // 3 horas de lluvia: el período se resume como lluvia, con el total y la peor probabilidad.
+    expect(afternoon).toMatchObject({ period: 'afternoon', code: 61, precipProbability: 70, precipitation: 7.5, cape: 1200 });
+    expect(evening!.windDirection).toBeCloseTo(180);
+  });
+
+  it('una sola hora de lluvia no define el período; nada de datos, no hay período', () => {
+    const hours = Array.from({ length: 6 }, (_, h) => hour(h + 6, h === 0 ? { code: 61 } : {}));
+    expect(periodSummaries(hours)).toEqual([expect.objectContaining({ period: 'morning', code: 1 })]);
+  });
+
+  it('dirección predominante sin saltar en el norte (350° y 10° → 0°)', () => {
+    const hours = [hour(0, { windDirection: 350 }), hour(1, { windDirection: 10 })];
+    const d = periodSummaries(hours)[0]!.windDirection!;
+    expect(Math.min(d, 360 - d)).toBeLessThan(0.5);
   });
 });
 
