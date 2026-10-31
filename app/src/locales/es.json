@@ -19,7 +19,7 @@
   "nav": {
     "home": "Inicio",
     "inventory": "Inventario",
-    "firstAid": "Botiquín",
+    "firstAid": "Emergencias",
     "documents": "Documentos",
     "orientation": "Orientación",
     "weather": "Meteo",
@@ -30,7 +30,7 @@
   },
   "sections": {
     "inventory": "Inventario",
-    "firstAid": "Botiquín",
+    "firstAid": "Emergencias",
     "documents": "Documentos",
     "orientation": "Orientación",
     "weather": "Meteorología",

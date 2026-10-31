@@ -12,7 +12,7 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Botiquín' }).click();
+  await page.getByRole('link', { name: 'Emergencias' }).click();
   await page.getByRole('link', { name: /Ficha médica/ }).click();
   await page.getByRole('link', { name: 'Nueva ficha' }).click();
   await page.getByLabel('Nombre').fill('Ana');

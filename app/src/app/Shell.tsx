@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   BookOpen,
-  BriefcaseMedical,
   CloudSun,
   Compass,
   Ellipsis,
@@ -12,6 +11,7 @@ import {
   Lock,
   Package,
   Settings,
+  Siren,
   Sprout,
 } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
@@ -26,7 +26,7 @@ import { UpdatePrompt } from './UpdatePrompt';
 // En pantallas anchas el riel lateral muestra todas. Ajustes va en la barra superior.
 const NAV = [
   { to: '/', key: 'home', icon: House },
-  { to: '/first-aid', key: 'firstAid', icon: BriefcaseMedical },
+  { to: '/first-aid', key: 'firstAid', icon: Siren },
   { to: '/documents', key: 'documents', icon: FileText },
   { to: '/orientation', key: 'orientation', icon: Compass },
   { to: '/weather', key: 'weather', icon: CloudSun },

@@ -38,8 +38,8 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   await page.getByRole('link', { name: 'Orientación', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Orientación' })).toBeVisible();
   await expect(page.getByText('Brújula', { exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Botiquín' }).click();
-  await expect(page.getByRole('heading', { name: 'Botiquín' })).toBeVisible();
+  await page.getByRole('link', { name: 'Emergencias' }).click();
+  await expect(page.getByRole('heading', { name: 'Emergencias' })).toBeVisible();
   await expect(page.getByText('Ficha médica')).toBeVisible();
   await page.getByRole('link', { name: 'Meteo' }).click();
   await expect(page.getByRole('heading', { name: 'Meteorología' })).toBeVisible();

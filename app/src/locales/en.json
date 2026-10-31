@@ -19,7 +19,7 @@
   "nav": {
     "home": "Home",
     "inventory": "Inventory",
-    "firstAid": "First aid",
+    "firstAid": "Emergencies",
     "documents": "Documents",
     "orientation": "Navigate",
     "weather": "Weather",
@@ -30,7 +30,7 @@
   },
   "sections": {
     "inventory": "Inventory",
-    "firstAid": "First aid",
+    "firstAid": "Emergencies",
     "documents": "Documents",
     "orientation": "Orientation",
     "weather": "Weather",
