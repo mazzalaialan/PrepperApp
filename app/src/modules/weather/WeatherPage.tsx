@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
   Cloud,
   CloudDrizzle,
@@ -20,7 +21,10 @@ import { cardinalOf } from '@/core/geo/geo';
 import { useSettings } from '@/core/settings/settings';
 import type { UnitSystem } from '@/core/units/units';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
+import { useWaypoints } from '@/modules/waypoints/store';
 import { cachedForecast, placeKey, storeForecast } from './cache';
+import { RAIN_MM_PER_SLOT, rainOutlook, type RainSlot } from './nowcast';
+import { HERE_ID, useRainWatch } from './rainWatch';
 import { fetchForecast, kmhToMph, mmToInch, skyOf, toFahrenheit, warningsOf, WeatherError, type Forecast, type Sky } from './forecast';
 
 /** Con conexión, un pronóstico más viejo que esto se actualiza solo al abrir la pantalla. */
@@ -157,6 +161,10 @@ export function WeatherPage() {
             </ul>
           </section>
 
+          {forecast.minutely15 && forecast.minutely15.length > 0 && (
+            <NextRain now={forecast.current.time} slots={forecast.minutely15} system={system} />
+          )}
+
           {warnings.length > 0 && (
             <section className="card stack weather-warnings" aria-labelledby="warn-title">
               <h2 id="warn-title" className="section-title" style={{ margin: 0 }}>
@@ -215,7 +223,87 @@ export function WeatherPage() {
           <p className="hint">{t('weather.source', { place: place.label })}</p>
         </>
       )}
+
+      <RainAlertsSettings />
     </div>
+  );
+}
+
+/** Lluvia de las próximas 2 horas, en barras de 15 minutos. */
+function NextRain({ now, slots, system }: { now: string; slots: RainSlot[]; system: UnitSystem }) {
+  const { t, i18n } = useTranslation();
+  const outlook = rainOutlook({ now, slots });
+  const mm = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
+  const amount = (v: number) => (system === 'imperial' ? `${mm.format(mmToInch(v))} in` : `${mm.format(v)} mm`);
+  const max = Math.max(1, ...slots.map((s) => s.mm));
+  return (
+    <section className="card stack" aria-labelledby="next-rain-title">
+      <h2 id="next-rain-title" className="section-title" style={{ margin: 0 }}>{t('rainAlerts.nextTitle')}</h2>
+      <p className="sky-big" data-testid="next-rain">
+        {outlook.state === 'dry'
+          ? t('rainAlerts.dry')
+          : outlook.state === 'raining'
+            ? t('rainAlerts.raining', { amount: amount(outlook.mm) })
+            : t('rainAlerts.soon', { minutes: outlook.inMinutes, amount: amount(outlook.mm) })}
+      </p>
+      <ol className="rain-bars" aria-hidden>
+        {slots.map((s) => (
+          <li key={s.time}>
+            <span className="rain-bar" style={{ height: `${Math.max(2, (s.mm / max) * 100)}%` }} data-wet={s.mm >= RAIN_MM_PER_SLOT} />
+            <span className="hint">{s.time.slice(11, 16)}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.modelNote')}</p>
+    </section>
+  );
+}
+
+/** Dónde avisar si va a llover: mi ubicación y los waypoints marcados. */
+function RainAlertsSettings() {
+  const { t } = useTranslation();
+  const here = useSettings((s) => s.settings.rainAlertsHere);
+  const update = useSettings((s) => s.update);
+  const waypoints = useWaypoints((s) => s.waypoints);
+  const statuses = useRainWatch((s) => s.statuses);
+  const watched = [...waypoints.values()].filter((w) => w.rainAlerts);
+  const permission = 'Notification' in window ? Notification.permission : 'denied';
+
+  const statusText = (id: string) => {
+    const s = statuses.get(id);
+    if (!s) return null;
+    if (s.outlook.state === 'dry') return t('rainAlerts.statusDry');
+    if (s.outlook.state === 'raining') return t('rainAlerts.statusRaining');
+    return t('rainAlerts.statusSoon', { minutes: s.outlook.inMinutes });
+  };
+
+  return (
+    <section className="card stack" aria-labelledby="rain-alerts-title">
+      <h2 id="rain-alerts-title" className="section-title" style={{ margin: 0 }}>{t('rainAlerts.title')}</h2>
+      <label className="check">
+        <input type="checkbox" checked={here} onChange={(e) => void update({ rainAlertsHere: e.target.checked })} />
+        {t('rainAlerts.here')}
+      </label>
+      {here && statusText(HERE_ID) && <p className="hint" style={{ margin: 0 }}>{statusText(HERE_ID)}</p>}
+      {watched.length > 0 ? (
+        <ul className="list">
+          {watched.map((w) => (
+            <li key={w.id}>
+              <Link className="list-row" to={`/orientation/waypoints/${w.id}`}>
+                <span className="list-main">
+                  <span className="list-title">{w.name}</span>
+                  {statusText(w.id) && <span className="list-sub">{statusText(w.id)}</span>}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.noWaypoints')}</p>
+      )}
+      {(here || watched.length > 0) && permission !== 'granted' && <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.enableNotifications')}</p>}
+      <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.whileOpen')}</p>
+    </section>
   );
 }
 

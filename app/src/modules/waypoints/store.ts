@@ -27,7 +27,8 @@ export const useWaypoints = create<WaypointsState>((set, get) => ({
     const [waypoints, routes] = await Promise.all([repos.waypoints.loadAll(), repos.routes.loadAll()]);
     set({
       loaded: true,
-      waypoints: new Map(waypoints.map((w) => [w.id, w])),
+      // `rainAlerts` no existía antes de la v0.5.
+      waypoints: new Map(waypoints.map((w) => [w.id, { ...w, rainAlerts: w.rainAlerts ?? false }])),
       routes: new Map(routes.map((r) => [r.id, r])),
     });
   },

@@ -45,6 +45,7 @@ export function WaypointsPage() {
         alt: here.alt,
         icon: 'pin',
         notes: '',
+        rainAlerts: false,
       });
       await saveWaypoint(wp);
       navigate(`/orientation/waypoints/${wp.id}`);

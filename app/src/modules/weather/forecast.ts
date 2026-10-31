@@ -1,3 +1,5 @@
+import { nowcastParams, parseSlots, type RainSlot } from './nowcast';
+
 /**
  * Pronóstico de Open-Meteo (open source, autoalojable; la URL se configura en
  * Ajustes). Se pide siempre en unidades métricas y se convierte al mostrar.
@@ -34,6 +36,8 @@ export interface Forecast {
     gustMax: number;
     uvMax: number | null;
   }[];
+  /** Lluvia de las próximas 2 horas cada 15 min (vacío en pronósticos guardados por versiones anteriores). */
+  minutely15?: RainSlot[];
 }
 
 const CURRENT = 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl';
@@ -49,6 +53,7 @@ export function forecastUrl(base: string, lat: number, lon: number): string {
     daily: DAILY,
     timezone: 'auto',
     forecast_days: '7',
+    ...nowcastParams(),
   });
   return `${base.replace(/\/+$/, '')}/v1/forecast?${params}`;
 }
@@ -67,6 +72,7 @@ interface ApiResponse {
   current: Record<string, number | string>;
   hourly: Record<string, (number | string | null)[]>;
   daily: Record<string, (number | string | null)[]>;
+  minutely_15?: { time?: unknown[]; precipitation?: unknown[] };
 }
 
 export async function fetchForecast(base: string, lat: number, lon: number, now = new Date()): Promise<Forecast> {
@@ -129,6 +135,7 @@ export function parseForecast(data: ApiResponse, now = new Date()): Forecast {
       gustMax: num(d.wind_gusts_10m_max![i]),
       uvMax: opt(d.uv_index_max?.[i]),
     })),
+    minutely15: parseSlots(data.minutely_15),
   };
 }
 

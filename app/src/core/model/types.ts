@@ -120,6 +120,8 @@ export interface Waypoint extends BaseEntity {
   alt: number | null;
   icon: string;
   notes: string;
+  /** Avisar si va a llover en este punto. */
+  rainAlerts: boolean;
 }
 
 /** Lista ordenada de waypoints con nombre (ej.: "Evacuación al refugio"). */

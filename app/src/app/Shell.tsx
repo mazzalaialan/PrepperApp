@@ -17,6 +17,8 @@ import {
 import { useVault } from '@/core/security/useVault';
 import { BrandMark } from '@/ui/Brand';
 import { Dialog } from '@/ui/Dialog';
+import { RainNotices } from '@/modules/weather/RainNotices';
+import { useRainWatcher } from '@/modules/weather/rainWatch';
 import { UpdatePrompt } from './UpdatePrompt';
 
 // En el celular entran seis botones: cinco secciones y "Más" con el resto.
@@ -41,6 +43,7 @@ export function Shell() {
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const inMore = MORE.some((m) => pathname.startsWith(m.to));
+  useRainWatcher();
 
   return (
     <div className="shell">
@@ -94,6 +97,7 @@ export function Shell() {
             <Lock size={22} />
           </button>
         </header>
+        <RainNotices />
         <main className="content">
           <Outlet />
         </main>

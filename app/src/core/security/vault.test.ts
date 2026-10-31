@@ -19,7 +19,7 @@ import {
 setTestIterations(1_000);
 
 const waypoint = () =>
-  newEntity<Waypoint>({ name: 'Refugio Sierra', lat: -41.1, lon: -71.3, alt: 900, icon: 'cabin', notes: '' });
+  newEntity<Waypoint>({ name: 'Refugio Sierra', lat: -41.1, lon: -71.3, alt: 900, icon: 'cabin', notes: '', rainAlerts: false });
 
 describe('vault', () => {
   beforeEach(() => {

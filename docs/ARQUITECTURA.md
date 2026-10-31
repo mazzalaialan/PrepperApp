@@ -348,6 +348,13 @@ Navegación en el celular: Inicio, Inventario, Botiquín, Documentos, Orientaci�
 
 **Ficha médica** (`MedicalProfile`, cifrada): nombre, fecha de nacimiento, grupo sanguíneo, alergias, enfermedades, medicación habitual (nombre, dosis, cuándo), contacto de emergencia, médico / obra social y notas.
 
+**Avisos de tiempo (lluvia y rayos).** Se activan por punto: cada waypoint tiene su interruptor, y "donde estoy" es una opción aparte.
+- *Lluvia:* pronóstico de Open-Meteo cada 15 minutos (`minutely_15`, modelo, no radar) para las próximas 2 horas. Avisa una vez por episodio ("lluvia en unos 45 min · Refugio"). Con la app abierta revisa cada 15 minutos; en segundo plano lo hará el servidor propio.
+- *Limitación de las PWA:* con la app cerrada el navegador no le da el GPS a la app, y el chequeo periódico de Chrome es de horas. Por eso, para "donde estoy" en segundo plano, el servidor usa la **última ubicación conocida**, que la app le envía cada vez que está abierta, e indica su antigüedad. Leer el GPS en segundo plano solo es posible con una app nativa.
+- *Rayos (pendiente, requiere servidor):* GOES‑19 GLM de NOAA (dominio público, cubre Argentina, unos 8 km de precisión, retraso de alrededor de un minuto). El servidor procesa los archivos, guarda la última hora de descargas y avisa por push por distancia a los puntos con aviso activado. Se descartó Blitzortung: sus condiciones no permiten usar los datos para sistemas de aviso.
+- *Radar (F5):* necesita el motor de mapas. La API gratuita de RainViewer quedó limitada a zoom 7 y sin predicción (2026); las fuentes se evalúan al llegar a F5.
+- Todos estos avisos son orientativos, se calculan a partir de pronósticos y no son alertas oficiales.
+
 **Guías de primeros auxilios:** se organizan por problema (trauma, sangrado profuso, anafilaxia, quemaduras…) y su contenido sale de manuales reconocidos de la Biblioteca (F4); la app no redacta indicaciones médicas propias.
 
 | Módulo | Descripción | Sin sensor / sin red |
@@ -486,6 +493,7 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 | **F5 — Mapas** | Descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía |
 | **F6 — Mapa estelar** | Carta del cielo orientada por brújula |
 | **F7 — Huerta y cultivo** | Alcance a definir antes de empezar la fase |
+| **Servidor (cuando esté instalado)** | Avisos de lluvia con la app cerrada (última ubicación conocida y waypoints), detector de rayos GOES‑19 con aviso por distancia |
 
 ---
 

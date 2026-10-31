@@ -31,7 +31,7 @@ export function WaypointEditPage() {
 }
 
 function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
-  const [initial] = useState(() => stored ?? newEntity<Waypoint>({ name: '', lat: 0, lon: 0, alt: null, icon: 'pin', notes: '' }));
+  const [initial] = useState(() => stored ?? newEntity<Waypoint>({ name: '', lat: 0, lon: 0, alt: null, icon: 'pin', notes: '', rainAlerts: false }));
   const isNew = !stored;
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -43,6 +43,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   const [coords, setCoords] = useState(stored ? formatDecimal(stored) : '');
   const [alt, setAlt] = useState(altitudeForInput(initial.alt, units));
   const [notes, setNotes] = useState(initial.notes);
+  const [rainAlerts, setRainAlerts] = useState(initial.rainAlerts);
   const [saved, setSaved] = useState(false);
   const [locating, setLocating] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -78,6 +79,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
       lon: parsed.lon,
       alt: altValue === null ? null : altitudeToMeters(altValue, units),
       notes,
+      rainAlerts,
     });
     if (isNew) navigate(`/orientation/waypoints/${initial.id}`, { replace: true });
     else setSaved(true);
@@ -156,7 +158,15 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
           <label htmlFor="notes">{t('waypoints.notes')}</label>
           <textarea id="notes" className="input textarea" value={notes} onChange={(e) => { setNotes(e.target.value); dirty(); }} />
         </div>
-        {saved && <p className="success" role="status">{t('common.saved')}</p>}
+        <fieldset className="fieldset stack">
+          <legend>{t('waypoints.alerts')}</legend>
+          <label className="check">
+            <input type="checkbox" checked={rainAlerts} onChange={(e) => { setRainAlerts(e.target.checked); dirty(); }} />
+            {t('waypoints.rainAlerts')}
+          </label>
+          <p className="hint" style={{ margin: 0 }}>{t('waypoints.lightningSoon')}</p>
+        </fieldset>
+        {saved &&<p className="success" role="status">{t('common.saved')}</p>}
         <div className="row-end">
           {stored && (
             <>

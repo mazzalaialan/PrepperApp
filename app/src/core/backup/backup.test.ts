@@ -11,7 +11,7 @@ import { BackupError, exportBackup, readBackup, restoreBackup } from './backup';
 
 setTestIterations(1_000);
 
-const waypoint = (name: string) => newEntity<Waypoint>({ name, lat: -41, lon: -71, alt: null, icon: 'cabin', notes: '' });
+const waypoint = (name: string) => newEntity<Waypoint>({ name, lat: -41, lon: -71, alt: null, icon: 'cabin', notes: '', rainAlerts: false });
 
 async function freshDb() {
   lockVault();

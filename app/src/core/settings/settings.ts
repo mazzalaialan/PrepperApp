@@ -26,6 +26,8 @@ export interface Settings {
    * coordenadas quedan cifradas) o `null` para usar el GPS.
    */
   placeWaypointId: string | null;
+  /** Avisar si va a llover donde estoy (GPS con la app abierta; última ubicación conocida en segundo plano). */
+  rainAlertsHere: boolean;
 }
 
 export type NorthReference = 'true' | 'magnetic';
@@ -49,6 +51,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notifyHour: 9,
   northReference: 'true',
   placeWaypointId: null,
+  rainAlertsHere: false,
 };
 
 const SETTINGS_KEY = 'app';
