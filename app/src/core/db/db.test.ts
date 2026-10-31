@@ -5,7 +5,7 @@ import type { MedicalProfile } from '@/core/model/types';
 import { UserDb } from './db';
 
 describe('migraciones', () => {
-  it('una base v2 (v0.3) pasa a v3 conservando los datos y suma las fichas médicas', async () => {
+  it('una base v2 (v0.3) pasa a la versión actual conservando los datos y suma las tablas nuevas', async () => {
     const name = 'upgrade-v2-v3';
     const tables = ['categories', 'locations', 'items', 'lots', 'stockMins', 'documents', 'attachments', 'waypoints', 'householdMembers', 'recommendationRules'];
     const old = new Dexie(name);
@@ -17,10 +17,12 @@ describe('migraciones', () => {
 
     const upgraded = new UserDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(3);
+    expect(upgraded.verno).toBe(4);
     expect(await upgraded.items.count()).toBe(1);
     await upgraded.medicalProfiles.put({ id: 'p', updatedAt: 'x', deletedAt: null, iv: new Uint8Array(12), ct: new ArrayBuffer(4) });
     expect(await upgraded.medicalProfiles.count()).toBe(1);
+    await upgraded.contacts.put({ id: 'c', updatedAt: 'x', deletedAt: null, iv: new Uint8Array(12), ct: new ArrayBuffer(4) });
+    expect(await upgraded.contacts.count()).toBe(1);
     upgraded.close();
   });
 });

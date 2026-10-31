@@ -2076,3 +2076,139 @@ a.module-card:hover {
 .maplibregl-ctrl-attrib a {
   color: var(--text-muted) !important;
 }
+
+/* ---------- Emergencias: contactos, mi ubicación, radio ---------- */
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-list .contact-row:last-child,
+.list .contact-row:last-child {
+  border-bottom: none;
+}
+
+.contact-icon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.contact-icon-police { color: var(--info); }
+.contact-icon-fire { color: var(--danger); }
+.contact-icon-medical,
+.contact-icon-hospital { color: var(--ok); }
+.contact-icon-civilDefense { color: var(--warn); }
+
+.contact-actions,
+.phone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.btn-call {
+  min-height: 40px;
+  padding: 6px 12px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.source-badge {
+  font-size: 0.75rem;
+}
+
+.source-official { color: var(--ok); }
+
+.location-big {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+.location-dms {
+  margin: 0;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.location-refs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.location-refs dt {
+  color: var(--text-muted);
+}
+
+.location-refs dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.location-message {
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.row-end.wrap {
+  flex-wrap: wrap;
+}
+
+.call-911 {
+  justify-content: center;
+  min-height: 52px;
+  font-size: 1.1rem;
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.radio-freqs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Si el teléfono no entra al lado del texto, baja abajo (no se parten las palabras). */
+.contact-row {
+  flex-wrap: wrap;
+}
+
+.contact-row .list-main {
+  flex: 1 1 170px;
+  min-width: 0;
+}
+
+.contact-row .contact-actions,
+.contact-row > .phone-actions {
+  margin-left: auto;
+}

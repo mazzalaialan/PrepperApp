@@ -1,0 +1,186 @@
+#!/usr/bin/env node
+/**
+ * Genera los datos de emergencia incluidos en la app (funcionan sin conexión):
+ * app/src/modules/emergency/emergency-data.json
+ *
+ * - Cuarteles de bomberos de todo el país: IGN / Consejo Nacional de Bomberos
+ *   Voluntarios, publicado en el catálogo de datos abiertos de la Provincia de
+ *   Buenos Aires (CC BY 4.0).
+ * - Comisarías de la Provincia de Buenos Aires (CC BY 4.0, mismo catálogo).
+ * - Establecimientos de salud públicos de la Provincia de Buenos Aires
+ *   (CC BY 4.0, mismo catálogo).
+ * - Emisoras de Radio Nacional (AM/FM): tabla de Wikipedia (CC BY-SA),
+ *   ubicadas con Nominatim (OpenStreetMap) una sola vez, al generar.
+ *
+ * Uso: node tools/emergency-data/build.mjs   (necesita conexión; el resultado se versiona)
+ */
+
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const OUT = fileURLToPath(new URL('../../app/src/modules/emergency/emergency-data.json', import.meta.url));
+const GBA = 'https://catalogo.datos.gba.gob.ar/dataset';
+const FIRE_CSV = `${GBA}/f3cf1025-b253-4627-b546-9c83457618f9/resource/9d601310-6bf9-4d82-b809-65fed2f3f63a/download/cuarteles-bomberos-082026.csv`;
+const POLICE_CSV = `${GBA}/bf79faeb-cb8a-4444-bbbe-5dc39479aa4a/resource/8d31bb16-3489-4ede-9e63-072f7f17383d/download/comisarias-pba-2026.csv`;
+const HEALTH_CSV = `${GBA}/91743f68-bc82-4475-baca-7d5d6908eee8/resource/c2d51824-c61d-4374-a014-cca5b76b082a/download/establecimientos-salud-publicos.csv`;
+const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+
+/** Radio Nacional: indicativo, ciudad, provincia, AM (kHz), FM (MHz). Fuente: es.wikipedia.org/wiki/Radio_Nacional_(Argentina). */
+const RADIO_NACIONAL = [
+  ['LRA 1', 'Ciudad de Buenos Aires', '', 870, null],
+  ['LRA 2', 'Viedma', 'Río Negro', 1150, 93.5],
+  ['LRA 3', 'Santa Rosa', 'La Pampa', 730, 95.9],
+  ['LRA 4', 'Salta', 'Salta', 690, 102.7],
+  ['LRA 5', 'Rosario', 'Santa Fe', 1300, 104.5],
+  ['LRA 6', 'Mendoza', 'Mendoza', 960, 97.1],
+  ['LRA 7', 'Córdoba', 'Córdoba', 750, 100.1],
+  ['LRA 8', 'Formosa', 'Formosa', 820, 94.1],
+  ['LRA 9', 'Esquel', 'Chubut', 560, 88.7],
+  ['LRA 10', 'Ushuaia', 'Tierra del Fuego', 780, 92.1],
+  ['LRA 11', 'Comodoro Rivadavia', 'Chubut', 670, 94.7],
+  ['LRA 12', 'Santo Tomé', 'Corrientes', 780, 100.5],
+  ['LRA 13', 'Bahía Blanca', 'Buenos Aires', 560, 99.3],
+  ['LRA 14', 'Santa Fe', 'Santa Fe', 540, 102.9],
+  ['LRA 15', 'San Miguel de Tucumán', 'Tucumán', 1190, 98.7],
+  ['LRA 16', 'La Quiaca', 'Jujuy', 560, 92.5],
+  ['LRA 17', 'Zapala', 'Neuquén', 710, 93.9],
+  ['LRA 18', 'Río Turbio', 'Santa Cruz', 620, 90.3],
+  ['LRA 19', 'Puerto Iguazú', 'Misiones', 710, 99.1],
+  ['LRA 20', 'Las Lomitas', 'Formosa', 1270, 99.5],
+  ['LRA 21', 'Santiago del Estero', 'Santiago del Estero', 1130, 98.5],
+  ['LRA 22', 'San Salvador de Jujuy', 'Jujuy', 790, 94.1],
+  ['LRA 23', 'San Juan', 'San Juan', 910, 101.9],
+  ['LRA 24', 'Río Grande', 'Tierra del Fuego', 640, 88.1],
+  ['LRA 25', 'Tartagal', 'Salta', 540, 92.3],
+  ['LRA 26', 'Resistencia', 'Chaco', 620, 94.1],
+  ['LRA 27', 'San Fernando del Valle de Catamarca', 'Catamarca', 730, 103.3],
+  ['LRA 28', 'La Rioja', 'La Rioja', 620, 102.5],
+  ['LRA 29', 'San Luis', 'San Luis', 1170, 96.7],
+  ['LRA 30', 'San Carlos de Bariloche', 'Río Negro', 590, 95.5],
+  ['LRA 42', 'Gualeguaychú', 'Entre Ríos', 1310, 98.7],
+  ['LRA 51', 'San José de Jáchal', 'San Juan', 1150, 102.7],
+  ['LRA 52', 'Chos Malal', 'Neuquén', 670, 92.3],
+  ['LRA 53', 'San Martín de los Andes', 'Neuquén', 1440, 92.5],
+  ['LRA 54', 'Ingeniero Jacobacci', 'Río Negro', 1370, 93.5],
+  ['LRA 55', 'Alto Río Senguer', 'Chubut', 740, 93.5],
+  ['LRA 56', 'Perito Moreno', 'Santa Cruz', 860, 93.5],
+  ['LRA 57', 'El Bolsón', 'Río Negro', 1160, 92.3],
+  ['LRA 58', 'Río Mayo', 'Chubut', 1020, 88.1],
+  ['LRA 59', 'Gobernador Gregores', 'Santa Cruz', 720, 99.9],
+  ['LRA 343', 'Neuquén', 'Neuquén', null, 103.3],
+];
+
+/** Ciudades que Nominatim no ubica bien por nombre. */
+const RADIO_COORDS = { 'LRA 10': [-54.8019, -68.303] };
+/** Tipos de establecimiento de salud que sirven ante una emergencia (se dejan afuera oficinas, laboratorios, etc.). */
+const HEALTH_TYPES = new Set(['Hospital', 'U.P.A.', 'Emergencias', 'C.A.P.S', 'Posta Sanitaria']);
+
+const r5 = (n) => Math.round(n * 1e5) / 1e5;
+const clean = (s) => (s ?? '').replace(/\s+/g, ' ').trim();
+const phone = (s) => (/\d/.test(s ?? '') ? clean(s) : '');
+
+/** CSV simple con comillas (los catálogos usan "," o ";"). */
+function parseCsv(text, sep) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else if (ch === '"') quoted = false;
+      else field += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === sep) {
+      row.push(field);
+      field = '';
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+    } else field += ch;
+  }
+  if (field || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  const [head, ...body] = rows.filter((r) => r.some((c) => c.trim()));
+  const keys = head.map((h) => h.replace(/^﻿/, '').trim());
+  return body.map((r) => Object.fromEntries(keys.map((k, i) => [k, r[i] ?? ''])));
+}
+
+async function csv(url, sep) {
+  const res = await fetch(url, { headers: { 'User-Agent': UA } });
+  if (!res.ok) throw new Error(`${url}: ${res.status}`);
+  return parseCsv(await res.text(), sep);
+}
+
+const num = (s) => Number(String(s).replace(',', '.'));
+const valid = (lat, lon) => Number.isFinite(lat) && Number.isFinite(lon) && lat < -20 && lat > -60 && lon < -50 && lon > -76;
+
+const fire = (await csv(FIRE_CSV, ','))
+  .map((r) => ({ name: clean(r.nombre), lat: r5(num(r.latitud)), lon: r5(num(r.longitud)) }))
+  .filter((r) => r.name && valid(r.lat, r.lon));
+
+const police = (await csv(POLICE_CSV, ','))
+  .map((r) => ({
+    name: clean(r.dependencia),
+    phone: phone(r.telefono),
+    address: [clean(r.direccion), clean(r.localidad)].filter(Boolean).join(', '),
+    lat: r5(num(r.latitud)),
+    lon: r5(num(r.longitud)),
+  }))
+  .filter((r) => r.name && valid(r.lat, r.lon));
+
+const health = (await csv(HEALTH_CSV, ';'))
+  .map((r) => ({
+    name: clean(r.fna),
+    // tes: dependencia; cat: tipo (hospital, CAPS, …).
+    type: clean(r.cat),
+    phone: phone(r.tel),
+    address: [clean(r.dom), clean(r.nba)].filter(Boolean).join(', '),
+    lat: r5(num(r.lat)),
+    lon: r5(num(r.long)),
+  }))
+  .filter((r) => r.name && HEALTH_TYPES.has(r.type) && valid(r.lat, r.lon));
+
+const radio = [];
+for (const [call, city, province, am, fm] of RADIO_NACIONAL) {
+  if (RADIO_COORDS[call]) {
+    const [lat, lon] = RADIO_COORDS[call];
+    radio.push({ call, city, province, am, fm, lat, lon });
+    continue;
+  }
+  const q = new URLSearchParams({ city, state: province, country: 'Argentina', format: 'json', limit: '1' });
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?${q}`, { headers: { 'User-Agent': UA } });
+  const [hit] = res.ok ? await res.json() : [];
+  if (!hit) {
+    console.warn(`Sin ubicación: ${call} ${city}`);
+    continue;
+  }
+  radio.push({ call, city, province, am, fm, lat: r5(Number(hit.lat)), lon: r5(Number(hit.lon)) });
+  // Política de uso de Nominatim: como máximo un pedido por segundo.
+  await new Promise((r) => setTimeout(r, 1100));
+}
+
+const data = {
+  sources: {
+    fire: 'IGN / Consejo Nacional de Bomberos Voluntarios (catalogo.datos.gba.gob.ar, CC BY 4.0)',
+    police: 'Ministerio de Seguridad de la Provincia de Buenos Aires (catalogo.datos.gba.gob.ar, CC BY 4.0)',
+    health: 'Ministerio de Salud de la Provincia de Buenos Aires (catalogo.datos.gba.gob.ar, CC BY 4.0)',
+    radio: 'Radio Nacional (es.wikipedia.org, CC BY-SA); ubicación: OpenStreetMap',
+  },
+  fire,
+  police,
+  health,
+  radio,
+};
+await mkdir(dirname(OUT), { recursive: true });
+await writeFile(OUT, JSON.stringify(data));
+console.log(`bomberos ${fire.length}, comisarías ${police.length}, salud ${health.length}, radios ${radio.length} → ${OUT} (${JSON.stringify(data).length} bytes)`);

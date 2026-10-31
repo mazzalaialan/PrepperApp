@@ -334,7 +334,7 @@ La app se organiza en siete secciones:
 
 | Sección | Módulos |
 |---|---|
-| Emergencias (antes "Botiquín") | Botiquines por tipo, ficha médica familiar, guías de primeros auxilios (F4) |
+| Emergencias (antes "Botiquín") | Contactos de emergencia, mi ubicación para socorristas, botiquines por tipo, ficha médica familiar, guías de primeros auxilios (F4), radio |
 | Documentos | Documentos personales con N fotos |
 | Orientación | Brújula, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
 | Meteorología | Clima, sol y luna, mapa de tiempo y peligros naturales (§12.4) |
@@ -355,7 +355,16 @@ Navegación en el celular: Inicio, Emergencias, Documentos, Orientación, Meteor
 - *Radar (F5):* necesita el motor de mapas. La API gratuita de RainViewer quedó limitada a zoom 7 y sin predicción (2026); las fuentes se evalúan al llegar a F5.
 - Todos estos avisos son orientativos, se calculan a partir de pronósticos y no son alertas oficiales.
 
-**Guías de primeros auxilios:** se organizan por problema (trauma, sangrado profuso, anafilaxia, quemaduras…) y su contenido sale de manuales reconocidos de la Biblioteca (F4); la app no redacta indicaciones médicas propias.
+**Guías de primeros auxilios:** se organizan por problema (trauma, sangrado profuso, anafilaxia, quemaduras…) y **separadas en ciudad y zonas agrestes** (en la ciudad la ayuda llega en minutos; en zonas agrestes puede tardar horas y hay que estabilizar, improvisar y evacuar). Su contenido sale de manuales reconocidos de la Biblioteca (F4); la app no redacta indicaciones médicas propias.
+
+**Contactos de emergencia** (`modules/emergency/`, tabla `contacts`, cifrada y en el backup): números nacionales (911, 107 SAME, 100, 103, 105, 106, Intoxicaciones 0800-333-0160, 144; fuente argentina.gob.ar), contactos propios y búsqueda de cercanos. El teléfono se toca para llamar (`tel:`) o se copia; la dirección abre Google Maps.
+- *Cercanos sin conexión:* datos oficiales incluidos en la app (`tools/emergency-data/build.mjs`, CC BY 4.0): cuarteles de bomberos de **todo el país** (IGN / Consejo Nacional de Bomberos Voluntarios, ~1.080), comisarías (~320) y establecimientos de salud (hospitales, UPA, CAPS; ~2.300) de la Provincia de Buenos Aires.
+- *Con conexión:* se suma OpenStreetMap (Overpass, con un espejo de respaldo porque los servidores públicos a veces se saturan) y se unen los duplicados (mismo tipo a menos de 150 m), completando teléfono y dirección.
+- *Pendiente con el servidor:* catálogos de otras provincias (Córdoba, Santa Fe, CABA) y el REFES nacional.
+
+**Mi ubicación para socorristas:** coordenadas (decimal y GMS), precisión y altura; con conexión, dirección aproximada (Nominatim), calles cercanas, ruta y mojón kilométrico (Overpass); sin conexión, distancia y rumbo al waypoint más cercano. Arma un mensaje listo para copiar, compartir, SMS o WhatsApp, y un botón para llamar al 911.
+
+**Radio:** Radio Nacional más cercana con AM/FM (incluida en la app; fuente Wikipedia, ubicada con OpenStreetMap), frecuencias internacionales de socorro (VHF marítimo canal 16, aeronáutica 121,5 MHz) y nota sobre radioaficionados (licencia ENACOM; repetidoras cercanas con el servidor). **No se incluyen frecuencias de fuerzas de seguridad, Gendarmería ni guardaparques:** no son públicas, muchas están cifradas y captarlas sin autorización puede ser delito (Código Penal, art. 153).
 
 | Módulo | Descripción | Sin sensor / sin red |
 |---|---|---|

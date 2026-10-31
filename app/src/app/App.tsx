@@ -13,6 +13,11 @@ import { KitPage } from '@/modules/firstAid/KitPage';
 import { KitsPage } from '@/modules/firstAid/KitsPage';
 import { MedicalEditPage } from '@/modules/firstAid/MedicalEditPage';
 import { MedicalPage } from '@/modules/firstAid/MedicalPage';
+import { ContactEditPage } from '@/modules/emergency/ContactEditPage';
+import { ContactsPage } from '@/modules/emergency/ContactsPage';
+import { MyLocationPage } from '@/modules/emergency/MyLocationPage';
+import { NearbyPage } from '@/modules/emergency/NearbyPage';
+import { RadioPage } from '@/modules/emergency/RadioPage';
 import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
 import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
 import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
@@ -63,6 +68,11 @@ const router = createHashRouter([
       { path: '/first-aid/kits/:id', element: <KitPage /> },
       { path: '/first-aid/medical', element: <MedicalPage /> },
       { path: '/first-aid/medical/:id', element: <MedicalEditPage /> },
+      { path: '/first-aid/contacts', element: <ContactsPage /> },
+      { path: '/first-aid/contacts/nearby', element: <NearbyPage /> },
+      { path: '/first-aid/contacts/:id', element: <ContactEditPage /> },
+      { path: '/first-aid/location', element: <MyLocationPage /> },
+      { path: '/first-aid/radio', element: <RadioPage /> },
       { path: '/documents', element: <DocumentsPage /> },
       { path: '/documents/:id', element: <DocumentEditPage /> },
       { path: '/transfer', element: <BackupPage /> },

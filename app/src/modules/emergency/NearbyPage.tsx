@@ -1,0 +1,163 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Check, Save } from 'lucide-react';
+import type { ContactKind } from '@/core/model/types';
+import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
+import { emptyContact } from './ContactEditPage';
+import { loadEmergencyData, mergeNearby, officialNearby, type EmergencyData, type NearbyPlace } from './data';
+import { fetchOsmNearby } from './osm';
+import { formatDistance, KindIcon, MapLink, PhoneActions } from './parts';
+import { useContacts } from './store';
+
+const RADII = [5, 15, 30];
+type Filter = 'all' | 'police' | 'fire' | 'health' | 'civilDefense';
+const FILTERS: Filter[] = ['all', 'police', 'fire', 'health', 'civilDefense'];
+const matches = (f: Filter, k: ContactKind) => f === 'all' || f === k || (f === 'health' && (k === 'hospital' || k === 'medical'));
+/** Más que esto no se lee en el celular: con un filtro se ven los de cada tipo. */
+const MAX_SHOWN = 60;
+
+export function NearbyPage() {
+  const { t, i18n } = useTranslation();
+  const { place, picker } = usePlacePicker();
+  const contacts = useContacts((s) => s.contacts);
+  const save = useContacts((s) => s.save);
+  const [data, setData] = useState<EmergencyData | null>(null);
+  const [radiusKm, setRadiusKm] = useState(15);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [osm, setOsm] = useState<{ key: string; items: NearbyPlace[] } | null>(null);
+  const [osmState, setOsmState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    void loadEmergencyData().then(setData);
+  }, []);
+
+  const searchKey = place ? `${place.lat.toFixed(3)},${place.lon.toFixed(3)},${radiusKm}` : null;
+
+  // OpenStreetMap suma lo que no está en los datos oficiales (y teléfonos), solo con conexión.
+  useEffect(() => {
+    if (!place || !searchKey) return;
+    if (!navigator.onLine) {
+      setOsmState('offline');
+      return;
+    }
+    let cancelled = false;
+    setOsmState('loading');
+    fetchOsmNearby(place.lat, place.lon, radiusKm * 1000).then(
+      (items) => {
+        if (cancelled) return;
+        setOsm({ key: searchKey, items });
+        setOsmState('idle');
+      },
+      () => !cancelled && setOsmState('error'),
+    );
+    return () => {
+      cancelled = true;
+    };
+    // `searchKey` resume el lugar redondeado y el radio: el GPS se mueve en metros.
+  }, [searchKey, attempt]);
+
+  const results = useMemo(() => {
+    if (!data || !place) return [];
+    const official = officialNearby(data, place.lat, place.lon, radiusKm * 1000);
+    return mergeNearby(official, osm?.key === searchKey ? osm.items : []);
+  }, [data, place?.lat, place?.lon, radiusKm, osm, searchKey]);
+  const shown = results.filter((r) => matches(filter, r.kind));
+
+  const savedKeys = useMemo(() => new Set([...contacts.values()].map((c) => `${c.name}|${c.lat?.toFixed(4)}|${c.lon?.toFixed(4)}`)), [contacts]);
+  const isSaved = (p: NearbyPlace) => savedKeys.has(`${p.name}|${p.lat.toFixed(4)}|${p.lon.toFixed(4)}`);
+
+  async function handleSave(p: NearbyPlace) {
+    await save({
+      ...emptyContact(p.kind),
+      name: p.name || t(`emergency.kind.${p.kind}`),
+      phone: p.phone,
+      address: p.address,
+      lat: p.lat,
+      lon: p.lon,
+      notes: p.detail && p.source === 'official' ? p.detail : '',
+      source: t(`emergency.source.${p.source}`),
+    });
+  }
+
+  return (
+    <div className="stack">
+      <div className="page-head">
+        <Link className="icon-btn" to="/first-aid/contacts" aria-label={t('common.back')}>
+          <ArrowLeft size={22} />
+        </Link>
+        <h1 className="page-title" style={{ flex: 1 }}>{t('emergency.nearbyTitle')}</h1>
+      </div>
+      {picker}
+
+      <div className="field">
+        <label htmlFor="radius">{t('emergency.radius')}</label>
+        <select id="radius" className="select" value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))}>
+          {RADII.map((r) => (
+            <option key={r} value={r}>
+              {t('maps.km', { count: r })}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="chips" role="group" aria-label={t('emergency.filter')}>
+        {FILTERS.map((f) => (
+          <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+            {t(`emergency.filters.${f}`)}
+          </button>
+        ))}
+      </div>
+
+      <p className="hint" role="status" data-testid="nearby-status" style={{ margin: 0 }}>
+        {osmState === 'loading'
+          ? t('emergency.osmLoading')
+          : osmState === 'offline'
+            ? t('emergency.osmOffline')
+            : osmState === 'error'
+              ? t('emergency.osmError')
+              : place && data && t('emergency.found', { count: shown.length })}
+      </p>
+      {osmState === 'error' && (
+        <button className="btn" type="button" onClick={() => setAttempt((a) => a + 1)}>
+          {t('emergency.retry')}
+        </button>
+      )}
+
+      {!place ? (
+        <p className="empty">{t('emergency.needPlace')}</p>
+      ) : shown.length === 0 ? (
+        <p className="empty">{t('emergency.nothingNear')}</p>
+      ) : (
+        <ul className="list contact-list" data-testid="nearby-list">
+          {shown.slice(0, MAX_SHOWN).map((p) => (
+            <li key={p.key} className="contact-row">
+              <KindIcon kind={p.kind} />
+              <span className="list-main">
+                <span className="list-title">{p.name || t(`emergency.kind.${p.kind}`)}</span>
+                <span className="list-sub">
+                  {formatDistance(p.distance, i18n.language)} · {p.detail && p.source === 'official' ? p.detail : t(`emergency.kind.${p.kind}`)} ·{' '}
+                  <span className={`source-badge source-${p.source}`}>{t(`emergency.source.${p.source}`)}</span>
+                </span>
+                <MapLink address={p.address} lat={p.lat} lon={p.lon} />
+              </span>
+              <span className="contact-actions">
+                <PhoneActions phone={p.phone} />
+                {isSaved(p) ? (
+                  <span className="icon-btn" aria-label={t('emergency.saved')} title={t('emergency.saved')}>
+                    <Check size={18} />
+                  </span>
+                ) : (
+                  <button className="icon-btn" type="button" onClick={() => void handleSave(p)} aria-label={t('emergency.save', { name: p.name })} title={t('emergency.save', { name: p.name })}>
+                    <Save size={18} />
+                  </button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="hint">{t('emergency.nearbySources')}</p>
+    </div>
+  );
+}

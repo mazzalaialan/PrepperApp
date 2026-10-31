@@ -134,6 +134,23 @@ export interface Route extends BaseEntity {
   notes: string;
 }
 
+export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other';
+
+/** Contacto de emergencia: comisaría, bomberos, hospital, médico, familiar… */
+export interface EmergencyContact extends BaseEntity {
+  kind: ContactKind;
+  name: string;
+  phone: string;
+  phone2: string;
+  address: string;
+  /** Ubicación, si se conoce (para ordenar por cercanía y abrir el mapa exacto). */
+  lat: number | null;
+  lon: number | null;
+  notes: string;
+  /** De dónde salió (búsqueda de cercanos): para saber qué tan confiable es. */
+  source: string | null;
+}
+
 export interface HouseholdMember extends BaseEntity {
   label: string;
   count: number;
@@ -205,6 +222,7 @@ export interface EntityMap {
   recommendationRules: RecommendationRule;
   medicalProfiles: MedicalProfile;
   routes: Route;
+  contacts: EmergencyContact;
 }
 
 export type EntityTable = keyof EntityMap;

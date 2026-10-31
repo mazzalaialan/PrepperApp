@@ -130,7 +130,7 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await periods.getByRole('button', { name: 'Cerrar' }).click();
   await expect(page.getByText(/Tendencia: días 8 a 16/)).toBeVisible();
   await expect(page.getByText(/Ráfagas fuertes de hasta 120/)).toHaveCount(0);
-  await expect(hour.getByText(/^\d+° ST$/)).toBeVisible();
+  await expect(hour.getByText(/^\d+° ST( \(.+\))?$/)).toBeVisible();
   // Filas alineadas: el viento queda a la misma altura en una hora con lluvia y en otra sin.
   const windTops = await page.getByTestId('hour').evaluateAll((items) =>
     items.slice(0, 12).map((li) => Math.round(li.querySelector('.hour-wind')!.getBoundingClientRect().top)),
