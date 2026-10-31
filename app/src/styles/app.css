@@ -1095,6 +1095,21 @@ a.module-card:hover {
 
 /* ---------- Ficha médica ---------- */
 
+.avatar {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.avatar-empty {
+  display: grid;
+  place-items: center;
+  color: var(--danger);
+}
+
 .allergy {
   display: flex;
   align-items: center;

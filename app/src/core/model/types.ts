@@ -100,7 +100,7 @@ export interface PersonalDocument extends BaseEntity {
   tags: string[];
 }
 
-export type AttachmentOwner = 'item' | 'document' | 'location' | 'waypoint';
+export type AttachmentOwner = 'item' | 'document' | 'location' | 'waypoint' | 'medicalProfile';
 
 export interface Attachment extends BaseEntity {
   ownerType: AttachmentOwner;

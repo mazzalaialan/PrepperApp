@@ -204,6 +204,7 @@
     "new": "New record",
     "empty": "No medical records yet. For each person in your household, write down blood type, allergies and medication: in an emergency, whoever helps you will need it.",
     "privacy": "Records stay encrypted on this device, like the rest of your data.",
+    "photoAfterSave": "Save the record to add a photo of the person.",
     "notFound": "This record doesn't exist.",
     "confirmDelete": "Delete the record for \"{{name}}\"?",
     "name": "Name",

@@ -204,6 +204,7 @@
     "new": "Nueva ficha",
     "empty": "Todavía no cargaste fichas médicas. Anotá de cada persona del grupo familiar el grupo sanguíneo, las alergias y la medicación: en una emergencia, quien te ayude lo va a necesitar.",
     "privacy": "Las fichas quedan cifradas en el dispositivo, como el resto de tus datos.",
+    "photoAfterSave": "Guardá la ficha para agregarle una foto de la persona.",
     "notFound": "La ficha no existe.",
     "confirmDelete": "¿Eliminar la ficha de \"{{name}}\"?",
     "name": "Nombre",

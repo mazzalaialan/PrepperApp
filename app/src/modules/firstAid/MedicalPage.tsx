@@ -2,12 +2,26 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { HeartPulse, Plus, TriangleAlert } from 'lucide-react';
+import type { Attachment } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
+import { useBlobUrl } from '@/ui/useBlobUrl';
 import { ageOn, useMedical } from './medicalStore';
+
+function Avatar({ photo }: { photo: Attachment | undefined }) {
+  const url = useBlobUrl(photo?.id, photo?.mime);
+  return url ? (
+    <img className="avatar" src={url} alt="" />
+  ) : (
+    <span className="avatar avatar-empty">
+      <HeartPulse size={22} aria-hidden />
+    </span>
+  );
+}
 
 export function MedicalPage() {
   const { t, i18n } = useTranslation();
   const profiles = useMedical((s) => s.profiles);
+  const photos = useMedical((s) => s.photos);
   const rows = useMemo(
     () => [...profiles.values()].sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
     [profiles, i18n.language],
@@ -36,7 +50,7 @@ export function MedicalPage() {
             return (
               <li key={p.id}>
                 <Link className="list-row" to={`/first-aid/medical/${p.id}`}>
-                  <HeartPulse size={22} aria-hidden style={{ color: 'var(--danger)', flex: 'none' }} />
+                  <Avatar photo={photos.get(p.id)} />
                   <span className="list-main">
                     <span className="list-title">{p.name}</span>
                     {facts.length > 0 && <span className="list-sub">{facts.join(' · ')}</span>}

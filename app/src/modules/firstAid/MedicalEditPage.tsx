@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { Medication, MedicalProfile } from '@/core/model/types';
+import { SinglePhoto } from '@/ui/SinglePhoto';
 import { useMedical } from './medicalStore';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
@@ -37,6 +38,21 @@ export function MedicalEditPage() {
     );
   }
   return <ProfileForm key={stored?.id ?? 'new'} stored={stored} />;
+}
+
+function ProfilePhoto({ profileId, name }: { profileId: string; name: string }) {
+  const photo = useMedical((s) => s.photos.get(profileId));
+  const setPhoto = useMedical((s) => s.setPhoto);
+  const removePhoto = useMedical((s) => s.removePhoto);
+  return (
+    <SinglePhoto
+      photo={photo}
+      alt={name}
+      onSet={(image) => setPhoto(profileId, image)}
+      onRemove={() => removePhoto(profileId)}
+      testId="person-photo-file"
+    />
+  );
 }
 
 function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
@@ -94,6 +110,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
         </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('medical.new')}</h1>
       </div>
+
+      {stored ? <ProfilePhoto profileId={stored.id} name={stored.name} /> : <p className="hint">{t('medical.photoAfterSave')}</p>}
 
       <form className="stack" onSubmit={handleSubmit}>
         <section className="card stack">

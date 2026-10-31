@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { expect, test } from '@playwright/test';
 
 const PASSWORD = 'prueba-segura-123';
@@ -28,7 +29,14 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await expect(page).toHaveURL(/medical\/[0-9a-f-]{36}$/);
   await expect(page.getByRole('group', { name: /Medicamento \d/ })).toHaveCount(1);
 
+  // Foto de la persona: se ve en la ficha y como avatar en el listado.
+  const photoPath = testInfo.outputPath('ana.png');
+  await sharp({ create: { width: 900, height: 1200, channels: 3, background: { r: 180, g: 140, b: 120 } } }).png().toFile(photoPath);
+  await page.getByTestId('person-photo-file').setInputFiles(photoPath);
+  await expect(page.getByRole('img', { name: 'Ana' })).toBeVisible();
+
   await page.goto('/#/first-aid/medical');
+  await expect(page.locator('img.avatar')).toBeVisible();
   await expect(page.getByText('Grupo 0- · 1 medicamento')).toBeVisible();
   await expect(page.getByText('Alergias: Penicilina')).toBeVisible();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-12-medical.png`, fullPage: true });
@@ -38,4 +46,5 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: 'Desbloquear' }).click();
   await page.goto('/#/first-aid/medical');
   await expect(page.getByText('Alergias: Penicilina')).toBeVisible();
+  await expect(page.locator('img.avatar')).toBeVisible();
 });
