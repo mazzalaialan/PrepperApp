@@ -606,7 +606,8 @@
     "capacityLow": "{{pct}}% left",
     "allGood": "All good: nothing expiring soon and no shortages.",
     "lotsTitle": "Expiry and capacity",
-    "shortagesTitle": "Below minimum stock"
+    "shortagesTitle": "Below minimum stock",
+    "recommendationsTitle": "Short of your recommendations"
   },
   "locations": {
     "new": "New location",

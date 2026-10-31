@@ -3,6 +3,11 @@ import { repos } from '@/core/db/repository';
 import { touch } from '@/core/model/entity';
 import type { HouseholdMember, Id, RecommendationRule } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
+import { i18n } from '@/core/i18n/i18n';
+import { categoryName } from '@/modules/inventory/domain/categories';
+import { today } from '@/modules/inventory/domain/dates';
+import { registerAlertSource, useInventory } from '@/modules/inventory/store';
+import { recommendationShortages } from './calc';
 
 interface RecommendationsState {
   loaded: boolean;
@@ -58,6 +63,33 @@ export const useRecommendations = create<RecommendationsState>((set, get) => ({
     set({ rules });
   },
 }));
+
+/** Cada cambio en el grupo o las reglas actualiza las alertas (y las notificaciones). */
+useRecommendations.subscribe((state, prev) => {
+  if (state.loaded && (state.rules !== prev.rules || state.members !== prev.members || !prev.loaded)) {
+    void useInventory.getState().refreshAlertIndex();
+  }
+});
+
+/** Faltantes de recomendaciones en el índice de alertas (se notifican como los vencimientos). */
+registerAlertSource(() => {
+  const { loaded, rules, members } = useRecommendations.getState();
+  if (!loaded) return [];
+  const { items, lots, categories } = useInventory.getState();
+  const todayStr = today();
+  return recommendationShortages([...rules.values()], [...members.values()], items, [...lots.values()]).map(({ rule, changedAt }) => {
+    const category = categories.get(rule.categoryId ?? '');
+    const name = rule.description || (rule.itemId ? items.get(rule.itemId)?.name : category && categoryName(category, (k) => i18n.t(k))) || '';
+    const changedOn = today(new Date(changedAt));
+    return {
+      lotId: `rec:${rule.id}`,
+      itemName: name.slice(0, 200),
+      kind: 'shortage' as const,
+      dueDate: null,
+      notifyFrom: changedOn < todayStr ? changedOn : todayStr,
+    };
+  });
+});
 
 onSessionChange(() => {
   if (isUnlocked()) {

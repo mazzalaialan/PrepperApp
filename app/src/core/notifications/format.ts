@@ -5,7 +5,7 @@
 
 export interface AlertSummary {
   itemName: string;
-  kind: 'expiry' | 'capacity' | string;
+  kind: 'expiry' | 'capacity' | 'shortage' | string;
   dueDate: string | null;
 }
 
@@ -18,6 +18,7 @@ const TEXT = {
     today: 'vence hoy',
     on: (d: string) => `vence el ${d}`,
     capacity: 'por agotarse',
+    shortage: 'falta stock según tus recomendaciones',
     more: (n: number) => `y ${n} más`,
     testTitle: 'VikArg Survival',
     testBody: 'Las notificaciones funcionan correctamente.',
@@ -28,6 +29,7 @@ const TEXT = {
     today: 'expires today',
     on: (d: string) => `expires ${d}`,
     capacity: 'running low',
+    shortage: 'short of your recommended stock',
     more: (n: number) => `and ${n} more`,
     testTitle: 'VikArg Survival',
     testBody: 'Notifications are working.',
@@ -44,6 +46,7 @@ function shortDate(day: string, lang: Lang): string {
 export function alertsNotification(alerts: AlertSummary[], lang: Lang, today: string): { title: string; body: string } {
   const tx = TEXT[lang];
   const describe = (a: AlertSummary) => {
+    if (a.kind === 'shortage') return `${a.itemName}: ${tx.shortage}`;
     if (a.kind === 'capacity' || !a.dueDate) return `${a.itemName}: ${tx.capacity}`;
     if (a.dueDate < today) return `${a.itemName}: ${tx.expired}`;
     if (a.dueDate === today) return `${a.itemName}: ${tx.today}`;

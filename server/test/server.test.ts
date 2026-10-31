@@ -91,6 +91,15 @@ describe('servidor', () => {
     assert.equal(push.sent.length, 2);
   });
 
+  it('acepta faltantes de recomendaciones y rechaza tipos desconocidos', async () => {
+    const { deviceId, token } = await register();
+    const shortage = { lotId: 'rec:r1', itemName: 'Agua (faltan 108 L)', kind: 'shortage', dueDate: null, notifyFrom: '2026-11-01' };
+    assert.equal((await putAlerts(deviceId, token, [shortage])).statusCode, 204);
+    await runScheduler(db, push, at('2026-11-02'));
+    assert.deepEqual(push.sent[0]!.payload, { type: 'alerts', alerts: [{ itemName: 'Agua (faltan 108 L)', kind: 'shortage', dueDate: null }] });
+    assert.equal((await putAlerts(deviceId, token, [{ ...shortage, kind: 'otro' }])).statusCode, 400);
+  });
+
   it('borra el dispositivo si la suscripción ya no existe', async () => {
     const { deviceId, token } = await register();
     await putAlerts(deviceId, token, [{ lotId: 'l1', itemName: 'Atún', kind: 'expiry', dueDate: '2026-11-30', notifyFrom: '2026-10-31' }]);

@@ -5,6 +5,7 @@ import { BellRing, CircleCheck } from 'lucide-react';
 import { AlertList, ShortageList } from '@/modules/inventory/components/AlertList';
 import { useAlerts, useShortages } from '@/modules/inventory/selectors';
 import { useInventory } from '@/modules/inventory/store';
+import { RecommendationShortageList, useRecommendationShortages } from '@/modules/recommendations/RecommendationShortageList';
 import { SECTIONS } from '@/modules/registry';
 import { ModuleGrid } from '@/ui/ModuleGrid';
 
@@ -15,7 +16,8 @@ function AlertSummary() {
   const hasItems = useInventory((s) => s.items.size > 0);
   const alerts = useAlerts();
   const shortages = useShortages();
-  const total = alerts.length + shortages.length;
+  const recShortages = useRecommendationShortages();
+  const total = alerts.length + shortages.length + recShortages.length;
 
   if (total === 0) {
     return (
@@ -39,6 +41,9 @@ function AlertSummary() {
       {alerts.length > 0 && <AlertList alerts={alerts} limit={HOME_ALERT_LIMIT} />}
       {alerts.length < HOME_ALERT_LIMIT && shortages.length > 0 && (
         <ShortageList shortages={shortages.slice(0, HOME_ALERT_LIMIT - alerts.length)} />
+      )}
+      {alerts.length + shortages.length < HOME_ALERT_LIMIT && recShortages.length > 0 && (
+        <RecommendationShortageList shortages={recShortages} limit={HOME_ALERT_LIMIT - alerts.length - shortages.length} />
       )}
     </section>
   );

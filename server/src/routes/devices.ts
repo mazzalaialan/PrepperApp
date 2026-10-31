@@ -31,7 +31,7 @@ const alertSchema = {
   properties: {
     lotId: { type: 'string', maxLength: 64 },
     itemName: { type: 'string', maxLength: 200 },
-    kind: { type: 'string', enum: ['expiry', 'capacity'] },
+    kind: { type: 'string', enum: ['expiry', 'capacity', 'shortage'] },
     dueDate: { type: ['string', 'null'], pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
     notifyFrom: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
   },
@@ -46,7 +46,7 @@ interface Prefs {
 interface AlertInput {
   lotId: string;
   itemName: string;
-  kind: 'expiry' | 'capacity';
+  kind: 'expiry' | 'capacity' | 'shortage';
   dueDate: string | null;
   notifyFrom: string;
 }

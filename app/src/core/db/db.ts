@@ -16,9 +16,10 @@ export interface KeyValueRow<T = unknown> {
 
 /** Índice mínimo de alertas, en claro a propósito (ver ARQUITECTURA §5.3). */
 export interface AlertIndexRow {
+  /** Id del lote, o `rec:<id de regla>` para un faltante de recomendaciones. */
   lotId: string;
   itemName: string;
-  kind: 'expiry' | 'capacity';
+  kind: 'expiry' | 'capacity' | 'shortage';
   /** Solo vencimientos. */
   dueDate: IsoDay | null;
   /** Desde qué día corresponde notificar. */

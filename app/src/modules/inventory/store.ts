@@ -61,6 +61,15 @@ interface InventoryState {
   setStockMin: (itemId: Id, locationId: Id, minQuantity: number | null) => Promise<void>;
   setItemPhoto: (itemId: Id, image: CompressedImage) => Promise<void>;
   removeItemPhoto: (itemId: Id) => Promise<void>;
+  /** Regenera el índice de alertas (p. ej. cuando cambian las recomendaciones). */
+  refreshAlertIndex: () => Promise<void>;
+}
+
+/** Otros módulos que aportan filas al índice de alertas (p. ej. faltantes de recomendaciones). */
+const alertSources = new Set<() => AlertIndexRow[]>();
+
+export function registerAlertSource(source: () => AlertIndexRow[]): void {
+  alertSources.add(source);
 }
 
 /**
@@ -81,6 +90,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         rows.push({ lotId: a.lotId, itemName: items.get(a.itemId)?.name ?? '', kind: 'capacity', dueDate: null, notifyFrom: a.notifyFrom });
       }
     }
+    for (const source of alertSources) rows.push(...source());
     await db.transaction('rw', db.alertIndex, async () => {
       await db.alertIndex.clear();
       await db.alertIndex.bulkPut(rows);
@@ -251,6 +261,10 @@ export const useInventory = create<InventoryState>((set, get) => {
       await blobStore.put(attachment.id, image.bytes);
       await repos.attachments.put(attachment);
       set({ attachments: withValue(get().attachments, attachment.id, attachment) });
+    },
+
+    async refreshAlertIndex() {
+      if (get().loaded) await syncAlertIndex();
     },
 
     async removeItemPhoto(itemId) {

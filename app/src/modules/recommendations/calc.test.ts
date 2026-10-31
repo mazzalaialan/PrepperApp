@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newEntity } from '@/core/model/entity';
 import type { HouseholdMember, Item, Lot, RecommendationRule } from '@/core/model/types';
-import { evaluateRule } from './calc';
+import { evaluateRule, recommendationShortages } from './calc';
 
 const member = (label: string, count: number) => newEntity<HouseholdMember>({ label, count });
 const item = (name: string, unit: string, categoryId = 'sys-water') =>
@@ -41,6 +41,20 @@ describe('evaluateRule', () => {
     const r = evaluateRule(rule({ itemId: alimento.id, unit: 'kg', quantityPerMemberPerDay: 0.3, targetDays: 30, memberIds: [dog.id] }), members, items, [lot(alimento.id, 15)]);
     expect(r).toMatchObject({ people: 1, dailyNeed: 0.3, target: 9, current: 15, missing: 0 });
     expect(r.daysCovered).toBeCloseTo(50);
+  });
+
+  it('faltantes: solo las reglas que no se cumplen, con el último cambio como fecha', () => {
+    const bidon = item('Bidón', 'L');
+    const items = new Map([[bidon.id, bidon]]);
+    const short = { ...rule({ categoryId: 'sys-water', unit: 'L', quantityPerMemberPerDay: 4, targetDays: 14 }), updatedAt: '2026-10-01T10:00:00.000Z' };
+    const ok = { ...rule({ categoryId: 'sys-water', unit: 'L', quantityPerMemberPerDay: 1, targetDays: 1 }), updatedAt: '2026-10-01T10:00:00.000Z' };
+    const l = { ...lot(bidon.id, 60), updatedAt: '2026-10-20T08:00:00.000Z' };
+    const result = recommendationShortages([short, ok], [{ ...adults, updatedAt: '2026-09-01T00:00:00.000Z' }], items, [l]);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.rule.id).toBe(short.id);
+    expect(result[0]!.changedAt).toBe('2026-10-20T08:00:00.000Z'); // el lote es lo último que cambió
+    // Sin integrantes la regla no aplica a nadie: no es un faltante.
+    expect(recommendationShortages([short], [], items, [l])).toEqual([]);
   });
 
   it('sin miembros no hay necesidad ni días calculables', () => {

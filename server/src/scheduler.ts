@@ -13,7 +13,7 @@ interface DeviceRow {
 
 interface AlertRow {
   item_name: string;
-  kind: 'expiry' | 'capacity';
+  kind: 'expiry' | 'capacity' | 'shortage';
   due_date: string | null;
   notify_from: string;
 }

@@ -57,6 +57,25 @@ test('recomendaciones: grupo familiar, regla de agua por categoría y cobertura'
   await expect(page.getByText('Faltan 108 L')).toBeVisible();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-18-recommendations.png`, fullPage: true });
 
+  // El faltante aparece en las alertas de Inicio y en la pantalla de Alertas…
+  await page.getByRole('link', { name: 'Inicio' }).click();
+  await expect(page.getByRole('link', { name: /Agua para tomar y cocinar.*alcanza para 5 días.*Faltan 108 L/ })).toBeVisible();
+  await page.goto('/#/inventory/alerts');
+  await expect(page.getByRole('heading', { name: 'Faltantes según tus recomendaciones' })).toBeVisible();
+  // …y en el índice que usan las notificaciones (aviso diario y servidor).
+  const rows = await page.evaluate(
+    () =>
+      new Promise<{ lotId: string; itemName: string; kind: string }[]>((resolve) => {
+        const req = indexedDB.open('vikarg-user');
+        req.onsuccess = () => {
+          const get = req.result.transaction('alertIndex').objectStore('alertIndex').getAll();
+          get.onsuccess = () => resolve(get.result);
+        };
+      }),
+  );
+  expect(rows).toEqual([expect.objectContaining({ itemName: 'Agua para tomar y cocinar', kind: 'shortage', lotId: expect.stringMatching(/^rec:/) })]);
+  await page.goto('/#/inventory/recommendations');
+
   // Borrar a "Niños": la regla pasa a 2 personas (no a todo el grupo).
   await page.getByRole('button', { name: /^Niños/ }).click();
   await dialog.getByRole('button', { name: 'Eliminar' }).click();

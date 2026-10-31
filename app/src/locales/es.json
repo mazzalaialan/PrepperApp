@@ -606,7 +606,8 @@
     "capacityLow": "Queda {{pct}}%",
     "allGood": "Todo en orden: no hay vencimientos próximos ni faltantes.",
     "lotsTitle": "Vencimientos y capacidad",
-    "shortagesTitle": "Debajo del stock mínimo"
+    "shortagesTitle": "Debajo del stock mínimo",
+    "recommendationsTitle": "Faltantes según tus recomendaciones"
   },
   "locations": {
     "new": "Nueva ubicación",

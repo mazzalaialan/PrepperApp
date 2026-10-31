@@ -53,3 +53,32 @@ export function evaluateRule(rule: RecommendationRule, members: HouseholdMember[
 }
 
 const round = (n: number) => Math.round(n * 1000) / 1000;
+
+export interface RecommendationShortage {
+  rule: RecommendationRule;
+  result: RuleResult;
+  /** Lo último que cambió (regla, grupo o stock contado): desde ahí corresponde avisar. */
+  changedAt: string;
+}
+
+/** Reglas que hoy no se cumplen (con alguien a quien aplicar). */
+export function recommendationShortages(
+  rules: RecommendationRule[],
+  members: HouseholdMember[],
+  items: Map<Id, Item>,
+  lots: Lot[],
+): RecommendationShortage[] {
+  return rules.flatMap((rule) => {
+    const result = evaluateRule(rule, members, items, lots);
+    if (result.people === 0 || result.missing <= 0) return [];
+    // Sin historial no se sabe cuándo empezó a faltar: se usa el último cambio de lo que interviene,
+    // que es estable mientras nada cambie (así no se avisa de nuevo todos los días).
+    const counted = new Set(result.countedItems.map((i) => i.id));
+    const stamps = [
+      rule.updatedAt,
+      ...membersFor(rule, members).map((m) => m.updatedAt),
+      ...lots.filter((l) => counted.has(l.itemId)).map((l) => l.updatedAt),
+    ];
+    return [{ rule, result, changedAt: stamps.reduce((a, b) => (a > b ? a : b)) }];
+  });
+}
