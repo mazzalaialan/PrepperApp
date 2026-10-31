@@ -1,5 +1,6 @@
 import { strFromU8, strToU8 } from 'fflate';
 import { blobStore } from '@/core/db/repository';
+import { loadPlaceFinder } from './places';
 
 /**
  * Repetidoras de radioaficionados importadas por el usuario desde un archivo
@@ -24,6 +25,13 @@ export interface Repeater {
   status: string;
   lat: number | null;
   lon: number | null;
+  /** País o estado según la fuente (RepeaterBook pone "Argentina" en "State"). */
+  region?: string;
+  /**
+   * Ubicación estimada por el nombre de la localidad (archivos sin coordenadas):
+   * "Avellaneda, Buenos Aires". `null` = se buscó y no se encontró.
+   */
+  approx?: string | null;
 }
 
 export interface RepeaterList {
@@ -122,6 +130,7 @@ export function parseRepeaterCsv(text: string): Repeater[] {
     mode: column(headers, 'Mode', 'Modes'),
     status: column(headers, 'Op Status', 'Operational Status', 'Status', 'Use'),
     comment: column(headers, 'Comment', 'Notes'),
+    region: column(headers, 'State', 'Country', 'Province'),
   };
   if (c.output < 0) return [];
   const out: Repeater[] = [];
@@ -157,9 +166,26 @@ export function parseRepeaterCsv(text: string): Repeater[] {
       status: get(c.status),
       lat: lat !== null && Math.abs(lat) <= 90 && lat !== 0 ? lat : null,
       lon: lon !== null && Math.abs(lon) <= 180 && lon !== 0 ? lon : null,
+      ...(get(c.region) && { region: get(c.region) }),
     });
   }
   return out;
+}
+
+/**
+ * Las que vienen sin coordenadas se ubican en el centro de su localidad, si es
+ * de Argentina (único nomenclátor incluido). Devuelve null si no cambió nada.
+ */
+export async function locateRepeaters(items: Repeater[]): Promise<Repeater[] | null> {
+  const pending = items.filter((r) => r.lat === null && r.approx === undefined);
+  if (pending.length === 0) return null;
+  const places = await loadPlaceFinder();
+  return items.map((r) => {
+    if (!pending.includes(r)) return r;
+    // La región (provincia, si la trae) ayuda a desempatar localidades con el mismo nombre.
+    const m = r.location && places.covers(r.region ?? '') ? places.find([r.location, r.region].filter((s) => s && !/^argentina$/i.test(s)).join(', ')) : null;
+    return m ? { ...r, lat: m.lat, lon: m.lon, approx: m.label } : { ...r, approx: null };
+  });
 }
 
 /** Datos sueltos en el texto de un punto GPX/KML (p. ej. "146.970- PL 100.0 LU1ABC Rosario"). */

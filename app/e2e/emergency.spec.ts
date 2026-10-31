@@ -179,18 +179,27 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(rpt.nth(1)).toContainText('fuera de servicio');
   await expect(rpt.nth(2)).toContainText('LU2FCF · Rosario');
 
-  // Un CSV de CHIRP (sin coordenadas) se suma al final y avisa.
-  const chirp = 'Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,Mode,Comment\n0,LU7DOT,145.210000,-,0.600000,Tone,88.5,FM,Mar del Plata\n';
-  await page.getByTestId('repeaters-file').setInputFiles({ name: 'chirp.csv', mimeType: 'text/csv', buffer: Buffer.from(chirp) });
-  await expect(page.getByTestId('repeaters-message')).toContainText('1 no traen ubicación');
-  await expect(rpt).toHaveCount(4);
-  await expect(rpt.nth(3)).toContainText('LU7DOT · Mar del Plata');
-  await expect(rpt.nth(3).getByTestId('rpt-distance')).toHaveText('sin ubicación');
+  // La exportación CSV de RepeaterBook no trae coordenadas: se ubica por la localidad (aproximada);
+  // la que no se encuentra va al final, sin distancia.
+  const noCoords = [
+    'Output Freq,Input Freq,Offset,Uplink Tone,Downlink Tone,Call,"Location",County,State,Modes,Digital Access',
+    '145.21000,144.610000,,88.5,,LU7DOT,"Mar del Plata - Faro",,Argentina,FM ,',
+    '145.39000,144.790000,,,,LU9XYZ,"Paraje Inexistente",,Argentina,FM ,',
+  ].join('\n');
+  await page.getByTestId('repeaters-file').setInputFiles({ name: 'RB_2610311757.csv.xls', mimeType: 'application/vnd.ms-excel', buffer: Buffer.from(noCoords) });
+  await expect(page.getByTestId('repeaters-message')).toContainText('de 1 no se encontró la localidad');
+  await expect(page.getByTestId('repeaters-message')).toContainText('1 venía sin coordenadas');
+  await expect(rpt).toHaveCount(5);
+  const mdp = rpt.filter({ hasText: 'LU7DOT' });
+  await expect(mdp.getByTestId('rpt-distance')).toHaveText(/^≈ 1\.?\d{3} km$/);
+  await expect(mdp).toContainText('Ubicación aproximada: centro de Mar del Plata, Buenos Aires');
+  await expect(rpt.nth(4)).toContainText('LU9XYZ');
+  await expect(rpt.nth(4).getByTestId('rpt-distance')).toHaveText('sin ubicación');
 
   // Siguen ahí al volver (guardadas en el dispositivo) y se pueden borrar.
   await page.goto('/#/first-aid');
   await page.goto('/#/first-aid/radio');
-  await expect(rpt).toHaveCount(4);
+  await expect(rpt).toHaveCount(5);
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Borrar todas' }).click();
   await expect(page.getByTestId('repeaters')).toHaveCount(0);

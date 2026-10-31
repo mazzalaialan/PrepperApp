@@ -6,7 +6,7 @@ import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { loadEmergencyData, nearestRadio, type EmergencyData } from './data';
 import { CopyButton, formatDistance, MapLink } from './parts';
-import { loadRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
+import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
 
 /**
@@ -153,23 +153,40 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
   const file = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void loadRepeaters().then(setList);
+    void (async () => {
+      const saved = await loadRepeaters();
+      setList(saved);
+      // Listas importadas antes de que existiera el nomenclátor: se ubican una vez.
+      const located = saved && (await locateRepeaters(saved.items));
+      if (saved && located) {
+        const next = { ...saved, items: located };
+        await saveRepeaters(next);
+        setList(next);
+      }
+    })();
   }, []);
 
   async function handleFile(f: File) {
-    const incoming = parseRepeaterFile(f.name, await f.text());
-    if (incoming.length === 0) {
+    const parsed = parseRepeaterFile(f.name, await f.text());
+    if (parsed.length === 0) {
       setMessage(t('radio.repeaters.importNone'));
       return;
     }
+    const incoming = (await locateRepeaters(parsed)) ?? parsed;
     const next: RepeaterList = { importedAt: new Date().toISOString(), source: f.name, items: mergeRepeaters(list?.items ?? [], incoming) };
     await saveRepeaters(next);
     setList(next);
-    const withPlace = incoming.filter((r) => r.lat !== null).length;
+    const missing = incoming.filter((r) => r.lat === null).length;
+    const approx = incoming.filter((r) => r.approx).length;
     setMessage(
-      withPlace === incoming.length
-        ? t('radio.repeaters.imported', { count: incoming.length })
-        : t('radio.repeaters.importedNoPlace', { count: incoming.length, missing: incoming.length - withPlace }),
+      [
+        missing === 0
+          ? t('radio.repeaters.imported', { count: incoming.length })
+          : t('radio.repeaters.importedNoPlace', { count: incoming.length, missing }),
+        approx > 0 ? t('radio.repeaters.importedApprox', { count: approx }) : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
     );
   }
 
@@ -214,7 +231,7 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
                   <span className="contact-actions">
                     <span className="radio-freqs">
                       <span className="rpt-distance" data-testid="rpt-distance">
-                        {d !== null ? formatKm(d, i18n.language) : r.lat === null ? t('radio.repeaters.noPlace') : t('radio.repeaters.choosePlace')}
+                        {d !== null ? `${r.approx ? '≈ ' : ''}${formatKm(d, i18n.language)}` : r.lat === null ? t('radio.repeaters.noPlace') : t('radio.repeaters.choosePlace')}
                       </span>
                     </span>
                     <CopyButton text={summary} label={t('radio.repeaters.copy', { call: r.call })} />
@@ -254,7 +271,7 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
       <input
         ref={file}
         type="file"
-        accept=".csv,.gpx,.kml,.xml,text/csv,application/gpx+xml,application/vnd.google-earth.kml+xml"
+        accept=".csv,.xls,.gpx,.kml,.xml,text/csv,application/vnd.ms-excel,application/gpx+xml,application/vnd.google-earth.kml+xml"
         hidden
         data-testid="repeaters-file"
         onChange={(e) => {
@@ -296,6 +313,7 @@ function RepeaterDetails({ r, off }: { r: Repeater; off: boolean }) {
       {(r.mode || off) && (
         <span className="list-sub">{[r.mode && t('radio.repeaters.mode', { mode: r.mode }), off && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}</span>
       )}
+      {r.approx && <span className="list-sub">{t('radio.repeaters.approx', { place: r.approx })}</span>}
     </span>
   );
 }
