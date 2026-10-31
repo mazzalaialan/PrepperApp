@@ -338,8 +338,8 @@ La app se organiza en siete secciones:
 | Botiquín | Botiquines por tipo, ficha médica familiar, guías de primeros auxilios (F4) |
 | Documentos | Documentos personales con N fotos |
 | Orientación | Brújula, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
-| Meteorología | Clima, sol y luna |
-| Huerta y cultivo | A definir (F7) |
+| Meteorología | Clima, sol y luna, mapa de tiempo y peligros naturales (§12.4) |
+| Huerta y cultivo | Calendario de siembra y cosecha (F7), canteros y seguimiento (F8) |
 | Biblioteca | Manuales |
 
 Navegación en el celular: Inicio, Inventario, Botiquín, Documentos, Orientación y "Más" (Meteorología, Huerta, Biblioteca). En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior.
@@ -374,7 +374,7 @@ Navegación en el celular: Inicio, Inventario, Botiquín, Documentos, Orientaci�
 | Clima | Pronóstico descargado y cacheado; muestra "actualizado hace X" | Último dato guardado |
 | Mapa estelar | Carta del cielo orientada con la brújula; estrellas hasta mag. ~5,5, constelaciones, planetas; Cruz del Sur destacada para hallar el sur | Rotación manual |
 | Biblioteca | §11 | — |
-| Huerta | A definir (F7) | — |
+| Huerta | Calendario (F7) y canteros (F8) | — |
 | Backup | §8 | — |
 | Ajustes | Idioma, unidades, tema, seguridad, servidor, espejos | — |
 
@@ -514,10 +514,14 @@ Detalle de las capas de tiempo:
 | **F2 — Servidor** | Docker, push programado, código de transferencia, aviso diario en segundo plano |
 | **F3 — Orientación, meteorología y botiquín** | Orientación: brújula, inclinómetro, GPS y waypoints con "ir al punto" (realidad aumentada con cámara y brújula). Meteorología: clima, sol y luna. Botiquín: botiquines por tipo y ficha médica. Documentos. Recomendaciones |
 | **F4 — Biblioteca** | Visor, búsqueda, paquetes, importación y herramienta de conversión |
-| **F5 — Mapas** | Descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía |
-| **F6 — Mapa estelar** | Carta del cielo orientada por brújula |
-| **F7 — Huerta y cultivo** | Alcance a definir antes de empezar la fase |
+| **F5 — Mapas** | Orientación: descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía. Meteorología: mapa base de AR, CL y UY con capas de tiempo y peligros naturales (§12.4) |
+| **F6 — Mapa estelar** | Carta del cielo orientada por brújula (§10) |
+| **F7 — Huerta: calendario** | Gráfico con la época del año actual y una línea de tiempo de qué se puede sembrar, trasplantar y cosechar, con datos del INTA por zona (a terminar de analizar) |
+| **F8 — Huerta: canteros** | Fase exclusiva. Carga de canteros y macetas (tamaño, horas de sol), recomendaciones de qué plantar según sol, época y zona, y seguimiento de cada planta con sus tareas. Referencia: https://huerta.diariodeljardin.com/planear/ (a terminar de analizar) |
 | **Servidor (cuando esté instalado)** | Avisos de lluvia con la app cerrada (última ubicación conocida y waypoints), detector de rayos GOES‑19 con aviso por distancia |
+
+**Orden de ejecución** (decidido el 31/10/2026; los números de fase se mantienen como identificadores):
+F0 → F1 → F2 → F3 (hechas) → **F6 Mapa estelar** → F5 Mapas (incluye el mapa de Meteorología) → Servidor (avisos en segundo plano, rayos, peligros naturales) → F7 y F8 Huerta → **F4 Biblioteca, al final**.
 
 ---
 

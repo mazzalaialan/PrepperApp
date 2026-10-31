@@ -63,7 +63,9 @@
     "weather": { "title": "Weather", "desc": "Forecast when online" },
     "maps": { "title": "Offline maps", "desc": "Downloaded areas with terrain" },
     "starmap": { "title": "Star map", "desc": "Navigate by the stars" },
-    "garden": { "title": "Garden", "desc": "Grow your own food" },
+    "gardenCalendar": { "title": "Planting calendar", "desc": "What to sow and harvest this season (INTA)" },
+    "gardenBeds": { "title": "My beds", "desc": "What to plant by sunlight, and plant tracking" },
+    "weatherMap": { "title": "Map", "desc": "Storms, lightning, earthquakes, fires and volcanoes" },
     "library": { "title": "Manuals", "desc": "Offline survival library" }
   },
   "status": {

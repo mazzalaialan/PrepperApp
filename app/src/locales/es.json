@@ -63,7 +63,9 @@
     "weather": { "title": "Clima", "desc": "Pronóstico cuando hay conexión" },
     "maps": { "title": "Mapas offline", "desc": "Zonas descargadas con relieve" },
     "starmap": { "title": "Mapa estelar", "desc": "Orientación por las estrellas" },
-    "garden": { "title": "Huerta", "desc": "Cultivos para autoabastecerse" },
+    "gardenCalendar": { "title": "Calendario de siembra", "desc": "Qué sembrar y cosechar en esta época (INTA)" },
+    "gardenBeds": { "title": "Mis canteros", "desc": "Qué plantar según el sol y seguimiento de cada planta" },
+    "weatherMap": { "title": "Mapa", "desc": "Tormentas, rayos, sismos, incendios y volcanes" },
     "library": { "title": "Manuales", "desc": "Biblioteca de supervivencia offline" }
   },
   "status": {

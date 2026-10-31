@@ -59,6 +59,7 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
     await page.getByRole('link', { name: 'Huerta' }).click();
   }
   await expect(page.getByText('Próximamente · F7')).toBeVisible();
+  await expect(page.getByText('Próximamente · F8')).toBeVisible();
   await shot(page, '03b-garden');
 
   // Ubicaciones

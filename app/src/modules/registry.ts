@@ -5,6 +5,7 @@ import {
   BookHeart,
   BookOpen,
   BriefcaseMedical,
+  CalendarDays,
   Calculator,
   CloudSun,
   Compass,
@@ -26,7 +27,7 @@ import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities
 /** En el orden en que se muestran en Inicio. */
 export const SECTIONS = ['inventory', 'firstAid', 'documents', 'orientation', 'weather', 'garden', 'library'] as const;
 export type Section = (typeof SECTIONS)[number];
-export type Phase = 'F1' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7';
+export type Phase = 'F1' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7' | 'F8';
 
 export interface ModuleDef {
   id: string;
@@ -62,8 +63,10 @@ export const MODULES: ModuleDef[] = [
   { id: 'maps', section: 'orientation', icon: MapIcon, phase: 'F5', implemented: false, degradesWithout: ['geolocation'] },
   { id: 'starmap', section: 'orientation', icon: Sparkles, phase: 'F6', implemented: false, degradesWithout: ['orientation'] },
   { id: 'weather', section: 'weather', icon: CloudSun, phase: 'F3', implemented: true, path: '/weather/forecast' },
+  { id: 'weatherMap', section: 'weather', icon: MapIcon, phase: 'F5', implemented: false },
   { id: 'astronomy', section: 'weather', icon: Moon, phase: 'F3', implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },
-  { id: 'garden', section: 'garden', icon: Sprout, phase: 'F7', implemented: false },
+  { id: 'gardenCalendar', section: 'garden', icon: CalendarDays, phase: 'F7', implemented: false },
+  { id: 'gardenBeds', section: 'garden', icon: Sprout, phase: 'F8', implemented: false },
   { id: 'library', section: 'library', icon: BookOpen, phase: 'F4', implemented: false },
 ];
 
