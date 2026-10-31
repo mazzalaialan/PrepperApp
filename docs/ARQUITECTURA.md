@@ -338,11 +338,11 @@ La app se organiza en siete secciones:
 | Documentos | Documentos personales con N fotos |
 | Orientación | Brújula, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
 | Meteorología | Clima, sol y luna, mapa de tiempo y peligros naturales (§12.4) |
-| Inventario | Artículos, ubicaciones, alertas, categorías, recomendaciones, backup |
+| Inventario | Artículos, ubicaciones, alertas, categorías, recomendaciones |
 | Huerta y cultivo | Calendario de siembra y cosecha (F7), canteros y seguimiento (F8) |
 | Biblioteca | Manuales |
 
-Navegación en el celular: Inicio, Botiquín, Documentos, Orientación, Meteorología y "Más" (Inventario, Huerta, Biblioteca). Inicio muestra las secciones en ese mismo orden, con las alertas arriba de todo. En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior.
+Navegación en el celular: Inicio, Botiquín, Documentos, Orientación, Meteorología y "Más" (Inventario, Huerta, Biblioteca). Inicio muestra las secciones en ese mismo orden, con las alertas arriba de todo. En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior; incluye Backup y transferencia (§8).
 
 **Botiquines.** Un botiquín es una ubicación del inventario con `kitType` (`general`, `trauma`, `bleeding`, `anaphylaxis`, `burns`, `other`): físicamente es una caja o mochila que puede estar en la casa, el auto o la mochila de escape. Su contenido son lotes del inventario (se cargan una vez); lo que falta sale del stock mínimo por ubicación. La sección muestra los vencimientos de todo lo que está en botiquines o en la categoría Botiquín.
 

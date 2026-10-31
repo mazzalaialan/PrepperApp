@@ -871,6 +871,8 @@
     "storageNotPersistent": "El navegador podría borrarlo si falta espacio",
     "storagePersist": "Proteger",
     "about": "Acerca de",
+    "backupTitle": "Backup y transferencia",
+    "backupOpen": "Exportar, restaurar o pasar a otro dispositivo",
     "version": "Versión {{version}}"
   },
   "theme": { "dark": "Oscuro", "light": "Claro", "red": "Rojo nocturno" },

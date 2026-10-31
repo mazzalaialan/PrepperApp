@@ -28,7 +28,7 @@ test('transferir a un dispositivo nuevo con el QR (link) y código de un solo us
   await expect(page).toHaveURL(/items\/[0-9a-f-]{36}$/);
 
   // Enviar
-  await page.goto('/#/inventory/backup');
+  await page.goto('/#/settings/backup');
   await page.getByRole('button', { name: 'Generar código' }).click();
   const codeText = await page.getByLabel('Código de transferencia').textContent();
   expect(codeText).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);

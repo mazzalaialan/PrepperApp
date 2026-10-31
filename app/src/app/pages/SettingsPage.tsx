@@ -1,6 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Crosshair, Lock, RefreshCw, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Archive, Check, Crosshair, Lock, RefreshCw, X } from 'lucide-react';
+import { lastBackupAt } from '@/core/backup/backup';
+import { daysBetween, today } from '@/modules/inventory/domain/dates';
 import { newerRelease, usePortableUpdate } from '@/core/portable/update';
 import { CAPABILITIES, useCapabilities } from '@/core/capabilities/capabilities';
 import { WrongSecretError } from '@/core/crypto/crypto';
@@ -78,6 +81,7 @@ export function SettingsPage() {
         </button>
       </section>
 
+      <BackupSection />
       <ConnectionsSection settings={settings} onSave={update} />
       <NotificationsSection />
       <DeviceSection />
@@ -91,6 +95,29 @@ export function SettingsPage() {
         <p className="hint" style={{ fontStyle: 'italic' }}>{t('app.motto')}</p>
       </section>
     </div>
+  );
+}
+
+/** Acceso al backup y la transferencia, con cuándo fue el último. */
+function BackupSection() {
+  const { t } = useTranslation();
+  const [last, setLast] = useState<string | null>(null);
+  useEffect(() => {
+    void lastBackupAt().then(setLast);
+  }, []);
+  const daysAgo = last ? daysBetween(today(new Date(last)), today()) : null;
+  return (
+    <section className="card stack">
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('settings.backupTitle')}</h2>
+      <p className="hint" style={{ margin: 0 }} data-testid="settings-last-backup">
+        {daysAgo === null ? t('backup.never') : daysAgo === 0 ? t('backup.lastToday') : t('backup.lastDaysAgo', { count: daysAgo })}
+      </p>
+      <div>
+        <Link className="btn" to="/settings/backup">
+          <Archive size={18} /> {t('settings.backupOpen')}
+        </Link>
+      </div>
+    </section>
   );
 }
 

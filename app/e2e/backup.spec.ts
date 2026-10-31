@@ -64,7 +64,7 @@ test('exportar en un dispositivo y restaurar en otro, con todo lo cargado', asyn
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/routes\/[0-9a-f-]{36}$/);
 
-  await page.goto('/#/inventory/backup');
+  await page.goto('/#/settings/backup');
   await expect(page.getByText('Todavía no hiciste ningún backup.')).toBeVisible();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar backup' }).click();
@@ -73,6 +73,15 @@ test('exportar en un dispositivo y restaurar en otro, con todo lo cargado', asyn
   const file = testInfo.outputPath('backup.vikarg');
   await download.saveAs(file);
   await expect(page.getByText('Último backup: hoy.')).toBeVisible();
+
+  // El backup vive en Ajustes: la sección muestra el último y la dirección vieja redirige.
+  await page.getByRole('link', { name: 'Volver' }).click();
+  await expect(page.getByTestId('settings-last-backup')).toHaveText('Último backup: hoy.');
+  await page.goto('/#/inventory/backup');
+  await expect(page).toHaveURL(/#\/settings\/backup$/);
+  await page.goto('/#/inventory');
+  await expect(page.getByRole('heading', { name: 'Inventario' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Backup/ })).toHaveCount(0);
 
   // Otro dispositivo: contexto nuevo, almacenamiento vacío.
   const other = await browser.newContext({ ...testInfo.project.use, baseURL: testInfo.project.use.baseURL });

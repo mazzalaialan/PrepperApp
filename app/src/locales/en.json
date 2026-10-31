@@ -871,6 +871,8 @@
     "storageNotPersistent": "The browser may clear it when space runs low",
     "storagePersist": "Protect",
     "about": "About",
+    "backupTitle": "Backup and transfer",
+    "backupOpen": "Export, restore or move to another device",
     "version": "Version {{version}}"
   },
   "theme": { "dark": "Dark", "light": "Light", "red": "Red night" },

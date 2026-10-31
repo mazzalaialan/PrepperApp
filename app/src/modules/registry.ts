@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  Archive,
   BellRing,
   BookHeart,
   BookOpen,
@@ -50,7 +49,6 @@ export const MODULES: ModuleDef[] = [
   { id: 'locations', section: 'inventory', icon: Warehouse, phase: 'F1', implemented: true, path: '/inventory/locations' },
   { id: 'alerts', section: 'inventory', icon: BellRing, phase: 'F1', implemented: true, path: '/inventory/alerts' },
   { id: 'categories', section: 'inventory', icon: Tags, phase: 'F1', implemented: true, path: '/inventory/categories' },
-  { id: 'backup', section: 'inventory', icon: Archive, phase: 'F1', implemented: true, path: '/inventory/backup' },
   { id: 'recommendations', section: 'inventory', icon: Calculator, phase: 'F3', implemented: true, path: '/inventory/recommendations' },
   { id: 'kits', section: 'firstAid', icon: BriefcaseMedical, phase: 'F3', implemented: true, path: '/first-aid/kits' },
   { id: 'medical', section: 'firstAid', icon: HeartPulse, phase: 'F3', implemented: true, path: '/first-aid/medical' },

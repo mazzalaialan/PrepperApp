@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Download, Send } from 'lucide-react';
+import { ArrowLeft, Download, Send } from 'lucide-react';
 import { backupFileName, exportBackup, lastBackupAt, markBackupDone } from '@/core/backup/backup';
 import { TransferError, formatTransferCode, transferLink, uploadTransfer, type TransferTicket } from '@/core/backup/transfer';
 import { useSettings } from '@/core/settings/settings';
@@ -46,7 +46,12 @@ export function BackupPage() {
 
   return (
     <div className="stack">
-      <h1 className="page-title">{t('modules.backup.title')}</h1>
+      <div className="page-head">
+        <Link className="icon-btn" to="/settings" aria-label={t('common.back')}>
+          <ArrowLeft size={22} />
+        </Link>
+        <h1 className="page-title" style={{ flex: 1 }}>{t('modules.backup.title')}</h1>
+      </div>
 
       {!initialTransfer && (
         <>

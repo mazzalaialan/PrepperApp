@@ -49,7 +49,9 @@ const router = createHashRouter([
       { path: '/inventory/locations', element: <LocationsPage /> },
       { path: '/inventory/categories', element: <CategoriesPage /> },
       { path: '/inventory/alerts', element: <AlertsPage /> },
-      { path: '/inventory/backup', element: <BackupPage /> },
+      { path: '/settings/backup', element: <BackupPage /> },
+      // Ruta anterior a v0.7.4 (el backup estaba en Inventario).
+      { path: '/inventory/backup', element: <Navigate to="/settings/backup" replace /> },
       { path: '/inventory/recommendations', element: <RecommendationsPage /> },
       { path: '/first-aid', element: <SectionPage section="firstAid" /> },
       { path: '/first-aid/kits', element: <KitsPage /> },
