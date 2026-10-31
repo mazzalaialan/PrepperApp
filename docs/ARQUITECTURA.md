@@ -453,6 +453,8 @@ Es un **módulo de la sección Meteorología**, separado de los mapas de Orienta
 | FIRMS (focos con clave) | NASA FIRMS, pide clave | Opcional en el servidor |
 | Nivel de alerta volcánica | SERNAGEOMIN (Chile) y OAVV/SEGEMAR (AR) publican reportes, no datos | Pendiente |
 
+**Radar del SMN (analizado 2026-10-31):** la página `smn.gob.ar/radar` lista las imágenes con `ws1.smn.gob.ar/v1/images/radar/COMP_ARG` (JWT que genera la página y vence en 1 h, CORS solo para smn.gob.ar) y las sirve desde `estaticos.smn.gob.ar/vmsr/radar/` (mosaico nacional y radares de Anguil, Ezeiza, Paraná, Pergamino y Termas de Río Hondo, cada 10 min, 2 h), todo detrás de la protección anti-robots de Cloudflare. **No se toma sin autorización:** el usuario va a pedir acceso al SMN; si lo dan, lo consume el servidor y lo entrega como capa georreferenciada. Tampoco se extraen datos de apps de terceros (APIs privadas o datos licenciados).
+
 **Fuentes sin API (decisión 2026-10-31):** la información que no tenga una API libre (alertas del SMN, nivel de alerta volcánica de SERNAGEOMIN y OAVV/SEGEMAR, reportes del SNMF, INPRES, etc.) se obtendrá con *web scraping* desde el servidor propio, que la normaliza y la sirve a la app. Se analiza fuente por fuente al instalar el servidor: términos de uso, frecuencia razonable de consulta (sin sobrecargar los sitios), caché y qué hacer cuando cambia el formato de la página.
 
 Sin conexión: se ven el mapa, los volcanes, los waypoints y lo último guardado de sismos, alertas y clima por zona (cifrado, `weathermap-cache`). Con ahorro de batería, satélite y radar muestran solo la última imagen (sin animación).
