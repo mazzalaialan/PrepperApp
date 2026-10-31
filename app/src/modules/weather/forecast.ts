@@ -162,12 +162,18 @@ export function parseForecast(data: ApiResponse, now = new Date()): Forecast {
       windGusts: num(c.wind_gusts_10m),
       pressure: num(c.pressure_msl),
     },
-    hourly: (h.time ?? []).map((time, i) => ({
+    // Al final del rango (día 16) el modelo deja horas y días vacíos (null): se saltean esos,
+    // en lugar de descartar todo el pronóstico.
+    hourly: (h.time ?? []).flatMap((time, i) => {
+      const temperature = opt(h.temperature_2m?.[i]);
+      const code = opt(h.weather_code?.[i]);
+      if (temperature === null || code === null) return [];
+      return [{
       time: String(time),
-      temperature: num(h.temperature_2m![i]),
+      temperature,
       precipProbability: opt(h.precipitation_probability?.[i]),
-      code: num(h.weather_code![i]),
-      windSpeed: num(h.wind_speed_10m![i]),
+      code,
+      windSpeed: opt(h.wind_speed_10m?.[i]) ?? 0,
       windDirection: opt(h.wind_direction_10m?.[i]),
       windGusts: opt(h.wind_gusts_10m?.[i]),
       apparent: opt(h.apparent_temperature?.[i]),
@@ -178,19 +184,26 @@ export function parseForecast(data: ApiResponse, now = new Date()): Forecast {
       visibility: opt(h.visibility?.[i]),
       cape: opt(h.cape?.[i]),
       freezingLevel: opt(h.freezing_level_height?.[i]),
-    })),
-    daily: (d.time ?? []).map((date, i) => ({
+      }];
+    }),
+    daily: (d.time ?? []).flatMap((date, i) => {
+      const code = opt(d.weather_code?.[i]);
+      const max = opt(d.temperature_2m_max?.[i]);
+      const min = opt(d.temperature_2m_min?.[i]);
+      if (code === null || max === null || min === null) return [];
+      return [{
       date: String(date),
-      code: num(d.weather_code![i]),
-      max: num(d.temperature_2m_max![i]),
-      min: num(d.temperature_2m_min![i]),
-      precipitation: num(d.precipitation_sum![i]),
+      code,
+      max,
+      min,
+      precipitation: opt(d.precipitation_sum?.[i]) ?? 0,
       precipProbability: opt(d.precipitation_probability_max?.[i]),
-      windMax: num(d.wind_speed_10m_max![i]),
-      gustMax: num(d.wind_gusts_10m_max![i]),
+      windMax: opt(d.wind_speed_10m_max?.[i]) ?? 0,
+      gustMax: opt(d.wind_gusts_10m_max?.[i]) ?? 0,
       windDirection: opt(d.wind_direction_10m_dominant?.[i]),
       uvMax: opt(d.uv_index_max?.[i]),
-    })),
+      }];
+    }),
     minutely15: parseSlots(data.minutely_15),
   };
 }

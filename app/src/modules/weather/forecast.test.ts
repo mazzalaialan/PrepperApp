@@ -66,6 +66,37 @@ describe('parseForecast', () => {
     expect(f.daily[0]!.uvMax).toBe(7);
     expect(() => parseForecast({ ...api, current: { ...api.current, temperature_2m: 'x' as unknown as number } })).toThrow();
   });
+
+  it('al final del rango (día 16) vienen vacíos: se saltean, no se descarta todo', () => {
+    const api = {
+      latitude: -34.6,
+      longitude: -58.4,
+      timezone: 'America/Argentina/Buenos_Aires',
+      current: {
+        time: '2026-10-30T14:00', temperature_2m: 22.5, relative_humidity_2m: 60, apparent_temperature: 23, precipitation: 0,
+        weather_code: 2, wind_speed_10m: 15, wind_direction_10m: 90, wind_gusts_10m: 30, pressure_msl: 1012,
+      },
+      hourly: {
+        time: ['2026-11-14T22:00', '2026-11-14T23:00'],
+        temperature_2m: [20, null],
+        weather_code: [3, null],
+        wind_speed_10m: [10, null],
+      },
+      daily: {
+        time: ['2026-11-14', '2026-11-15'],
+        weather_code: [3, null],
+        temperature_2m_max: [26, null],
+        temperature_2m_min: [15, null],
+        precipitation_sum: [0, null],
+        wind_speed_10m_max: [null, null],
+        wind_gusts_10m_max: [30, null],
+      },
+    };
+    const f = parseForecast(api as never);
+    expect(f.hourly.map((h) => h.time)).toEqual(['2026-11-14T22:00']);
+    expect(f.daily.map((d) => d.date)).toEqual(['2026-11-14']);
+    expect(f.daily[0]!.windMax).toBe(0);
+  });
 });
 
 describe('warningsOf', () => {
