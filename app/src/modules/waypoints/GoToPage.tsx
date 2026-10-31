@@ -9,6 +9,7 @@ import type { Waypoint } from '@/core/model/types';
 import { angleDiff } from '@/core/sensors/heading';
 import { useCamera, visibleFov } from '@/core/sensors/useCamera';
 import { useHeading, type Heading } from '@/core/sensors/useHeading';
+import { useBatterySaver } from '@/core/power/saver';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
 import { CompassRose } from '@/modules/compass/CompassRose';
@@ -55,9 +56,11 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
   const canAr = (caps?.camera && caps.orientation) ?? false;
-  // `null` = automático: prendida si el dispositivo puede (la detección de sensores tarda un instante).
+  const saver = useBatterySaver();
+  // `null` = automático: prendida si el dispositivo puede (la detección de sensores tarda un instante),
+  // salvo con ahorro de batería, donde la cámara se prende a mano.
   const [cameraChoice, setCameraOn] = useState<boolean | null>(null);
-  const cameraOn = cameraChoice ?? canAr;
+  const cameraOn = cameraChoice ?? (canAr && !saver);
 
   const distance = fix ? distanceMeters(fix, target) : null;
   const trueBearing = fix ? bearingDeg(fix, target) : null;

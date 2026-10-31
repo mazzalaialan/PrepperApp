@@ -2,18 +2,18 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { create } from 'zustand';
 import { currentPosition } from '@/core/geo/useGeolocation';
+import { RAIN_CHECK_MS, useBatterySaver } from '@/core/power/saver';
 import { useSettings } from '@/core/settings/settings';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { fetchNowcast, rainOutlook, type RainOutlook } from './nowcast';
 
 /**
- * Avisos de lluvia mientras la app está abierta: cada 15 minutos revisa "mi
+ * Avisos de lluvia mientras la app está abierta: cada 15 minutos (60 con ahorro de batería) revisa "mi
  * ubicación" (si está activado) y los waypoints con aviso. Con la app cerrada
  * una PWA no puede leer el GPS ni consultar a tiempo: eso lo hará el servidor
  * propio con la última ubicación conocida (ARQUITECTURA §9).
  */
 
-const CHECK_MS = 15 * 60_000;
 export const HERE_ID = 'here';
 
 export interface RainStatus {
@@ -55,6 +55,7 @@ export function useRainWatcher() {
   const { t, i18n } = useTranslation();
   const here = useSettings((s) => s.settings.rainAlertsHere);
   const base = useSettings((s) => s.settings.weatherUrl);
+  const checkMs = useBatterySaver() ? RAIN_CHECK_MS.saver : RAIN_CHECK_MS.normal;
   const waypoints = useWaypoints((s) => s.waypoints);
   // La lista se reduce a lo que importa para no reiniciar el ciclo por cambios ajenos (nombre, notas…).
   const watched = [...waypoints.values()].filter((w) => w.rainAlerts);
@@ -107,11 +108,11 @@ export function useRainWatcher() {
     }
 
     void check();
-    const timer = setInterval(() => void check(), CHECK_MS);
+    const timer = setInterval(() => void check(), checkMs);
     return () => {
       cancelled = true;
       clearInterval(timer);
     };
     // `watchKey` resume los waypoints vigilados (la lista `watched` cambia de identidad en cada render).
-  }, [here, base, watchKey, i18n.language, t]);
+  }, [here, base, watchKey, checkMs, i18n.language, t]);
 }

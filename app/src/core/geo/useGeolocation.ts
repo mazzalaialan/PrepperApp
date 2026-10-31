@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSensorActive } from '@/core/power/saver';
 import type { LatLon } from './geo';
 
 export interface GeoFix extends LatLon {
@@ -31,9 +32,10 @@ const OPTIONS: PositionOptions = { enableHighAccuracy: true, maximumAge: 5_000, 
 export function useGeolocation(enabled = true): { fix: GeoFix | null; error: GeoError | null } {
   const [fix, setFix] = useState<GeoFix | null>(null);
   const [error, setError] = useState<GeoError | null>(null);
+  const { active } = useSensorActive(enabled);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!active) return;
     if (!('geolocation' in navigator)) {
       setError('unsupported');
       return;
@@ -47,7 +49,7 @@ export function useGeolocation(enabled = true): { fix: GeoFix | null; error: Geo
       OPTIONS,
     );
     return () => navigator.geolocation.clearWatch(id);
-  }, [enabled]);
+  }, [active]);
 
   return { fix, error };
 }

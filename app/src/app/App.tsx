@@ -4,6 +4,7 @@ import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
 import { useEffectiveTheme } from '@/core/settings/theme';
+import { useBatterySaver } from '@/core/power/saver';
 import { AstronomyPage } from '@/modules/astronomy/AstronomyPage';
 import { BackupPage } from '@/modules/backup/BackupPage';
 import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
@@ -83,13 +84,17 @@ const router = createHashRouter([
   },
 ]);
 
-const THEME_COLOR: Record<Theme, string> = { dark: '#121a24', light: '#f3efe7', red: '#000000' };
+const THEME_COLOR: Record<Theme, string> = { dark: '#121a24', light: '#f3efe7', red: '#000000', saver: '#000000' };
 
-function useApplyTheme(theme: Theme) {
+function useApplyTheme(theme: Theme, saver: boolean) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
   }, [theme]);
+  // Aparte del tema: con el rojo nocturno encima, el ahorro (sin animaciones) sigue.
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-saver', saver);
+  }, [saver]);
 }
 
 export function App() {
@@ -97,7 +102,7 @@ export function App() {
   const autoLockMinutes = useSettings((s) => s.settings.autoLockMinutes);
   const theme = useEffectiveTheme();
 
-  useApplyTheme(theme);
+  useApplyTheme(theme, useBatterySaver());
   useAutoLock(autoLockMinutes);
 
   if (pendingRecoveryKey) return <RecoveryKeyScreen recoveryKey={pendingRecoveryKey} />;

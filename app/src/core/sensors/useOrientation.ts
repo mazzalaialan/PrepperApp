@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { sensorFrameMs, useSensorActive } from '@/core/power/saver';
 import { orientationFrom, smoothAngle, type Orientation } from './heading';
 
 /** Las lecturas llegan a ~60 Hz; se redibuja como mucho a este ritmo. */
@@ -10,9 +11,11 @@ const FRAME_MS = 50;
  */
 export function useOrientation(enabled = true): Orientation | null {
   const [state, setState] = useState<Orientation | null>(null);
+  const { active, saver } = useSensorActive(enabled);
 
   useEffect(() => {
-    if (!enabled || !('ondeviceorientationabsolute' in window)) return;
+    if (!active || !('ondeviceorientationabsolute' in window)) return;
+    const frameMs = sensorFrameMs(FRAME_MS, saver);
     let smoothed: number | null = null;
     let lastMode: Orientation['mode'] | null = null;
     let lastEmit = 0;
@@ -26,14 +29,14 @@ export function useOrientation(enabled = true): Orientation | null {
       smoothed = raw.mode === lastMode ? smoothAngle(smoothed, raw.heading) : raw.heading;
       lastMode = raw.mode;
       const now = performance.now();
-      if (now - lastEmit < FRAME_MS) return;
+      if (now - lastEmit < frameMs) return;
       lastEmit = now;
       setState({ ...raw, heading: smoothed });
     };
 
     window.addEventListener('deviceorientationabsolute', handler);
     return () => window.removeEventListener('deviceorientationabsolute', handler);
-  }, [enabled]);
+  }, [active, saver]);
 
   return state;
 }

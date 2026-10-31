@@ -108,3 +108,33 @@ test('ir al punto: flecha con el celular acostado y realidad aumentada parado', 
   await expect(page.getByTestId('ar-edge')).toBeVisible();
   await expect(marker).toHaveCount(0);
 });
+
+test('ahorro de batería: negro puro, sin animaciones y la realidad aumentada arranca sin cámara', async ({ page }, testInfo) => {
+  await setup(page);
+  await page.getByRole('link', { name: 'Ajustes' }).click();
+  await page.getByRole('button', { name: 'Ahorro de batería' }).click();
+  await expect(page.getByTestId('saver-hint')).toContainText('OLED');
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-theme', 'saver');
+  await expect(html).toHaveAttribute('data-saver', '');
+  // Fondo y tarjetas en negro puro.
+  expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(0, 0, 0)');
+  expect(await page.locator('.card').first().evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(0, 0, 0)');
+  expect(await page.locator('.btn').first().evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-15-saver.png`, fullPage: true });
+
+  await page.goto('/#/orientation/waypoints/new');
+  await page.getByLabel('Nombre').fill('Refugio');
+  await page.getByLabel('Coordenadas').fill(`${TARGET.lat}, ${TARGET.lon}`);
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await page.getByRole('link', { name: 'Ir a este punto' }).click();
+  await expect(page.getByTestId('goto-distance')).toHaveText(/^1,\d+ km$/);
+  // Puede usar la cámara, pero no la prende sola.
+  await expect(page.getByRole('button', { name: 'Ver con la cámara' })).toBeVisible();
+  await expect(page.locator('video')).toHaveCount(0);
+
+  // Al volver a otro tema, se apaga.
+  await page.goto('/#/settings');
+  await page.getByRole('button', { name: 'Oscuro' }).click();
+  await expect(html).not.toHaveAttribute('data-saver');
+});

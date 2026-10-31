@@ -843,6 +843,7 @@
     "general": "General",
     "language": "Language",
     "theme": "Theme",
+    "saverHint": "Pure black background: on OLED/AMOLED screens black pixels are off and the screen uses much less power (no change on LCD; lower the brightness there). Also: no animations, rain is checked every 60 min, GPS and sensors stop while the app isn't visible, and augmented reality starts with the camera off.",
     "redSchedule": "Automatic red night mode",
     "redScheduleOptions": { "off": "Off", "custom": "Schedule", "dusk": "At dusk" },
     "redFrom": "From",
@@ -879,7 +880,7 @@
     "backupOpen": "Export, restore or move to another device",
     "version": "Version {{version}}"
   },
-  "theme": { "dark": "Dark", "light": "Light", "red": "Red night" },
+  "theme": { "dark": "Dark", "light": "Light", "red": "Red night", "saver": "Battery saver" },
   "units": { "metric": "Metric", "imperial": "Imperial" },
   "language": { "es": "Español", "en": "English" },
   "pwa": {

@@ -843,6 +843,7 @@
     "general": "General",
     "language": "Idioma",
     "theme": "Tema",
+    "saverHint": "Fondo negro puro: en pantallas OLED/AMOLED los píxeles negros se apagan y la pantalla gasta mucho menos (en LCD no cambia; ahí conviene bajar el brillo). Además: sin animaciones, la lluvia se revisa cada 60 min, el GPS y los sensores se cortan cuando la app no se ve y la realidad aumentada arranca con la cámara apagada.",
     "redSchedule": "Rojo nocturno automático",
     "redScheduleOptions": { "off": "Desactivado", "custom": "Horario", "dusk": "Al anochecer" },
     "redFrom": "Desde",
@@ -879,7 +880,7 @@
     "backupOpen": "Exportar, restaurar o pasar a otro dispositivo",
     "version": "Versión {{version}}"
   },
-  "theme": { "dark": "Oscuro", "light": "Claro", "red": "Rojo nocturno" },
+  "theme": { "dark": "Oscuro", "light": "Claro", "red": "Rojo nocturno", "saver": "Ahorro de batería" },
   "units": { "metric": "Métrico", "imperial": "Imperial" },
   "language": { "es": "Español", "en": "English" },
   "pwa": {

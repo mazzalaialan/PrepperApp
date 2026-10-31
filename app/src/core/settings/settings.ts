@@ -7,7 +7,8 @@ import type { UnitSystem } from '@/core/units/units';
  * desbloquear (idioma y tema de la pantalla de desbloqueo).
  */
 export type Language = 'es' | 'en';
-export type Theme = 'dark' | 'light' | 'red';
+/** `saver`: ahorro de batería (negro puro para pantallas OLED y menos trabajo de fondo; ver core/power/saver.ts). */
+export type Theme = 'dark' | 'light' | 'red' | 'saver';
 
 export interface Settings {
   language: Language;
@@ -57,7 +58,7 @@ export interface StarmapLayers {
 }
 
 export const LANGUAGES: Language[] = ['es', 'en'];
-export const THEMES: Theme[] = ['dark', 'light', 'red'];
+export const THEMES: Theme[] = ['dark', 'light', 'red', 'saver'];
 export const AUTO_LOCK_OPTIONS = [1, 5, 15, 30, 60];
 
 function detectLanguage(): Language {

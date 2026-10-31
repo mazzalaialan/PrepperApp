@@ -1888,3 +1888,12 @@ a.module-card:hover {
   border-radius: 8px;
   background: var(--surface-2);
 }
+
+/* Ahorro de batería: sin animaciones ni transiciones (cada cuadro animado es trabajo de la GPU). */
+:root[data-saver] *,
+:root[data-saver] *::before,
+:root[data-saver] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

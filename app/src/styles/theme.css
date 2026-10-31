@@ -42,6 +42,30 @@
   --shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
+/*
+ * Ahorro de batería: negro puro (en pantallas OLED/AMOLED un píxel negro está
+ * apagado). Las tarjetas también son negras y se separan solo con el borde;
+ * colores apagados para no encender subpíxeles de más.
+ */
+:root[data-theme='saver'] {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #000000;
+  --surface-2: #0d0d0d;
+  --border: #333333;
+  --text: #f2f2f2;
+  --text-muted: #9e9e9e;
+  --accent: #b9773f;
+  --accent-strong: #cf8b52;
+  --on-accent: #000000;
+  --ok: #5f8a40;
+  --info: #557aa0;
+  --warn: #c0932f;
+  --danger: #b04a32;
+  --focus: #cf8b52;
+  --shadow: none;
+}
+
 /* Rojo nocturno: solo tonos rojos y poco brillo para preservar la visión nocturna. */
 :root[data-theme='red'] {
   color-scheme: dark;

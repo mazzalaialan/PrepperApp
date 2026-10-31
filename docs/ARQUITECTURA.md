@@ -480,7 +480,8 @@ Detalle de las capas de tiempo:
   | `--info` | Información | Azul acero |
   | `--danger` | Vencido / alerta | Rojo óxido |
 - **Ícono simplificado** para tamaños chicos (solo el símbolo central en cobre sobre fondo oscuro), en SVG + PNG maskable.
-- **Temas:** oscuro (por defecto), claro, **rojo nocturno** (preserva la visión nocturna; recomendado para el mapa estelar).
+- **Temas:** oscuro (por defecto), claro, **rojo nocturno** (preserva la visión nocturna; recomendado para el mapa estelar) y **ahorro de batería**.
+- **Ahorro de batería** (`core/power/saver.ts`): fondo y tarjetas en negro puro (en OLED/AMOLED el píxel negro está apagado; en LCD no ahorra). Además, sin animaciones ni transiciones, chequeo de lluvia cada 60 min en lugar de 15, GPS y sensores cortados mientras la página no se ve y con la mitad de redibujos, y la realidad aumentada arranca con la cámara apagada. Depende del tema elegido, no del efectivo: si el horario nocturno pone el rojo, el ahorro sigue. Pendiente: activarlo solo por nivel de batería (Battery Status API, solo Chromium).
 - Interfaz simple, navegación por módulos, mobile-first, usable con una mano y con guantes (objetivos táctiles ≥ 48 px).
 
 ---

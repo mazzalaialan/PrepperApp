@@ -49,6 +49,7 @@ export function SettingsPage() {
           options={THEMES.map((th) => ({ value: th, label: t(`theme.${th}`) }))}
           onChange={(theme) => void update({ theme })}
         />
+        {settings.theme === 'saver' && <p className="hint" data-testid="saver-hint">{t('settings.saverHint')}</p>}
         <RedScheduleFields settings={settings} onSave={update} />
         <Segmented
           label={t('settings.units')}

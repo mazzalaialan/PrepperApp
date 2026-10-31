@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { sensorFrameMs, useSensorActive } from '@/core/power/saver';
 
 export interface DeviceAngles {
   alpha: number;
@@ -17,20 +18,22 @@ const FRAME_MS = 33;
  */
 export function useDeviceAngles(enabled: boolean): DeviceAngles | null {
   const [angles, setAngles] = useState<DeviceAngles | null>(null);
+  const { active, saver } = useSensorActive(enabled);
 
   useEffect(() => {
-    if (!enabled || !('ondeviceorientationabsolute' in window)) return;
+    if (!active || !('ondeviceorientationabsolute' in window)) return;
+    const frameMs = sensorFrameMs(FRAME_MS, saver);
     let last = 0;
     const handler = (e: DeviceOrientationEvent) => {
       if (e.alpha === null || e.beta === null || e.gamma === null) return;
       const now = performance.now();
-      if (now - last < FRAME_MS) return;
+      if (now - last < frameMs) return;
       last = now;
       setAngles({ alpha: e.alpha, beta: e.beta, gamma: e.gamma, screenAngle: screen.orientation?.angle ?? 0 });
     };
     window.addEventListener('deviceorientationabsolute', handler);
     return () => window.removeEventListener('deviceorientationabsolute', handler);
-  }, [enabled]);
+  }, [active, saver]);
 
   return angles;
 }
