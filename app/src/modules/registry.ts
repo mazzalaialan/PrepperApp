@@ -2,11 +2,14 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Archive,
   BellRing,
+  BookHeart,
   BookOpen,
+  BriefcaseMedical,
   Calculator,
   CloudSun,
   Compass,
   FileText,
+  HeartPulse,
   Map as MapIcon,
   MapPin,
   Moon,
@@ -19,7 +22,9 @@ import {
 } from 'lucide-react';
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
-export type Section = 'inventory' | 'orientation' | 'weather' | 'garden' | 'library';
+/** En el orden en que se muestran en Inicio. */
+export const SECTIONS = ['inventory', 'firstAid', 'documents', 'orientation', 'weather', 'garden', 'library'] as const;
+export type Section = (typeof SECTIONS)[number];
 export type Phase = 'F1' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7';
 
 export interface ModuleDef {
@@ -44,8 +49,11 @@ export const MODULES: ModuleDef[] = [
   { id: 'alerts', section: 'inventory', icon: BellRing, phase: 'F1', implemented: true, path: '/inventory/alerts' },
   { id: 'categories', section: 'inventory', icon: Tags, phase: 'F1', implemented: true, path: '/inventory/categories' },
   { id: 'backup', section: 'inventory', icon: Archive, phase: 'F1', implemented: true, path: '/inventory/backup' },
-  { id: 'documents', section: 'inventory', icon: FileText, phase: 'F3', implemented: true, path: '/inventory/documents' },
   { id: 'recommendations', section: 'inventory', icon: Calculator, phase: 'F3', implemented: false },
+  { id: 'kits', section: 'firstAid', icon: BriefcaseMedical, phase: 'F3', implemented: false },
+  { id: 'medical', section: 'firstAid', icon: HeartPulse, phase: 'F3', implemented: false },
+  { id: 'firstAidGuides', section: 'firstAid', icon: BookHeart, phase: 'F4', implemented: false },
+  { id: 'documents', section: 'documents', icon: FileText, phase: 'F3', implemented: true, path: '/documents' },
   { id: 'compass', section: 'orientation', icon: Compass, phase: 'F3', implemented: false, requires: ['orientation'] },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, phase: 'F3', implemented: false, requires: ['motion'] },
   { id: 'waypoints', section: 'orientation', icon: MapPin, phase: 'F3', implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },

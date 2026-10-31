@@ -5,11 +5,10 @@ import { BellRing, CircleCheck } from 'lucide-react';
 import { AlertList, ShortageList } from '@/modules/inventory/components/AlertList';
 import { useAlerts, useShortages } from '@/modules/inventory/selectors';
 import { useInventory } from '@/modules/inventory/store';
-import type { Section } from '@/modules/registry';
+import { SECTIONS } from '@/modules/registry';
 import { ModuleGrid } from '@/ui/ModuleGrid';
 
 const HOME_ALERT_LIMIT = 5;
-const SECTIONS: Section[] = ['inventory', 'orientation', 'weather', 'garden', 'library'];
 
 function AlertSummary() {
   const { t } = useTranslation();

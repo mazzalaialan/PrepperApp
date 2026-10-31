@@ -1,15 +1,35 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, Outlet } from 'react-router-dom';
-import { BookOpen, CloudSun, Compass, House, Lock, Package, Settings, Sprout } from 'lucide-react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import {
+  BookOpen,
+  BriefcaseMedical,
+  CloudSun,
+  Compass,
+  Ellipsis,
+  FileText,
+  House,
+  Lock,
+  Package,
+  Settings,
+  Sprout,
+} from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
 import { BrandMark } from '@/ui/Brand';
+import { Dialog } from '@/ui/Dialog';
 import { UpdatePrompt } from './UpdatePrompt';
 
-// Ajustes va en la barra superior: seis destinos es el máximo que entra en un celular.
+// En el celular entran seis botones: cinco secciones y "Más" con el resto.
+// En pantallas anchas el riel lateral muestra todas. Ajustes va en la barra superior.
 const NAV = [
   { to: '/', key: 'home', icon: House },
   { to: '/inventory', key: 'inventory', icon: Package },
+  { to: '/first-aid', key: 'firstAid', icon: BriefcaseMedical },
+  { to: '/documents', key: 'documents', icon: FileText },
   { to: '/orientation', key: 'orientation', icon: Compass },
+] as const;
+
+const MORE = [
   { to: '/weather', key: 'weather', icon: CloudSun },
   { to: '/garden', key: 'garden', icon: Sprout },
   { to: '/library', key: 'library', icon: BookOpen },
@@ -18,6 +38,9 @@ const NAV = [
 export function Shell() {
   const { t } = useTranslation();
   const lock = useVault((s) => s.lock);
+  const { pathname } = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const inMore = MORE.some((m) => pathname.startsWith(m.to));
 
   return (
     <div className="shell">
@@ -28,7 +51,38 @@ export function Shell() {
             {t(`nav.${key}`)}
           </NavLink>
         ))}
+        {MORE.map(({ to, key, icon: Icon }) => (
+          <NavLink key={to} to={to} className="nav-wide">
+            <Icon size={24} aria-hidden />
+            {t(`nav.${key}`)}
+          </NavLink>
+        ))}
+        <button
+          type="button"
+          className={`nav-more${inMore ? ' active' : ''}`}
+          onClick={() => setMoreOpen(true)}
+          aria-haspopup="dialog"
+        >
+          <Ellipsis size={24} aria-hidden />
+          {t('nav.more')}
+        </button>
       </nav>
+      {moreOpen && (
+        <Dialog title={t('nav.more')} onClose={() => setMoreOpen(false)}>
+          <ul className="list">
+            {MORE.map(({ to, key, icon: Icon }) => (
+              <li key={to}>
+                <Link className="list-row" to={to} onClick={() => setMoreOpen(false)}>
+                  <Icon size={22} aria-hidden style={{ color: 'var(--accent)' }} />
+                  <span className="list-main">
+                    <span className="list-title">{t(`sections.${key}`)}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Dialog>
+      )}
       <div className="shell-main">
         <header className="topbar">
           <BrandMark />

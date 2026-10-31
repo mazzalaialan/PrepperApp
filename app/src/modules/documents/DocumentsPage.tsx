@@ -36,7 +36,7 @@ export function DocumentsPage() {
     <>
       <div className="page-head">
         <h1 className="page-title">{t('modules.documents.title')}</h1>
-        <Link className="btn btn-primary" to="/inventory/documents/new">
+        <Link className="btn btn-primary" to="/documents/new">
           <Plus size={20} /> {t('documents.new')}
         </Link>
       </div>
@@ -56,7 +56,7 @@ export function DocumentsPage() {
         <ul className="list">
           {rows.map(({ doc, pages }) => (
             <li key={doc.id}>
-              <Link className="list-row" to={`/inventory/documents/${doc.id}`}>
+              <Link className="list-row" to={`/documents/${doc.id}`}>
                 <Thumb page={pages[0]} />
                 <span className="list-main">
                   <span className="list-title">{doc.title}</span>

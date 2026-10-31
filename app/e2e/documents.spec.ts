@@ -25,7 +25,7 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
-  await page.goto('/#/inventory/documents');
+  await page.goto('/#/documents');
   await expect(page.getByText('Todavía no cargaste documentos')).toBeVisible();
   await page.getByRole('link', { name: 'Nuevo documento' }).click();
   await expect(page.getByText('Guardá el documento para agregarle fotos.')).toBeVisible();
@@ -63,7 +63,7 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   await expect(page.getByRole('button', { name: /^Foto \d$/ })).toHaveCount(2);
 
   // Listado: búsqueda por etiqueta (sin duplicados) y cantidad de fotos.
-  await page.goto('/#/inventory/documents');
+  await page.goto('/#/documents');
   await page.getByPlaceholder('Buscar por título o etiqueta').fill('famil');
   await expect(page.getByText('2 fotos · identidad, familia')).toBeVisible();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-09-documents.png`, fullPage: true });
@@ -72,7 +72,7 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   await page.getByRole('button', { name: 'Bloquear ahora' }).first().click();
   await page.getByLabel('Contraseña').fill(PASSWORD);
   await page.getByRole('button', { name: 'Desbloquear' }).click();
-  await page.goto('/#/inventory/documents');
+  await page.goto('/#/documents');
   await page.getByRole('link', { name: /DNI de Ana/ }).click();
   await expect(page.getByRole('button', { name: /^Foto \d$/ })).toHaveCount(2);
 });

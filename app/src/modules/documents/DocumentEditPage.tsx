@@ -29,7 +29,7 @@ export function DocumentEditPage() {
   if (id !== 'new' && !stored) {
     return (
       <p className="empty">
-        {t('documents.notFound')} <Link to="/inventory/documents">{t('common.back')}</Link>
+        {t('documents.notFound')} <Link to="/documents">{t('common.back')}</Link>
       </p>
     );
   }
@@ -55,20 +55,20 @@ function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     await saveDocument({ ...draft, title: draft.title.trim(), tags: parseTags(tags) });
-    if (isNew) navigate(`/inventory/documents/${draft.id}`, { replace: true });
+    if (isNew) navigate(`/documents/${draft.id}`, { replace: true });
     else setSaved(true);
   }
 
   async function handleDelete() {
     if (!stored || !window.confirm(t('documents.confirmDelete', { name: stored.title }))) return;
     await deleteDocument(stored.id);
-    navigate('/inventory/documents', { replace: true });
+    navigate('/documents', { replace: true });
   }
 
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/inventory/documents" aria-label={t('common.back')}>
+        <Link className="icon-btn" to="/documents" aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.title : t('documents.new')}</h1>
