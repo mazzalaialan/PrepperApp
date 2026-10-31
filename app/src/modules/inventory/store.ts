@@ -44,7 +44,7 @@ interface InventoryState {
   items: ById<Item>;
   lots: ById<Lot>;
   stockMins: ById<StockMin>;
-  /** Solo metadatos; los bytes se leen bajo demanda de `blobStore`. */
+  /** Fotos de artículos; solo metadatos, los bytes se leen bajo demanda de `blobStore`. */
   attachments: ById<Attachment>;
 
   load: () => Promise<void>;
@@ -115,7 +115,7 @@ export const useInventory = create<InventoryState>((set, get) => {
         items: toMap(items),
         lots: toMap(lots.map(normalizeLot)),
         stockMins: toMap(stockMins),
-        attachments: toMap(attachments),
+        attachments: toMap(attachments.filter((a) => a.ownerType === 'item')),
       });
       await syncAlertIndex();
     },

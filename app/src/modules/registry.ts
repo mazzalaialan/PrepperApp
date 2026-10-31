@@ -44,7 +44,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'alerts', section: 'inventory', icon: BellRing, phase: 'F1', implemented: true, path: '/inventory/alerts' },
   { id: 'categories', section: 'inventory', icon: Tags, phase: 'F1', implemented: true, path: '/inventory/categories' },
   { id: 'backup', section: 'inventory', icon: Archive, phase: 'F1', implemented: true, path: '/inventory/backup' },
-  { id: 'documents', section: 'inventory', icon: FileText, phase: 'F3', implemented: false },
+  { id: 'documents', section: 'inventory', icon: FileText, phase: 'F3', implemented: true, path: '/inventory/documents' },
   { id: 'recommendations', section: 'inventory', icon: Calculator, phase: 'F3', implemented: false },
   { id: 'compass', section: 'orientation', icon: Compass, phase: 'F3', implemented: false, requires: ['orientation'] },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, phase: 'F3', implemented: false, requires: ['motion'] },

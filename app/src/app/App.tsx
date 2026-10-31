@@ -4,6 +4,8 @@ import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
 import { BackupPage } from '@/modules/backup/BackupPage';
+import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
+import { DocumentsPage } from '@/modules/documents/DocumentsPage';
 import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
 import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
 import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
@@ -31,6 +33,8 @@ const router = createHashRouter([
       { path: '/inventory/categories', element: <CategoriesPage /> },
       { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/inventory/backup', element: <BackupPage /> },
+      { path: '/inventory/documents', element: <DocumentsPage /> },
+      { path: '/inventory/documents/:id', element: <DocumentEditPage /> },
       { path: '/transfer', element: <BackupPage /> },
       { path: '/orientation', element: <SectionPage section="orientation" /> },
       { path: '/weather', element: <SectionPage section="weather" /> },
