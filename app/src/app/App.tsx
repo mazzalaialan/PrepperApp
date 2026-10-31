@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
@@ -39,6 +39,9 @@ import { SetupScreen } from './screens/SetupScreen';
 import { UnlockScreen } from './screens/UnlockScreen';
 import { Shell } from './Shell';
 
+// MapLibre pesa ~1 MB: se carga recién al abrir los mapas (igual queda guardado para usarlo sin conexión).
+const MapsPage = lazy(() => import('@/modules/maps/MapsPage').then((m) => ({ default: m.MapsPage })));
+
 // Hash router: funciona en GitHub Pages y offline sin configurar el servidor.
 const router = createHashRouter([
   {
@@ -70,6 +73,14 @@ const router = createHashRouter([
       { path: '/orientation/compass', element: <CompassPage /> },
       { path: '/orientation/inclinometer', element: <InclinometerPage /> },
       { path: '/orientation/starmap', element: <StarMapPage /> },
+      {
+        path: '/orientation/maps',
+        element: (
+          <Suspense fallback={null}>
+            <MapsPage />
+          </Suspense>
+        ),
+      },
       { path: '/orientation/routes', element: <RoutesPage /> },
       { path: '/orientation/routes/:id', element: <RouteEditPage /> },
       { path: '/orientation/routes/:id/go/:step', element: <RouteGoPage /> },

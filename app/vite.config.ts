@@ -25,7 +25,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
+        // .mjs: el worker de MapLibre (los mapas tienen que andar sin conexión).
+        globPatterns: ['**/*.{js,mjs,css,html,svg,png,webp,woff2,json}'],
+        globIgnores: ['sw.mjs'],
       },
       includeAssets: ['favicon.svg', 'brand/*.png'],
       manifest: {

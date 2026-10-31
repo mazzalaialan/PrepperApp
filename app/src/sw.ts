@@ -19,6 +19,13 @@ const ALERTS_URL = '#/inventory/alerts';
 precacheAndRoute(self.__WB_MANIFEST);
 registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')));
 
+// Elevación de los mapas offline: primero lo descargado por zona (curvas de nivel sin conexión).
+const MAP_CACHE = 'vikarg-maps';
+registerRoute(
+  ({ url }) => url.hostname === 's3.amazonaws.com' && url.pathname.startsWith('/elevation-tiles-prod/'),
+  async ({ request }) => (await caches.match(request.url, { cacheName: MAP_CACHE })) ?? fetch(request),
+);
+
 // La app pide activar la versión nueva cuando el usuario toca "Actualizar".
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();

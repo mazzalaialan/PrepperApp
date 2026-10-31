@@ -426,6 +426,13 @@ Ejemplo: en un refugio remoto, el usuario baja un área de 20 km de radio con de
 
 Los servidores públicos de teselas de OpenStreetMap **no** se usan para descargas: su política lo prohíbe.
 
+**Estado (v0.9, sin servidor):** implementado en `modules/maps/` con MapLibre GL 6 (se carga aparte, solo al abrir el mapa, y queda en el precache con su worker) y `maplibre-contour`.
+- *Fuentes mientras no haya servidor:* mapa vectorial de **OpenFreeMap** (OpenStreetMap, esquema OpenMapTiles, sin clave). Sus condiciones permiten descargas offline de hasta **3.000 teselas o 50 MB por zona**, con 4 pedidos en paralelo y un User-Agent propio. El navegador no deja cambiar el User-Agent; los pedidos llevan el origen de la app. Si hace falta, se les escribe. Elevación de **Terrain Tiles** (AWS Open Data, Terrarium) hasta zoom 12. Letras Noto Sans de OpenFreeMap.
+- *Zona:* círculo alrededor del centro del mapa (2 a 50 km) y detalle (zoom 10, 12 o 14). La app estima teselas y MB y no deja pasar el límite. Se guarda en Cache Storage (`vikarg-maps`; las vectoriales con clave propia sin versión, porque OpenFreeMap cambia la URL cada semana), y los datos de la zona van cifrados (`map-zones`, viajan en el backup; si se restaura en otro dispositivo, la zona figura como "no está en este dispositivo"). Al borrar una zona se borran solo las teselas que no usa otra.
+- *Lectura:* protocolos propios de MapLibre (`vktile`, `vkdem`, `vkglyph`) que buscan primero en lo descargado y si no, en internet sin guardar. Las curvas de nivel piden la elevación con `fetch` y la sirve el service worker desde lo descargado.
+- *Capas:* relieve, curvas de nivel (equidistancia según el zoom, maestras rotuladas), mis waypoints y rutas, mi ubicación, zonas descargadas y el contorno de AR/CL/UY como referencia sin teselas. El estilo usa los colores del tema (rojo nocturno y ahorro incluidos).
+- *Pendiente:* importar `.pmtiles` y GPX (§F5), y el servidor propio como fuente principal.
+
 ### 12.3 Visualización
 - **Sombreado de relieve y curvas de nivel se calculan en el dispositivo** a partir de la elevación.
 - Se guarda en OPFS; la app pide almacenamiento persistente (`navigator.storage.persist()`).

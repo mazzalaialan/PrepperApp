@@ -1,7 +1,7 @@
 {
   "name": "vikarg-survival",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
@@ -20,6 +20,8 @@
     "i18next": "^26.5.12",
     "lucide-react": "^1.65.0",
     "magvar": "2.2.0",
+    "maplibre-contour": "0.1.1",
+    "maplibre-gl": "6.14.0",
     "qrcode-generator": "^2.0.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

@@ -1996,3 +1996,83 @@ a.module-card:hover {
 .wmap-swatch-fire { display: none; }
 .wmap-swatch-hazard { background: linear-gradient(90deg, var(--scale-3), var(--scale-5), var(--scale-6)); }
 .wmap-swatch-wind { background: none; border-bottom: 2px solid var(--text); border-radius: 0; height: 6px; }
+
+/* ---------- Mapas offline ---------- */
+
+.maps-stage {
+  height: min(68dvh, 680px);
+  min-height: 340px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.maps-canvas {
+  /* MapLibre le pone position: relative al contenedor: el alto tiene que ser explícito. */
+  width: 100%;
+  height: 100%;
+}
+
+/* El botón de pantalla completa queda arriba a la izquierda: a la derecha están el zoom y la brújula de MapLibre. */
+.maps-stage .fs-toggle {
+  left: 8px;
+  right: auto;
+}
+
+.maps-locate {
+  position: absolute;
+  right: 10px;
+  bottom: 40px;
+  z-index: 2;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.maps-center {
+  margin: 0;
+}
+
+.zone-go {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--surface) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--border) !important;
+}
+
+.maplibregl-ctrl-icon {
+  filter: var(--map-ctrl-filter, none);
+}
+
+:root[data-theme='dark'],
+:root[data-theme='saver'],
+:root[data-theme='red'],
+:root:not([data-theme]) {
+  --map-ctrl-filter: invert(0.9);
+}
+
+.maplibregl-ctrl-scale {
+  background: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+  color: var(--text) !important;
+  border-color: var(--text) !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+  color: var(--text-muted) !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--text-muted) !important;
+}

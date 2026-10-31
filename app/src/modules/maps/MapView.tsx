@@ -1,0 +1,179 @@
+import { useEffect, useRef } from 'react';
+import * as maplibregl from 'maplibre-gl';
+import type { GeoJSONSource, Map as MlMap } from 'maplibre-gl';
+import type { FeatureCollection } from 'geojson';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { useEffectiveTheme } from '@/core/settings/theme';
+import { setupProtocols } from './protocols';
+import { buildStyle, themeColors, type MapColors, type MapLayersOn } from './style';
+
+export interface MapPoint {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+export interface MapCircle {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  radiusKm: number;
+}
+
+export interface ViewState {
+  lat: number;
+  lon: number;
+  zoom: number;
+}
+
+interface Props {
+  initial: ViewState;
+  layers: MapLayersOn;
+  showMine: boolean;
+  waypoints: MapPoint[];
+  routes: { id: string; name: string; points: [number, number][] }[];
+  here: { lat: number; lon: number; accuracy: number } | null;
+  zones: MapCircle[];
+  preview: MapCircle | null;
+  /** Contorno de la región (sin conexión y fuera de las zonas, al menos se ve dónde estás). */
+  outline: FeatureCollection | null;
+  /** Cambia `key` para mover la vista. */
+  flyTo: (ViewState & { key: number }) | null;
+  onMove: (view: ViewState) => void;
+  onWaypoint: (id: string) => void;
+}
+
+const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] };
+
+/** Círculo geodésico aproximado (64 lados) para dibujar una zona. */
+export function circlePolygon(lat: number, lon: number, radiusKm: number): [number, number][] {
+  const out: [number, number][] = [];
+  for (let i = 0; i <= 64; i++) {
+    const a = (i / 64) * 2 * Math.PI;
+    out.push([lon + (radiusKm / (111.32 * Math.cos((lat * Math.PI) / 180))) * Math.sin(a), lat + (radiusKm / 111.32) * Math.cos(a)]);
+  }
+  return out;
+}
+
+const circlesGeo = (circles: MapCircle[]): FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: circles.map((c) => ({ type: 'Feature', properties: { id: c.id, name: c.name }, geometry: { type: 'Polygon', coordinates: [circlePolygon(c.lat, c.lon, c.radiusKm)] } })),
+});
+
+function data(p: Props) {
+  return {
+    'mine-waypoints': {
+      type: 'FeatureCollection',
+      features: p.waypoints.map((w) => ({ type: 'Feature', properties: { id: w.id, name: w.name }, geometry: { type: 'Point', coordinates: [w.lon, w.lat] } })),
+    } as FeatureCollection,
+    'mine-routes': {
+      type: 'FeatureCollection',
+      features: p.routes.filter((r) => r.points.length > 1).map((r) => ({ type: 'Feature', properties: { id: r.id, name: r.name }, geometry: { type: 'LineString', coordinates: r.points } })),
+    } as FeatureCollection,
+    here: (p.here
+      ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { accuracy: p.here.accuracy }, geometry: { type: 'Point', coordinates: [p.here.lon, p.here.lat] } }] }
+      : EMPTY) as FeatureCollection,
+    zones: circlesGeo(p.zones),
+    preview: circlesGeo(p.preview ? [p.preview] : []),
+    outline: p.outline ?? EMPTY,
+  };
+}
+
+/** Capas propias encima del estilo base; se vuelven a agregar cada vez que cambia el estilo (tema). */
+function addOverlays(map: MlMap, c: MapColors, p: Props) {
+  const d = data(p);
+  for (const [id, fc] of Object.entries(d)) if (!map.getSource(id)) map.addSource(id, { type: 'geojson', data: fc });
+  const mine = p.showMine ? 'visible' : 'none';
+  // El contorno va debajo de todo lo dibujado del mapa, pero arriba del fondo.
+  map.addLayer({ id: 'outline', type: 'line', source: 'outline', paint: { 'line-color': c.muted, 'line-width': 0.8 } }, 'landcover-wood');
+  map.addLayer({ id: 'zones', type: 'line', source: 'zones', paint: { 'line-color': c.info, 'line-width': 1.5, 'line-dasharray': [3, 2] } });
+  map.addLayer({ id: 'preview-fill', type: 'fill', source: 'preview', paint: { 'fill-color': c.accent, 'fill-opacity': 0.12 } });
+  map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': c.accent, 'line-width': 2 } });
+  map.addLayer({ id: 'mine-routes', type: 'line', source: 'mine-routes', layout: { visibility: mine, 'line-cap': 'round' }, paint: { 'line-color': c.accent, 'line-width': 3, 'line-opacity': 0.85 } });
+  map.addLayer({
+    id: 'mine-waypoints',
+    type: 'circle',
+    source: 'mine-waypoints',
+    layout: { visibility: mine },
+    paint: { 'circle-radius': 6, 'circle-color': c.accent, 'circle-stroke-color': c.bg, 'circle-stroke-width': 2 },
+  });
+  map.addLayer({
+    id: 'mine-waypoint-names',
+    type: 'symbol',
+    source: 'mine-waypoints',
+    layout: { visibility: mine, 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top' },
+    paint: { 'text-color': c.text, 'text-halo-color': c.surface, 'text-halo-width': 2 },
+  });
+  map.addLayer({ id: 'here', type: 'circle', source: 'here', paint: { 'circle-radius': 7, 'circle-color': c.info, 'circle-stroke-color': c.text, 'circle-stroke-width': 2 } });
+}
+
+export function MapView(props: Props) {
+  const container = useRef<HTMLDivElement>(null);
+  const map = useRef<MlMap | null>(null);
+  const latest = useRef(props);
+  latest.current = props;
+  const theme = useEffectiveTheme();
+
+  useEffect(() => {
+    const { contoursUrl } = setupProtocols();
+    const m = new maplibregl.Map({
+      container: container.current!,
+      style: buildStyle(themeColors(), contoursUrl, props.layers),
+      center: [props.initial.lon, props.initial.lat],
+      zoom: props.initial.zoom,
+      attributionControl: { compact: true },
+      maxZoom: 17,
+    });
+    map.current = m;
+    m.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
+    m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+    m.on('style.load', () => addOverlays(m, themeColors(), latest.current));
+    // Los créditos arrancan plegados (botón "i"): abiertos tapan la escala y el botón de ubicación en el celular.
+    m.once('load', () => container.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
+    m.on('moveend', () => {
+      const c = m.getCenter();
+      latest.current.onMove({ lat: c.lat, lon: c.lng, zoom: m.getZoom() });
+    });
+    m.on('click', 'mine-waypoints', (e) => {
+      const id = e.features?.[0]?.properties?.id as string | undefined;
+      if (id) latest.current.onWaypoint(id);
+    });
+    m.on('mouseenter', 'mine-waypoints', () => (m.getCanvas().style.cursor = 'pointer'));
+    m.on('mouseleave', 'mine-waypoints', () => (m.getCanvas().style.cursor = ''));
+    return () => {
+      m.remove();
+      map.current = null;
+    };
+    // El mapa se crea una vez; lo demás se actualiza abajo.
+  }, []);
+
+  // Cambio de tema: estilo nuevo con los colores nuevos (se leen después de que el tema se aplicó).
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const frame = requestAnimationFrame(() => m.setStyle(buildStyle(themeColors(), setupProtocols().contoursUrl, latest.current.layers)));
+    return () => cancelAnimationFrame(frame);
+  }, [theme]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m?.isStyleLoaded()) return;
+    for (const id of ['hillshade']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.hillshade ? 'visible' : 'none');
+    for (const id of ['contour-lines', 'contour-labels']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.contours ? 'visible' : 'none');
+    for (const id of ['mine-routes', 'mine-waypoints', 'mine-waypoint-names']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.showMine ? 'visible' : 'none');
+  }, [props.layers.hillshade, props.layers.contours, props.showMine]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    for (const [id, fc] of Object.entries(data(props))) (m.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
+  }, [props.waypoints, props.routes, props.here, props.zones, props.preview, props.outline]);
+
+  useEffect(() => {
+    if (props.flyTo) map.current?.flyTo({ center: [props.flyTo.lon, props.flyTo.lat], zoom: props.flyTo.zoom, essential: true });
+  }, [props.flyTo?.key]);
+
+  return <div ref={container} className="maps-canvas" data-testid="offline-map" />;
+}
