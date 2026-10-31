@@ -1571,6 +1571,98 @@ a.module-card:hover {
   vertical-align: -2px;
 }
 
+.hour-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.hour-wet {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--info);
+  font-weight: 600;
+}
+
+.day-row {
+  text-align: left;
+}
+
+.weather-legend summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.weather-legend ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.weather-legend svg {
+  vertical-align: -2px;
+}
+
+.hour-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hour-row {
+  display: grid;
+  grid-template-columns: 48px 30px 1fr;
+  align-items: start;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.hour-row-time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.hour-row-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 0.85rem;
+}
+
+.fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.fact[data-fog='true'] {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.fact[data-risk='moderate'] {
+  color: var(--warn);
+}
+
+.fact[data-risk='high'],
+.fact[data-risk='veryHigh'] {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .wind-arrow {
   flex: none;
   color: var(--accent);

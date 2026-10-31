@@ -34,6 +34,14 @@ function fakeForecast() {
       wind_speed_10m: hours.map(() => 15),
       wind_direction_10m: hours.map(() => 180), // del sur: la flecha apunta al norte
       wind_gusts_10m: hours.map(() => 32),
+      apparent_temperature: hours.map((_, i) => 16 + (i % 10)),
+      relative_humidity_2m: hours.map(() => 64),
+      precipitation: hours.map((_, i) => (i % 12 === 0 ? 1.2 : 0)),
+      snowfall: hours.map((_, i) => (i === 3 ? 0.8 : 0)),
+      cloud_cover: hours.map(() => 75),
+      visibility: hours.map((_, i) => (i === 3 ? 600 : 24_000)),
+      cape: hours.map((_, i) => (i === 3 ? 1500 : 50)),
+      freezing_level_height: hours.map(() => 2100),
     },
     daily: {
       time: days,
@@ -87,6 +95,26 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await expect(page.getByTestId('trend-day')).toHaveCount(9);
   await expect(page.getByText(/Tendencia: días 8 a 16/)).toBeVisible();
   await expect(page.getByText(/Ráfagas fuertes de hasta 120/)).toHaveCount(0);
+  await expect(hour.getByText(/^\d+° ST$/)).toBeVisible();
+
+  // Detalle de un día, hora por hora, con cada dato identificado.
+  await page.getByTestId('day').first().click();
+  const detail = page.getByRole('dialog');
+  await expect(detail.getByTestId('hour-detail').first()).toBeVisible();
+  await expect(detail.getByText('64% HR').first()).toBeVisible();
+  await expect(detail.getByLabel('Nubosidad 75 %').first()).toBeVisible();
+  await expect(detail.getByLabel('Isoterma de 0° a 2100 m').first()).toBeVisible();
+  // La hora con niebla, nieve y riesgo de tormenta (la 4.ª del pronóstico, si cae hoy).
+  const special = detail.getByTestId('hour-detail').filter({ hasText: 'niebla' });
+  if ((await special.count()) > 0) {
+    await expect(special.getByLabel('Visibilidad 600 m')).toBeVisible();
+    await expect(special.getByLabel('Riesgo de tormenta Alto')).toBeVisible();
+    await expect(special.getByLabel('Nieve 0,8 cm')).toBeVisible();
+  }
+  await detail.getByText('Qué significa cada dato').click();
+  await expect(detail.getByText(/ST = sensación térmica/)).toBeVisible();
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-16b-weather-day.png` });
+  await detail.getByRole('button', { name: 'Cerrar' }).click();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-16-weather.png`, fullPage: true });
   expect(requests).toBe(1);
 
@@ -101,6 +129,32 @@ test('clima: descarga, avisos, y sin conexión muestra lo guardado', async ({ pa
   await page.getByRole('button', { name: 'Actualizar' }).click();
   await expect(page.getByText('Sin conexión: el pronóstico se descarga cuando haya internet. Se muestra el último pronóstico guardado.')).toBeVisible();
   await expect(page.getByTestId('weather-temp')).toHaveText('21°');
+  await context.setOffline(false);
+});
+
+test('las horas siguen al reloj aunque el pronóstico guardado sea de antes', async ({ page, context }) => {
+  // Se descarga a la 01:10; después se pierde la conexión y el reloj sigue hasta las 02:25.
+  await page.clock.install({ time: new Date('2026-10-31T04:10:00Z') }); // 01:10 en Buenos Aires
+  await context.route('https://api.open-meteo.com/v1/forecast**', (route) => route.fulfill({ json: fakeForecast() }));
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/weather/forecast');
+  await expect(page.getByTestId('hour').first()).toContainText('01:00');
+
+  await context.setOffline(true);
+  await page.clock.runFor('01:15:00');
+  // En ese tiempo la app se bloquea sola por inactividad: se desbloquea y se vuelve al clima.
+  await page.getByLabel('Contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await page.goto('/#/weather/forecast');
+  await expect(page.getByTestId('hour').first()).toContainText('02:00');
+  // Las barras de lluvia arrancan en el cuarto de hora actual (02:15), no a la hora de descarga.
+  await expect(page.locator('.rain-bars li').first()).toContainText('02:15');
   await context.setOffline(false);
 });
 

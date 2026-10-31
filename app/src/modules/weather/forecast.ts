@@ -30,9 +30,23 @@ export interface Forecast {
     precipProbability: number | null;
     code: number;
     windSpeed: number;
-    /** De dónde viene el viento, grados (null en pronósticos guardados por versiones anteriores). */
+    // Los siguientes son `null` en pronósticos guardados por versiones anteriores.
+    /** De dónde viene el viento, grados. */
     windDirection: number | null;
     windGusts: number | null;
+    apparent: number | null;
+    humidity: number | null;
+    /** Lluvia y nieve de esa hora: mm y cm. */
+    precipitation: number | null;
+    snowfall: number | null;
+    /** Nubosidad, %. */
+    cloudCover: number | null;
+    /** Visibilidad, metros. */
+    visibility: number | null;
+    /** Energía disponible para tormentas (J/kg). */
+    cape: number | null;
+    /** Altura de la isoterma de 0 °C, metros. */
+    freezingLevel: number | null;
   }[];
   daily: {
     date: string;
@@ -52,7 +66,22 @@ export interface Forecast {
 }
 
 const CURRENT = 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl';
-const HOURLY = 'temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m';
+const HOURLY = [
+  'temperature_2m',
+  'apparent_temperature',
+  'relative_humidity_2m',
+  'precipitation_probability',
+  'precipitation',
+  'snowfall',
+  'weather_code',
+  'cloud_cover',
+  'visibility',
+  'wind_speed_10m',
+  'wind_direction_10m',
+  'wind_gusts_10m',
+  'cape',
+  'freezing_level_height',
+].join(',');
 const DAILY =
   'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max';
 
@@ -141,6 +170,14 @@ export function parseForecast(data: ApiResponse, now = new Date()): Forecast {
       windSpeed: num(h.wind_speed_10m![i]),
       windDirection: opt(h.wind_direction_10m?.[i]),
       windGusts: opt(h.wind_gusts_10m?.[i]),
+      apparent: opt(h.apparent_temperature?.[i]),
+      humidity: opt(h.relative_humidity_2m?.[i]),
+      precipitation: opt(h.precipitation?.[i]),
+      snowfall: opt(h.snowfall?.[i]),
+      cloudCover: opt(h.cloud_cover?.[i]),
+      visibility: opt(h.visibility?.[i]),
+      cape: opt(h.cape?.[i]),
+      freezingLevel: opt(h.freezing_level_height?.[i]),
     })),
     daily: (d.time ?? []).map((date, i) => ({
       date: String(date),
@@ -200,7 +237,48 @@ export function warningsOf(daily: Forecast['daily']): Warning[] {
   return out;
 }
 
+/**
+ * Hora actual en la zona horaria del lugar, en el formato de Open-Meteo
+ * ("YYYY-MM-DDTHH:MM"). Las horas del pronóstico vienen en esa zona: "ahora"
+ * no puede ser la hora en que se descargó (un pronóstico guardado quedaría
+ * mostrando horas ya pasadas).
+ */
+export function placeNow(timezone: string, now = new Date()): string {
+  try {
+    // sv-SE da "2026-10-31 02:15", el formato ISO local.
+    return new Intl.DateTimeFormat('sv-SE', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .format(now)
+      .replace(' ', 'T');
+  } catch {
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 16);
+  }
+}
+
+export type StormRisk = 'low' | 'moderate' | 'high' | 'veryHigh';
+
+/** Riesgo de tormenta a partir del CAPE (umbrales habituales en meteorología operativa). */
+export function stormRisk(cape: number): StormRisk {
+  if (cape < 300) return 'low';
+  if (cape < 1000) return 'moderate';
+  if (cape < 2500) return 'high';
+  return 'veryHigh';
+}
+
+/** Por debajo de 1 km de visibilidad se considera niebla. */
+export const FOG_VISIBILITY_M = 1000;
+
 /** Para mostrar en el sistema elegido. */
 export const toFahrenheit = (c: number) => (c * 9) / 5 + 32;
 export const kmhToMph = (v: number) => v / 1.609344;
 export const mmToInch = (v: number) => v / 25.4;
+export const metersToFeet = (v: number) => v / 0.3048;
+export const metersToMiles = (v: number) => v / 1609.344;

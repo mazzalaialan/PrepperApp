@@ -1,0 +1,274 @@
+import { useTranslation } from 'react-i18next';
+import {
+  ArrowUp,
+  ChevronRight,
+  Cloud,
+  CloudDrizzle,
+  CloudFog,
+  CloudLightning,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  Droplets,
+  Eye,
+  Mountain,
+  Snowflake,
+  Sun,
+  Thermometer,
+  Wind,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
+import { cardinalOf } from '@/core/geo/geo';
+import type { UnitSystem } from '@/core/units/units';
+import { Dialog } from '@/ui/Dialog';
+import { FOG_VISIBILITY_M, kmhToMph, metersToFeet, metersToMiles, mmToInch, skyOf, stormRisk, toFahrenheit, type Forecast, type Sky } from './forecast';
+
+/**
+ * Piezas del pronóstico. Cada dato lleva un ícono o una sigla (ST, HR, r.)
+ * para que se entienda qué es sin leer la leyenda.
+ */
+
+const SKY_ICON: Record<Sky, LucideIcon> = {
+  clear: Sun,
+  partly: CloudSun,
+  cloudy: Cloud,
+  fog: CloudFog,
+  drizzle: CloudDrizzle,
+  rain: CloudRain,
+  snow: CloudSnow,
+  storm: CloudLightning,
+};
+
+export function SkyIcon({ code, size = 24 }: { code: number; size?: number }) {
+  const { t } = useTranslation();
+  const sky = skyOf(code);
+  const Icon = SKY_ICON[sky];
+  return <Icon size={size} aria-label={t(`weather.sky.${sky}`)} role="img" className="sky-icon" />;
+}
+
+export function useUnits(system: UnitSystem, locale: string) {
+  const n0 = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+  const n1 = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const imperial = system === 'imperial';
+  return {
+    temp: (c: number) => `${n0.format(imperial ? toFahrenheit(c) : c)}°`,
+    wind: (kmh: number) => (imperial ? `${n0.format(kmhToMph(kmh))} mph` : `${n0.format(kmh)} km/h`),
+    /** Solo el número (la unidad va en la leyenda, para que entre en cada hora). */
+    windValue: (kmh: number) => n0.format(imperial ? kmhToMph(kmh) : kmh),
+    windUnit: imperial ? 'mph' : 'km/h',
+    rain: (mm: number) => (imperial ? `${n1.format(mmToInch(mm))} in` : `${n1.format(mm)} mm`),
+    snow: (cm: number) => (imperial ? `${n1.format(mmToInch(cm * 10))} in` : `${n1.format(cm)} cm`),
+    visibility: (m: number) =>
+      imperial ? `${n1.format(metersToMiles(m))} mi` : m < 1000 ? `${n0.format(Math.round(m / 50) * 50)} m` : `${n0.format(m / 1000)} km`,
+    altitude: (m: number) => (imperial ? `${n0.format(Math.round(metersToFeet(m) / 100) * 100)} ft` : `${n0.format(Math.round(m / 50) * 50)} m`),
+  };
+}
+
+export type Units = ReturnType<typeof useUnits>;
+
+/** Flecha hacia donde sopla el viento (el dato viene como "de dónde viene"). */
+export function WindArrow({ from, size = 16 }: { from: number; size?: number }) {
+  const { t } = useTranslation();
+  return (
+    <ArrowUp
+      size={size}
+      className="wind-arrow"
+      style={{ transform: `rotate(${(from + 180) % 360}deg)` }}
+      role="img"
+      aria-label={t('weather.windFrom', { dir: t(`geo.cardinal.${cardinalOf(from)}`) })}
+    />
+  );
+}
+
+type Hour = Forecast['hourly'][number];
+
+/** Hora en la tira de las próximas 24 h: lo esencial. */
+export function HourStripItem({ h, u }: { h: Hour; u: Units }) {
+  const { t } = useTranslation();
+  return (
+    <li data-testid="hour">
+      <span className="hint">{h.time.slice(11, 16)}</span>
+      <SkyIcon code={h.code} />
+      <strong>{u.temp(h.temperature)}</strong>
+      {h.apparent !== null && <span className="hour-meta">{t('weather.feelsShort', { temp: u.temp(h.apparent) })}</span>}
+      <RainChance h={h} />
+      {h.precipitation !== null && h.precipitation > 0 && (
+        <span className="hour-meta hour-wet">
+          <CloudRain size={12} aria-hidden /> {u.rain(h.precipitation)}
+        </span>
+      )}
+      <WindValue h={h} u={u} />
+      {h.windGusts !== null && <span className="hint hour-gust">{t('weather.gustShort', { value: u.windValue(h.windGusts) })}</span>}
+    </li>
+  );
+}
+
+function RainChance({ h }: { h: Hour }) {
+  const { t } = useTranslation();
+  return (
+    <span className="hour-rain" data-wet={(h.precipProbability ?? 0) > 0} aria-label={t('weather.rainChance', { pct: h.precipProbability ?? 0 })}>
+      <Droplets size={13} aria-hidden />
+      {h.precipProbability ?? 0}%
+    </span>
+  );
+}
+
+function WindValue({ h, u }: { h: Hour; u: Units }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className="hour-wind"
+      aria-label={t('weather.windAria', { speed: u.windValue(h.windSpeed), gusts: h.windGusts === null ? '—' : u.windValue(h.windGusts), unit: u.windUnit })}
+    >
+      {h.windDirection !== null && <WindArrow from={h.windDirection} size={14} />}
+      {u.windValue(h.windSpeed)}
+    </span>
+  );
+}
+
+/** Una hora con todos los datos (detalle de un día). */
+function HourDetailRow({ h, u }: { h: Hour; u: Units }) {
+  const { t } = useTranslation();
+  const fog = h.visibility !== null && h.visibility < FOG_VISIBILITY_M;
+  const risk = h.cape === null ? null : stormRisk(h.cape);
+  return (
+    <li className="hour-row" data-testid="hour-detail">
+      <span className="hour-row-time">{h.time.slice(11, 16)}</span>
+      <SkyIcon code={h.code} size={26} />
+      <div className="hour-row-facts">
+        <span className="fact">
+          <Thermometer size={14} aria-hidden /> <strong>{u.temp(h.temperature)}</strong>
+          {h.apparent !== null && <> · {t('weather.feelsShort', { temp: u.temp(h.apparent) })}</>}
+        </span>
+        <span className="fact">
+          <RainChance h={h} />
+          {h.precipitation !== null && h.precipitation > 0 && <> · {u.rain(h.precipitation)}</>}
+        </span>
+        {h.snowfall !== null && h.snowfall > 0 && (
+          <span className="fact" aria-label={t('weather.snowAria', { value: u.snow(h.snowfall) })}>
+            <Snowflake size={14} aria-hidden /> {u.snow(h.snowfall)}
+          </span>
+        )}
+        <span className="fact">
+          <Wind size={14} aria-hidden /> <WindValue h={h} u={u} /> {u.windUnit}
+          {h.windGusts !== null && <> · {t('weather.gustShort', { value: u.windValue(h.windGusts) })}</>}
+        </span>
+        {h.cloudCover !== null && (
+          <span className="fact" aria-label={t('weather.cloudAria', { pct: Math.round(h.cloudCover) })}>
+            <Cloud size={14} aria-hidden /> {Math.round(h.cloudCover)}%
+          </span>
+        )}
+        {h.visibility !== null && (
+          <span className="fact" data-fog={fog} aria-label={t('weather.visibilityAria', { value: u.visibility(h.visibility) })}>
+            <Eye size={14} aria-hidden /> {u.visibility(h.visibility)}
+            {fog && <> · {t('weather.fog')}</>}
+          </span>
+        )}
+        {h.humidity !== null && <span className="fact">{t('weather.humidityShort', { pct: Math.round(h.humidity) })}</span>}
+        {risk && (
+          <span className="fact" data-risk={risk} aria-label={t('weather.stormAria', { risk: t(`weather.stormRisk.${risk}`) })}>
+            <Zap size={14} aria-hidden /> {t(`weather.stormRisk.${risk}`)}
+          </span>
+        )}
+        {h.freezingLevel !== null && (
+          <span className="fact" aria-label={t('weather.freezingAria', { value: u.altitude(h.freezingLevel) })}>
+            <Mountain size={14} aria-hidden /> {t('weather.freezingShort', { value: u.altitude(h.freezingLevel) })}
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/** Leyenda de íconos y siglas del detalle por hora. */
+function Legend({ u }: { u: Units }) {
+  const { t } = useTranslation();
+  const items: [LucideIcon | null, string][] = [
+    [Thermometer, t('weather.legend.temp')],
+    [Droplets, t('weather.legend.rain')],
+    [Snowflake, t('weather.legend.snow')],
+    [Wind, t('weather.legend.wind', { unit: u.windUnit })],
+    [Cloud, t('weather.legend.cloud')],
+    [Eye, t('weather.legend.visibility')],
+    [null, t('weather.legend.humidity')],
+    [Zap, t('weather.legend.storm')],
+    [Mountain, t('weather.legend.freezing')],
+  ];
+  return (
+    <details className="weather-legend">
+      <summary>{t('weather.legend.title')}</summary>
+      <ul>
+        {items.map(([Icon, text]) => (
+          <li key={text}>
+            {Icon ? <Icon size={14} aria-hidden /> : null} {text}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** Detalle hora por hora de un día. */
+export function DayHoursDialog({ title, hours, u, onClose }: { title: string; hours: Hour[]; u: Units; onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Dialog title={title} onClose={onClose}>
+      <Legend u={u} />
+      {hours.length === 0 ? (
+        <p className="hint">{t('weather.noHours')}</p>
+      ) : (
+        <ol className="hour-rows">
+          {hours.map((h) => (
+            <HourDetailRow key={h.time} h={h} u={u} />
+          ))}
+        </ol>
+      )}
+    </Dialog>
+  );
+}
+
+/** Lista de días; tocando uno se abre su detalle por hora. */
+export function DayList({
+  days,
+  offset,
+  dayLabel,
+  u,
+  onSelect,
+  trend = false,
+}: {
+  days: Forecast['daily'];
+  offset: number;
+  dayLabel: (iso: string, i: number) => string;
+  u: Units;
+  onSelect: (date: string) => void;
+  trend?: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ul className="list" data-trend={trend}>
+      {days.map((d, i) => (
+        <li key={d.date}>
+          <button className="list-row day-row" type="button" data-testid={trend ? 'trend-day' : 'day'} onClick={() => onSelect(d.date)}>
+            <span className="day-name">{dayLabel(d.date, i + offset)}</span>
+            <SkyIcon code={d.code} />
+            <span className="list-main">
+              <span className="list-title">
+                {u.temp(d.min)} / {u.temp(d.max)}
+              </span>
+              <span className="list-sub">
+                <Droplets size={13} aria-hidden /> {d.precipitation > 0 ? u.rain(d.precipitation) : t('weather.noRain')}
+                {d.precipProbability !== null && d.precipProbability > 0 && ` (${d.precipProbability}%)`}
+              </span>
+              <span className="list-sub">
+                {d.windDirection != null && <WindArrow from={d.windDirection} size={13} />}{' '}
+                {t('weather.windDay', { speed: u.wind(d.windMax), gusts: u.wind(d.gustMax) })}
+              </span>
+            </span>
+            <ChevronRight size={18} aria-hidden />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { forecastUrl, parseForecast, skyOf, warningsOf, type Forecast } from './forecast';
+import { forecastUrl, parseForecast, placeNow, skyOf, stormRisk, warningsOf, type Forecast } from './forecast';
 
 describe('forecastUrl', () => {
   it('usa la URL configurada (con o sin barra final) y pide 16 días en la zona del lugar', () => {
@@ -8,6 +8,27 @@ describe('forecastUrl', () => {
     expect(url.searchParams.get('latitude')).toBe('-34.6037');
     expect(url.searchParams.get('timezone')).toBe('auto');
     expect(url.searchParams.get('forecast_days')).toBe('16');
+  });
+});
+
+describe('placeNow', () => {
+  it('hora actual en la zona del lugar, no la de descarga ni la del equipo', () => {
+    const at = new Date('2026-10-31T05:20:00Z');
+    expect(placeNow('America/Argentina/Buenos_Aires', at)).toBe('2026-10-31T02:20');
+    expect(placeNow('Europe/Madrid', at)).toBe('2026-10-31T06:20');
+    expect(placeNow('Asia/Kolkata', at)).toBe('2026-10-31T10:50');
+  });
+
+  it('zona inválida: usa la hora del dispositivo', () => {
+    expect(placeNow('Marte/Olimpo', new Date())).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  });
+});
+
+describe('stormRisk', () => {
+  it('umbrales de CAPE', () => {
+    expect([0, 299, 300, 999, 1000, 2499, 2500, 4000].map(stormRisk)).toEqual([
+      'low', 'low', 'moderate', 'moderate', 'high', 'high', 'veryHigh', 'veryHigh',
+    ]);
   });
 });
 
