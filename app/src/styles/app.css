@@ -1808,31 +1808,49 @@ a.module-card:hover {
 }
 
 .med-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.med-head {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
 }
 
-.med-row .input:not(:first-of-type) {
+.med-head .input:nth-of-type(2) {
   grid-column: 1;
 }
 
-.med-row .icon-btn {
+.med-head .icon-btn {
   grid-column: 2;
   grid-row: 1;
 }
 
+.med-first {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.med-first .input {
+  flex: 1;
+  min-width: 0;
+}
+
 @media (min-width: 640px) {
-  .med-row {
-    grid-template-columns: 2fr 1fr 1fr auto;
+  .med-head {
+    grid-template-columns: 2fr 1fr auto;
   }
 
-  .med-row .input:not(:first-of-type) {
+  .med-head .input:nth-of-type(2) {
     grid-column: auto;
   }
 
-  .med-row .icon-btn {
-    grid-column: 4;
+  .med-head .icon-btn {
+    grid-column: 3;
   }
 }
 
@@ -2253,4 +2271,40 @@ a.module-card:hover {
   margin: 0 0 6px;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* ---------- Mis datos (Contactos de emergencia) ---------- */
+
+.my-data {
+  border-left: 4px solid var(--accent);
+}
+
+.my-data-name {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.my-data-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.my-data-list dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.my-data-list dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-data-meds {
+  margin: 0;
+  padding-left: 18px;
 }

@@ -39,7 +39,17 @@ export const useMedical = create<MedicalState>((set, get) => ({
   async saveProfile(p) {
     const saved = touch(p);
     await repos.medicalProfiles.put(saved);
-    set({ profiles: new Map(get().profiles).set(saved.id, saved) });
+    const profiles = new Map(get().profiles).set(saved.id, saved);
+    // "Soy yo" hay uno solo: al marcarlo en una ficha se desmarca en la anterior.
+    if (saved.isMe) {
+      for (const other of profiles.values()) {
+        if (other.id === saved.id || !other.isMe) continue;
+        const unmarked = touch({ ...other, isMe: false });
+        await repos.medicalProfiles.put(unmarked);
+        profiles.set(unmarked.id, unmarked);
+      }
+    }
+    set({ profiles });
   },
 
   async deleteProfile(id) {
@@ -88,7 +98,31 @@ onSessionChange(() => {
 
 /** Las fichas anteriores a v0.7.2 eran todas de personas; las anteriores a 0.11 no tenían parentesco ni teléfono. */
 export function normalizeProfile(p: MedicalProfile): MedicalProfile {
-  return { ...p, kind: p.kind ?? 'person', pet: p.pet ?? null, relationship: p.relationship ?? '', phone: p.phone ?? '', inContacts: p.inContacts ?? true };
+  return {
+    ...p,
+    kind: p.kind ?? 'person',
+    pet: p.pet ?? null,
+    relationship: p.relationship ?? '',
+    phone: p.phone ?? '',
+    inContacts: p.inContacts ?? true,
+    isMe: p.isMe ?? false,
+    medications: (p.medications ?? []).map((m) => ({ ...m, everyHours: m.everyHours ?? null, firstTime: m.firstTime ?? null })),
+  };
+}
+
+/** Frecuencias que se ofrecen, en horas (0 = solo si hace falta). */
+export const MED_FREQUENCIES = [24, 12, 8, 6, 4, 48, 168, 0] as const;
+
+/** Horarios del día a partir de la primera toma: cada 8 h desde las 08:00 → 08:00, 16:00, 00:00. */
+export function medTimes(everyHours: number | null | undefined, firstTime: string | null | undefined): string[] {
+  if (!firstTime || !everyHours) return [];
+  if (everyHours >= 24) return [firstTime];
+  const [h, m] = firstTime.split(':').map(Number);
+  const start = h! * 60 + m!;
+  return Array.from({ length: Math.floor(24 / everyHours) }, (_, i) => {
+    const t = (start + i * everyHours * 60) % (24 * 60);
+    return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  });
 }
 
 export function emptyPetHealth(): PetHealth {

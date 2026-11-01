@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Search, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
+import { medScheduleText, phoneIn } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
@@ -25,6 +26,8 @@ export function ContactsPage() {
         </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('modules.contacts.title')}</h1>
       </div>
+
+      <MyDataSection />
 
       <section className="card stack" aria-labelledby="national-title">
         <h2 id="national-title" className="section-title" style={{ margin: 0 }}>{t('emergency.nationalTitle')}</h2>
@@ -84,6 +87,77 @@ export function ContactsPage() {
   );
 }
 
+/** Mi ficha ("Soy yo"): lo que necesita saber quien me asiste, arriba de todo. */
+function MyDataSection() {
+  const { t } = useTranslation();
+  const me = useMedical((s) => [...s.profiles.values()].find((p) => p.kind === 'person' && p.isMe));
+  const loaded = useMedical((s) => s.loaded);
+  if (!loaded) return null;
+  if (!me) {
+    return (
+      <p className="hint" data-testid="my-data-missing">
+        {t('emergency.myDataMissing')} <Link to="/first-aid/medical">{t('emergency.myDataGo')}</Link>
+      </p>
+    );
+  }
+  const age = me.birthDate ? ageOn(me.birthDate, today()) : null;
+  const contactPhone = phoneIn(me.emergencyContact);
+  const rows: [string, string][] = [
+    [t('medical.bloodType'), me.bloodType],
+    [t('medical.allergies'), me.allergies],
+    [t('medical.conditions'), me.conditions],
+    [t('medical.doctor'), me.doctor],
+  ];
+  return (
+    <section className="card stack my-data" aria-labelledby="my-data-title" data-testid="my-data">
+      <div className="row-between">
+        <h2 id="my-data-title" className="section-title" style={{ margin: 0 }}>{t('emergency.myDataTitle')}</h2>
+        <Link className="icon-btn" to={`/first-aid/medical/${me.id}`} aria-label={t('emergency.openMedical', { name: me.name })}>
+          <Pencil size={18} />
+        </Link>
+      </div>
+      <p className="my-data-name">
+        <strong>{me.name}</strong>
+        {age !== null && ` · ${t('medical.age', { count: age })}`}
+      </p>
+      <dl className="my-data-list">
+        {rows
+          .filter(([, value]) => value.trim())
+          .map(([label, value]) => (
+            <Fragment key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </Fragment>
+          ))}
+        {me.medications.length > 0 && (
+          <>
+            <dt>{t('medical.medications')}</dt>
+            <dd>
+              <ul className="my-data-meds">
+                {me.medications.map((m, i) => (
+                  <li key={i}>
+                    <strong>{[m.name, m.dose].filter(Boolean).join(' ')}</strong>
+                    {[medScheduleText(m, t), m.schedule].filter(Boolean).map((s) => ` · ${s}`)}
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </>
+        )}
+        {me.emergencyContact.trim() && (
+          <>
+            <dt>{t('medical.emergencyContact')}</dt>
+            <dd>
+              {me.emergencyContact}
+              {contactPhone && <PhoneActions phone={contactPhone} />}
+            </dd>
+          </>
+        )}
+      </dl>
+    </section>
+  );
+}
+
 /** Mayor de edad: a quién tiene sentido llamar en una emergencia. */
 const ADULT_AGE = 18;
 
@@ -95,7 +169,7 @@ function FamilySection() {
   const people = useMemo(
     () =>
       [...profiles.values()]
-        .filter((p) => p.kind === 'person' && p.inContacts !== false)
+        .filter((p) => p.kind === 'person' && p.inContacts !== false && !p.isMe)
         .map((p) => ({ p, age: p.birthDate ? ageOn(p.birthDate, todayStr) : null }))
         // Sin fecha de nacimiento, entre los adultos y los menores (no se sabe).
         .sort((a, b) => (b.age ?? ADULT_AGE - 0.5) - (a.age ?? ADULT_AGE - 0.5) || a.p.name.localeCompare(b.p.name, i18n.language)),

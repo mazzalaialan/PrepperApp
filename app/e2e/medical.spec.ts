@@ -23,11 +23,19 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: 'Agregar medicamento' }).click();
   await page.getByLabel('Medicamento', { exact: true }).first().fill('Levotiroxina');
   await page.getByLabel('Dosis').first().fill('50 mcg');
-  await page.getByLabel('Cuándo').first().fill('en ayunas');
+  // Cada cuánto y la primera toma: los demás horarios se calculan.
+  await page.getByLabel('Cada cuánto').first().selectOption({ label: 'Cada 8 h' });
+  await page.getByLabel('Primera toma').first().fill('08:00');
+  await expect(page.getByTestId('med-times').first()).toHaveText('Horarios: 08:00 · 16:00 · 00:00');
+  await page.getByLabel('Indicaciones').first().fill('en ayunas');
+  // "Soy yo": queda como mi ficha.
+  await page.getByLabel('Soy yo (esta es mi ficha)').check();
+  await page.getByLabel('Contacto de emergencia').fill('Juan (hermano) 11 5555-1234');
   // El segundo queda vacío: no se guarda.
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/medical\/[0-9a-f-]{36}$/);
   await expect(page.getByRole('group', { name: /Medicamento \d/ })).toHaveCount(1);
+  await expect(page.getByLabel('Parentesco')).toHaveValue('Yo');
 
   // Foto de la persona: se ve en la ficha y como avatar en el listado.
   const photoPath = testInfo.outputPath('ana.png');
@@ -40,6 +48,16 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await expect(page.getByText('Grupo 0- · 1 medicamento')).toBeVisible();
   await expect(page.getByText('Alergias: Penicilina')).toBeVisible();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-12-medical.png`, fullPage: true });
+
+  // Mis datos, arriba de todo en Contactos de emergencia, para quien me asista.
+  await page.goto('/#/first-aid/contacts');
+  const me = page.getByTestId('my-data');
+  await expect(me).toContainText('Ana');
+  await expect(me).toContainText('0-');
+  await expect(me).toContainText('Penicilina');
+  await expect(me).toContainText('Levotiroxina 50 mcg · Cada 8 h: 08:00 · 16:00 · 00:00 · en ayunas');
+  await expect(me.getByRole('link', { name: '11 5555-1234' })).toHaveAttribute('href', 'tel:1155551234');
+  await expect(page.getByTestId('family-contacts')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Bloquear ahora' }).first().click();
   await page.getByLabel('Contraseña').fill(PASSWORD);

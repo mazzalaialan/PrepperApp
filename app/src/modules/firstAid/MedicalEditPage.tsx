@@ -7,7 +7,7 @@ import type { Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } f
 import { today } from '@/modules/inventory/domain/dates';
 import { Segmented } from '@/ui/Segmented';
 import { SinglePhoto } from '@/ui/SinglePhoto';
-import { emptyPetHealth, monthsSince, useMedical } from './medicalStore';
+import { emptyPetHealth, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -92,9 +92,16 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       bloodType: isPet ? '' : draft.bloodType,
       relationship: isPet ? '' : (draft.relationship ?? '').trim(),
       phone: isPet ? '' : (draft.phone ?? '').trim(),
+      isMe: !isPet && !!draft.isMe,
       // Las filas de medicación vacías no se guardan.
       medications: draft.medications
-        .map((m) => ({ name: m.name.trim(), dose: m.dose.trim(), schedule: m.schedule.trim() }))
+        .map((m) => ({
+          name: m.name.trim(),
+          dose: m.dose.trim(),
+          schedule: m.schedule.trim(),
+          everyHours: m.everyHours ?? null,
+          firstTime: m.everyHours ? (m.firstTime ?? null) : null,
+        }))
         .filter((m) => m.name),
     });
     if (isNew) navigate(`/first-aid/medical/${draft.id}`, { replace: true });
@@ -182,7 +189,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
               </div>
             </div>
           )}
-          {!isPet && (
+          {!isPet && !draft.isMe && (
             <label className="check">
               <input type="checkbox" checked={draft.inContacts ?? true} onChange={(e) => set({ inContacts: e.target.checked })} />
               {t('medical.inContacts')}
@@ -259,25 +266,71 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
         <section className="card stack">
           <h2 className="section-title" style={{ margin: 0 }}>{t('medical.medications')}</h2>
           {draft.medications.length === 0 && <p className="hint">{t('medical.noMedications')}</p>}
-          {draft.medications.map((m, i) => (
-            <fieldset key={i} className="fieldset med-row">
-              <legend>{t('medical.medicationN', { n: i + 1 })}</legend>
-              <input className="input" aria-label={t('medical.medName')} placeholder={t('medical.medName')} value={m.name} onChange={(e) => setMed(i, { name: e.target.value })} />
-              <input className="input" aria-label={t('medical.medDose')} placeholder={t('medical.medDose')} value={m.dose} onChange={(e) => setMed(i, { dose: e.target.value })} />
-              <input className="input" aria-label={t('medical.medSchedule')} placeholder={t('medical.medSchedule')} value={m.schedule} onChange={(e) => setMed(i, { schedule: e.target.value })} />
-              <button className="icon-btn" type="button" onClick={() => set({ medications: draft.medications.filter((_, j) => j !== i) })} aria-label={t('medical.removeMedication')} title={t('medical.removeMedication')}>
-                <X size={18} />
-              </button>
-            </fieldset>
-          ))}
+          {draft.medications.map((m, i) => {
+            const times = medTimes(m.everyHours, m.firstTime);
+            return (
+              <fieldset key={i} className="fieldset med-row">
+                <legend>{t('medical.medicationN', { n: i + 1 })}</legend>
+                <div className="med-head">
+                  <input className="input" aria-label={t('medical.medName')} placeholder={t('medical.medName')} value={m.name} onChange={(e) => setMed(i, { name: e.target.value })} />
+                  <input className="input" aria-label={t('medical.medDose')} placeholder={t('medical.medDosePlaceholder')} value={m.dose} onChange={(e) => setMed(i, { dose: e.target.value })} />
+                  <button className="icon-btn" type="button" onClick={() => set({ medications: draft.medications.filter((_, j) => j !== i) })} aria-label={t('medical.removeMedication')} title={t('medical.removeMedication')}>
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="grid-2">
+                  <select
+                    className="select"
+                    aria-label={t('medical.medEvery')}
+                    value={m.everyHours ?? ''}
+                    onChange={(e) => setMed(i, { everyHours: e.target.value === '' ? null : Number(e.target.value) })}
+                  >
+                    <option value="">{t('medical.medEveryUnset')}</option>
+                    {MED_FREQUENCIES.map((h) => (
+                      <option key={h} value={h}>
+                        {t(`medical.freq.${h}`)}
+                      </option>
+                    ))}
+                  </select>
+                  {!!m.everyHours && (
+                    <label className="med-first">
+                      <span>{t('medical.medFirstTime')}</span>
+                      <input className="input" type="time" value={m.firstTime ?? ''} onChange={(e) => setMed(i, { firstTime: e.target.value || null })} />
+                    </label>
+                  )}
+                </div>
+                {times.length > 0 && (
+                  <p className="hint med-times" data-testid="med-times" style={{ margin: 0 }}>
+                    {t('medical.medTimes', { times: times.join(' · ') })}
+                  </p>
+                )}
+                <input className="input" aria-label={t('medical.medSchedule')} placeholder={t('medical.medSchedulePlaceholder')} value={m.schedule} onChange={(e) => setMed(i, { schedule: e.target.value })} />
+              </fieldset>
+            );
+          })}
           <div className="row-end">
-            <button className="btn" type="button" onClick={() => set({ medications: [...draft.medications, { name: '', dose: '', schedule: '' }] })}>
+            <button className="btn" type="button" onClick={() => set({ medications: [...draft.medications, { name: '', dose: '', schedule: '', everyHours: 24, firstTime: null }] })}>
               <Plus size={18} /> {t('medical.addMedication')}
             </button>
           </div>
         </section>
 
         <section className="card stack">
+          {!isPet && (
+            <>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={draft.isMe ?? false}
+                  onChange={(e) =>
+                    set({ isMe: e.target.checked, relationship: e.target.checked && !draft.relationship?.trim() ? t('medical.relationshipMe') : draft.relationship })
+                  }
+                />
+                {t('medical.isMe')}
+              </label>
+              {draft.isMe && <p className="hint" style={{ margin: 0 }}>{t('medical.isMeHint')}</p>}
+            </>
+          )}
           {text('emergencyContact', false)}
           {text('doctor', false)}
           {text('notes')}

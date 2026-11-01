@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
-import { ageOn, monthsSince, normalizeProfile } from '@/modules/firstAid/medicalStore';
+import { ageOn, medTimes, monthsSince, normalizeProfile } from '@/modules/firstAid/medicalStore';
 import type { MedicalProfile } from '@/core/model/types';
 import { UserDb } from './db';
 
@@ -38,6 +38,17 @@ describe('fichas de mascotas', () => {
   it('las fichas anteriores a las mascotas son de personas', () => {
     const old = { id: 'p', name: 'Ana' } as unknown as MedicalProfile;
     expect(normalizeProfile(old)).toMatchObject({ kind: 'person', pet: null });
+  });
+});
+
+describe('medTimes', () => {
+  it('calcula los horarios del día desde la primera toma', () => {
+    expect(medTimes(8, '08:00')).toEqual(['08:00', '16:00', '00:00']);
+    expect(medTimes(12, '09:30')).toEqual(['09:30', '21:30']);
+    expect(medTimes(24, '22:00')).toEqual(['22:00']);
+    expect(medTimes(168, '08:00')).toEqual(['08:00']);
+    expect(medTimes(0, '08:00')).toEqual([]);
+    expect(medTimes(8, null)).toEqual([]);
   });
 });
 

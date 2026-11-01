@@ -175,8 +175,12 @@ export interface RecommendationRule extends BaseEntity {
 export interface Medication {
   name: string;
   dose: string;
-  /** Cuándo se toma (texto libre: "cada 8 h", "en ayunas"). */
+  /** Indicaciones en texto libre ("en ayunas", "con comida"); antes de 0.11 era el único dato de cuándo tomarlo. */
   schedule: string;
+  /** Cada cuántas horas (24 = una vez por día, 168 = semanal); 0 = solo si hace falta; null = sin indicar. */
+  everyHours?: number | null;
+  /** Hora de la primera toma del día ("08:00"); las demás se calculan. */
+  firstTime?: string | null;
 }
 
 export type ProfileKind = 'person' | 'pet';
@@ -192,6 +196,8 @@ export interface MedicalProfile extends BaseEntity {
   phone?: string;
   /** Solo personas: si aparece en Contactos de emergencia (por defecto, sí). */
   inContacts?: boolean;
+  /** La ficha del usuario ("Soy yo"): sus datos van arriba de todo en Contactos. Solo una. */
+  isMe?: boolean;
   birthDate: IsoDay | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
   bloodType: string;
