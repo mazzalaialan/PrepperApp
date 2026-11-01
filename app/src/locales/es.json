@@ -343,7 +343,10 @@
       "phoneLabelPlaceholder": "Para qué (ej.: riesgo de vida)",
       "phoneNumber": "Número del teléfono {{n}}",
       "addPhone": "Agregar teléfono",
-      "removePhone": "Quitar teléfono"
+      "removePhone": "Quitar teléfono",
+      "pick": "Elegir obra social ya cargada",
+      "other": "Otra (cargar una nueva)",
+      "shared": "Compartida con {{names}}: el nombre y los teléfonos son los mismos para todos; el plan y la credencial son de cada uno."
     },
     "addMedication": "Agregar medicamento",
     "removeMedication": "Quitar medicamento",
@@ -404,6 +407,7 @@
       "civilDefense": "Defensa Civil",
       "doctor": "Médico",
       "vet": "Veterinario",
+      "insurance": "Obra social",
       "other": "Otro"
     },
     "name": "Nombre",

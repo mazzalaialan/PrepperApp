@@ -143,7 +143,7 @@ export interface Route extends BaseEntity {
 }
 
 /** `radio`: frecuencia guardada por el usuario (p. ej. la que le dieron en un refugio). */
-export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other' | 'radio' | 'doctor' | 'vet';
+export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other' | 'radio' | 'doctor' | 'vet' | 'insurance';
 
 /** Contacto de emergencia: comisaría, bomberos, hospital, médico, familiar… */
 export interface EmergencyContact extends BaseEntity {
@@ -164,6 +164,8 @@ export interface EmergencyContact extends BaseEntity {
   tone?: string;
   /** Médicos y veterinarios: especialidad ("Psiquiatra", "Pediatra"). */
   specialty?: string;
+  /** Obras sociales: sus teléfonos con nombre ("Riesgo de vida"…); `phone` es copia del primero. */
+  phones?: InsurancePhone[];
 }
 
 export interface HouseholdMember extends BaseEntity {
@@ -211,8 +213,13 @@ export interface Doctor {
   phone: string;
 }
 
-/** Obra social o prepaga. */
+/**
+ * Obra social o prepaga. Desde 0.13 el nombre y los teléfonos son de un contacto
+ * compartido (`contactId`, la misma obra social para toda la familia); acá quedan
+ * como copia. El plan y la credencial son de cada persona.
+ */
 export interface HealthInsurance {
+  contactId?: Id | null;
   name: string;
   plan: string;
   /** Número de credencial / afiliado. */

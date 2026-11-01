@@ -2520,3 +2520,10 @@ a.module-card:hover {
   gap: 6px;
 }
 
+
+.labeled-phone {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+

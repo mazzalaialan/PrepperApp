@@ -79,7 +79,17 @@ export function ContactsPage() {
                   {c.notes && <span className="list-sub">{c.notes}</span>}
                 </span>
                 <span className="contact-actions">
-                  <PhoneActions phone={c.phone} />
+                  {c.phones?.length ? (
+                    // Obra social: cada teléfono con su nombre ("Riesgo de vida", "Emergencias").
+                    c.phones.map((p, i) => (
+                      <span key={i} className="labeled-phone" data-testid="saved-insurance-phone">
+                        <span className="hint">{p.label || t('medical.insurance.emergencyPhone')}</span>
+                        <PhoneActions phone={p.number} />
+                      </span>
+                    ))
+                  ) : (
+                    <PhoneActions phone={c.phone} />
+                  )}
                   {c.phone2 && <PhoneActions phone={c.phone2} />}
                   <Link className="icon-btn" to={`/first-aid/contacts/${c.id}`} aria-label={t('emergency.editContact', { name: c.name })}>
                     <Pencil size={18} />
@@ -142,7 +152,9 @@ function MyDataSection() {
     [t('medical.allergies'), me.allergies],
     [t('medical.conditions'), me.conditions],
   ];
-  const ins = me.insurance;
+  // Obra social compartida: nombre y teléfonos actuales del contacto.
+  const insContact = me.insurance?.contactId ? savedContacts.get(me.insurance.contactId) : undefined;
+  const ins = me.insurance && insContact ? { ...me.insurance, name: insContact.name, phones: insContact.phones ?? [] } : me.insurance;
   const insPhones = insurancePhones(ins);
   const insuranceText = ins
     ? [ins.name, ins.plan && t('medical.insurance.planShort', { plan: ins.plan }), ins.memberNumber && t('medical.insurance.memberShort', { n: ins.memberNumber })].filter(Boolean).join(' · ')

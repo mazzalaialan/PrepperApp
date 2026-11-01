@@ -183,6 +183,11 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await expect(juanDoctor).toContainText('Compartido con Tomi');
   // Cambiar el teléfono desde acá lo cambia para todas las fichas.
   await juanDoctor.getByLabel('Teléfono').fill('4777-9999');
+  // La obra social también se comparte: se elige y trae sus teléfonos; la credencial es de cada uno.
+  await page.getByLabel('Elegir obra social ya cargada').selectOption({ label: 'OSDE' });
+  await expect(page.getByLabel('Número del teléfono 1')).toHaveValue('0810-888-7788');
+  await expect(page.getByTestId('insurance-shared')).toContainText('Compartida con Tomi');
+  await page.getByLabel('N.º de credencial').fill('61 234567 8 02');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
   await expect(page.getByTestId('doctor-line')).toHaveText('Médico de cabecera: Dra. Gómez · 4777-9999');
@@ -190,18 +195,20 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   // En Mis contactos: los médicos una sola vez, con para quién son; la obra social y lo escrito en las fichas.
   await page.goto('/#/first-aid/contacts');
   const saved = page.getByTestId('my-contacts');
-  await expect(saved.locator('li')).toHaveCount(2);
+  await expect(saved.locator('li')).toHaveCount(3);
   await expect(saved).toContainText('Dra. Gómez');
   await expect(saved).toContainText('Médico · Pediatra · Pediatra de Tomi · Médico de cabecera de Juan');
   await expect(saved.getByRole('link', { name: '4777-9999' })).toBeVisible();
   await expect(saved).toContainText('Psicólogo de Tomi');
+  // La obra social, una sola vez, con todos sus teléfonos y de quién es.
+  const osde = saved.locator('li').filter({ hasText: 'OSDE' });
+  await expect(osde).toContainText('Obra social · Obra social de Tomi · Obra social de Juan');
+  await expect(osde.getByTestId('saved-insurance-phone')).toHaveCount(2);
+  await expect(osde.getByTestId('saved-insurance-phone').nth(0)).toContainText('Riesgo de vida');
+  await expect(osde.getByRole('link', { name: '0810-888-7788' })).toHaveAttribute('href', 'tel:08108887788');
+  await expect(osde.getByRole('link', { name: '0810-555-1234' })).toHaveAttribute('href', 'tel:08105551234');
   const fromFichas = page.getByTestId('ficha-contacts').locator('li');
-  await expect(fromFichas).toHaveCount(3);
-  await expect(page.getByTestId('ficha-contacts')).toContainText('OSDE · Riesgo de vida');
-  await expect(page.getByTestId('ficha-contacts')).toContainText('OSDE · Emergencias');
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Obra social de Tomi');
-  await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '0810-888-7788' })).toHaveAttribute('href', 'tel:08108887788');
-  await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '0810-555-1234' })).toHaveAttribute('href', 'tel:08105551234');
+  await expect(fromFichas).toHaveCount(1);
   await expect(page.getByTestId('ficha-contacts')).toContainText('Contacto de emergencia de Tomi');
   await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '4222-3333' })).toHaveAttribute('href', 'tel:42223333');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();

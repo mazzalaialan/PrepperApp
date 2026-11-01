@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { ContactKind, EmergencyContact } from '@/core/model/types';
+import { InsurancePhonesEditor } from '@/modules/firstAid/InsurancePhonesEditor';
 import { CONTACT_KINDS } from './parts';
 import { useContacts } from './store';
 
@@ -36,7 +37,17 @@ function ContactForm({ stored }: { stored: EmergencyContact | undefined }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await save({ ...draft, name: draft.name.trim(), phone: draft.phone.trim(), phone2: draft.phone2.trim(), address: draft.address.trim() });
+    const isInsurance = draft.kind === 'insurance';
+    const phones = (draft.phones ?? []).map((p) => ({ label: p.label.trim(), number: p.number.trim() })).filter((p) => p.number);
+    await save({
+      ...draft,
+      name: draft.name.trim(),
+      // Obra social: los teléfonos van en la lista; `phone` es copia del primero.
+      phones: isInsurance ? phones : draft.phones,
+      phone: isInsurance ? (phones[0]?.number ?? '') : draft.phone.trim(),
+      phone2: isInsurance ? '' : draft.phone2.trim(),
+      address: draft.address.trim(),
+    });
     navigate('/first-aid/contacts', { replace: true });
   }
 
@@ -80,14 +91,20 @@ function ContactForm({ stored }: { stored: EmergencyContact | undefined }) {
             </datalist>
           </div>
         )}
-        <div className="field">
-          <label htmlFor="phone">{t('emergency.phone')}</label>
-          <input id="phone" className="input" type="tel" value={draft.phone} onChange={(e) => set({ phone: e.target.value })} />
-        </div>
-        <div className="field">
-          <label htmlFor="phone2">{t('emergency.phone2')}</label>
-          <input id="phone2" className="input" type="tel" value={draft.phone2} onChange={(e) => set({ phone2: e.target.value })} />
-        </div>
+        {draft.kind === 'insurance' ? (
+          <InsurancePhonesEditor phones={draft.phones ?? []} onChange={(phones) => set({ phones })} />
+        ) : (
+          <>
+            <div className="field">
+              <label htmlFor="phone">{t('emergency.phone')}</label>
+              <input id="phone" className="input" type="tel" value={draft.phone} onChange={(e) => set({ phone: e.target.value })} />
+            </div>
+            <div className="field">
+              <label htmlFor="phone2">{t('emergency.phone2')}</label>
+              <input id="phone2" className="input" type="tel" value={draft.phone2} onChange={(e) => set({ phone2: e.target.value })} />
+            </div>
+          </>
+        )}
         <div className="field">
           <label htmlFor="address">{t('emergency.address')}</label>
           <input id="address" className="input" value={draft.address} onChange={(e) => set({ address: e.target.value })} placeholder={t('emergency.addressPlaceholder')} />

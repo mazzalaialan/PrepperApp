@@ -211,6 +211,12 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
         if (!filled[k]?.trim() && c[k]?.trim()) filled[k] = c[k];
       }
       if (filled.lat === null && c.lat !== null) Object.assign(filled, { lat: c.lat, lon: c.lon });
+      // Obra social: se suman los teléfonos que falten.
+      if (c.phones?.length) {
+        const phones = [...(filled.phones ?? [])];
+        for (const ph of c.phones) if (!phones.some((x) => digits(x.number) && digits(x.number) === digits(ph.number))) phones.push(ph);
+        if (phones.length !== (filled.phones ?? []).length) filled.phones = phones;
+      }
       if (JSON.stringify(filled) !== JSON.stringify(found)) {
         contactWrites.push({ ...filled, updatedAt: now });
         updatedContacts++;
@@ -243,6 +249,7 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
   }
 
   const mapDoctor = (d: Doctor): Doctor => ({ ...d, contactId: d.contactId ? (contactMap.get(d.contactId) ?? null) : null });
+  const mapInsurer = (id: Id | null | undefined): Id | null => (id ? (contactMap.get(id) ?? null) : null);
   const mapContactRef = (c: EmergencyContactRef): EmergencyContactRef | null =>
     c.profileId ? (profileMap.has(c.profileId) ? { ...c, profileId: profileMap.get(c.profileId)! } : null) : c;
 
@@ -267,6 +274,7 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       inContacts: true,
       doctors: (p.doctors ?? []).map(mapDoctor),
       emergencyContacts: (p.emergencyContacts ?? []).flatMap((c) => mapContactRef(c) ?? []),
+      insurance: p.insurance ? { ...p.insurance, contactId: mapInsurer(p.insurance.contactId) } : p.insurance,
       updatedAt: now,
       deletedAt: null,
     };
@@ -337,6 +345,12 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       }
     }
     merged = { ...merged, medications: meds, doctors, emergencyContacts: contacts };
+    // La obra social compartida que llega: si la ficha propia no tenía, apunta a la misma.
+    const insurer = mapInsurer(p.insurance?.contactId);
+    if (l.kind !== 'pet' && insurer && !merged.insurance?.contactId && (!merged.insurance?.name.trim() || norm(merged.insurance.name) === norm(p.insurance!.name))) {
+      merged = { ...merged, insurance: { ...(merged.insurance ?? emptyInsurance()), contactId: insurer } };
+      additions++;
+    }
     // Teléfonos de la obra social: se suman los que falten.
     if (l.kind !== 'pet' && p.insurance?.phones?.length) {
       const phones = [...(merged.insurance?.phones ?? [])];

@@ -280,3 +280,24 @@ describe('obra social con varios teléfonos', () => {
     expect(r.writes.profiles[0]!.insurance!.phones!.map((p) => p.label)).toEqual(['Emergencias', 'Riesgo de vida']);
   });
 });
+
+describe('obra social compartida', () => {
+  it('la que llega apunta a la misma obra social del familiar (por teléfono) y suma sus teléfonos', () => {
+    const myOsde = contact({ kind: 'insurance', name: 'OSDE', phone: '0810-555-1234', phones: [{ label: 'Emergencias', number: '0810-555-1234' }] });
+    const theirOsde = contact({
+      kind: 'insurance',
+      name: 'OSDE',
+      phone: '0810 555 1234',
+      phones: [
+        { label: 'Emergencias', number: '0810 555 1234' },
+        { label: 'Riesgo de vida', number: '0810-888-7788' },
+      ],
+    });
+    const insurance = (contactId: string, memberNumber: string) => ({ contactId, name: 'OSDE', plan: '310', memberNumber, emergencyPhone: '', phones: [] });
+    const tomi = profile({ name: 'Tomi', insurance: insurance(theirOsde.id, '02') });
+    const r = mergeShare({ ...empty, contacts: [myOsde] }, payload({ profiles: [tomi], contacts: [theirOsde] }), none());
+    expect(r.newContacts).toBe(0);
+    expect(r.writes.contacts[0]!.phones!.map((p) => p.label)).toEqual(['Emergencias', 'Riesgo de vida']);
+    expect(r.newProfiles[0]!.insurance).toMatchObject({ contactId: myOsde.id, memberNumber: '02' });
+  });
+});

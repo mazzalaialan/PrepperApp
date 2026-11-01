@@ -75,8 +75,10 @@ export async function collectShare(selection: ShareSelection): Promise<SharePayl
   const local = await loadLocalData();
   const sharedProfiles = selection.medical ? local.profiles : [];
   const profileIds = new Set(sharedProfiles.map((p) => p.id));
-  // Los médicos de las fichas viajan siempre con ellas; el resto de los contactos, si se eligieron.
-  const doctorIds = new Set(sharedProfiles.flatMap((p) => (p.doctors ?? []).flatMap((d) => (d.contactId ? [d.contactId] : []))));
+  // Los médicos y la obra social de las fichas viajan siempre con ellas; el resto de los contactos, si se eligieron.
+  const doctorIds = new Set(
+    sharedProfiles.flatMap((p) => [...(p.doctors ?? []).map((d) => d.contactId), p.insurance?.contactId].filter((id): id is string => !!id)),
+  );
   const sharedContacts = local.contacts.filter((c) => selection.contacts || doctorIds.has(c.id));
   const sharedDocuments = (selection.documents ? local.documents : []).map((d) => ({
     ...d,

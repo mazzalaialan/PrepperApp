@@ -343,7 +343,10 @@
       "phoneLabelPlaceholder": "What for (e.g.: life-threatening)",
       "phoneNumber": "Number of phone {{n}}",
       "addPhone": "Add phone",
-      "removePhone": "Remove phone"
+      "removePhone": "Remove phone",
+      "pick": "Pick a saved health insurance",
+      "other": "Other (add a new one)",
+      "shared": "Shared with {{names}}: name and phones are the same for everyone; plan and member number belong to each person."
     },
     "addMedication": "Add medication",
     "removeMedication": "Remove medication",
@@ -404,6 +407,7 @@
       "civilDefense": "Civil Defense",
       "doctor": "Doctor",
       "vet": "Vet",
+      "insurance": "Health insurance",
       "other": "Other"
     },
     "name": "Name",

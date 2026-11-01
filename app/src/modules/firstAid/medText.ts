@@ -44,11 +44,13 @@ export function doctorUse(d: Doctor, p: MedicalProfile, t: TFunction): string {
   return t('emergency.doctorOf', { role: d.role || t(p.kind === 'pet' ? 'emergency.vet' : 'emergency.doctor'), name: p.name });
 }
 
-/** Para cada médico compartido, en qué fichas está y como qué. */
+/** Para cada médico u obra social compartidos, en qué fichas están y como qué ("Pediatra de Tomi", "Obra social de Ana"). */
 export function doctorUses(profiles: Map<Id, MedicalProfile>, t: TFunction): Map<Id, string[]> {
   const uses = new Map<Id, string[]>();
+  const add = (id: Id, use: string) => uses.set(id, [...(uses.get(id) ?? []), use]);
   for (const p of profiles.values()) {
-    for (const d of p.doctors ?? []) if (d.contactId) uses.set(d.contactId, [...(uses.get(d.contactId) ?? []), doctorUse(d, p, t)]);
+    for (const d of p.doctors ?? []) if (d.contactId) add(d.contactId, doctorUse(d, p, t));
+    if (p.insurance?.contactId) add(p.insurance.contactId, t('emergency.insuranceOf', { name: p.name }));
   }
   return uses;
 }
@@ -82,7 +84,8 @@ export function fichaContacts(profiles: Map<Id, MedicalProfile>, t: TFunction): 
       if (d.contactId) continue;
       add(doctorLabel(d) || d.phone, d.phone, doctorUse(d, p, t));
     }
-    if (p.kind !== 'pet') {
+    // La obra social compartida está en los contactos guardados; acá solo la que no se guardó todavía.
+    if (p.kind !== 'pet' && !p.insurance?.contactId) {
       const ins = p.insurance;
       for (const phone of insurancePhones(ins)) {
         add(`${ins?.name || t('medical.insurance.title')} · ${phone.label || t('medical.insurance.emergencyPhone')}`, phone.number, t('emergency.insuranceOf', { name: p.name }));

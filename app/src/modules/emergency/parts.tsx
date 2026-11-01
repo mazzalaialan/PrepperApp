@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Copy, Flame, HeartPulse, Hospital, LifeBuoy, MapPinned, PawPrint, Phone, Radio, Shield, Stethoscope, type LucideIcon } from 'lucide-react';
+import { Check, Copy, Flame, HeartPulse, Hospital, LifeBuoy, MapPinned, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { dialable, mapsUrl } from './national';
 
@@ -14,10 +14,11 @@ const KIND_ICON: Record<ContactKind, LucideIcon> = {
   radio: Radio,
   doctor: Stethoscope,
   vet: PawPrint,
+  insurance: ShieldPlus,
 };
 
 /** Tipos que se eligen en un contacto (las frecuencias de radio se cargan desde Radio). */
-export const CONTACT_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense', 'doctor', 'vet', 'other'];
+export const CONTACT_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense', 'doctor', 'vet', 'insurance', 'other'];
 
 export function KindIcon({ kind, size = 22 }: { kind: ContactKind; size?: number }) {
   const Icon = KIND_ICON[kind];
