@@ -162,6 +162,31 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     contactId
       ? [...allProfiles.values()].filter((p) => p.id !== draft.id && (p.doctors ?? []).some((d) => d.contactId === contactId)).map((p) => p.name)
       : [];
+  // Igual que la medicación: los ya cargados en una línea, se abren para editarlos.
+  const [openDoctors, setOpenDoctors] = useState<Set<number>>(() => new Set());
+  // Filas agregadas en esta edición: solo en ellas se puede elegir un médico ya cargado.
+  const [addedDoctors, setAddedDoctors] = useState<Set<number>>(() => new Set());
+  const shiftOut = (s: Set<number>, index: number) => new Set([...s].filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)));
+  const addDoctor = () => {
+    setOpenDoctors((s) => new Set(s).add(doctors.length));
+    setAddedDoctors((s) => new Set(s).add(doctors.length));
+    set({ doctors: [...doctors, { contactId: null, role: doctors.length === 0 && !isPet ? t('medical.doctors.primary') : '', name: '', phone: '' }] });
+  };
+  const removeDoctor = (index: number) => {
+    setOpenDoctors((s) => shiftOut(s, index));
+    setAddedDoctors((s) => shiftOut(s, index));
+    set({ doctors: doctors.filter((_, j) => j !== index) });
+  };
+  /** Abrir para editar con los datos actuales (pudieron cambiar desde otra ficha). */
+  const openDoctor = (index: number) => {
+    setDoctor(index, liveDoctor(doctors[index]!));
+    setOpenDoctors((s) => new Set(s).add(index));
+  };
+  /** Los datos actuales del médico compartido (nombre y teléfono viven en el contacto). */
+  const liveDoctor = (d: Doctor): Doctor => {
+    const c = d.contactId ? savedContacts.get(d.contactId) : undefined;
+    return c ? { ...d, name: c.name, phone: c.phone } : d;
+  };
   const pickDoctor = (index: number, contactId: string) => {
     const c = contactId ? savedContacts.get(contactId) : undefined;
     setDoctor(index, c ? { contactId: c.id, name: c.name, phone: c.phone, role: doctors[index]!.role || c.specialty || '' } : { contactId: null, name: '', phone: '' });
@@ -184,7 +209,12 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       const entry = { contactId: d.contactId ?? null, role: d.role.trim(), name: d.name.trim(), phone: d.phone.trim() };
       if (!entry.name && !entry.phone) continue;
       const existing = entry.contactId ? savedContacts.get(entry.contactId) : undefined;
-      if (existing) {
+      // Sin tocar en esta ficha: vale lo del contacto (pudo cambiar desde otra ficha), no la copia vieja.
+      const before = (initial.doctors ?? []).find((x) => x.contactId && x.contactId === entry.contactId);
+      if (existing && before && before.name === entry.name && before.phone === entry.phone) {
+        entry.name = existing.name;
+        entry.phone = existing.phone;
+      } else if (existing) {
         if (existing.name !== entry.name || existing.phone !== entry.phone) await saveContact({ ...existing, name: entry.name, phone: entry.phone });
       } else {
         const created = { ...emptyContact(isPet ? 'vet' : 'doctor'), name: entry.name || entry.phone, phone: entry.phone, specialty: entry.role };
@@ -232,6 +262,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     else {
       setSaved(true);
       setOpenMeds(new Set());
+      setOpenDoctors(new Set());
+      setAddedDoctors(new Set());
     }
   }
 
@@ -516,10 +548,25 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
           </datalist>
           {doctors.map((d, i) => {
             const shared = sharedWith(d.contactId);
+            if (!openDoctors.has(i) && (d.name.trim() || d.phone.trim())) {
+              const live = liveDoctor(d);
+              return (
+                <div key={i} className="med-line" data-testid="doctor-line">
+                  <span className="med-line-text">{[doctorLabel(live), live.phone].filter(Boolean).join(' · ')}</span>
+                  <button className="icon-btn" type="button" onClick={() => openDoctor(i)} aria-label={t('medical.doctors.edit', { name: live.name })}>
+                    <Pencil size={16} />
+                  </button>
+                  <button className="icon-btn" type="button" onClick={() => removeDoctor(i)} aria-label={label('doctors.remove')}>
+                    <X size={16} />
+                  </button>
+                </div>
+              );
+            }
             return (
               <fieldset key={i} className="fieldset doctor-row" data-testid="doctor-row">
                 <legend>{t(isPet ? 'medical.pet.doctors.n' : 'medical.doctors.n', { n: i + 1 })}</legend>
-                {professionals.length > 0 && (
+                {/* Elegir uno ya cargado solo al agregar: en uno guardado reemplazaría al médico sin querer. */}
+                {addedDoctors.has(i) && professionals.length > 0 && (
                   <select className="select doctor-pick" aria-label={label('doctors.pick')} value={d.contactId ?? ''} onChange={(e) => pickDoctor(i, e.target.value)}>
                     <option value="">{label('doctors.new')}</option>
                     {professionals.map((c) => (
@@ -532,7 +579,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                 <input className="input" list="doctor-roles" aria-label={t('medical.doctors.role')} placeholder={label('doctors.rolePlaceholder')} value={d.role} onChange={(e) => setDoctor(i, { role: e.target.value })} />
                 <input className="input" aria-label={label('doctors.name')} placeholder={label('doctors.name')} value={d.name} onChange={(e) => setDoctor(i, { name: e.target.value })} />
                 <input className="input" type="tel" inputMode="tel" aria-label={t('medical.doctors.phone')} placeholder={t('medical.doctors.phone')} value={d.phone} onChange={(e) => setDoctor(i, { phone: e.target.value })} />
-                <button className="icon-btn" type="button" onClick={() => set({ doctors: doctors.filter((_, j) => j !== i) })} aria-label={label('doctors.remove')}>
+                <button className="icon-btn" type="button" onClick={() => removeDoctor(i)} aria-label={label('doctors.remove')}>
                   <X size={16} />
                 </button>
                 {shared.length > 0 && (
@@ -540,15 +587,18 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                     {t('medical.doctors.shared', { names: shared.join(', ') })}
                   </p>
                 )}
+                {(d.name.trim() || d.phone.trim()) && (
+                  <div className="row-end doctor-done">
+                    <button className="btn" type="button" onClick={() => setOpenDoctors((s) => new Set([...s].filter((j) => j !== i)))}>
+                      <Check size={16} /> {t('medical.medDone')}
+                    </button>
+                  </div>
+                )}
               </fieldset>
             );
           })}
           <div className="row-end">
-            <button
-              className="btn"
-              type="button"
-              onClick={() => set({ doctors: [...doctors, { contactId: null, role: doctors.length === 0 && !isPet ? t('medical.doctors.primary') : '', name: '', phone: '' }] })}
-            >
+            <button className="btn" type="button" onClick={addDoctor}>
               <Plus size={18} /> {label('doctors.add')}
             </button>
           </div>

@@ -322,6 +322,7 @@
       "phone": "Teléfono",
       "add": "Agregar médico",
       "remove": "Quitar médico",
+      "edit": "Editar {{name}}",
       "pick": "Elegir médico ya cargado",
       "new": "Nuevo médico",
       "shared": "Compartido con {{names}}: si cambiás nombre o teléfono, cambia en todas las fichas."

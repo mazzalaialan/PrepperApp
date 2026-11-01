@@ -155,6 +155,16 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
 
+  // Ya guardados, cada médico en una línea; al abrirlo no se puede cambiar por otro.
+  const doctorLines = page.getByTestId('doctor-line');
+  await expect(doctorLines).toHaveCount(2);
+  await expect(doctorLines.nth(0)).toHaveText('Pediatra: Dra. Gómez · 4777-8888');
+  await page.getByRole('button', { name: 'Editar Dra. Gómez' }).click();
+  await expect(page.getByRole('group', { name: 'Médico 1' }).getByLabel('Nombre del médico')).toHaveValue('Dra. Gómez');
+  await expect(page.getByLabel('Elegir médico ya cargado')).toHaveCount(0);
+  await page.getByRole('group', { name: 'Médico 1' }).getByRole('button', { name: 'Listo' }).click();
+  await expect(doctorLines).toHaveCount(2);
+
   // El mismo médico se comparte con otra ficha: se elige de los ya cargados.
   await page.goto('/#/first-aid/contacts');
   await family.nth(0).getByRole('link', { name: 'Ficha médica de Juan' }).click();
@@ -168,6 +178,7 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await juanDoctor.getByLabel('Teléfono').fill('4777-9999');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('doctor-line')).toHaveText('Médico de cabecera: Dra. Gómez · 4777-9999');
 
   // En Mis contactos: los médicos una sola vez, con para quién son; la obra social y lo escrito en las fichas.
   await page.goto('/#/first-aid/contacts');

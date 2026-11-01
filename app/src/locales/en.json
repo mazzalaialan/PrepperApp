@@ -322,6 +322,7 @@
       "phone": "Phone",
       "add": "Add doctor",
       "remove": "Remove doctor",
+      "edit": "Edit {{name}}",
       "pick": "Pick a saved doctor",
       "new": "New doctor",
       "shared": "Shared with {{names}}: changing name or phone changes it in every record."
