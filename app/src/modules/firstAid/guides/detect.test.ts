@@ -20,11 +20,23 @@ describe('¿ciudad o zona agreste?', () => {
     expect(obelisco.km).toBeLessThan(3);
   });
 
-  it('lejos de todo es zona agreste', () => {
-    // Puna de Atacama y meseta central de Santa Cruz.
+  it('en pueblos con bomberos o en ciudades turísticas, la ayuda está cerca', () => {
     for (const [lat, lon] of [
-      [-25.0, -67.6],
-      [-48.0, -70.0],
+      [-41.134, -71.31], // Bariloche
+      [-27.687, -67.616], // Fiambalá
+      [-26.85, -65.71], // Tafí del Valle
+    ]) {
+      expect(help(lat!, lon!).env, `${lat}, ${lon}`).toBe('city');
+    }
+  });
+
+  it('lejos de todo es zona agreste, aunque haya un caserío cerca', () => {
+    for (const [lat, lon] of [
+      [-25.0, -67.6], // Puna de Atacama
+      [-48.0, -70.0], // meseta central de Santa Cruz
+      [-32.65, -70.0], // Plaza de Mulas, Aconcagua
+      [-47.44, -70.93], // Bajo Caracoles, Ruta 40
+      [-27.3, -68.15], // Ruta 60 camino al Paso San Francisco
     ]) {
       const far = help(lat!, lon!);
       expect(far.env, `${lat}, ${lon}: ${far.name} a ${far.km} km`).toBe('wild');

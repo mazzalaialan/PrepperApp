@@ -33,11 +33,14 @@ export interface PlaceFinder {
   find(text: string): PlaceMatch | null;
   /** Si la región ("Argentina", "Santa Fe", "Texas"…) está cubierta por el nomenclátor. */
   covers(region: string): boolean;
-  /** La localidad (no paraje) más cercana a un punto. */
-  nearestTown(lat: number, lon: number): PlaceMatch | null;
+  /**
+   * La localidad más cercana con al menos esa relevancia (ver tools/places-data):
+   * 2000 = cualquier pueblo (no paraje); 3000 = parte de una ciudad o con población conocida.
+   */
+  nearestTown(lat: number, lon: number, minRank?: number): PlaceMatch | null;
 }
 
-/** Desde esta relevancia es una localidad (pueblo o ciudad), no un paraje (ver tools/places-data). */
+/** Desde esta relevancia es una localidad (pueblo o ciudad), no un paraje. */
 const TOWN_RANK = 2000;
 
 /** Arma el buscador a partir de los datos (separado para poder probarlo sin cargar el archivo). */
@@ -57,12 +60,12 @@ export function placeFinder(data: PlacesData): PlaceFinder {
     return !r || r === 'argentina' || provinces.includes(r);
   };
 
-  function nearestTown(lat: number, lon: number): PlaceMatch | null {
+  function nearestTown(lat: number, lon: number, minRank = TOWN_RANK): PlaceMatch | null {
     let best = -1;
     let bestD = Infinity;
     const k = Math.cos((lat * Math.PI) / 180);
     data.places.forEach((p, i) => {
-      if (p[4] < TOWN_RANK) return;
+      if (p[4] < minRank) return;
       const d = (p[2] - lat) ** 2 + ((p[3] - lon) * k) ** 2;
       if (d < bestD) {
         bestD = d;
