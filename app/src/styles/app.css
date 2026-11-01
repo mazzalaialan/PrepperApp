@@ -2308,3 +2308,28 @@ a.module-card:hover {
   margin: 0;
   padding-left: 18px;
 }
+
+/* ---------- Documentos agrupados ---------- */
+
+.doc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.doc-subgroup-title {
+  margin: 4px 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.doc-move {
+  display: flex;
+  gap: 4px;
+}
+
+.doc-sorting .icon-btn:disabled {
+  opacity: 0.3;
+}
+

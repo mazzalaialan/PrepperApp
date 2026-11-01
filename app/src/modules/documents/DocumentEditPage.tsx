@@ -1,18 +1,19 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Camera, ChevronLeft, ChevronRight, ImagePlus, Trash2 } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { compressImage, type CompressedImage } from '@/core/images/compress';
 import { newEntity } from '@/core/model/entity';
-import type { Attachment, PersonalDocument } from '@/core/model/types';
+import type { Attachment, DocumentCategory, PersonalDocument } from '@/core/model/types';
+import { useOwnerOptions } from './owners';
 import { Dialog } from '@/ui/Dialog';
 import { useBlobUrl } from '@/ui/useBlobUrl';
 import { DOCUMENT_LEAD_DAYS } from './expiry';
 import { documentPages, useDocuments } from './store';
 
-function emptyDocument(): PersonalDocument {
-  return newEntity<PersonalDocument>({ title: '', notes: '', tags: [], expiryDate: null });
+function emptyDocument(category: DocumentCategory, profileId: string | null): PersonalDocument {
+  return newEntity<PersonalDocument>({ title: '', notes: '', tags: [], expiryDate: null, category, profileId });
 }
 
 /** "dni, Familia , ,viaje" → ["dni", "Familia", "viaje"] */
@@ -38,11 +39,17 @@ export function DocumentEditPage() {
 }
 
 function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
-  // Un id nuevo por montaje (mismo criterio que en artículos).
-  const [initial] = useState(() => stored ?? emptyDocument());
+  const [params] = useSearchParams();
+  // Desde una ficha médica: nuevo documento médico de esa persona, y "volver" lleva a la ficha.
+  const fromProfile = params.get('profile');
+  const [initial] = useState(
+    () => stored ?? emptyDocument(params.get('category') === 'medical' ? 'medical' : 'general', fromProfile),
+  );
   const isNew = !stored;
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const owners = useOwnerOptions();
+  const backTo = fromProfile ? `/first-aid/medical/${fromProfile}` : '/documents';
   const { saveDocument, deleteDocument } = useDocuments();
   const [draft, setDraft] = useState(initial);
   const [tags, setTags] = useState(initial.tags.join(', '));
@@ -56,20 +63,20 @@ function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     await saveDocument({ ...draft, title: draft.title.trim(), tags: parseTags(tags) });
-    if (isNew) navigate(`/documents/${draft.id}`, { replace: true });
+    if (isNew) navigate(`/documents/${draft.id}${fromProfile ? `?profile=${fromProfile}` : ''}`, { replace: true });
     else setSaved(true);
   }
 
   async function handleDelete() {
     if (!stored || !window.confirm(t('documents.confirmDelete', { name: stored.title }))) return;
     await deleteDocument(stored.id);
-    navigate('/documents', { replace: true });
+    navigate(backTo, { replace: true });
   }
 
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/documents" aria-label={t('common.back')}>
+        <Link className="icon-btn" to={backTo} aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.title : t('documents.new')}</h1>
@@ -79,6 +86,26 @@ function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
         <div className="field">
           <label htmlFor="title">{t('documents.titleLabel')}</label>
           <input id="title" className="input" required value={draft.title} onChange={(e) => set({ title: e.target.value })} autoFocus={isNew} placeholder={t('documents.titlePlaceholder')} />
+        </div>
+        <div className="grid-2">
+          <div className="field">
+            <label htmlFor="category">{t('documents.category')}</label>
+            <select id="category" className="select" value={draft.category ?? 'general'} onChange={(e) => set({ category: e.target.value as DocumentCategory })}>
+              <option value="general">{t('documents.categories.general')}</option>
+              <option value="medical">{t('documents.categories.medical')}</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="owner">{t('documents.owner')}</label>
+            <select id="owner" className="select" value={draft.profileId ?? ''} onChange={(e) => set({ profileId: e.target.value || null })}>
+              <option value="">{t('documents.ownerGeneral')}</option>
+              {owners.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="field">
           <label htmlFor="expiry">{t('documents.expiry')}</label>

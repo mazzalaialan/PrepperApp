@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Trash2, X } from 'lucide-react';
+import { useDocuments } from '@/modules/documents/store';
 import { newEntity } from '@/core/model/entity';
 import type { Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
@@ -59,6 +60,47 @@ function ProfilePhoto({ profileId, name }: { profileId: string; name: string }) 
       onRemove={() => removePhoto(profileId)}
       testId="person-photo-file"
     />
+  );
+}
+
+/** Documentos de esta persona o mascota (estudios, recetas, carnet de vacunas…). */
+function ProfileDocuments({ profileId }: { profileId: string }) {
+  const { t, i18n } = useTranslation();
+  const documents = useDocuments((s) => s.documents);
+  const docs = useMemo(
+    () =>
+      [...documents.values()]
+        .filter((d) => d.profileId === profileId)
+        // El mismo orden que eligió en Documentos.
+        .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.title.localeCompare(b.title, i18n.language)),
+    [documents, profileId, i18n.language],
+  );
+  return (
+    <section className="card stack" aria-labelledby="profile-docs-title">
+      <h2 id="profile-docs-title" className="section-title" style={{ margin: 0 }}>{t('medical.documents')}</h2>
+      {docs.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>{t('medical.noDocuments')}</p>
+      ) : (
+        <ul className="list" data-testid="profile-documents">
+          {docs.map((d) => (
+            <li key={d.id}>
+              <Link className="list-row" to={`/documents/${d.id}?profile=${profileId}`}>
+                <FileText size={20} aria-hidden />
+                <span className="list-main">
+                  <span className="list-title">{d.title}</span>
+                  {d.category === 'medical' && <span className="list-sub">{t('documents.categories.medical')}</span>}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="row-end">
+        <Link className="btn" to={`/documents/new?profile=${profileId}&category=medical`}>
+          <Plus size={18} /> {t('medical.addDocument')}
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -149,6 +191,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       </div>
 
       {stored ? <ProfilePhoto profileId={stored.id} name={stored.name} /> : <p className="hint">{t('medical.photoAfterSave')}</p>}
+
+      {stored && <ProfileDocuments profileId={stored.id} />}
 
       <form className="stack" onSubmit={handleSubmit}>
         <section className="card stack">

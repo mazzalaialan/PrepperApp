@@ -78,6 +78,8 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
 
   const add = async (name: string, relationship: string, birth: string, phone: string, show = true) => {
     await page.goto('/#/first-aid/medical/new');
+    // Cambia solo el hash: esperar el formulario nuevo para no escribir sobre la ficha anterior.
+    await expect(page.getByRole('heading', { name: 'Nueva ficha' })).toBeVisible();
     await page.getByLabel('Nombre').fill(name);
     await page.getByLabel('Parentesco').fill(relationship);
     await page.getByLabel('Teléfono').fill(phone);
@@ -105,4 +107,44 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await expect(family.nth(1)).toContainText('Sin teléfono');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();
   await expect(page.getByLabel('Nombre')).toHaveValue('Tomi');
+
+  // Documentos de la ficha: se agregan desde ahí, ya asociados y como médicos.
+  await page.getByRole('link', { name: 'Agregar documento' }).click();
+  await expect(page.getByLabel('Categoría')).toHaveValue('medical');
+  await expect(page.getByLabel('De quién es')).toHaveText(/Tomi \(Hijo\)/);
+  await page.getByLabel('Título').fill('Carnet de vacunas');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/documents\/[0-9a-f-]{36}\?profile=/);
+  await page.getByRole('link', { name: 'Volver' }).click();
+  await expect(page.getByLabel('Nombre')).toHaveValue('Tomi');
+  await expect(page.getByTestId('profile-documents')).toContainText('Carnet de vacunas');
+
+  // Los generales no aparecen en la ficha; en Documentos van agrupados: generales y familia (por persona).
+  for (const title of ['Escritura de la casa', 'Póliza del auto']) {
+    await page.goto('/#/documents/new');
+    await expect(page.getByRole('heading', { name: 'Nuevo documento' })).toBeVisible();
+    await expect(page.getByLabel('De quién es')).toHaveValue('');
+    await page.getByLabel('Título').fill(title);
+    await page.getByRole('button', { name: 'Guardar' }).click();
+    await expect(page).toHaveURL(/documents\/[0-9a-f-]{36}$/);
+  }
+  await page.goto('/#/documents');
+  await expect(page.getByRole('heading', { name: 'Generales' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Familia' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tomi (Hijo)' })).toBeVisible();
+  const general = page.getByTestId('doc-group-general').locator('li');
+  await expect(general.nth(0)).toContainText('Escritura de la casa');
+
+  // Orden propio dentro del grupo, guardado.
+  await page.getByRole('button', { name: 'Ordenar' }).click();
+  await page.getByRole('button', { name: 'Subir Póliza del auto' }).click();
+  await expect(general.nth(0)).toContainText('Póliza del auto');
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await page.goto('/#/first-aid');
+  await page.goto('/#/documents');
+  await expect(general.nth(0)).toContainText('Póliza del auto');
+
+  await page.getByRole('button', { name: 'Solo médicos' }).click();
+  await expect(page.getByText('Escritura de la casa')).toHaveCount(0);
+  await expect(page.getByText('Carnet de vacunas')).toBeVisible();
 });

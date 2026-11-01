@@ -100,7 +100,15 @@ export interface PersonalDocument extends BaseEntity {
   tags: string[];
   /** Vencimiento del documento (DNI, pasaporte, licencia…). Ausente en los guardados antes de 0.7.4. */
   expiryDate?: IsoDay | null;
+  /** Médicos (estudios, recetas, carnet de vacunas…) o generales. Ausente = general. */
+  category?: DocumentCategory;
+  /** De quién es: una ficha médica (persona o mascota); ausente o null = general. */
+  profileId?: Id | null;
+  /** Posición elegida por el usuario dentro de su grupo; sin ordenar, van al final por título. */
+  order?: number;
 }
+
+export type DocumentCategory = 'general' | 'medical';
 
 export type AttachmentOwner = 'item' | 'document' | 'location' | 'waypoint' | 'medicalProfile';
 

@@ -20,6 +20,8 @@ interface DocumentsState {
   load: () => Promise<void>;
   clear: () => void;
   saveDocument: (d: PersonalDocument) => Promise<void>;
+  /** Guarda el orden elegido para los documentos de un grupo (ids en el orden nuevo). */
+  reorderDocuments: (ids: Id[]) => Promise<void>;
   deleteDocument: (id: Id) => Promise<void>;
   addPages: (documentId: Id, images: CompressedImage[]) => Promise<void>;
   removePage: (attachmentId: Id) => Promise<void>;
@@ -58,6 +60,18 @@ export const useDocuments = create<DocumentsState>((set, get) => {
       const saved = touch(d);
       await repos.documents.put(saved);
       set({ documents: new Map(get().documents).set(saved.id, saved) });
+    },
+
+    async reorderDocuments(ids) {
+      const documents = new Map(get().documents);
+      for (const [order, id] of ids.entries()) {
+        const doc = documents.get(id);
+        if (!doc || doc.order === order) continue;
+        const saved = touch({ ...doc, order });
+        await repos.documents.put(saved);
+        documents.set(id, saved);
+      }
+      set({ documents });
     },
 
     async deleteDocument(id) {
