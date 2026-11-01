@@ -458,7 +458,7 @@ Es un **módulo de la sección Meteorología**, separado de los mapas de Orienta
 | Capa | Fuente | Estado |
 |---|---|---|
 | Satélite (nubes de tormenta) | GOES‑19 infrarrojo banda 13 (NASA GIBS, WMS EPSG:3857). Cada 10 min, ~45 min de demora; se busca la última imagen con pedidos de 16×16 px (si falta responde un PNG vacío). Animación de 2 h (13 imágenes) | ✅ |
-| Radar de lluvia | RainViewer (13 imágenes, 2 h, teselas hasta zoom 7). En Argentina solo cubre el noreste: no publica los radares del SMN | ✅ (cobertura limitada) |
+| Radar de lluvia | RainViewer (13 imágenes, 2 h, teselas hasta zoom 7). En Argentina solo cubre el noreste (alcance de los radares de Brasil): el SMN, Chile y Uruguay no le comparten sus radares. Lluvia estimada por satélite: IMERG de la NASA (GIBS) se descartó por su demora de 6–7 h (el mapa muestra las últimas 2 h); la candidata es la lluvia del GOES‑19 (RRQPE, cada 10 min, AWS `noaa-goes19`), que viene en NetCDF y necesita el servidor para convertirla en imágenes | ✅ (cobertura limitada); RRQPE pendiente: servidor |
 | Clima por zona | Open-Meteo, una consulta con las 61 capitales: temperatura, lluvia o viento con los colores de nivel | ✅ |
 | Sismos | USGS, M2,5+ de la última semana, color por antigüedad | ✅ |
 | Alertas de desastres | GDACS (ONU y Comisión Europea): ciclones tropicales/huracanes, inundaciones, sequías, incendios forestales y erupciones, con nivel verde/naranja/rojo | ✅ |
