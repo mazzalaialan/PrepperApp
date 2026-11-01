@@ -232,6 +232,18 @@
       "rabiesShort": "rabies {{ago}}",
       "doctor": "Vet",
       "doctorPlaceholder": "Vet clinic, phone",
+      "doctors": {
+        "title": "Vets",
+        "empty": "No vet yet. If you already added one for another pet, you can pick it.",
+        "n": "Vet {{n}}",
+        "rolePlaceholder": "What for (e.g.: regular, 24 h emergency)",
+        "roles": ["Regular vet", "24 h emergency", "Specialist"],
+        "name": "Vet's name",
+        "pick": "Pick a saved vet",
+        "new": "New vet",
+        "add": "Add vet",
+        "remove": "Remove vet"
+      },
       "conditionsPlaceholder": "E.g.: hip dysplasia, epilepsy",
       "allergiesPlaceholder": "Drugs, food, insect stings"
     },
@@ -309,7 +321,10 @@
       "name": "Doctor's name",
       "phone": "Phone",
       "add": "Add doctor",
-      "remove": "Remove doctor"
+      "remove": "Remove doctor",
+      "pick": "Pick a saved doctor",
+      "new": "New doctor",
+      "shared": "Shared with {{names}}: changing name or phone changes it in every record."
     },
     "insurance": {
       "title": "Health insurance",
@@ -357,7 +372,8 @@
     "doctor": "doctor",
     "insuranceEmergency": "{{name}} emergencies",
     "insuranceOf": "{{name}}'s health insurance",
-    "vetOf": "{{name}}'s vet",
+    "vet": "vet",
+    "specialty": "Specialty",
     "emergencyContactOf": "{{name}}'s emergency contact",
     "familyNoPhone": "No phone: add it in their medical record",
     "minor": "minor",
@@ -374,6 +390,8 @@
       "medical": "Health center",
       "hospital": "Hospital",
       "civilDefense": "Civil Defense",
+      "doctor": "Doctor",
+      "vet": "Vet",
       "other": "Other"
     },
     "name": "Name",

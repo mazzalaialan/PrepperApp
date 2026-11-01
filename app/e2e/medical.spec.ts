@@ -155,13 +155,30 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
 
-  // En Mis contactos: además de la familia, los médicos, la obra social y contactos escritos en las fichas.
+  // El mismo médico se comparte con otra ficha: se elige de los ya cargados.
   await page.goto('/#/first-aid/contacts');
+  await family.nth(0).getByRole('link', { name: 'Ficha médica de Juan' }).click();
+  await expect(page.locator('.page-title').last()).toHaveText('Juan');
+  await page.getByRole('button', { name: 'Agregar médico' }).click();
+  const juanDoctor = page.getByRole('group', { name: 'Médico 1' });
+  await juanDoctor.getByLabel('Elegir médico ya cargado').selectOption({ label: 'Dra. Gómez (Pediatra)' });
+  await expect(juanDoctor.getByLabel('Teléfono')).toHaveValue('4777-8888');
+  await expect(juanDoctor).toContainText('Compartido con Tomi');
+  // Cambiar el teléfono desde acá lo cambia para todas las fichas.
+  await juanDoctor.getByLabel('Teléfono').fill('4777-9999');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
+
+  // En Mis contactos: los médicos una sola vez, con para quién son; la obra social y lo escrito en las fichas.
+  await page.goto('/#/first-aid/contacts');
+  const saved = page.getByTestId('my-contacts');
+  await expect(saved.locator('li')).toHaveCount(2);
+  await expect(saved).toContainText('Dra. Gómez');
+  await expect(saved).toContainText('Médico · Pediatra · Pediatra de Tomi · Médico de cabecera de Juan');
+  await expect(saved.getByRole('link', { name: '4777-9999' })).toBeVisible();
+  await expect(saved).toContainText('Psicólogo de Tomi');
   const fromFichas = page.getByTestId('ficha-contacts').locator('li');
-  await expect(fromFichas).toHaveCount(4);
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Pediatra: Dra. Gómez');
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Pediatra de Tomi');
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Psicólogo: Lic. Ruiz');
+  await expect(fromFichas).toHaveCount(2);
   await expect(page.getByTestId('ficha-contacts')).toContainText('Emergencias de OSDE');
   await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '0810-888-7788' })).toHaveAttribute('href', 'tel:08108887788');
   await expect(page.getByTestId('ficha-contacts')).toContainText('Contacto de emergencia de Tomi');

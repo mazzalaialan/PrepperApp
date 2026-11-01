@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Search, Stethoscope, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
-import { doctorLabel, fichaContacts, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
+import { doctorLabel, doctorUses, fichaContacts, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
@@ -17,6 +17,9 @@ export function ContactsPage() {
     () => [...contacts.values()].filter((c) => c.kind !== 'radio').sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
     [contacts, i18n.language],
   );
+  // Médicos compartidos: en qué fichas están ("Pediatra de Tomi").
+  const profiles = useMedical((s) => s.profiles);
+  const uses = useMemo(() => doctorUses(profiles, t), [profiles, t]);
 
   return (
     <div className="stack">
@@ -69,7 +72,9 @@ export function ContactsPage() {
                 <KindIcon kind={c.kind} />
                 <span className="list-main">
                   <span className="list-title">{c.name}</span>
-                  <span className="list-sub">{t(`emergency.kind.${c.kind}`)}</span>
+                  <span className="list-sub">
+                    {[t(`emergency.kind.${c.kind}`), c.specialty, ...(uses.get(c.id) ?? [])].filter(Boolean).join(' · ')}
+                  </span>
                   <MapLink address={c.address} lat={c.lat} lon={c.lon} />
                   {c.notes && <span className="list-sub">{c.notes}</span>}
                 </span>
@@ -120,6 +125,7 @@ function MyDataSection() {
   const { t } = useTranslation();
   const profiles = useMedical((s) => s.profiles);
   const me = useMemo(() => [...profiles.values()].find((p) => p.kind === 'person' && p.isMe), [profiles]);
+  const savedContacts = useContacts((s) => s.contacts);
   const loaded = useMedical((s) => s.loaded);
   if (!loaded) return null;
   if (!me) {
@@ -179,12 +185,17 @@ function MyDataSection() {
         {(me.doctors ?? []).length > 0 && (
           <>
             <dt>{t('medical.doctors.title')}</dt>
-            {me.doctors!.map((d, i) => (
-              <dd key={i}>
-                {doctorLabel(d)}
-                {d.phone && <PhoneActions phone={d.phone} />}
-              </dd>
-            ))}
+            {me.doctors!.map((d, i) => {
+              // Compartido: los datos actuales están en el contacto.
+              const live = d.contactId ? savedContacts.get(d.contactId) : undefined;
+              const doctor = live ? { ...d, name: live.name, phone: live.phone } : d;
+              return (
+                <dd key={i}>
+                  {doctorLabel(doctor)}
+                  {doctor.phone && <PhoneActions phone={doctor.phone} />}
+                </dd>
+              );
+            })}
           </>
         )}
         {(insuranceText || ins?.emergencyPhone) && (

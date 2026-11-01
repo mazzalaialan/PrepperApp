@@ -232,6 +232,18 @@
       "rabiesShort": "antirrábica {{ago}}",
       "doctor": "Veterinario",
       "doctorPlaceholder": "Veterinaria, teléfono",
+      "doctors": {
+        "title": "Veterinarios",
+        "empty": "Sin veterinario cargado. Si ya cargaste uno en otra mascota, lo podés elegir.",
+        "n": "Veterinario {{n}}",
+        "rolePlaceholder": "Para qué (ej.: de cabecera, guardia 24 h)",
+        "roles": ["Veterinario de cabecera", "Guardia 24 h", "Especialista"],
+        "name": "Nombre del veterinario",
+        "pick": "Elegir veterinario ya cargado",
+        "new": "Nuevo veterinario",
+        "add": "Agregar veterinario",
+        "remove": "Quitar veterinario"
+      },
       "conditionsPlaceholder": "Ej.: displasia de cadera, epilepsia",
       "allergiesPlaceholder": "Medicamentos, alimentos, picaduras"
     },
@@ -309,7 +321,10 @@
       "name": "Nombre del médico",
       "phone": "Teléfono",
       "add": "Agregar médico",
-      "remove": "Quitar médico"
+      "remove": "Quitar médico",
+      "pick": "Elegir médico ya cargado",
+      "new": "Nuevo médico",
+      "shared": "Compartido con {{names}}: si cambiás nombre o teléfono, cambia en todas las fichas."
     },
     "insurance": {
       "title": "Obra social / prepaga",
@@ -357,7 +372,8 @@
     "doctor": "Médico",
     "insuranceEmergency": "Emergencias de {{name}}",
     "insuranceOf": "Obra social de {{name}}",
-    "vetOf": "Veterinario de {{name}}",
+    "vet": "Veterinario",
+    "specialty": "Especialidad",
     "emergencyContactOf": "Contacto de emergencia de {{name}}",
     "familyNoPhone": "Sin teléfono: agregalo en su ficha médica",
     "minor": "menor de edad",
@@ -374,6 +390,8 @@
       "medical": "Centro de salud",
       "hospital": "Hospital",
       "civilDefense": "Defensa Civil",
+      "doctor": "Médico",
+      "vet": "Veterinario",
       "other": "Otro"
     },
     "name": "Nombre",

@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import type { Id, Medication, MedicalProfile } from '@/core/model/types';
+import type { Doctor, Id, Medication, MedicalProfile } from '@/core/model/types';
 import { medTimes, phoneIn } from './medicalStore';
 
 export { phoneIn };
@@ -33,6 +33,20 @@ export function doctorLabel(d: { role: string; name: string }): string {
   return [d.role, d.name].filter(Boolean).join(': ');
 }
 
+/** "Pediatra de Tomi", "Veterinario de Firulais". */
+export function doctorUse(d: Doctor, p: MedicalProfile, t: TFunction): string {
+  return t('emergency.doctorOf', { role: d.role || t(p.kind === 'pet' ? 'emergency.vet' : 'emergency.doctor'), name: p.name });
+}
+
+/** Para cada médico compartido, en qué fichas está y como qué. */
+export function doctorUses(profiles: Map<Id, MedicalProfile>, t: TFunction): Map<Id, string[]> {
+  const uses = new Map<Id, string[]>();
+  for (const p of profiles.values()) {
+    for (const d of p.doctors ?? []) if (d.contactId) uses.set(d.contactId, [...(uses.get(d.contactId) ?? []), doctorUse(d, p, t)]);
+  }
+  return uses;
+}
+
 export interface FichaContact {
   /** Quién es ("Psiquiatra: Dr. Pérez", "Escuela 4222-3333"). */
   text: string;
@@ -57,10 +71,12 @@ export function fichaContacts(profiles: Map<Id, MedicalProfile>, t: TFunction): 
     } else byPhone.set(key, { text: text.trim(), phone: phone.trim(), roles: [role] });
   };
   for (const p of profiles.values()) {
-    if (p.kind === 'pet') {
-      if (p.doctor.trim()) add(p.doctor, phoneIn(p.doctor), t('emergency.vetOf', { name: p.name }));
-    } else {
-      for (const d of p.doctors ?? []) add(doctorLabel(d) || d.phone, d.phone, t('emergency.doctorOf', { role: d.role || t('emergency.doctor'), name: p.name }));
+    // Los médicos compartidos están en los contactos guardados; acá solo los que no se guardaron todavía.
+    for (const d of p.doctors ?? []) {
+      if (d.contactId) continue;
+      add(doctorLabel(d) || d.phone, d.phone, doctorUse(d, p, t));
+    }
+    if (p.kind !== 'pet') {
       const ins = p.insurance;
       if (ins?.emergencyPhone.trim()) {
         add(t('emergency.insuranceEmergency', { name: ins.name || t('medical.insurance.title') }), ins.emergencyPhone, t('emergency.insuranceOf', { name: p.name }));

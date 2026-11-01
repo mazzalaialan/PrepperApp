@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useDocuments } from '@/modules/documents/store';
+import { emptyContact } from '@/modules/emergency/ContactEditPage';
+import { useContacts } from '@/modules/emergency/store';
 import { newEntity } from '@/core/model/entity';
 import type { Doctor, EmergencyContactRef, HealthInsurance, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
@@ -148,6 +150,22 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   const contacts = draft.emergencyContacts ?? [];
   const doctors = draft.doctors ?? [];
   const setDoctor = (index: number, changes: Partial<Doctor>) => set({ doctors: doctors.map((d, i) => (i === index ? { ...d, ...changes } : d)) });
+  // Médicos (o veterinarios) ya cargados, para elegirlos en lugar de escribirlos otra vez.
+  const savedContacts = useContacts((s) => s.contacts);
+  const saveContact = useContacts((s) => s.save);
+  const professionals = useMemo(
+    () => [...savedContacts.values()].filter((c) => c.kind === (isPet ? 'vet' : 'doctor')).sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
+    [savedContacts, isPet, i18n.language],
+  );
+  /** Otras fichas que comparten este médico. */
+  const sharedWith = (contactId: string | null | undefined) =>
+    contactId
+      ? [...allProfiles.values()].filter((p) => p.id !== draft.id && (p.doctors ?? []).some((d) => d.contactId === contactId)).map((p) => p.name)
+      : [];
+  const pickDoctor = (index: number, contactId: string) => {
+    const c = contactId ? savedContacts.get(contactId) : undefined;
+    setDoctor(index, c ? { contactId: c.id, name: c.name, phone: c.phone, role: doctors[index]!.role || c.specialty || '' } : { contactId: null, name: '', phone: '' });
+  };
   const insurance = draft.insurance ?? emptyInsurance();
   const setInsurance = (changes: Partial<HealthInsurance>) => set({ insurance: { ...insurance, ...changes } });
   const setContact = (index: number, changes: Partial<EmergencyContactRef>) =>
@@ -159,10 +177,22 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    // Los vacíos no se guardan.
-    const doctors = isPet
-      ? []
-      : (draft.doctors ?? []).map((d) => ({ role: d.role.trim(), name: d.name.trim(), phone: d.phone.trim() })).filter((d) => d.name || d.phone);
+    // Los vacíos no se guardan. Cada médico queda como contacto compartido: si ya
+    // existía se actualizan sus datos (valen para todas las fichas), si no se crea.
+    const doctors: Doctor[] = [];
+    for (const d of draft.doctors ?? []) {
+      const entry = { contactId: d.contactId ?? null, role: d.role.trim(), name: d.name.trim(), phone: d.phone.trim() };
+      if (!entry.name && !entry.phone) continue;
+      const existing = entry.contactId ? savedContacts.get(entry.contactId) : undefined;
+      if (existing) {
+        if (existing.name !== entry.name || existing.phone !== entry.phone) await saveContact({ ...existing, name: entry.name, phone: entry.phone });
+      } else {
+        const created = { ...emptyContact(isPet ? 'vet' : 'doctor'), name: entry.name || entry.phone, phone: entry.phone, specialty: entry.role };
+        await saveContact(created);
+        entry.contactId = created.id;
+      }
+      doctors.push(entry);
+    }
     const ins = draft.insurance ?? emptyInsurance();
     const insurance = isPet
       ? emptyInsurance()
@@ -181,12 +211,10 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       emergencyContacts: contacts,
       doctors,
       insurance,
-      // En personas, respaldo en texto para versiones anteriores; en mascotas es el veterinario.
-      doctor: isPet
-        ? draft.doctor.trim()
-        : [...doctors.map((d) => [doctorLabel(d), d.phone].filter(Boolean).join(' ')), [insurance.name, insurance.plan, insurance.memberNumber].filter(Boolean).join(' ')]
-            .filter(Boolean)
-            .join(' / '),
+      // Respaldo en texto para versiones anteriores.
+      doctor: [...doctors.map((d) => [doctorLabel(d), d.phone].filter(Boolean).join(' ')), [insurance.name, insurance.plan, insurance.memberNumber].filter(Boolean).join(' ')]
+        .filter(Boolean)
+        .join(' / '),
       // Respaldo en texto para versiones anteriores de la app.
       emergencyContact: contacts.map((c) => (c.profileId ? contactName(c.profileId) : c.text)).join(' / '),
       // Las filas de medicación vacías no se guardan.
@@ -478,33 +506,53 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
           </div>
         </section>
 
-        {!isPet && (
-          <section className="card stack" aria-labelledby="doctors-title">
-            <h2 id="doctors-title" className="section-title" style={{ margin: 0 }}>{t('medical.doctors.title')}</h2>
-            {doctors.length === 0 && <p className="hint" style={{ margin: 0 }}>{t('medical.doctors.empty')}</p>}
-            <datalist id="doctor-roles">
-              {(t('medical.doctors.roles', { returnObjects: true }) as string[]).map((r) => (
-                <option key={r} value={r} />
-              ))}
-            </datalist>
-            {doctors.map((d, i) => (
+        <section className="card stack" aria-labelledby="doctors-title">
+          <h2 id="doctors-title" className="section-title" style={{ margin: 0 }}>{label('doctors.title')}</h2>
+          {doctors.length === 0 && <p className="hint" style={{ margin: 0 }}>{label('doctors.empty')}</p>}
+          <datalist id="doctor-roles">
+            {(t(isPet ? 'medical.pet.doctors.roles' : 'medical.doctors.roles', { returnObjects: true }) as string[]).map((r) => (
+              <option key={r} value={r} />
+            ))}
+          </datalist>
+          {doctors.map((d, i) => {
+            const shared = sharedWith(d.contactId);
+            return (
               <fieldset key={i} className="fieldset doctor-row" data-testid="doctor-row">
-                <legend>{t('medical.doctors.n', { n: i + 1 })}</legend>
-                <input className="input" list="doctor-roles" aria-label={t('medical.doctors.role')} placeholder={t('medical.doctors.rolePlaceholder')} value={d.role} onChange={(e) => setDoctor(i, { role: e.target.value })} />
-                <input className="input" aria-label={t('medical.doctors.name')} placeholder={t('medical.doctors.name')} value={d.name} onChange={(e) => setDoctor(i, { name: e.target.value })} />
+                <legend>{t(isPet ? 'medical.pet.doctors.n' : 'medical.doctors.n', { n: i + 1 })}</legend>
+                {professionals.length > 0 && (
+                  <select className="select doctor-pick" aria-label={label('doctors.pick')} value={d.contactId ?? ''} onChange={(e) => pickDoctor(i, e.target.value)}>
+                    <option value="">{label('doctors.new')}</option>
+                    {professionals.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {[c.name, c.specialty && `(${c.specialty})`].filter(Boolean).join(' ')}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <input className="input" list="doctor-roles" aria-label={t('medical.doctors.role')} placeholder={label('doctors.rolePlaceholder')} value={d.role} onChange={(e) => setDoctor(i, { role: e.target.value })} />
+                <input className="input" aria-label={label('doctors.name')} placeholder={label('doctors.name')} value={d.name} onChange={(e) => setDoctor(i, { name: e.target.value })} />
                 <input className="input" type="tel" inputMode="tel" aria-label={t('medical.doctors.phone')} placeholder={t('medical.doctors.phone')} value={d.phone} onChange={(e) => setDoctor(i, { phone: e.target.value })} />
-                <button className="icon-btn" type="button" onClick={() => set({ doctors: doctors.filter((_, j) => j !== i) })} aria-label={t('medical.doctors.remove')}>
+                <button className="icon-btn" type="button" onClick={() => set({ doctors: doctors.filter((_, j) => j !== i) })} aria-label={label('doctors.remove')}>
                   <X size={16} />
                 </button>
+                {shared.length > 0 && (
+                  <p className="hint doctor-shared" style={{ margin: 0 }}>
+                    {t('medical.doctors.shared', { names: shared.join(', ') })}
+                  </p>
+                )}
               </fieldset>
-            ))}
-            <div className="row-end">
-              <button className="btn" type="button" onClick={() => set({ doctors: [...doctors, { role: doctors.length === 0 ? t('medical.doctors.primary') : '', name: '', phone: '' }] })}>
-                <Plus size={18} /> {t('medical.doctors.add')}
-              </button>
-            </div>
-          </section>
-        )}
+            );
+          })}
+          <div className="row-end">
+            <button
+              className="btn"
+              type="button"
+              onClick={() => set({ doctors: [...doctors, { contactId: null, role: doctors.length === 0 && !isPet ? t('medical.doctors.primary') : '', name: '', phone: '' }] })}
+            >
+              <Plus size={18} /> {label('doctors.add')}
+            </button>
+          </div>
+        </section>
 
         {!isPet && (
           <section className="card stack" aria-labelledby="insurance-title">
@@ -531,7 +579,6 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
         )}
 
         <section className="card stack">
-          {isPet && text('doctor', false)}
           {text('notes')}
         </section>
 

@@ -143,7 +143,7 @@ export interface Route extends BaseEntity {
 }
 
 /** `radio`: frecuencia guardada por el usuario (p. ej. la que le dieron en un refugio). */
-export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other' | 'radio';
+export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other' | 'radio' | 'doctor' | 'vet';
 
 /** Contacto de emergencia: comisaría, bomberos, hospital, médico, familiar… */
 export interface EmergencyContact extends BaseEntity {
@@ -162,6 +162,8 @@ export interface EmergencyContact extends BaseEntity {
   frequency?: string;
   /** Tono (CTCSS/DCS), canal u otro dato para sintonizar. */
   tone?: string;
+  /** Médicos y veterinarios: especialidad ("Psiquiatra", "Pediatra"). */
+  specialty?: string;
 }
 
 export interface HouseholdMember extends BaseEntity {
@@ -195,9 +197,15 @@ export type ProfileKind = 'person' | 'pet';
 export type PetSpecies = 'dog' | 'cat' | 'other';
 
 /** Ficha médica de una persona o una mascota del grupo familiar. */
-/** Un profesional de la salud de la persona: de cabecera, psicólogo, psiquiatra… */
+/**
+ * Un profesional de la salud de la persona o mascota (de cabecera, psiquiatra,
+ * veterinario…). Desde 0.11.1 es un contacto compartido (`contactId`): el mismo
+ * médico puede estar en varias fichas y sus datos se cambian en un solo lugar.
+ * `name` y `phone` quedan como copia para versiones anteriores.
+ */
 export interface Doctor {
-  /** Especialidad o rol ("Médico de cabecera", "Psiquiatra"). */
+  contactId?: Id | null;
+  /** Para esta persona ("Médico de cabecera", "Psiquiatra"). */
   role: string;
   name: string;
   phone: string;
@@ -235,7 +243,7 @@ export interface MedicalProfile extends BaseEntity {
    * queda como texto de respaldo para versiones anteriores.
    */
   emergencyContacts?: EmergencyContactRef[];
-  /** Solo personas (desde 0.11.1): antes iban en el texto de `doctor`, que queda como respaldo. */
+  /** Médicos (en mascotas, veterinarios), desde 0.11.1: antes iban en el texto de `doctor`, que queda como respaldo. */
   doctors?: Doctor[];
   insurance?: HealthInsurance;
   birthDate: IsoDay | null;

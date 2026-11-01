@@ -69,6 +69,17 @@ function ContactForm({ stored }: { stored: EmergencyContact | undefined }) {
           <label htmlFor="name">{t('emergency.name')}</label>
           <input id="name" className="input" required value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder={t('emergency.namePlaceholder')} />
         </div>
+        {(draft.kind === 'doctor' || draft.kind === 'vet') && (
+          <div className="field">
+            <label htmlFor="specialty">{t('emergency.specialty')}</label>
+            <input id="specialty" className="input" list="contact-specialties" value={draft.specialty ?? ''} onChange={(e) => set({ specialty: e.target.value })} />
+            <datalist id="contact-specialties">
+              {(t('medical.doctors.roles', { returnObjects: true }) as string[]).map((r) => (
+                <option key={r} value={r} />
+              ))}
+            </datalist>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="phone">{t('emergency.phone')}</label>
           <input id="phone" className="input" type="tel" value={draft.phone} onChange={(e) => set({ phone: e.target.value })} />

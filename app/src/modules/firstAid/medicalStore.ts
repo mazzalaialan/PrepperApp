@@ -119,8 +119,8 @@ export function normalizeProfile(p: MedicalProfile): MedicalProfile {
     isMe: p.isMe ?? false,
     // Antes de 0.11.1 había un solo contacto, en texto.
     emergencyContacts: p.emergencyContacts ?? (p.emergencyContact?.trim() ? [{ profileId: null, text: p.emergencyContact.trim() }] : []),
-    // Antes de 0.11.1 médico y obra social iban juntos en un texto: pasa como un médico, para revisarlo.
-    doctors: p.doctors ?? (p.kind !== 'pet' && p.doctor?.trim() ? [legacyDoctor(p.doctor)] : []),
+    // Antes de 0.11.1 médico y obra social (o el veterinario) iban en un texto: pasa como un médico, para revisarlo.
+    doctors: p.doctors ?? (p.doctor?.trim() ? [legacyDoctor(p.doctor)] : []),
     insurance: p.insurance ?? emptyInsurance(),
     medications: (p.medications ?? []).map((m) => ({ ...m, everyHours: m.everyHours ?? null, firstTime: m.firstTime ?? null })),
   };
