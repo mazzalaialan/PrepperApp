@@ -1165,6 +1165,18 @@
       "cityHint": "Help arrives in minutes: call right away and hold on until they arrive.",
       "wildHint": "Help may take hours: besides first aid, keep warm, find shelter and ask for rescue with your location."
     },
+    "detect": {
+      "button": "Detect from my location",
+      "busy": "Searching…",
+      "result": "Nearest: {{what}}, {{km}} km in a straight line (about {{minutes}} min by car). Over {{limit}} min = wilderness: {{env}} selected. You can change it by hand; if you are on foot far from a road, choose wilderness.",
+      "kind": {
+        "health": "health center {{name}}",
+        "fire": "fire station {{name}}",
+        "town": "{{name}}"
+      },
+      "nothing": "No help center found nearby: choose wilderness.",
+      "noLocation": "Could not get your location: choose manually."
+    },
     "first": {
       "title": "First things first",
       "protect": { "title": "1. Protect yourself.", "text": "Make sure the scene is safe before approaching (traffic, fire, wires, water, rocks)." },

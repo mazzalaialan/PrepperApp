@@ -1165,6 +1165,18 @@
       "cityHint": "La ayuda llega en minutos: llamá enseguida y sostené hasta que lleguen.",
       "wildHint": "La ayuda puede tardar horas: además de los primeros auxilios, abrigo, refugio y pedir rescate con tu ubicación."
     },
+    "detect": {
+      "button": "Detectar con mi ubicación",
+      "busy": "Buscando…",
+      "result": "Lo más cercano: {{what}}, a {{km}} km en línea recta (unos {{minutes}} min en auto). Más de {{limit}} min = zona agreste: elegí {{env}}. Podés cambiarlo a mano; si estás a pie lejos de un camino, poné zona agreste.",
+      "kind": {
+        "health": "centro de salud {{name}}",
+        "fire": "bomberos {{name}}",
+        "town": "{{name}}"
+      },
+      "nothing": "No se encontró ningún centro de atención cerca: elegí zona agreste.",
+      "noLocation": "No se pudo obtener tu ubicación: elegí a mano."
+    },
     "first": {
       "title": "Lo primero",
       "protect": { "title": "1. Protegete.", "text": "Mirá que el lugar sea seguro antes de acercarte (tránsito, fuego, cables, agua, piedras)." },

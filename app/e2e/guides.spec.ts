@@ -60,3 +60,35 @@ test('guía de primeros auxilios: lo primero, evaluación paso a paso y entorno'
   await expect(page.getByTestId('guide-calls').getByRole('link', { name: '0800-333-0160' })).toBeVisible();
   await expect(node).toContainText('camilla');
 });
+
+test('guía de primeros auxilios: detectar ciudad o zona agreste con la ubicación, sin conexión', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  // En la ciudad: la ayuda está a minutos.
+  await context.setGeolocation({ latitude: -34.6037, longitude: -58.3816 });
+  await page.goto('/#/first-aid/guides');
+  await page.getByRole('button', { name: 'Zona agreste' }).click();
+  await page.getByRole('button', { name: 'Detectar con mi ubicación' }).click();
+  await expect(page.getByTestId('guide-detect')).toContainText('elegí Ciudad');
+  await expect(page.getByRole('button', { name: 'Ciudad' })).toHaveAttribute('aria-pressed', 'true');
+
+  // Sin conexión, en la Puna, lejos de todo: zona agreste (los datos vienen incluidos en la app).
+  await context.setOffline(true);
+  await context.setGeolocation({ latitude: -25.0, longitude: -67.6 });
+  await page.getByRole('button', { name: 'Detectar con mi ubicación' }).click();
+  await expect(page.getByTestId('guide-detect')).toContainText('elegí Zona agreste');
+  await expect(page.getByRole('button', { name: 'Zona agreste' })).toHaveAttribute('aria-pressed', 'true');
+
+  // Igual se puede cambiar a mano.
+  await page.getByRole('button', { name: 'Ciudad' }).click();
+  await expect(page.getByRole('button', { name: 'Ciudad' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('guide-detect')).toHaveCount(0);
+  await context.setOffline(false);
+});
