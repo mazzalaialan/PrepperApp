@@ -1170,7 +1170,8 @@
     "label": "País",
     "AR": "Argentina",
     "CL": "Chile",
-    "UY": "Uruguay"
+    "UY": "Uruguay",
+    "hint": "Define los números de emergencia, el centro toxicológico y la guía de primeros auxilios. También se cambia en Contactos de emergencia y en la guía."
   },
   "about": {
     "title": "Acerca de",

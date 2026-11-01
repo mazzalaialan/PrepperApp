@@ -1170,7 +1170,8 @@
     "label": "Country",
     "AR": "Argentina",
     "CL": "Chile",
-    "UY": "Uruguay"
+    "UY": "Uruguay",
+    "hint": "Sets the emergency numbers, poison center and first aid guide. It can also be changed in Emergency contacts and in the guide."
   },
   "about": {
     "title": "About",

@@ -102,9 +102,13 @@ test('números de emergencia y guía según el país: Chile y Uruguay', async ({
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
+  // El país se elige en Ajustes (y también en Contactos y en la guía).
+  await page.goto('/#/settings');
+  await page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Chile' }).click();
+
   // Chile: números propios en Contactos.
   await page.goto('/#/first-aid/contacts');
-  await page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Chile' }).click();
+  await expect(page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Chile' })).toHaveAttribute('aria-pressed', 'true');
   const national = page.getByTestId('national-numbers');
   await expect(national).toContainText('Ambulancia (SAMU)');
   await expect(national.getByRole('link', { name: '131' })).toHaveAttribute('href', 'tel:131');
