@@ -1145,7 +1145,9 @@
     "include": {
       "medical": "Medical records (with photos, doctors and vets)",
       "contacts": "Contacts (police, neighbors, frequencies…)",
-      "documents": "Documents (with photos)"
+      "documents": "Documents (with photos)",
+      "inventory": "Inventory (items, locations, quantities and expiry dates)",
+      "waypoints": "Waypoints and routes"
     },
     "password": "Password for this file",
     "repeat": "Repeat password",
@@ -1197,7 +1199,9 @@
     },
     "contacts": "Contacts: {{added}} new, {{updated}} completed.",
     "documents": "Documents: {{added}} new ({{existing}} you already had).",
-    "neverDeletes": "Nothing you already have is deleted.",
+    "inventoryHint": "What you send is added to your family member's inventory: if they have locations with the same name (e.g. \"Pantry\"), quantities go there. Mostly useful if you share the house.",
+    "inventory": "Inventory: {{items}} new items, {{lots}} quantities (lots), {{locations}} locations and {{categories}} new categories.",
+    "waypoints": "Waypoints: {{waypoints}} new and {{routes}} routes.",    "neverDeletes": "Nothing you already have is deleted.",
     "apply": "Save",
     "nothingNew": "Nothing new",
     "applied": "Done: {{profiles}} new records, {{updated}} completed, {{contacts}} contacts and {{documents}} new documents."

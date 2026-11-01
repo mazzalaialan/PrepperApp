@@ -40,9 +40,17 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await doctor.getByLabel('Nombre del médico').fill('Dra. Gómez');
   await doctor.getByLabel('Teléfono').fill('4777-8888');
   await save(page, 'Tomi');
+  await page.goto('/#/orientation/waypoints/new');
+  await page.getByLabel('Nombre').fill('Refugio');
+  await page.getByLabel('Coordenadas').fill('-41.13, -71.31');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/waypoints\/[0-9a-f-]{36}$/);
 
   await page.goto('/#/settings/backup');
   await page.getByRole('link', { name: 'Compartir con un familiar' }).click();
+  // Se elige qué compartir: el inventario viene apagado; waypoints y rutas, prendidos.
+  await expect(page.getByLabel('Inventario (artículos, ubicaciones, cantidades y vencimientos)')).not.toBeChecked();
+  await expect(page.getByLabel('Waypoints y rutas')).toBeChecked();
   await page.getByLabel('Contraseña del envío').fill('envio-familia');
   await page.getByLabel('Repetir contraseña').fill('envio-familia');
   const downloadPromise = page.waitForEvent('download');
@@ -79,6 +87,8 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await expect(tomi.getByLabel('Dejar el mío: 0+')).toBeChecked();
   await tomi.getByLabel('Usar el que llega: A+').check();
   await expect(preview).toContainText('Contactos: 1 nuevos, 0 completados.');
+  await expect(juan.getByTestId('share-waypoints')).toHaveText('Waypoints: 1 nuevos y 0 rutas.');
+  await expect(juan.getByTestId('share-inventory')).toHaveCount(0);
   await juan.getByRole('button', { name: 'Guardar' }).click();
   await expect(juan.getByTestId('share-done')).toContainText('Listo: 1 fichas nuevas, 1 completadas, 1 contactos');
 
@@ -93,6 +103,8 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await juan.goto('/#/first-aid/contacts');
   await expect(juan.getByTestId('my-data')).toContainText('Juan');
   await expect(juan.getByTestId('my-contacts')).toContainText('Pediatra de Tomi');
+  await juan.goto('/#/orientation/waypoints');
+  await expect(juan.getByText('Refugio')).toBeVisible();
 
   // Recibir lo mismo otra vez no duplica nada.
   await juan.goto('/#/settings/share');

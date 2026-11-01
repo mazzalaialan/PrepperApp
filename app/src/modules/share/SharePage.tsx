@@ -1,11 +1,11 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { Fragment, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, FileUp, Share2 } from 'lucide-react';
 import { MIN_PASSWORD_LENGTH } from '@/core/security/vault';
 import { deliverFile } from '@/ui/files';
 import { mergeShare, type Conflict, type LocalData, type MergeDecisions } from './merge';
-import { applyMerge, collectShare, decodeShare, encodeShare, loadLocalData, SHARE_EXTENSION, ShareError, shareFileName, type SharePayload, type ShareSelection } from './package';
+import { applyMerge, collectShare, decodeShare, encodeShare, loadLocalData, SHARE_EXTENSION, SHARE_SECTIONS, ShareError, shareFileName, type SharePayload, type ShareSelection } from './package';
 
 /** Compartir fichas, contactos y documentos con un familiar, y recibir los suyos sin borrar nada. */
 export function SharePage() {
@@ -27,7 +27,7 @@ export function SharePage() {
 
 function SendSection() {
   const { t } = useTranslation();
-  const [selection, setSelection] = useState<ShareSelection>({ medical: true, contacts: true, documents: true });
+  const [selection, setSelection] = useState<ShareSelection>({ medical: true, contacts: true, documents: true, inventory: false, waypoints: true });
   const [password, setPassword] = useState('');
   const [repeat, setRepeat] = useState('');
   const [busy, setBusy] = useState(false);
@@ -61,9 +61,10 @@ function SendSection() {
   return (
     <form className="card stack" onSubmit={handleSubmit}>
       <h2 className="section-title" style={{ margin: 0 }}>{t('share.sendTitle')}</h2>
-      {option('medical')}
-      {option('contacts')}
-      {option('documents')}
+      {SHARE_SECTIONS.map((key) => (
+        <Fragment key={key}>{option(key)}</Fragment>
+      ))}
+      {selection.inventory && <p className="hint" style={{ margin: 0 }}>{t('share.inventoryHint')}</p>}
       <div className="grid-2">
         <div className="field">
           <label htmlFor="share-password">{t('share.password')}</label>
@@ -78,7 +79,7 @@ function SendSection() {
       {error && <p className="error" role="alert">{error}</p>}
       {message && <p className="success" role="status">{message}</p>}
       <div className="row-end">
-        <button className="btn btn-primary" type="submit" disabled={busy || !(selection.medical || selection.contacts || selection.documents)}>
+        <button className="btn btn-primary" type="submit" disabled={busy || !SHARE_SECTIONS.some((k) => selection[k])}>
           <Share2 size={18} /> {busy ? t('share.creating') : t('share.create')}
         </button>
       </div>
@@ -197,7 +198,7 @@ function MergePreview({ payload, local, onCancel, onApplied }: { payload: ShareP
     }
   }
 
-  const nothing = result.writes.profiles.length + result.writes.contacts.length + result.writes.documents.length + result.writes.attachments.length === 0;
+  const nothing = Object.values(result.writes).every((list) => list.length === 0);
 
   return (
     <div className="stack" data-testid="share-preview">
@@ -249,6 +250,8 @@ function MergePreview({ payload, local, onCancel, onApplied }: { payload: ShareP
       <ul className="share-list">
         <li>{t('share.contacts', { added: result.newContacts, updated: result.updatedContacts })}</li>
         <li>{t('share.documents', { added: result.newDocuments, existing: result.existingDocuments })}</li>
+        {result.inventory && <li data-testid="share-inventory">{t('share.inventory', result.inventory)}</li>}
+        {result.waypoints && <li data-testid="share-waypoints">{t('share.waypoints', result.waypoints)}</li>}
       </ul>
       <p className="hint" style={{ margin: 0 }}>{t('share.neverDeletes')}</p>
 

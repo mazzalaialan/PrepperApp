@@ -316,7 +316,10 @@ A diferencia del backup (que reemplaza todo y se abre con la contraseña propia)
   - *No viaja lo que depende de quién mira:* parentesco, "Yo", "Mostrar en contactos" y el orden de los documentos. Las fichas nuevas llegan sin parentesco.
   - *Contactos:* el mismo si tiene el mismo id o teléfono; solo se completan sus datos vacíos. Las referencias (médico de una ficha, contacto de emergencia que es otra ficha) se reubican a los ids locales.
   - *Documentos:* se agregan los que no están (por id), con sus fotos.
+  - *Waypoints:* el mismo si tiene el mismo id o el mismo nombre a menos de 30 m. *Rutas:* se agregan las que falten (por id o nombre), apuntando a los waypoints propios.
+  - *Inventario* (apagado por defecto): categorías del sistema por id y propias por nombre; ubicaciones por nombre dentro de la misma ubicación padre; artículos por nombre dentro de la misma categoría (se completan código, unidad, peso y notas vacíos); lotes y mínimos se agregan los que falten (por id), así recibir dos veces no duplica el stock. Pensado para quienes comparten la casa.
 - Recibir el mismo archivo dos veces no duplica nada.
+- **Regla para módulos nuevos (huerta y los que vengan):** todo módulo con datos del usuario suma su sección en `SHARE_SECTIONS` (`modules/share/package.ts`) y su regla de mezcla en `merge.ts`, con pruebas, siguiendo los mismos principios: no borrar, reconocer lo mismo por id o por un dato natural, completar lo vacío y no pisar lo que depende de quién mira.
 
 ---
 

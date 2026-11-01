@@ -1145,7 +1145,9 @@
     "include": {
       "medical": "Fichas médicas (con sus fotos, médicos y veterinarios)",
       "contacts": "Contactos (policía, vecinos, frecuencias…)",
-      "documents": "Documentos (con sus fotos)"
+      "documents": "Documentos (con sus fotos)",
+      "inventory": "Inventario (artículos, ubicaciones, cantidades y vencimientos)",
+      "waypoints": "Waypoints y rutas"
     },
     "password": "Contraseña del envío",
     "repeat": "Repetir contraseña",
@@ -1197,7 +1199,9 @@
     },
     "contacts": "Contactos: {{added}} nuevos, {{updated}} completados.",
     "documents": "Documentos: {{added}} nuevos ({{existing}} ya los tenías).",
-    "neverDeletes": "No se borra nada de lo que ya tenés.",
+    "inventoryHint": "Lo que llega se suma al inventario de tu familiar: si tienen ubicaciones con el mismo nombre (por ejemplo \"Despensa\"), las cantidades van ahí. Sirve sobre todo si comparten la casa.",
+    "inventory": "Inventario: {{items}} artículos nuevos, {{lots}} cantidades (lotes), {{locations}} ubicaciones y {{categories}} categorías nuevas.",
+    "waypoints": "Waypoints: {{waypoints}} nuevos y {{routes}} rutas.",    "neverDeletes": "No se borra nada de lo que ya tenés.",
     "apply": "Guardar",
     "nothingNew": "No hay nada nuevo",
     "applied": "Listo: {{profiles}} fichas nuevas, {{updated}} completadas, {{contacts}} contactos y {{documents}} documentos nuevos."

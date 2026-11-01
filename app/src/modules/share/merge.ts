@@ -1,8 +1,24 @@
 import { v7 as uuidv7 } from 'uuid';
 import { nowIso } from '@/core/model/entity';
-import type { Attachment, Doctor, EmergencyContact, EmergencyContactRef, Id, MedicalProfile, PersonalDocument, PetHealth } from '@/core/model/types';
+import type {
+  Attachment,
+  Category,
+  Doctor,
+  EmergencyContact,
+  EmergencyContactRef,
+  Id,
+  Item,
+  Location,
+  Lot,
+  MedicalProfile,
+  PersonalDocument,
+  PetHealth,
+  Route,
+  StockMin,
+  Waypoint,
+} from '@/core/model/types';
 import { emptyInsurance, emptyPetHealth, normalizeProfile } from '@/modules/firstAid/medicalStore';
-import type { SharePayload } from './package';
+import type { InventoryShare, SharePayload } from './package';
 
 /**
  * Mezcla lo que comparte un familiar con lo que ya hay (ARQUITECTURA §8.3):
@@ -16,6 +32,9 @@ export interface LocalData {
   contacts: EmergencyContact[];
   documents: PersonalDocument[];
   attachments: Attachment[];
+  inventory: InventoryShare;
+  waypoints: Waypoint[];
+  routes: Route[];
 }
 
 /** Datos sueltos de una ficha que pueden estar cargados distinto. */
@@ -68,10 +87,20 @@ export interface MergeResult {
   updatedContacts: number;
   newDocuments: number;
   existingDocuments: number;
+  /** Ausentes si el archivo no trae esa sección. */
+  inventory: { items: number; lots: number; locations: number; categories: number } | null;
+  waypoints: { waypoints: number; routes: number } | null;
   writes: {
     profiles: MedicalProfile[];
     contacts: EmergencyContact[];
     documents: PersonalDocument[];
+    categories: Category[];
+    locations: Location[];
+    items: Item[];
+    lots: Lot[];
+    stockMins: StockMin[];
+    waypoints: Waypoint[];
+    routes: Route[];
     /** Adjuntos nuevos y de qué adjunto del paquete salen sus bytes. */
     attachments: { attachment: Attachment; from: Id }[];
   };
@@ -131,7 +160,14 @@ function setField(p: MedicalProfile, f: ConflictField, value: string): MedicalPr
   return { ...p, [f]: value };
 }
 
-const PET_DATES = ['lastRabiesVaccine', 'lastSpeciesVaccine', 'lastDeworming', 'lastFleaTreatment'] as const;
+/** Distancia aproximada en metros (para reconocer el mismo waypoint). */
+function metersBetween(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const dLat = (a.lat - b.lat) * 111_320;
+  const dLon = (a.lon - b.lon) * 111_320 * Math.cos((a.lat * Math.PI) / 180);
+  return Math.hypot(dLat, dLon);
+}
+
+const PET_DATES =['lastRabiesVaccine', 'lastSpeciesVaccine', 'lastDeworming', 'lastFleaTreatment'] as const;
 
 /** ¿Es la misma persona? Mismo nombre y especie, y la fecha de nacimiento no se contradice. */
 function samePerson(a: MedicalProfile, b: MedicalProfile): boolean {
@@ -139,7 +175,22 @@ function samePerson(a: MedicalProfile, b: MedicalProfile): boolean {
 }
 
 export function mergeShare(local: LocalData, incoming: SharePayload, decisions: MergeDecisions): MergeResult {
-  const localIds = new Set([...local.profiles, ...local.contacts, ...local.documents, ...local.attachments].map((e) => e.id));
+  const inv = local.inventory;
+  const localIds = new Set(
+    [
+      ...local.profiles,
+      ...local.contacts,
+      ...local.documents,
+      ...local.attachments,
+      ...inv.categories,
+      ...inv.locations,
+      ...inv.items,
+      ...inv.lots,
+      ...inv.stockMins,
+      ...local.waypoints,
+      ...local.routes,
+    ].map((e) => e.id),
+  );
   const freshId = (id: Id) => (localIds.has(id) ? uuidv7() : id);
   const now = nowIso();
 
@@ -297,6 +348,123 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
     matches.push({ incoming: p, local: l, sameRecord, additions, conflicts });
   }
 
+  /** Fotos de lo que se agrega (artículos, ubicaciones, waypoints): las del paquete, con el dueño nuevo. */
+  const copyPhotos = (ownerType: Attachment['ownerType'], fromOwner: Id, toOwner: Id) => {
+    for (const a of incoming.attachments) {
+      if (a.ownerType === ownerType && a.ownerId === fromOwner && incoming.blobs[a.id]) {
+        attachmentWrites.push({ attachment: { ...a, id: freshId(a.id), ownerId: toOwner, updatedAt: now }, from: a.id });
+      }
+    }
+  };
+
+  // ---------- waypoints y rutas ----------
+  const waypointMap = new Map<Id, Id>();
+  const waypointWrites: Waypoint[] = [];
+  const routeWrites: Route[] = [];
+  let waypointSummary: MergeResult['waypoints'] = null;
+  if (incoming.waypoints) {
+    for (const w of incoming.waypoints) {
+      // El mismo punto: mismo id, o mismo nombre a menos de 30 m.
+      const found = local.waypoints.find((l) => l.id === w.id) ?? local.waypoints.find((l) => norm(l.name) === norm(w.name) && metersBetween(l, w) < 30);
+      if (found) {
+        waypointMap.set(w.id, found.id);
+        continue;
+      }
+      const id = freshId(w.id);
+      waypointMap.set(w.id, id);
+      waypointWrites.push({ ...w, id, updatedAt: now, deletedAt: null });
+      copyPhotos('waypoint', w.id, id);
+    }
+    for (const r of incoming.routes ?? []) {
+      if (local.routes.some((l) => l.id === r.id || norm(l.name) === norm(r.name))) continue;
+      const waypointIds = r.waypointIds.flatMap((id) => (waypointMap.has(id) ? [waypointMap.get(id)!] : []));
+      if (waypointIds.length < 2) continue;
+      routeWrites.push({ ...r, id: freshId(r.id), waypointIds, updatedAt: now, deletedAt: null });
+    }
+    waypointSummary = { waypoints: waypointWrites.length, routes: routeWrites.length };
+  }
+
+  // ---------- inventario ----------
+  const categoryWrites: Category[] = [];
+  const locationWrites: Location[] = [];
+  const itemWrites: Item[] = [];
+  const lotWrites: Lot[] = [];
+  const stockMinWrites: StockMin[] = [];
+  let inventorySummary: MergeResult['inventory'] = null;
+  if (incoming.inventory) {
+    const theirs = incoming.inventory;
+    // Categorías: las del sistema tienen el mismo id en todos lados; las propias, por nombre.
+    const categoryMap = new Map<Id, Id>();
+    for (const c of theirs.categories) {
+      const found = inv.categories.find((l) => l.id === c.id) ?? (c.isSystem ? undefined : inv.categories.find((l) => !l.isSystem && norm(l.name) === norm(c.name)));
+      if (found) categoryMap.set(c.id, found.id);
+      else if (!c.isSystem) {
+        const id = freshId(c.id);
+        categoryMap.set(c.id, id);
+        categoryWrites.push({ ...c, id, updatedAt: now, deletedAt: null });
+      }
+    }
+    // Ubicaciones: de arriba hacia abajo, la misma si se llama igual dentro de la misma ubicación.
+    const locationMap = new Map<Id, Id>();
+    const allLocations = [...inv.locations];
+    for (const l of [...theirs.locations].sort((a, b) => a.depth - b.depth)) {
+      const parentId = l.parentId ? (locationMap.get(l.parentId) ?? null) : null;
+      if (l.parentId && !parentId) continue;
+      const found = allLocations.find((x) => x.id === l.id) ?? allLocations.find((x) => x.parentId === parentId && norm(x.name) === norm(l.name));
+      if (found) {
+        locationMap.set(l.id, found.id);
+        continue;
+      }
+      const id = freshId(l.id);
+      locationMap.set(l.id, id);
+      const created = { ...l, id, parentId, waypointId: l.waypointId ? (waypointMap.get(l.waypointId) ?? null) : null, updatedAt: now, deletedAt: null };
+      locationWrites.push(created);
+      allLocations.push(created);
+      copyPhotos('location', l.id, id);
+    }
+    // Artículos: el mismo si tiene el mismo id o se llama igual en la misma categoría; se completan sus datos vacíos.
+    const itemMap = new Map<Id, Id>();
+    for (const it of theirs.items) {
+      const categoryId = categoryMap.get(it.categoryId);
+      if (!categoryId) continue;
+      const found = inv.items.find((x) => x.id === it.id) ?? inv.items.find((x) => x.categoryId === categoryId && norm(x.name) === norm(it.name));
+      if (found) {
+        itemMap.set(it.id, found.id);
+        const filled: Item = { ...found };
+        if (!filled.barcode && it.barcode) filled.barcode = it.barcode;
+        if (!filled.notes.trim() && it.notes.trim()) filled.notes = it.notes;
+        if (!filled.unit.trim() && it.unit.trim()) filled.unit = it.unit;
+        if (filled.weightGrams === null && it.weightGrams !== null) filled.weightGrams = it.weightGrams;
+        if (JSON.stringify(filled) !== JSON.stringify(found)) itemWrites.push({ ...filled, updatedAt: now });
+        continue;
+      }
+      const id = freshId(it.id);
+      itemMap.set(it.id, id);
+      itemWrites.push({ ...it, id, categoryId, updatedAt: now, deletedAt: null });
+      copyPhotos('item', it.id, id);
+    }
+    // Lotes: se agregan los que no están (por id: recibir dos veces no duplica el stock).
+    for (const lot of theirs.lots) {
+      const itemId = itemMap.get(lot.itemId);
+      const locationId = locationMap.get(lot.locationId);
+      if (!itemId || !locationId || inv.lots.some((x) => x.id === lot.id)) continue;
+      lotWrites.push({ ...lot, id: freshId(lot.id), itemId, locationId, updatedAt: now, deletedAt: null });
+    }
+    // Mínimos: los que faltan para ese artículo y ubicación.
+    for (const m of theirs.stockMins) {
+      const itemId = itemMap.get(m.itemId);
+      const locationId = locationMap.get(m.locationId);
+      if (!itemId || !locationId || inv.stockMins.some((x) => x.id === m.id || (x.itemId === itemId && x.locationId === locationId))) continue;
+      stockMinWrites.push({ ...m, id: freshId(m.id), itemId, locationId, updatedAt: now, deletedAt: null });
+    }
+    inventorySummary = {
+      items: itemWrites.filter((x) => !inv.items.some((l) => l.id === x.id)).length,
+      lots: lotWrites.length,
+      locations: locationWrites.length,
+      categories: categoryWrites.length,
+    };
+  }
+
   // ---------- documentos: los que no están se agregan ----------
   const documentWrites: PersonalDocument[] = [];
   let existingDocuments = 0;
@@ -322,6 +490,20 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
     updatedContacts,
     newDocuments: documentWrites.length,
     existingDocuments,
-    writes: { profiles: profileWrites, contacts: contactWrites, documents: documentWrites, attachments: attachmentWrites },
+    inventory: inventorySummary,
+    waypoints: waypointSummary,
+    writes: {
+      profiles: profileWrites,
+      contacts: contactWrites,
+      documents: documentWrites,
+      categories: categoryWrites,
+      locations: locationWrites,
+      items: itemWrites,
+      lots: lotWrites,
+      stockMins: stockMinWrites,
+      waypoints: waypointWrites,
+      routes: routeWrites,
+      attachments: attachmentWrites,
+    },
   };
 }

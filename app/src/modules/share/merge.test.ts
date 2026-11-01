@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newEntity } from '@/core/model/entity';
-import type { Attachment, EmergencyContact, MedicalProfile, PersonalDocument } from '@/core/model/types';
+import type { Attachment, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, Waypoint } from '@/core/model/types';
 import { emptyInsurance, normalizeProfile } from '@/modules/firstAid/medicalStore';
 import { mergeShare, type LocalData, type MergeDecisions } from './merge';
 import { decodeShare, encodeShare, ShareError, type SharePayload } from './package';
@@ -40,7 +40,15 @@ const payload = (fields: Partial<SharePayload>): SharePayload => ({
   ...fields,
 });
 
-const empty: LocalData = { profiles: [], contacts: [], documents: [], attachments: [] };
+const empty: LocalData = {
+  profiles: [],
+  contacts: [],
+  documents: [],
+  attachments: [],
+  inventory: { categories: [], locations: [], items: [], lots: [], stockMins: [] },
+  waypoints: [],
+  routes: [],
+};
 const none = (): MergeDecisions => ({ separate: new Set(), useTheirs: new Set() });
 
 describe('compartir con un familiar: mezcla', () => {
@@ -166,5 +174,92 @@ describe('compartir con un familiar: archivo', () => {
     expect((await decodeShare(bytes, 'clave-del-envio')).profiles[0]!.name).toBe('Ana');
     await expect(decodeShare(bytes, 'otra')).rejects.toEqual(new ShareError('wrong-password'));
     await expect(decodeShare(new TextEncoder().encode('{"hola":1}'), 'x')).rejects.toEqual(new ShareError('invalid-file'));
+  });
+});
+
+describe('compartir con un familiar: inventario, waypoints y rutas', () => {
+  const waypoint = (name: string, lat: number, lon: number): Waypoint => ({
+    ...newEntity<Waypoint>({ name, lat, lon, alt: null, icon: 'pin', notes: '', rainAlerts: false }),
+  });
+  const location = (name: string, parentId: string | null = null, depth = 1): Location =>
+    newEntity<Location>({ name, parentId, depth, notes: '', waypointId: null, kitType: null });
+  const item = (name: string, categoryId: string): Item =>
+    newEntity<Item>({
+      name,
+      categoryId,
+      notes: '',
+      barcode: null,
+      unit: '',
+      weightGrams: null,
+      favorite: false,
+      controlType: null,
+      alertsEnabled: null,
+      alertLeadDays: null,
+      alertCapacityPct: null,
+    });
+  const lot = (itemId: string, locationId: string, quantity: number): Lot =>
+    newEntity<Lot>({
+      itemId,
+      locationId,
+      quantity,
+      packageCount: null,
+      packageSize: null,
+      packageName: null,
+      packageTareGrams: null,
+      expiryDate: '2027-01-01',
+      manufactureDate: null,
+      shelfLifeMonths: null,
+      capacityTotal: null,
+      capacityRemaining: null,
+      capacityUnit: null,
+      notes: '',
+    });
+  const inventory = (fields: Partial<LocalData['inventory']>) => ({ categories: [], locations: [], items: [], lots: [], stockMins: [], ...fields });
+
+  it('waypoints: el mismo punto (nombre y a menos de 30 m) no se duplica; las rutas apuntan a los propios', () => {
+    const mine = waypoint('Refugio', -41.1, -71.3);
+    const theirs = waypoint('refugio', -41.10005, -71.30005);
+    const lake = waypoint('Lago', -41.2, -71.4);
+    const route = newEntity<Route>({ name: 'Al lago', waypointIds: [theirs.id, lake.id], notes: '' });
+    const r = mergeShare({ ...empty, waypoints: [mine] }, payload({ waypoints: [theirs, lake], routes: [route] }), none());
+    expect(r.waypoints).toEqual({ waypoints: 1, routes: 1 });
+    expect(r.writes.waypoints.map((w) => w.name)).toEqual(['Lago']);
+    expect(r.writes.routes[0]!.waypointIds).toEqual([mine.id, lake.id]);
+  });
+
+  it('inventario: ubicaciones y artículos con el mismo nombre se reusan; los lotes se suman una sola vez', () => {
+    const food = 'system-category-food';
+    const myPantry = location('Despensa');
+    const myRice = item('Arroz', food);
+    const theirPantry = location('despensa');
+    const theirShelf = location('Estante alto', theirPantry.id, 2);
+    const theirRice = { ...item('Arroz', food), barcode: '7790000000001' };
+    const theirBeans = item('Lentejas', food);
+    const local = { ...empty, inventory: inventory({ categories: [{ id: food } as never], locations: [myPantry], items: [myRice] }) };
+    const incoming = payload({
+      inventory: inventory({
+        categories: [{ id: food, isSystem: true } as never],
+        locations: [theirShelf, theirPantry],
+        items: [theirRice, theirBeans],
+        lots: [lot(theirRice.id, theirPantry.id, 5), lot(theirBeans.id, theirShelf.id, 2)],
+      }),
+    });
+    const r = mergeShare(local, incoming, none());
+    expect(r.inventory).toEqual({ items: 1, lots: 2, locations: 1, categories: 0 });
+    // El estante queda dentro de la despensa propia; el arroz es el propio, con el código que le faltaba.
+    expect(r.writes.locations[0]).toMatchObject({ name: 'Estante alto', parentId: myPantry.id });
+    expect(r.writes.items.find((x) => x.id === myRice.id)!.barcode).toBe('7790000000001');
+    expect(r.writes.lots[0]).toMatchObject({ itemId: myRice.id, locationId: myPantry.id, quantity: 5 });
+    // Recibir lo mismo otra vez (con lo ya guardado) no vuelve a sumar los lotes.
+    const after = {
+      ...local,
+      inventory: inventory({
+        categories: local.inventory.categories,
+        locations: [myPantry, ...r.writes.locations],
+        items: [...r.writes.items],
+        lots: r.writes.lots,
+      }),
+    };
+    expect(mergeShare(after, incoming, none()).writes.lots).toHaveLength(0);
   });
 });
