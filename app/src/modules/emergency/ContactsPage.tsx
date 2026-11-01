@@ -1,9 +1,9 @@
 import { Fragment, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Plus, Search, User } from 'lucide-react';
+import { ArrowLeft, Pencil, Plus, Search, Stethoscope, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
-import { medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
+import { fichaContacts, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
@@ -46,8 +46,6 @@ export function ContactsPage() {
         <p className="hint" style={{ margin: 0 }}>{t('emergency.localNote')}</p>
       </section>
 
-      <FamilySection />
-
       <section className="card stack" aria-labelledby="mine-title">
         <h2 id="mine-title" className="section-title" style={{ margin: 0 }}>{t('emergency.mineTitle')}</h2>
         <div className="row-end wrap">
@@ -58,9 +56,13 @@ export function ContactsPage() {
             <Plus size={20} /> {t('emergency.newContact')}
           </Link>
         </div>
+        <FamilyGroup />
+        <FichaContactsGroup />
         {mine.length === 0 ? (
           <p className="empty" style={{ margin: 0 }}>{t('emergency.noContacts')}</p>
         ) : (
+          <>
+          <h3 className="contact-group-title">{t('emergency.savedTitle')}</h3>
           <ul className="list contact-list" data-testid="my-contacts">
             {mine.map((c) => (
               <li key={c.id} className="contact-row">
@@ -81,9 +83,35 @@ export function ContactsPage() {
               </li>
             ))}
           </ul>
+          </>
         )}
       </section>
     </div>
+  );
+}
+
+/** Médicos, veterinarios y contactos de emergencia escritos en las fichas médicas. */
+function FichaContactsGroup() {
+  const { t } = useTranslation();
+  const profiles = useMedical((s) => s.profiles);
+  const items = useMemo(() => fichaContacts(profiles, t), [profiles, t]);
+  if (items.length === 0) return null;
+  return (
+    <>
+      <h3 className="contact-group-title">{t('emergency.fichaContactsTitle')}</h3>
+      <ul className="list contact-list" data-testid="ficha-contacts">
+        {items.map((c) => (
+          <li key={c.phone} className="contact-row">
+            <Stethoscope size={22} aria-hidden className="contact-icon" />
+            <span className="list-main">
+              <span className="list-title">{c.text}</span>
+              <span className="list-sub">{c.roles.join(' · ')}</span>
+            </span>
+            <PhoneActions phone={c.phone} />
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -165,7 +193,7 @@ function MyDataSection() {
 const ADULT_AGE = 18;
 
 /** Personas de las fichas médicas, de mayor a menor edad, con su parentesco. */
-function FamilySection() {
+function FamilyGroup() {
   const { t, i18n } = useTranslation();
   const profiles = useMedical((s) => s.profiles);
   const todayStr = today();
@@ -181,8 +209,8 @@ function FamilySection() {
   if (people.length === 0) return null;
 
   return (
-    <section className="card stack" aria-labelledby="family-title">
-      <h2 id="family-title" className="section-title" style={{ margin: 0 }}>{t('emergency.familyTitle')}</h2>
+    <>
+      <h3 className="contact-group-title">{t('emergency.familyTitle')}</h3>
       <ul className="list contact-list" data-testid="family-contacts">
         {people.map(({ p, age }) => {
           const minor = age !== null && age < ADULT_AGE;
@@ -195,12 +223,6 @@ function FamilySection() {
                   {[p.relationship, age !== null ? t('medical.age', { count: age }) : null, minor ? t('emergency.minor') : null].filter(Boolean).join(' · ')}
                 </span>
                 {!p.phone && <span className="list-sub">{t('emergency.familyNoPhone')}</span>}
-                {resolveEmergencyContacts(p, profiles).map((c, i) => (
-                  <span key={i} className="family-ec" data-testid="family-emergency-contact">
-                    <span className="list-sub">{t('emergency.familyContact', { name: c.label })}</span>
-                    {c.phone && <PhoneActions phone={c.phone} />}
-                  </span>
-                ))}
               </span>
               <span className="contact-actions">
                 {p.phone && <PhoneActions phone={p.phone} />}
@@ -213,6 +235,6 @@ function FamilySection() {
         })}
       </ul>
       <p className="hint" style={{ margin: 0 }}>{t('emergency.familyHint')}</p>
-    </section>
+    </>
   );
 }

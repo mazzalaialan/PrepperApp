@@ -2380,3 +2380,10 @@ a.module-card:hover {
   margin-top: 4px;
 }
 
+
+.contact-group-title {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+

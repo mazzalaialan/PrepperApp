@@ -18,18 +18,27 @@ interface MedicalState {
   removePhoto: (profileId: Id) => Promise<void>;
 }
 
+let loading: Promise<void> | null = null;
+
 export const useMedical = create<MedicalState>((set, get) => ({
   loaded: false,
   profiles: new Map(),
   photos: new Map(),
 
-  async load() {
-    const [profiles, attachments] = await Promise.all([repos.medicalProfiles.loadAll(), repos.attachments.loadAll()]);
-    set({
-      loaded: true,
-      profiles: new Map(profiles.map((p) => [p.id, normalizeProfile(p)])),
-      photos: new Map(attachments.filter((a) => a.ownerType === 'medicalProfile').map((a) => [a.ownerId, a])),
+  load() {
+    // Una sola carga a la vez: si al desbloquear se pide dos veces, la segunda no
+    // debe pisar con datos viejos una ficha guardada mientras tanto.
+    loading ??= (async () => {
+      const [profiles, attachments] = await Promise.all([repos.medicalProfiles.loadAll(), repos.attachments.loadAll()]);
+      set({
+        loaded: true,
+        profiles: new Map(profiles.map((p) => [p.id, normalizeProfile(p)])),
+        photos: new Map(attachments.filter((a) => a.ownerType === 'medicalProfile').map((a) => [a.ownerId, a])),
+      });
+    })().finally(() => {
+      loading = null;
     });
+    return loading;
   },
 
   clear() {
@@ -37,6 +46,7 @@ export const useMedical = create<MedicalState>((set, get) => ({
   },
 
   async saveProfile(p) {
+    if (loading) await loading;
     const saved = touch(p);
     await repos.medicalProfiles.put(saved);
     const profiles = new Map(get().profiles).set(saved.id, saved);

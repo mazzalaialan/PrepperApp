@@ -122,14 +122,18 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByRole('button', { name: 'Agregar contacto' }).click();
   await page.getByLabel('Contacto de emergencia 2').selectOption({ label: 'Otra persona (escribir)' });
   await page.getByLabel('Nombre y teléfono del contacto 2').fill('Escuela 4222-3333');
+  await page.getByLabel('Médico / obra social').fill('Dra. Gómez, pediatra 4777-8888');
   await page.getByRole('button', { name: 'Guardar' }).click();
-  await expect(page.getByText('Guardado')).toBeVisible();
+  await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
+
+  // En Mis contactos: además de la familia, los médicos y contactos escritos en las fichas.
   await page.goto('/#/first-aid/contacts');
-  const tomiContacts = family.nth(1).getByTestId('family-emergency-contact');
-  await expect(tomiContacts).toHaveCount(2);
-  await expect(tomiContacts.nth(0)).toContainText('Su contacto: Juan (Hijo)');
-  await expect(tomiContacts.nth(0).getByRole('link', { name: '11 5555-1234' })).toHaveAttribute('href', 'tel:1155551234');
-  await expect(tomiContacts.nth(1).getByRole('link', { name: '4222-3333' })).toBeVisible();
+  const fromFichas = page.getByTestId('ficha-contacts').locator('li');
+  await expect(fromFichas).toHaveCount(2);
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Dra. Gómez, pediatra 4777-8888');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Médico de Tomi');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Contacto de emergencia de Tomi');
+  await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '4222-3333' })).toHaveAttribute('href', 'tel:42223333');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();
   await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Tomi');
 
