@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Search, Stethoscope, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
-import { fichaContacts, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
+import { doctorLabel, fichaContacts, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
@@ -135,8 +135,11 @@ function MyDataSection() {
     [t('medical.bloodType'), me.bloodType],
     [t('medical.allergies'), me.allergies],
     [t('medical.conditions'), me.conditions],
-    [t('medical.doctor'), me.doctor],
   ];
+  const ins = me.insurance;
+  const insuranceText = ins
+    ? [ins.name, ins.plan && t('medical.insurance.planShort', { plan: ins.plan }), ins.memberNumber && t('medical.insurance.memberShort', { n: ins.memberNumber })].filter(Boolean).join(' · ')
+    : '';
   return (
     <section className="card stack my-data" aria-labelledby="my-data-title" data-testid="my-data">
       <div className="row-between">
@@ -170,6 +173,26 @@ function MyDataSection() {
                   </li>
                 ))}
               </ul>
+            </dd>
+          </>
+        )}
+        {(me.doctors ?? []).length > 0 && (
+          <>
+            <dt>{t('medical.doctors.title')}</dt>
+            {me.doctors!.map((d, i) => (
+              <dd key={i}>
+                {doctorLabel(d)}
+                {d.phone && <PhoneActions phone={d.phone} />}
+              </dd>
+            ))}
+          </>
+        )}
+        {(insuranceText || ins?.emergencyPhone) && (
+          <>
+            <dt>{t('medical.insurance.title')}</dt>
+            <dd data-testid="my-insurance">
+              {insuranceText}
+              {ins?.emergencyPhone && <PhoneActions phone={ins.emergencyPhone} />}
             </dd>
           </>
         )}

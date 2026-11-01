@@ -195,6 +195,24 @@ export type ProfileKind = 'person' | 'pet';
 export type PetSpecies = 'dog' | 'cat' | 'other';
 
 /** Ficha médica de una persona o una mascota del grupo familiar. */
+/** Un profesional de la salud de la persona: de cabecera, psicólogo, psiquiatra… */
+export interface Doctor {
+  /** Especialidad o rol ("Médico de cabecera", "Psiquiatra"). */
+  role: string;
+  name: string;
+  phone: string;
+}
+
+/** Obra social o prepaga. */
+export interface HealthInsurance {
+  name: string;
+  plan: string;
+  /** Número de credencial / afiliado. */
+  memberNumber: string;
+  /** Teléfono de emergencias (urgencias, ambulancia) de la obra social. */
+  emergencyPhone: string;
+}
+
 /** Un contacto de emergencia: otra ficha médica (sus datos se leen de ahí) o un texto libre ("María 11 5555-1234"). */
 export interface EmergencyContactRef {
   profileId: Id | null;
@@ -217,6 +235,9 @@ export interface MedicalProfile extends BaseEntity {
    * queda como texto de respaldo para versiones anteriores.
    */
   emergencyContacts?: EmergencyContactRef[];
+  /** Solo personas (desde 0.11.1): antes iban en el texto de `doctor`, que queda como respaldo. */
+  doctors?: Doctor[];
+  insurance?: HealthInsurance;
   birthDate: IsoDay | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
   bloodType: string;

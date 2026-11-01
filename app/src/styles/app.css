@@ -2387,3 +2387,33 @@ a.module-card:hover {
   color: var(--text-muted);
 }
 
+
+.doctor-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.doctor-row .input {
+  grid-column: 1;
+}
+
+.doctor-row .icon-btn {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (min-width: 640px) {
+  .doctor-row {
+    grid-template-columns: 1fr 1fr 1fr auto;
+  }
+
+  .doctor-row .input {
+    grid-column: auto;
+  }
+
+  .doctor-row .icon-btn {
+    grid-column: 4;
+  }
+}
+

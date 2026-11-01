@@ -72,6 +72,17 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await page.goto('/#/first-aid/medical');
   await expect(page.getByText('Alergias: Penicilina')).toBeVisible();
   await expect(page.locator('img.avatar')).toBeVisible();
+
+  // Otra ficha con parentesco "Yo": la anterior pasa a "Otros".
+  await page.goto('/#/first-aid/medical/new');
+  await expect(page.getByRole('heading', { name: 'Nueva ficha' })).toBeVisible();
+  await page.getByLabel('Nombre', { exact: true }).fill('Ana María');
+  await page.getByLabel('Parentesco').fill('Yo');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/medical\/[0-9a-f-]{36}$/);
+  await page.goto('/#/first-aid/medical');
+  await page.getByRole('link', { name: /^Ana\b(?! María)/ }).click();
+  await expect(page.getByLabel('Parentesco')).toHaveValue('Otros');
 });
 
 test('las personas de las fichas aparecen en contactos de emergencia, con parentesco y edad', async ({ page }) => {
@@ -89,11 +100,13 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
     await expect(page.getByRole('heading', { name: 'Nueva ficha' })).toBeVisible();
     await page.getByLabel('Nombre', { exact: true }).fill(name);
     await page.getByLabel('Parentesco').fill(relationship);
-    await page.getByLabel('Teléfono').fill(phone);
+    await page.getByLabel('Teléfono', { exact: true }).fill(phone);
     await page.getByLabel('Fecha de nacimiento').fill(birth);
     if (!show) await page.getByLabel('Mostrar en Contactos de emergencia').uncheck();
     await page.getByRole('button', { name: 'Guardar' }).click();
     await expect(page).toHaveURL(/medical\/[0-9a-f-]{36}$/);
+    // La URL cambia antes de que se redibuje: esperar la ficha guardada antes de cargar la siguiente.
+    await expect(page.locator('.page-title').last()).toHaveText(name);
   };
   const year = new Date().getFullYear();
   await add('Tomi', 'Hijo', `${year - 9}-01-01`, '');
@@ -122,16 +135,35 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByRole('button', { name: 'Agregar contacto' }).click();
   await page.getByLabel('Contacto de emergencia 2').selectOption({ label: 'Otra persona (escribir)' });
   await page.getByLabel('Nombre y teléfono del contacto 2').fill('Escuela 4222-3333');
-  await page.getByLabel('Médico / obra social').fill('Dra. Gómez, pediatra 4777-8888');
+  // Médicos: el primero sugiere "de cabecera"; se pueden sumar otros (psicólogo, psiquiatra…).
+  await page.getByRole('button', { name: 'Agregar médico' }).click();
+  const doctor1 = page.getByRole('group', { name: 'Médico 1' });
+  await expect(doctor1.getByLabel('Especialidad')).toHaveValue('Médico de cabecera');
+  await doctor1.getByLabel('Especialidad').fill('Pediatra');
+  await doctor1.getByLabel('Nombre del médico').fill('Dra. Gómez');
+  await doctor1.getByLabel('Teléfono').fill('4777-8888');
+  await page.getByRole('button', { name: 'Agregar médico' }).click();
+  const doctor2 = page.getByRole('group', { name: 'Médico 2' });
+  await doctor2.getByLabel('Especialidad').fill('Psicólogo');
+  await doctor2.getByLabel('Nombre del médico').fill('Lic. Ruiz');
+  await doctor2.getByLabel('Teléfono').fill('4999-0000');
+  // Obra social separada: nombre, plan, credencial y teléfono de emergencias.
+  await page.getByLabel('Obra social', { exact: true }).fill('OSDE');
+  await page.getByLabel('Plan').fill('310');
+  await page.getByLabel('N.º de credencial').fill('61 234567 8 01');
+  await page.getByLabel('Teléfono de emergencias').fill('0810-888-7788');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
 
-  // En Mis contactos: además de la familia, los médicos y contactos escritos en las fichas.
+  // En Mis contactos: además de la familia, los médicos, la obra social y contactos escritos en las fichas.
   await page.goto('/#/first-aid/contacts');
   const fromFichas = page.getByTestId('ficha-contacts').locator('li');
-  await expect(fromFichas).toHaveCount(2);
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Dra. Gómez, pediatra 4777-8888');
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Médico de Tomi');
+  await expect(fromFichas).toHaveCount(4);
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Pediatra: Dra. Gómez');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Pediatra de Tomi');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Psicólogo: Lic. Ruiz');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Emergencias de OSDE');
+  await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '0810-888-7788' })).toHaveAttribute('href', 'tel:08108887788');
   await expect(page.getByTestId('ficha-contacts')).toContainText('Contacto de emergencia de Tomi');
   await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '4222-3333' })).toHaveAttribute('href', 'tel:42223333');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();

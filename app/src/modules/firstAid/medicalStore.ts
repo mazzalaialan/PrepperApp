@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { blobStore, repos } from '@/core/db/repository';
 import type { CompressedImage } from '@/core/images/compress';
 import { newEntity, touch } from '@/core/model/entity';
-import type { Attachment, Id, MedicalProfile, PetHealth } from '@/core/model/types';
+import i18n from 'i18next';
+import type { Attachment, Doctor, HealthInsurance, Id, MedicalProfile, PetHealth } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
 
 interface MedicalState {
@@ -50,11 +51,11 @@ export const useMedical = create<MedicalState>((set, get) => ({
     const saved = touch(p);
     await repos.medicalProfiles.put(saved);
     const profiles = new Map(get().profiles).set(saved.id, saved);
-    // "Soy yo" hay uno solo: al marcarlo en una ficha se desmarca en la anterior.
+    // "Yo" hay uno solo: la ficha que lo era pasa a "Otros".
     if (saved.isMe) {
       for (const other of profiles.values()) {
-        if (other.id === saved.id || !other.isMe) continue;
-        const unmarked = touch({ ...other, isMe: false, relationship: isMeRelationship(other.relationship) ? '' : other.relationship });
+        if (other.id === saved.id || !(other.isMe || isMeRelationship(other.relationship))) continue;
+        const unmarked = touch({ ...other, isMe: false, relationship: isMeRelationship(other.relationship) ? i18n.t('medical.relationshipOthers') : other.relationship });
         await repos.medicalProfiles.put(unmarked);
         profiles.set(unmarked.id, unmarked);
       }
@@ -118,8 +119,25 @@ export function normalizeProfile(p: MedicalProfile): MedicalProfile {
     isMe: p.isMe ?? false,
     // Antes de 0.11.1 había un solo contacto, en texto.
     emergencyContacts: p.emergencyContacts ?? (p.emergencyContact?.trim() ? [{ profileId: null, text: p.emergencyContact.trim() }] : []),
+    // Antes de 0.11.1 médico y obra social iban juntos en un texto: pasa como un médico, para revisarlo.
+    doctors: p.doctors ?? (p.kind !== 'pet' && p.doctor?.trim() ? [legacyDoctor(p.doctor)] : []),
+    insurance: p.insurance ?? emptyInsurance(),
     medications: (p.medications ?? []).map((m) => ({ ...m, everyHours: m.everyHours ?? null, firstTime: m.firstTime ?? null })),
   };
+}
+
+export function emptyInsurance(): HealthInsurance {
+  return { name: '', plan: '', memberNumber: '', emergencyPhone: '' };
+}
+
+function legacyDoctor(text: string): Doctor {
+  const phone = phoneIn(text) ?? '';
+  return { role: '', name: (phone ? text.replace(phone, '') : text).replace(/[\s,;-]+$/, '').trim(), phone };
+}
+
+/** Teléfono dentro de un texto libre ("María (hermana) 11 5555-1234"). */
+export function phoneIn(text: string): string | null {
+  return text.match(/\+?\d[\d\s().-]{5,}\d/)?.[0] ?? null;
 }
 
 /** Parentesco "Yo" (o "Me"): esa ficha es la del usuario. */

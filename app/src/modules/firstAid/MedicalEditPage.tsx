@@ -4,12 +4,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useDocuments } from '@/modules/documents/store';
 import { newEntity } from '@/core/model/entity';
-import type { EmergencyContactRef, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
+import type { Doctor, EmergencyContactRef, HealthInsurance, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
 import { Segmented } from '@/ui/Segmented';
 import { SinglePhoto } from '@/ui/SinglePhoto';
-import { emptyPetHealth, isMeRelationship, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
-import { medLine } from './medText';
+import { emptyInsurance, emptyPetHealth, isMeRelationship, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
+import { doctorLabel, medLine } from './medText';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -28,6 +28,8 @@ function emptyProfile(): MedicalProfile {
     medications: [],
     emergencyContact: '',
     emergencyContacts: [],
+    doctors: [],
+    insurance: emptyInsurance(),
     doctor: '',
     notes: '',
   });
@@ -144,6 +146,10 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     return p ? [p.name, p.relationship && `(${p.relationship})`, p.phone].filter(Boolean).join(' ') : '';
   };
   const contacts = draft.emergencyContacts ?? [];
+  const doctors = draft.doctors ?? [];
+  const setDoctor = (index: number, changes: Partial<Doctor>) => set({ doctors: doctors.map((d, i) => (i === index ? { ...d, ...changes } : d)) });
+  const insurance = draft.insurance ?? emptyInsurance();
+  const setInsurance = (changes: Partial<HealthInsurance>) => set({ insurance: { ...insurance, ...changes } });
   const setContact = (index: number, changes: Partial<EmergencyContactRef>) =>
     set({ emergencyContacts: contacts.map((c, i) => (i === index ? { ...c, ...changes } : c)) });
   const pet = draft.pet ?? emptyPetHealth();
@@ -154,6 +160,13 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     // Los vacíos no se guardan.
+    const doctors = isPet
+      ? []
+      : (draft.doctors ?? []).map((d) => ({ role: d.role.trim(), name: d.name.trim(), phone: d.phone.trim() })).filter((d) => d.name || d.phone);
+    const ins = draft.insurance ?? emptyInsurance();
+    const insurance = isPet
+      ? emptyInsurance()
+      : { name: ins.name.trim(), plan: ins.plan.trim(), memberNumber: ins.memberNumber.trim(), emergencyPhone: ins.emergencyPhone.trim() };
     const contacts = (draft.emergencyContacts ?? [])
       .map((c) => ({ profileId: c.profileId, text: c.profileId ? '' : c.text.trim() }))
       .filter((c) => c.profileId || c.text);
@@ -166,6 +179,14 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       phone: isPet ? '' : (draft.phone ?? '').trim(),
       isMe: isMe,
       emergencyContacts: contacts,
+      doctors,
+      insurance,
+      // En personas, respaldo en texto para versiones anteriores; en mascotas es el veterinario.
+      doctor: isPet
+        ? draft.doctor.trim()
+        : [...doctors.map((d) => [doctorLabel(d), d.phone].filter(Boolean).join(' ')), [insurance.name, insurance.plan, insurance.memberNumber].filter(Boolean).join(' ')]
+            .filter(Boolean)
+            .join(' / '),
       // Respaldo en texto para versiones anteriores de la app.
       emergencyContact: contacts.map((c) => (c.profileId ? contactName(c.profileId) : c.text)).join(' / '),
       // Las filas de medicación vacías no se guardan.
@@ -457,8 +478,60 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
           </div>
         </section>
 
+        {!isPet && (
+          <section className="card stack" aria-labelledby="doctors-title">
+            <h2 id="doctors-title" className="section-title" style={{ margin: 0 }}>{t('medical.doctors.title')}</h2>
+            {doctors.length === 0 && <p className="hint" style={{ margin: 0 }}>{t('medical.doctors.empty')}</p>}
+            <datalist id="doctor-roles">
+              {(t('medical.doctors.roles', { returnObjects: true }) as string[]).map((r) => (
+                <option key={r} value={r} />
+              ))}
+            </datalist>
+            {doctors.map((d, i) => (
+              <fieldset key={i} className="fieldset doctor-row" data-testid="doctor-row">
+                <legend>{t('medical.doctors.n', { n: i + 1 })}</legend>
+                <input className="input" list="doctor-roles" aria-label={t('medical.doctors.role')} placeholder={t('medical.doctors.rolePlaceholder')} value={d.role} onChange={(e) => setDoctor(i, { role: e.target.value })} />
+                <input className="input" aria-label={t('medical.doctors.name')} placeholder={t('medical.doctors.name')} value={d.name} onChange={(e) => setDoctor(i, { name: e.target.value })} />
+                <input className="input" type="tel" inputMode="tel" aria-label={t('medical.doctors.phone')} placeholder={t('medical.doctors.phone')} value={d.phone} onChange={(e) => setDoctor(i, { phone: e.target.value })} />
+                <button className="icon-btn" type="button" onClick={() => set({ doctors: doctors.filter((_, j) => j !== i) })} aria-label={t('medical.doctors.remove')}>
+                  <X size={16} />
+                </button>
+              </fieldset>
+            ))}
+            <div className="row-end">
+              <button className="btn" type="button" onClick={() => set({ doctors: [...doctors, { role: doctors.length === 0 ? t('medical.doctors.primary') : '', name: '', phone: '' }] })}>
+                <Plus size={18} /> {t('medical.doctors.add')}
+              </button>
+            </div>
+          </section>
+        )}
+
+        {!isPet && (
+          <section className="card stack" aria-labelledby="insurance-title">
+            <h2 id="insurance-title" className="section-title" style={{ margin: 0 }}>{t('medical.insurance.title')}</h2>
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="ins-name">{t('medical.insurance.name')}</label>
+                <input id="ins-name" className="input" value={insurance.name} onChange={(e) => setInsurance({ name: e.target.value })} placeholder={t('medical.insurance.namePlaceholder')} />
+              </div>
+              <div className="field">
+                <label htmlFor="ins-plan">{t('medical.insurance.plan')}</label>
+                <input id="ins-plan" className="input" value={insurance.plan} onChange={(e) => setInsurance({ plan: e.target.value })} />
+              </div>
+              <div className="field">
+                <label htmlFor="ins-member">{t('medical.insurance.memberNumber')}</label>
+                <input id="ins-member" className="input" value={insurance.memberNumber} onChange={(e) => setInsurance({ memberNumber: e.target.value })} />
+              </div>
+              <div className="field">
+                <label htmlFor="ins-phone">{t('medical.insurance.emergencyPhone')}</label>
+                <input id="ins-phone" className="input" type="tel" inputMode="tel" value={insurance.emergencyPhone} onChange={(e) => setInsurance({ emergencyPhone: e.target.value })} />
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="card stack">
-          {text('doctor', false)}
+          {isPet && text('doctor', false)}
           {text('notes')}
         </section>
 
