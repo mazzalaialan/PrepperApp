@@ -357,7 +357,10 @@
       "civilDefense": { "name": "Civil Defense", "desc": "103: floods, collapses, storms and other disasters" },
       "nautical": { "name": "Nautical emergencies · Coast Guard", "desc": "106: rivers, lakes and coasts" },
       "environmental": { "name": "Environmental emergencies", "desc": "105: spills, pollution and other environmental disasters" },
-      "poison": { "name": "Poisoning", "desc": "National Poison Center, free, 24 hours" },
+      "poison": { "name": "Poisoning", "desc": "National Poison Center (Hospital Posadas), free, 24 hours: also snakebites and stings" },
+      "poisonKids": { "name": "Poisoning in children", "desc": "Toxicology at Ricardo Gutiérrez Children's Hospital, free, 24 hours" },
+      "burns": { "name": "Burns Hospital", "desc": "Emergency room of the Burns Hospital (Buenos Aires City). Elsewhere, 107 refers you to the nearest burns center" },
+      "mentalHealth": { "name": "Mental health and crisis", "desc": "Ministry of Health line, free, 24 hours: mental health emergencies and suicide risk" },
       "gender": { "name": "Gender violence", "desc": "144: advice and support, 24 hours" }
     },
     "localNote": "Some numbers change by province or municipality: save your local ones in \"My contacts\" too.",
@@ -1134,6 +1137,42 @@
       "invalid-response": "The address responds, but it isn't a VikArg server.",
       "push-unsupported": "This browser doesn't support push notifications.",
       "permission-denied": "Notifications are blocked. Allow them in the site permissions."
+    }
+  },
+  "guides": {
+    "title": "First aid",
+    "start": "Start assessment",
+    "topics": "Situations",
+    "search": "Search: snake, burn, heart attack…",
+    "restart": "Assess again",
+    "all": "All guides",
+    "notFound": "Guide not found.",
+    "dont": "Do not",
+    "myLocation": "My location (for rescuers)",
+    "disclaimer": "Guide based on the first aid recommendations of the European Resuscitation Council, the Red Cross and the Argentine Ministry of Health. It does not replace a course: take a CPR and first aid course. When in doubt, call 107 or 911.",
+    "env": {
+      "label": "Where you are",
+      "city": "City",
+      "wild": "Wilderness",
+      "cityHint": "Help arrives in minutes: call right away and hold on until they arrive.",
+      "wildHint": "Help may take hours: besides first aid, keep warm, find shelter and ask for rescue with your location."
+    },
+    "first": {
+      "title": "First things first",
+      "protect": { "title": "1. Protect yourself.", "text": "Make sure the scene is safe before approaching (traffic, fire, wires, water, rocks)." },
+      "call": { "title": "2. Call.", "text": "107 (medical emergencies) or 911. In the wilderness, ask for rescue and give your coordinates." },
+      "responds": { "title": "3. Do they respond?", "text": "Tap their shoulders and speak loudly." },
+      "breathing": { "title": "4. Normal breathing?", "text": "If not breathing or only gasping: CPR now, 100 to 120 compressions per minute on the center of the chest." },
+      "bleeding": { "title": "5. Heavy bleeding?", "text": "Press hard on the wound; on an arm or leg, if it does not stop, tourniquet." },
+      "position": { "title": "6. Keep them warm and still", "text": "unless in danger. If unresponsive but breathing, on their side (recovery position)." }
+    },
+    "call": {
+      "emergency": "Emergencies / Police",
+      "same": "Medical emergencies",
+      "fire": "Fire department",
+      "poison": "Poison Center",
+      "poisonKids": "Poisoning in children",
+      "burns": "Burns Hospital (Buenos Aires)"
     }
   },
   "share": {

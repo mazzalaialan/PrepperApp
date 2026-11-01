@@ -20,6 +20,8 @@ import { FrequencyEditPage } from '@/modules/emergency/FrequencyEditPage';
 import { MyLocationPage } from '@/modules/emergency/MyLocationPage';
 import { NearbyPage } from '@/modules/emergency/NearbyPage';
 import { RadioPage } from '@/modules/emergency/RadioPage';
+import { GuidesPage } from '@/modules/firstAid/guides/GuidesPage';
+import { GuideTopicPage } from '@/modules/firstAid/guides/GuideTopicPage';
 import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
 import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
 import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
@@ -76,6 +78,8 @@ const router = createHashRouter([
       { path: '/first-aid/contacts/nearby', element: <NearbyPage /> },
       { path: '/first-aid/contacts/:id', element: <ContactEditPage /> },
       { path: '/first-aid/location', element: <MyLocationPage /> },
+      { path: '/first-aid/guides', element: <GuidesPage /> },
+      { path: '/first-aid/guides/:topicId', element: <GuideTopicPage /> },
       { path: '/first-aid/radio', element: <RadioPage /> },
       { path: '/first-aid/radio/:id', element: <FrequencyEditPage /> },
       { path: '/documents', element: <DocumentsPage /> },

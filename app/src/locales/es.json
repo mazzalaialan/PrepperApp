@@ -357,7 +357,10 @@
       "civilDefense": { "name": "Defensa Civil", "desc": "103: inundaciones, derrumbes, temporales y otros desastres" },
       "nautical": { "name": "Emergencias náuticas · Prefectura", "desc": "106: ríos, lagos y costas" },
       "environmental": { "name": "Emergencias ambientales", "desc": "105: derrames, contaminación y otras catástrofes ambientales" },
-      "poison": { "name": "Intoxicaciones", "desc": "Centro Nacional de Intoxicaciones, gratuito, las 24 horas" },
+      "poison": { "name": "Intoxicaciones", "desc": "Centro Nacional de Intoxicaciones (Hospital Posadas), gratuito, las 24 horas: también mordeduras de serpiente y picaduras" },
+      "poisonKids": { "name": "Intoxicaciones en niños", "desc": "Toxicología del Hospital de Niños Ricardo Gutiérrez, gratuito, las 24 horas" },
+      "burns": { "name": "Hospital de Quemados", "desc": "Guardia del Hospital de Quemados (Ciudad de Buenos Aires). En el resto del país, el 107 deriva al centro de quemados más cercano" },
+      "mentalHealth": { "name": "Salud mental y crisis", "desc": "Línea del Ministerio de Salud, gratuita, las 24 horas: urgencias de salud mental y riesgo de suicidio" },
       "gender": { "name": "Violencia de género", "desc": "144: asesoramiento y contención las 24 horas" }
     },
     "localNote": "Algunos números cambian según la provincia o el municipio: guardá también los de tu zona en \"Mis contactos\".",
@@ -1134,6 +1137,42 @@
       "invalid-response": "La dirección responde, pero no es un servidor VikArg.",
       "push-unsupported": "Este navegador no admite notificaciones push.",
       "permission-denied": "Las notificaciones están bloqueadas. Habilitalas en los permisos del sitio."
+    }
+  },
+  "guides": {
+    "title": "Primeros auxilios",
+    "start": "Empezar evaluación",
+    "topics": "Situaciones",
+    "search": "Buscar: serpiente, quemadura, infarto…",
+    "restart": "Volver a evaluar",
+    "all": "Todas las guías",
+    "notFound": "No se encontró esa guía.",
+    "dont": "No hacer",
+    "myLocation": "Mi ubicación (para el rescate)",
+    "disclaimer": "Guía basada en las recomendaciones de primeros auxilios del Consejo Europeo de Resucitación, la Cruz Roja y el Ministerio de Salud. No reemplaza un curso: hacé uno de RCP y primeros auxilios. Ante la duda, llamá al 107 o al 911.",
+    "env": {
+      "label": "Dónde estás",
+      "city": "Ciudad",
+      "wild": "Zona agreste",
+      "cityHint": "La ayuda llega en minutos: llamá enseguida y sostené hasta que lleguen.",
+      "wildHint": "La ayuda puede tardar horas: además de los primeros auxilios, abrigo, refugio y pedir rescate con tu ubicación."
+    },
+    "first": {
+      "title": "Lo primero",
+      "protect": { "title": "1. Protegete.", "text": "Mirá que el lugar sea seguro antes de acercarte (tránsito, fuego, cables, agua, piedras)." },
+      "call": { "title": "2. Avisá.", "text": "107 (emergencias médicas) o 911. En zona agreste, pedí rescate y pasá tus coordenadas." },
+      "responds": { "title": "3. ¿Responde?", "text": "Tocale los hombros y hablale fuerte." },
+      "breathing": { "title": "4. ¿Respira normal?", "text": "Si no respira o solo da bocanadas: RCP ya, 100 a 120 compresiones por minuto en el centro del pecho." },
+      "bleeding": { "title": "5. ¿Sangra mucho?", "text": "Apretá fuerte sobre la herida; si es un brazo o una pierna y no para, torniquete." },
+      "position": { "title": "6. Abrigala y no la muevas", "text": "salvo peligro. Si no responde pero respira, de costado (posición lateral de seguridad)." }
+    },
+    "call": {
+      "emergency": "Emergencias / Policía",
+      "same": "Emergencias médicas",
+      "fire": "Bomberos",
+      "poison": "Centro de Intoxicaciones",
+      "poisonKids": "Intoxicaciones en niños",
+      "burns": "Hospital de Quemados (CABA)"
     }
   },
   "share": {

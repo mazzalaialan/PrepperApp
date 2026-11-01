@@ -47,7 +47,11 @@ export interface Settings {
   weatherMapValue: WeatherMapValue;
   /** Capas de los mapas offline de Orientación. */
   mapLayers: MapLayers;
+  /** Entorno de la guía de primeros auxilios: con ayuda cerca o lejos. */
+  firstAidEnv: FirstAidEnv;
 }
+
+export type FirstAidEnv = 'city' | 'wild';
 
 export interface MapLayers {
   hillshade: boolean;
@@ -113,6 +117,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true },
   weatherMapValue: 'temp',
   mapLayers: { hillshade: true, contours: true, mine: true },
+  firstAidEnv: 'city',
 };
 
 const SETTINGS_KEY = 'app';

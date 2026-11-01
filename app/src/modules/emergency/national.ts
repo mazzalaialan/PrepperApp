@@ -1,9 +1,10 @@
 import type { ContactKind } from '@/core/model/types';
 
 /**
- * Números nacionales de emergencia de la Argentina (argentina.gob.ar/tema/emergencias
- * y Centro Nacional de Intoxicaciones). El texto de cada uno está en los
- * idiomas (`emergency.national.<id>`).
+ * Números nacionales de emergencia de la Argentina (argentina.gob.ar/tema/emergencias,
+ * Centro Nacional de Intoxicaciones, Red de Toxicología y Hospital de Quemados de
+ * la Ciudad de Buenos Aires, Línea de Salud Mental del Ministerio de Salud). El
+ * texto de cada uno está en los idiomas (`emergency.national.<id>`).
  */
 export interface NationalNumber {
   id: string;
@@ -19,6 +20,9 @@ export const NATIONAL_NUMBERS: NationalNumber[] = [
   { id: 'nautical', number: '106', kind: 'other' },
   { id: 'environmental', number: '105', kind: 'other' },
   { id: 'poison', number: '0800-333-0160', kind: 'medical' },
+  { id: 'poisonKids', number: '0800-444-8694', kind: 'medical' },
+  { id: 'burns', number: '011 4923-4082', kind: 'hospital' },
+  { id: 'mentalHealth', number: '0800-999-0091', kind: 'medical' },
   { id: 'gender', number: '144', kind: 'other' },
 ];
 
