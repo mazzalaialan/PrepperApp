@@ -17,7 +17,7 @@ import type {
   StockMin,
   Waypoint,
 } from '@/core/model/types';
-import { emptyInsurance, emptyPetHealth, normalizeProfile } from '@/modules/firstAid/medicalStore';
+import { emptyInsurance, emptyPetHealth, insurerKey, normalizeProfile } from '@/modules/firstAid/medicalStore';
 import type { InventoryShare, SharePayload } from './package';
 
 /**
@@ -202,6 +202,8 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
     const found =
       localContacts.find((l) => l.id === c.id) ??
       (phones.length ? localContacts.find((l) => [digits(l.phone), digits(l.phone2)].some((d) => phones.includes(d))) : undefined) ??
+      // Obra social: la misma si se llama igual ("OSDE" = "Osde"), aunque tenga otros teléfonos.
+      (c.kind === 'insurance' ? localContacts.find((l) => l.kind === 'insurance' && insurerKey(l.name) === insurerKey(c.name)) : undefined) ??
       (!phones.length ? localContacts.find((l) => l.kind === c.kind && norm(l.name) === norm(c.name)) : undefined);
     if (found) {
       contactMap.set(c.id, found.id);
@@ -347,7 +349,7 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
     merged = { ...merged, medications: meds, doctors, emergencyContacts: contacts };
     // La obra social compartida que llega: si la ficha propia no tenía, apunta a la misma.
     const insurer = mapInsurer(p.insurance?.contactId);
-    if (l.kind !== 'pet' && insurer && !merged.insurance?.contactId && (!merged.insurance?.name.trim() || norm(merged.insurance.name) === norm(p.insurance!.name))) {
+    if (l.kind !== 'pet' && insurer && !merged.insurance?.contactId && (!merged.insurance?.name.trim() || insurerKey(merged.insurance.name) === insurerKey(p.insurance!.name))) {
       merged = { ...merged, insurance: { ...(merged.insurance ?? emptyInsurance()), contactId: insurer } };
       additions++;
     }

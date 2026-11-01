@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newEntity } from '@/core/model/entity';
 import type { Attachment, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, Waypoint } from '@/core/model/types';
-import { emptyInsurance, normalizeProfile } from '@/modules/firstAid/medicalStore';
+import { emptyInsurance, insurerKey, normalizeProfile } from '@/modules/firstAid/medicalStore';
 import { mergeShare, type LocalData, type MergeDecisions } from './merge';
 import { decodeShare, encodeShare, ShareError, type SharePayload } from './package';
 
@@ -299,5 +299,23 @@ describe('obra social compartida', () => {
     expect(r.newContacts).toBe(0);
     expect(r.writes.contacts[0]!.phones!.map((p) => p.label)).toEqual(['Emergencias', 'Riesgo de vida']);
     expect(r.newProfiles[0]!.insurance).toMatchObject({ contactId: myOsde.id, memberNumber: '02' });
+  });
+});
+
+describe('nombre de obra social', () => {
+  it('ignora mayúsculas, tildes, puntos y espacios', () => {
+    expect(insurerKey('OSDE')).toBe(insurerKey('Osde'));
+    expect(insurerKey('O.S.D.E.')).toBe(insurerKey('osde'));
+    expect(insurerKey('Swiss Medical')).toBe(insurerKey('SwissMedical'));
+    expect(insurerKey('Galeno')).not.toBe(insurerKey('OSDE'));
+  });
+
+  it('al compartir, "Osde" del familiar es la misma "OSDE" aunque tenga otro teléfono', () => {
+    const mine = contact({ kind: 'insurance', name: 'OSDE', phone: '0810-555-1234', phones: [{ label: 'Emergencias', number: '0810-555-1234' }] });
+    const theirs = contact({ kind: 'insurance', name: 'Osde', phone: '0800-999-0000', phones: [{ label: 'Turnos', number: '0800-999-0000' }] });
+    const r = mergeShare({ ...empty, contacts: [mine] }, payload({ contacts: [theirs] }), none());
+    expect(r.newContacts).toBe(0);
+    expect(r.writes.contacts[0]).toMatchObject({ id: mine.id, name: 'OSDE' });
+    expect(r.writes.contacts[0]!.phones!.map((p) => p.label)).toEqual(['Emergencias', 'Turnos']);
   });
 });

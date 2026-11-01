@@ -148,6 +148,9 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await doctor2.getByLabel('Nombre del médico').fill('Lic. Ruiz');
   await doctor2.getByLabel('Teléfono').fill('4999-0000');
   // Obra social separada: nombre, plan, credencial y teléfono de emergencias.
+  // El nombre se elige de una lista de obras sociales y prepagas comunes (o se escribe otra).
+  await expect(page.getByTestId('insurer-names').locator('option[value="IOMA"]')).toHaveCount(1);
+  await expect(page.getByTestId('insurer-names').locator('option[value="PAMI"]')).toHaveCount(1);
   await page.getByLabel('Obra social', { exact: true }).fill('OSDE');
   await page.getByLabel('Plan').fill('310');
   await page.getByLabel('N.º de credencial').fill('61 234567 8 01');
@@ -159,6 +162,11 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByRole('button', { name: 'Agregar teléfono' }).click();
   await page.getByLabel('Para qué es el teléfono 2').fill('Emergencias');
   await page.getByLabel('Número del teléfono 2').fill('0810-555-1234');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
+  // Guardar otra vez sin salir no duplica médicos ni obra social (se cuenta más abajo en Mis contactos).
+  await expect(page.getByLabel('Elegir obra social ya cargada')).toHaveValue(/.+/);
+  await page.getByLabel('Plan').fill('410');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
 
@@ -209,6 +217,20 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await expect(osde.getByRole('link', { name: '0810-555-1234' })).toHaveAttribute('href', 'tel:08105551234');
   const fromFichas = page.getByTestId('ficha-contacts').locator('li');
   await expect(fromFichas).toHaveCount(1);
+
+  // Escrita a mano distinto ("Osde"): se reconoce como la misma obra social, con sus teléfonos.
+  await page.goto('/#/first-aid/medical');
+  await page.getByRole('link', { name: /^Rosa/ }).click();
+  await expect(page.locator('.page-title').last()).toHaveText('Rosa');
+  await page.getByLabel('Obra social', { exact: true }).fill('Osde');
+  await page.getByLabel('N.º de credencial').fill('61 999999 9 01');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Elegir obra social ya cargada')).toHaveValue(/.+/);
+  await page.goto('/#/first-aid/contacts');
+  await expect(saved.locator('li')).toHaveCount(3);
+  await expect(osde).toContainText('Obra social de Rosa');
+  await expect(osde.getByTestId('saved-insurance-phone')).toHaveCount(2);
   await expect(page.getByTestId('ficha-contacts')).toContainText('Contacto de emergencia de Tomi');
   await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '4222-3333' })).toHaveAttribute('href', 'tel:42223333');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();

@@ -10,8 +10,9 @@ import type { Doctor, EmergencyContact, EmergencyContactRef, HealthInsurance, Me
 import { today } from '@/modules/inventory/domain/dates';
 import { Segmented } from '@/ui/Segmented';
 import { SinglePhoto } from '@/ui/SinglePhoto';
-import { emptyInsurance, emptyPetHealth, isMeRelationship, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
+import { emptyInsurance, emptyPetHealth, insurerKey, isMeRelationship, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
 import { InsurancePhonesEditor } from './InsurancePhonesEditor';
+import { COMMON_INSURERS } from './insurers';
 import { doctorLabel, medLine } from './medText';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
@@ -116,12 +117,6 @@ function withLiveInsurance(p: MedicalProfile, contacts: Map<string, EmergencyCon
   return c ? { ...p, insurance: { ...p.insurance!, name: c.name, phones: c.phones ?? [] } } : p;
 }
 
-const normName = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase()
-    .trim();
 
 function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   // La obra social compartida se muestra con sus datos actuales (pudieron cambiar desde otra ficha).
@@ -213,6 +208,16 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     () => [...savedContacts.values()].filter((c) => c.kind === 'insurance').sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
     [savedContacts, i18n.language],
   );
+  // Para escribir el nombre: las ya cargadas primero y después las comunes (sin repetir "OSDE" y "Osde").
+  const insurerNames = useMemo(() => {
+    const seen = new Set<string>();
+    return [...insurers.map((c) => c.name), ...COMMON_INSURERS].filter((n) => {
+      const key = insurerKey(n);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [insurers]);
   const pickInsurer = (contactId: string) => {
     const c = contactId ? savedContacts.get(contactId) : undefined;
     setInsurance(c ? { contactId: c.id, name: c.name, phones: c.phones ?? [] } : { contactId: null, name: '', phones: [] });
@@ -258,7 +263,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     let insContactId: string | null = null;
     if (!isPet && (insName || insPhones.length)) {
       const linked = ins.contactId ? savedContacts.get(ins.contactId) : undefined;
-      const sameName = linked ? undefined : [...savedContacts.values()].find((c) => c.kind === 'insurance' && insName && normName(c.name) === normName(insName));
+      const sameName = linked ? undefined : [...savedContacts.values()].find((c) => c.kind === 'insurance' && insName && insurerKey(c.name) === insurerKey(insName));
       if (linked) {
         const changed = linked.name !== insName || JSON.stringify(linked.phones ?? []) !== JSON.stringify(insPhones);
         if (changed) await saveContact({ ...linked, name: insName || linked.name, phones: insPhones, phone: insPhones[0]?.number ?? '' });
@@ -291,7 +296,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
     const contacts = (draft.emergencyContacts ?? [])
       .map((c) => ({ profileId: c.profileId, text: c.profileId ? '' : c.text.trim() }))
       .filter((c) => c.profileId || c.text);
-    await saveProfile({
+    const toSave: MedicalProfile = {
       ...draft,
       name: draft.name.trim(),
       pet: isPet ? { ...pet, speciesOther: pet.species === 'other' ? pet.speciesOther.trim() : '' } : null,
@@ -318,9 +323,13 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
           firstTime: m.everyHours ? (m.firstTime ?? null) : null,
         }))
         .filter((m) => m.name),
-    });
+    };
+    await saveProfile(toSave);
     if (isNew) navigate(`/first-aid/medical/${draft.id}`, { replace: true });
     else {
+      // Lo guardado (con los médicos y la obra social ya vinculados a sus contactos): si se
+      // vuelve a guardar sin salir, no se crean contactos repetidos.
+      setDraft(toSave);
       setSaved(true);
       setOpenMeds(new Set());
       setOpenDoctors(new Set());
@@ -689,7 +698,19 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
             <div className="grid-2">
               <div className="field">
                 <label htmlFor="ins-name">{t('medical.insurance.name')}</label>
-                <input id="ins-name" className="input" value={insurance.name} onChange={(e) => setInsurance({ name: e.target.value })} placeholder={t('medical.insurance.namePlaceholder')} />
+                <input
+                  id="ins-name"
+                  className="input"
+                  list="insurer-names"
+                  value={insurance.name}
+                  onChange={(e) => setInsurance({ name: e.target.value })}
+                  placeholder={t('medical.insurance.namePlaceholder')}
+                />
+                <datalist id="insurer-names" data-testid="insurer-names">
+                  {insurerNames.map((n) => (
+                    <option key={n} value={n} />
+                  ))}
+                </datalist>
               </div>
               <div className="field">
                 <label htmlFor="ins-plan">{t('medical.insurance.plan')}</label>

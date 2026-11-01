@@ -147,6 +147,15 @@ export function phoneIn(text: string): string | null {
   return text.match(/\+?\d[\d\s().-]{5,}\d/)?.[0] ?? null;
 }
 
+/** Nombre de obra social para comparar: "OSDE" = "Osde" = "O.S.D.E."; "Swiss Medical" = "SwissMedical". */
+export function insurerKey(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
 /** Parentesco "Yo" (o "Me"): esa ficha es la del usuario. */
 export function isMeRelationship(relationship: string | undefined): boolean {
   return /^\s*(yo|me)\s*$/i.test(relationship ?? '');
