@@ -1151,6 +1151,34 @@
       "permission-denied": "Las notificaciones están bloqueadas. Habilitalas en los permisos del sitio."
     }
   },
+  "about": {
+    "title": "Acerca de",
+    "link": "Acerca de, reportar un problema y contacto",
+    "footer": "VikArg {{version}} · Acerca de, reportar un problema y contacto",
+    "description": "Herramientas para estar preparado: inventario, emergencias, orientación, clima y más. Funciona sin conexión.",
+    "privacy": "Tus datos quedan cifrados en tu dispositivo: no se envían a ningún lado salvo que vos lo decidas (backup, compartir con un familiar o un reporte).",
+    "source": "Código fuente",
+    "feedbackTitle": "Reportar un problema o sugerir una mejora",
+    "feedbackHint": "Contá qué pasó (o qué te gustaría) con el mayor detalle posible: qué estabas haciendo, qué esperabas y qué pasó.",
+    "kindLabel": "Tipo de mensaje",
+    "kind": { "bug": "Problema", "idea": "Sugerencia", "message": "Mensaje" },
+    "message": "Mensaje",
+    "placeholder": {
+      "bug": "Ej.: en Clima, al tocar Actualizar sin conexión, la pantalla queda en blanco.",
+      "idea": "Ej.: que el inventario avise cuando falta agua para 3 días.",
+      "message": "Escribí tu mensaje."
+    },
+    "includeInfo": "Incluir la versión y datos técnicos del dispositivo (nada personal)",
+    "copy": "Copiar mensaje",
+    "copied": "Copiado",
+    "sendMail": "Enviar por mail",
+    "sendGithub": "Reportar en GitHub",
+    "githubHint": "En GitHub hace falta una cuenta (gratis). Si no tenés, mandalo por mail.",
+    "noMailYet": "Para reportar en GitHub hace falta una cuenta (gratis). Si no tenés, copiá el mensaje y mandalo por donde te quede cómodo; pronto se va a poder enviar desde acá.",
+    "coffeeTitle": "Invitame un cafecito",
+    "coffeeText": "VikArg es gratis y sin publicidad. Si te sirve y querés apoyar su desarrollo, podés invitarme un cafecito.",
+    "coffee": "Invitame un cafecito"
+  },
   "guides": {
     "title": "Primeros auxilios",
     "start": "Empezar evaluación",

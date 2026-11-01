@@ -1151,6 +1151,34 @@
       "permission-denied": "Notifications are blocked. Allow them in the site permissions."
     }
   },
+  "about": {
+    "title": "About",
+    "link": "About, report a problem and contact",
+    "footer": "VikArg {{version}} · About, report a problem and contact",
+    "description": "Tools to be prepared: inventory, emergencies, navigation, weather and more. Works offline.",
+    "privacy": "Your data stays encrypted on your device: it is not sent anywhere unless you decide to (backup, sharing with a family member or a report).",
+    "source": "Source code",
+    "feedbackTitle": "Report a problem or suggest an improvement",
+    "feedbackHint": "Tell what happened (or what you would like) in as much detail as possible: what you were doing, what you expected and what happened.",
+    "kindLabel": "Message type",
+    "kind": { "bug": "Problem", "idea": "Suggestion", "message": "Message" },
+    "message": "Message",
+    "placeholder": {
+      "bug": "E.g.: in Weather, tapping Refresh offline leaves the screen blank.",
+      "idea": "E.g.: have the inventory warn when there is not enough water for 3 days.",
+      "message": "Write your message."
+    },
+    "includeInfo": "Include the version and technical device data (nothing personal)",
+    "copy": "Copy message",
+    "copied": "Copied",
+    "sendMail": "Send by email",
+    "sendGithub": "Report on GitHub",
+    "githubHint": "GitHub needs an account (free). If you do not have one, send it by email.",
+    "noMailYet": "Reporting on GitHub needs an account (free). If you do not have one, copy the message and send it however you like; sending from here is coming soon.",
+    "coffeeTitle": "Buy me a coffee",
+    "coffeeText": "VikArg is free and ad-free. If it helps you and you want to support its development, you can buy me a coffee (cafecito).",
+    "coffee": "Buy me a cafecito"
+  },
   "guides": {
     "title": "First aid",
     "start": "Start assessment",

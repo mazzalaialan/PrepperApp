@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Archive, Check, Crosshair, Lock, RefreshCw, X } from 'lucide-react';
+import { Archive, Check, Crosshair, Info, Lock, RefreshCw, X } from 'lucide-react';
 import { lastBackupAt } from '@/core/backup/backup';
 import { daysBetween, today } from '@/modules/inventory/domain/dates';
 import { newerRelease, usePortableUpdate } from '@/core/portable/update';
@@ -94,6 +94,9 @@ export function SettingsPage() {
         <p className="hint">{t('settings.version', { version: __APP_VERSION__ })}</p>
         <PortableUpdateCheck />
         <p className="hint" style={{ fontStyle: 'italic' }}>{t('app.motto')}</p>
+        <Link className="btn" to="/about">
+          <Info size={18} /> {t('about.link')}
+        </Link>
       </section>
     </div>
   );
@@ -123,7 +126,7 @@ function BackupSection() {
 }
 
 /** Solo en el paquete portable: buscar versiones nuevas a mano. */
-function PortableUpdateCheck() {
+export function PortableUpdateCheck() {
   const { t } = useTranslation();
   const { portable, latest, checking, error, checkedAt, check } = usePortableUpdate();
   if (!portable) return null;

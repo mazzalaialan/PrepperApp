@@ -63,6 +63,9 @@ export function HomePage() {
           <ModuleGrid section={section} />
         </Fragment>
       ))}
+      <footer className="home-footer">
+        <Link to="/about">{t('about.footer', { version: __APP_VERSION__ })}</Link>
+      </footer>
     </>
   );
 }

@@ -2527,3 +2527,33 @@ a.module-card:hover {
   gap: 2px;
 }
 
+
+/* ---------- Acerca de ---------- */
+
+.about-info {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-muted);
+  background: var(--surface-2, transparent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.home-footer {
+  margin: 24px 0 8px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.home-footer a {
+  color: var(--text-muted);
+}
+

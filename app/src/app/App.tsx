@@ -42,6 +42,7 @@ import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
 import { HomePage } from './pages/HomePage';
 import { SectionPage } from './pages/SectionPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AboutPage } from './pages/AboutPage';
 import { NewPasswordScreen } from './screens/NewPasswordScreen';
 import { RecoveryKeyScreen } from './screens/RecoveryKeyScreen';
 import { SetupScreen } from './screens/SetupScreen';
@@ -112,6 +113,7 @@ const router = createHashRouter([
       { path: '/field', element: <Navigate to="/orientation" replace /> },
       { path: '/library', element: <SectionPage section="library" /> },
       { path: '/settings', element: <SettingsPage /> },
+      { path: '/about', element: <AboutPage /> },
     ],
   },
 ]);

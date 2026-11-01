@@ -360,7 +360,7 @@ La app se organiza en siete secciones:
 | Huerta y cultivo | Calendario de siembra y cosecha (F7), canteros y seguimiento (F8) |
 | Biblioteca | Manuales |
 
-Navegación en el celular: Inicio, Emergencias, Documentos, Orientación, Meteorología y "Más" (Inventario, Huerta, Biblioteca). Inicio muestra las secciones en ese mismo orden, con las alertas arriba de todo. En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior; incluye Backup y transferencia (§8).
+Navegación en el celular: Inicio, Emergencias, Documentos, Orientación, Meteorología y "Más" (Inventario, Huerta, Biblioteca). Inicio muestra las secciones en ese mismo orden, con las alertas arriba de todo. En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior; incluye Backup y transferencia (§8). **Acerca de** (`/about`, al pie del Inicio y al final de Ajustes): versión, privacidad, código fuente, formulario para reportar un problema, sugerir una mejora o dejar un mensaje (con versión y datos técnicos del dispositivo opcionales) que se envía como issue de GitHub o se copia; el envío por mail se activa poniendo `CONTACT_EMAIL` en `core/about.ts` (pendiente de un mail propio), y más adelante por el servidor. Incluye el enlace a cafecito.app/vikarg.
 
 **Botiquines.** Un botiquín es una ubicación del inventario con `kitType` (`general`, `trauma`, `bleeding`, `anaphylaxis`, `burns`, `other`): físicamente es una caja o mochila que puede estar en la casa, el auto o la mochila de escape. Su contenido son lotes del inventario (se cargan una vez); lo que falta sale del stock mínimo por ubicación. La sección muestra los vencimientos de todo lo que está en botiquines o en la categoría Botiquín.
 
