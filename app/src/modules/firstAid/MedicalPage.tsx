@@ -50,6 +50,7 @@ export function MedicalPage() {
             const species = p.pet ? (p.pet.species === 'other' && p.pet.speciesOther ? p.pet.speciesOther : t(`medical.pet.speciesOptions.${p.pet.species}`)) : null;
             const facts = [
               species,
+              p.relationship || null,
               p.birthDate ? t('medical.age', { count: ageOn(p.birthDate, todayStr) }) : null,
               p.pet?.lastRabiesVaccine ? t('medical.pet.rabiesShort', { ago: monthsLabel(p.pet.lastRabiesVaccine) }) : null,
               p.bloodType ? t('medical.bloodShort', { type: p.bloodType }) : null,

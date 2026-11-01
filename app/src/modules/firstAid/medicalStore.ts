@@ -86,9 +86,9 @@ onSessionChange(() => {
   }
 });
 
-/** Las fichas anteriores a v0.7.2 eran todas de personas. */
+/** Las fichas anteriores a v0.7.2 eran todas de personas; las anteriores a 0.11 no tenían parentesco ni teléfono. */
 export function normalizeProfile(p: MedicalProfile): MedicalProfile {
-  return { ...p, kind: p.kind ?? 'person', pet: p.pet ?? null };
+  return { ...p, kind: p.kind ?? 'person', pet: p.pet ?? null, relationship: p.relationship ?? '', phone: p.phone ?? '', inContacts: p.inContacts ?? true };
 }
 
 export function emptyPetHealth(): PetHealth {

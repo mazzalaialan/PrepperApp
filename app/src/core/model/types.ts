@@ -186,6 +186,12 @@ export type PetSpecies = 'dog' | 'cat' | 'other';
 export interface MedicalProfile extends BaseEntity {
   kind: ProfileKind;
   name: string;
+  /** Solo personas: "Hijo", "Madre", "Pareja"… (ausente en las fichas anteriores a 0.11). */
+  relationship?: string;
+  /** Solo personas: para llamarla desde Contactos de emergencia. */
+  phone?: string;
+  /** Solo personas: si aparece en Contactos de emergencia (por defecto, sí). */
+  inContacts?: boolean;
   birthDate: IsoDay | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
   bloodType: string;

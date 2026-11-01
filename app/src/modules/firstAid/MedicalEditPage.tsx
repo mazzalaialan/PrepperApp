@@ -16,6 +16,9 @@ function emptyProfile(): MedicalProfile {
     kind: 'person',
     pet: null,
     name: '',
+    relationship: '',
+    phone: '',
+    inContacts: true,
     birthDate: null,
     bloodType: '',
     allergies: '',
@@ -87,6 +90,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       name: draft.name.trim(),
       pet: isPet ? { ...pet, speciesOther: pet.species === 'other' ? pet.speciesOther.trim() : '' } : null,
       bloodType: isPet ? '' : draft.bloodType,
+      relationship: isPet ? '' : (draft.relationship ?? '').trim(),
+      phone: isPet ? '' : (draft.phone ?? '').trim(),
       // Las filas de medicación vacías no se guardan.
       medications: draft.medications
         .map((m) => ({ name: m.name.trim(), dose: m.dose.trim(), schedule: m.schedule.trim() }))
@@ -153,6 +158,36 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
             <label htmlFor="name">{t('medical.name')}</label>
             <input id="name" className="input" required value={draft.name} onChange={(e) => set({ name: e.target.value })} autoFocus={isNew} />
           </div>
+          {!isPet && (
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="relationship">{t('medical.relationship')}</label>
+                <input
+                  id="relationship"
+                  className="input"
+                  list="relationship-options"
+                  value={draft.relationship ?? ''}
+                  onChange={(e) => set({ relationship: e.target.value })}
+                  placeholder={t('medical.relationshipPlaceholder')}
+                />
+                <datalist id="relationship-options">
+                  {(t('medical.relationshipOptions', { returnObjects: true }) as string[]).map((r) => (
+                    <option key={r} value={r} />
+                  ))}
+                </datalist>
+              </div>
+              <div className="field">
+                <label htmlFor="phone">{t('medical.phone')}</label>
+                <input id="phone" className="input" type="tel" inputMode="tel" value={draft.phone ?? ''} onChange={(e) => set({ phone: e.target.value })} />
+              </div>
+            </div>
+          )}
+          {!isPet && (
+            <label className="check">
+              <input type="checkbox" checked={draft.inContacts ?? true} onChange={(e) => set({ inContacts: e.target.checked })} />
+              {t('medical.inContacts')}
+            </label>
+          )}
           {isPet && (
             <div className="grid-2">
               <div className="field">

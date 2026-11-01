@@ -48,3 +48,43 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await expect(page.getByText('Alergias: Penicilina')).toBeVisible();
   await expect(page.locator('img.avatar')).toBeVisible();
 });
+
+test('las personas de las fichas aparecen en contactos de emergencia, con parentesco y edad', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  const add = async (name: string, relationship: string, birth: string, phone: string, show = true) => {
+    await page.goto('/#/first-aid/medical/new');
+    await page.getByLabel('Nombre').fill(name);
+    await page.getByLabel('Parentesco').fill(relationship);
+    await page.getByLabel('Teléfono').fill(phone);
+    await page.getByLabel('Fecha de nacimiento').fill(birth);
+    if (!show) await page.getByLabel('Mostrar en Contactos de emergencia').uncheck();
+    await page.getByRole('button', { name: 'Guardar' }).click();
+    await expect(page).toHaveURL(/medical\/[0-9a-f-]{36}$/);
+  };
+  const year = new Date().getFullYear();
+  await add('Tomi', 'Hijo', `${year - 9}-01-01`, '');
+  await add('Juan', 'Hijo', `${year - 30}-01-01`, '11 5555-1234');
+  await add('Rosa', 'Vecina', `${year - 70}-01-01`, '11 4444-0000', false);
+
+  await page.goto('/#/first-aid/medical');
+  await expect(page.getByText('Hijo · 30 años')).toBeVisible();
+
+  await page.goto('/#/first-aid/contacts');
+  const family = page.getByTestId('family-contacts').locator('li');
+  await expect(family).toHaveCount(2);
+  // Primero el adulto, con su teléfono para llamar.
+  await expect(family.nth(0)).toContainText('Juan');
+  await expect(family.nth(0)).toContainText('Hijo · 30 años');
+  await expect(family.nth(0).getByRole('link', { name: '11 5555-1234' })).toHaveAttribute('href', 'tel:1155551234');
+  await expect(family.nth(1)).toContainText('Hijo · 9 años · menor de edad');
+  await expect(family.nth(1)).toContainText('Sin teléfono');
+  await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();
+  await expect(page.getByLabel('Nombre')).toHaveValue('Tomi');
+});
