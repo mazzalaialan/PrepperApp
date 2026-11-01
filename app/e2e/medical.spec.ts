@@ -15,7 +15,7 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await page.getByRole('link', { name: 'Emergencias' }).click();
   await page.getByRole('link', { name: /Ficha médica/ }).click();
   await page.getByRole('link', { name: 'Nueva ficha' }).click();
-  await page.getByLabel('Nombre').fill('Ana');
+  await page.getByLabel('Nombre', { exact: true }).fill('Ana');
   await page.getByLabel('Fecha de nacimiento').fill('1990-05-20');
   await page.getByLabel('Grupo sanguíneo').selectOption('0-');
   await page.getByLabel('Alergias').fill('Penicilina');
@@ -28,14 +28,21 @@ test('ficha médica con alergias y medicación', async ({ page }, testInfo) => {
   await page.getByLabel('Primera toma').first().fill('08:00');
   await expect(page.getByTestId('med-times').first()).toHaveText('Horarios: 08:00 · 16:00 · 00:00');
   await page.getByLabel('Indicaciones').first().fill('en ayunas');
-  // "Soy yo": queda como mi ficha.
-  await page.getByLabel('Soy yo (esta es mi ficha)').check();
-  await page.getByLabel('Contacto de emergencia').fill('Juan (hermano) 11 5555-1234');
-  // El segundo queda vacío: no se guarda.
+  // Parentesco "Yo": es mi ficha.
+  await page.getByLabel('Parentesco').fill('Yo');
+  await expect(page.getByText('Es tu ficha')).toBeVisible();
+  await page.getByRole('button', { name: 'Agregar contacto' }).click();
+  await page.getByLabel('Nombre y teléfono del contacto 1').fill('Juan (hermano) 11 5555-1234');
+  // El segundo medicamento queda vacío: no se guarda.
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/medical\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole('group', { name: /Medicamento \d/ })).toHaveCount(1);
-  await expect(page.getByLabel('Parentesco')).toHaveValue('Yo');
+  // Ya guardado, cada medicamento en una línea; se abre para editarlo.
+  await expect(page.getByTestId('med-line')).toHaveText('Levotiroxina 50 mcg · Cada 8 h: 08:00 · 16:00 · 00:00 · en ayunas');
+  await expect(page.getByRole('group', { name: /Medicamento \d/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Editar Levotiroxina' }).click();
+  await expect(page.getByRole('group', { name: 'Medicamento 1' })).toBeVisible();
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await expect(page.getByTestId('med-line')).toHaveCount(1);
 
   // Foto de la persona: se ve en la ficha y como avatar en el listado.
   const photoPath = testInfo.outputPath('ana.png');
@@ -80,7 +87,7 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
     await page.goto('/#/first-aid/medical/new');
     // Cambia solo el hash: esperar el formulario nuevo para no escribir sobre la ficha anterior.
     await expect(page.getByRole('heading', { name: 'Nueva ficha' })).toBeVisible();
-    await page.getByLabel('Nombre').fill(name);
+    await page.getByLabel('Nombre', { exact: true }).fill(name);
     await page.getByLabel('Parentesco').fill(relationship);
     await page.getByLabel('Teléfono').fill(phone);
     await page.getByLabel('Fecha de nacimiento').fill(birth);
@@ -106,7 +113,25 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await expect(family.nth(1)).toContainText('Hijo · 9 años · menor de edad');
   await expect(family.nth(1)).toContainText('Sin teléfono');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();
-  await expect(page.getByLabel('Nombre')).toHaveValue('Tomi');
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Tomi');
+
+  // Contactos de emergencia de Tomi: uno de otra ficha (Juan) y otro escrito a mano.
+  await page.getByRole('button', { name: 'Agregar contacto' }).click();
+  await page.getByLabel('Contacto de emergencia 1').selectOption({ label: 'Juan (Hijo)' });
+  await expect(page.getByText('11 5555-1234')).toBeVisible();
+  await page.getByRole('button', { name: 'Agregar contacto' }).click();
+  await page.getByLabel('Contacto de emergencia 2').selectOption({ label: 'Otra persona (escribir)' });
+  await page.getByLabel('Nombre y teléfono del contacto 2').fill('Escuela 4222-3333');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('Guardado')).toBeVisible();
+  await page.goto('/#/first-aid/contacts');
+  const tomiContacts = family.nth(1).getByTestId('family-emergency-contact');
+  await expect(tomiContacts).toHaveCount(2);
+  await expect(tomiContacts.nth(0)).toContainText('Su contacto: Juan (Hijo)');
+  await expect(tomiContacts.nth(0).getByRole('link', { name: '11 5555-1234' })).toHaveAttribute('href', 'tel:1155551234');
+  await expect(tomiContacts.nth(1).getByRole('link', { name: '4222-3333' })).toBeVisible();
+  await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Tomi');
 
   // Documentos de la ficha: se agregan desde ahí, ya asociados y como médicos.
   await page.getByRole('link', { name: 'Agregar documento' }).click();
@@ -116,7 +141,7 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/documents\/[0-9a-f-]{36}\?profile=/);
   await page.getByRole('link', { name: 'Volver' }).click();
-  await expect(page.getByLabel('Nombre')).toHaveValue('Tomi');
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Tomi');
   await expect(page.getByTestId('profile-documents')).toContainText('Carnet de vacunas');
 
   // Los generales no aparecen en la ficha; en Documentos van agrupados: generales y familia (por persona).

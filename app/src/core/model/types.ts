@@ -195,6 +195,12 @@ export type ProfileKind = 'person' | 'pet';
 export type PetSpecies = 'dog' | 'cat' | 'other';
 
 /** Ficha médica de una persona o una mascota del grupo familiar. */
+/** Un contacto de emergencia: otra ficha médica (sus datos se leen de ahí) o un texto libre ("María 11 5555-1234"). */
+export interface EmergencyContactRef {
+  profileId: Id | null;
+  text: string;
+}
+
 export interface MedicalProfile extends BaseEntity {
   kind: ProfileKind;
   name: string;
@@ -204,8 +210,13 @@ export interface MedicalProfile extends BaseEntity {
   phone?: string;
   /** Solo personas: si aparece en Contactos de emergencia (por defecto, sí). */
   inContacts?: boolean;
-  /** La ficha del usuario ("Soy yo"): sus datos van arriba de todo en Contactos. Solo una. */
+  /** La ficha del usuario (parentesco "Yo"): sus datos van arriba de todo en Contactos. Solo una. */
   isMe?: boolean;
+  /**
+   * Contactos de emergencia, en orden de prioridad (desde 0.11.1). `emergencyContact`
+   * queda como texto de respaldo para versiones anteriores.
+   */
+  emergencyContacts?: EmergencyContactRef[];
   birthDate: IsoDay | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
   bloodType: string;

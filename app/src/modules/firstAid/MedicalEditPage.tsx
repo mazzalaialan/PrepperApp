@@ -1,14 +1,15 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, FileText, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useDocuments } from '@/modules/documents/store';
 import { newEntity } from '@/core/model/entity';
-import type { Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
+import type { EmergencyContactRef, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
 import { Segmented } from '@/ui/Segmented';
 import { SinglePhoto } from '@/ui/SinglePhoto';
-import { emptyPetHealth, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
+import { emptyPetHealth, isMeRelationship, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
+import { medLine } from './medText';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -26,6 +27,7 @@ function emptyProfile(): MedicalProfile {
     conditions: '',
     medications: [],
     emergencyContact: '',
+    emergencyContacts: [],
     doctor: '',
     notes: '',
   });
@@ -119,7 +121,31 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   };
   const setMed = (index: number, changes: Partial<Medication>) =>
     set({ medications: draft.medications.map((m, i) => (i === index ? { ...m, ...changes } : m)) });
+  // Las ya cargadas se ven en una línea; se abren para editarlas.
+  const [openMeds, setOpenMeds] = useState<Set<number>>(() => new Set());
+  const addMed = () => {
+    setOpenMeds((s) => new Set(s).add(draft.medications.length));
+    set({ medications: [...draft.medications, { name: '', dose: '', schedule: '', everyHours: 24, firstTime: null }] });
+  };
+  const removeMed = (index: number) => {
+    setOpenMeds((s) => new Set([...s].filter((i) => i !== index).map((i) => (i > index ? i - 1 : i))));
+    set({ medications: draft.medications.filter((_, j) => j !== index) });
+  };
   const isPet = draft.kind === 'pet';
+  const isMe = !isPet && isMeRelationship(draft.relationship);
+  const allProfiles = useMedical((s) => s.profiles);
+  // Para el contacto de emergencia: las otras personas con ficha.
+  const others = useMemo(
+    () => [...allProfiles.values()].filter((p) => p.kind === 'person' && p.id !== draft.id).sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
+    [allProfiles, draft.id, i18n.language],
+  );
+  const contactName = (id: string) => {
+    const p = allProfiles.get(id);
+    return p ? [p.name, p.relationship && `(${p.relationship})`, p.phone].filter(Boolean).join(' ') : '';
+  };
+  const contacts = draft.emergencyContacts ?? [];
+  const setContact = (index: number, changes: Partial<EmergencyContactRef>) =>
+    set({ emergencyContacts: contacts.map((c, i) => (i === index ? { ...c, ...changes } : c)) });
   const pet = draft.pet ?? emptyPetHealth();
   const setPet = (changes: Partial<PetHealth>) => set({ pet: { ...pet, ...changes } });
   // Al pasar a mascota se crean sus datos; si se vuelve a persona, se descartan al guardar.
@@ -127,6 +153,10 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    // Los vacíos no se guardan.
+    const contacts = (draft.emergencyContacts ?? [])
+      .map((c) => ({ profileId: c.profileId, text: c.profileId ? '' : c.text.trim() }))
+      .filter((c) => c.profileId || c.text);
     await saveProfile({
       ...draft,
       name: draft.name.trim(),
@@ -134,7 +164,10 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       bloodType: isPet ? '' : draft.bloodType,
       relationship: isPet ? '' : (draft.relationship ?? '').trim(),
       phone: isPet ? '' : (draft.phone ?? '').trim(),
-      isMe: !isPet && !!draft.isMe,
+      isMe: isMe,
+      emergencyContacts: contacts,
+      // Respaldo en texto para versiones anteriores de la app.
+      emergencyContact: contacts.map((c) => (c.profileId ? contactName(c.profileId) : c.text)).join(' / '),
       // Las filas de medicación vacías no se guardan.
       medications: draft.medications
         .map((m) => ({
@@ -147,7 +180,10 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
         .filter((m) => m.name),
     });
     if (isNew) navigate(`/first-aid/medical/${draft.id}`, { replace: true });
-    else setSaved(true);
+    else {
+      setSaved(true);
+      setOpenMeds(new Set());
+    }
   }
 
   async function handleDelete() {
@@ -233,7 +269,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
               </div>
             </div>
           )}
-          {!isPet && !draft.isMe && (
+          {isMe && <p className="hint" style={{ margin: 0 }}>{t('medical.isMeHint')}</p>}
+          {!isPet && !isMe && (
             <label className="check">
               <input type="checkbox" checked={draft.inContacts ?? true} onChange={(e) => set({ inContacts: e.target.checked })} />
               {t('medical.inContacts')}
@@ -312,13 +349,26 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
           {draft.medications.length === 0 && <p className="hint">{t('medical.noMedications')}</p>}
           {draft.medications.map((m, i) => {
             const times = medTimes(m.everyHours, m.firstTime);
+            if (!openMeds.has(i) && m.name.trim()) {
+              return (
+                <div key={i} className="med-line" data-testid="med-line">
+                  <span className="med-line-text">{medLine(m, t)}</span>
+                  <button className="icon-btn" type="button" onClick={() => setOpenMeds((s) => new Set(s).add(i))} aria-label={t('medical.editMedication', { name: m.name })}>
+                    <Pencil size={16} />
+                  </button>
+                  <button className="icon-btn" type="button" onClick={() => removeMed(i)} aria-label={t('medical.removeMedication')} title={t('medical.removeMedication')}>
+                    <X size={16} />
+                  </button>
+                </div>
+              );
+            }
             return (
               <fieldset key={i} className="fieldset med-row">
                 <legend>{t('medical.medicationN', { n: i + 1 })}</legend>
                 <div className="med-head">
                   <input className="input" aria-label={t('medical.medName')} placeholder={t('medical.medName')} value={m.name} onChange={(e) => setMed(i, { name: e.target.value })} />
                   <input className="input" aria-label={t('medical.medDose')} placeholder={t('medical.medDosePlaceholder')} value={m.dose} onChange={(e) => setMed(i, { dose: e.target.value })} />
-                  <button className="icon-btn" type="button" onClick={() => set({ medications: draft.medications.filter((_, j) => j !== i) })} aria-label={t('medical.removeMedication')} title={t('medical.removeMedication')}>
+                  <button className="icon-btn" type="button" onClick={() => removeMed(i)} aria-label={t('medical.removeMedication')} title={t('medical.removeMedication')}>
                     <X size={18} />
                   </button>
                 </div>
@@ -349,33 +399,65 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                   </p>
                 )}
                 <input className="input" aria-label={t('medical.medSchedule')} placeholder={t('medical.medSchedulePlaceholder')} value={m.schedule} onChange={(e) => setMed(i, { schedule: e.target.value })} />
+                {m.name.trim() && (
+                  <div className="row-end">
+                    <button className="btn" type="button" onClick={() => setOpenMeds((s) => new Set([...s].filter((j) => j !== i)))}>
+                      <Check size={16} /> {t('medical.medDone')}
+                    </button>
+                  </div>
+                )}
               </fieldset>
             );
           })}
           <div className="row-end">
-            <button className="btn" type="button" onClick={() => set({ medications: [...draft.medications, { name: '', dose: '', schedule: '', everyHours: 24, firstTime: null }] })}>
+            <button className="btn" type="button" onClick={addMed}>
               <Plus size={18} /> {t('medical.addMedication')}
             </button>
           </div>
         </section>
 
         <section className="card stack">
-          {!isPet && (
-            <>
-              <label className="check">
+          <h2 className="section-title" style={{ margin: 0 }}>{t('medical.emergencyContacts')}</h2>
+          {contacts.length === 0 && <p className="hint" style={{ margin: 0 }}>{t('medical.noEmergencyContacts')}</p>}
+          {contacts.map((c, i) => (
+            <div key={i} className="ec-row" data-testid="emergency-contact-row">
+              <select
+                className="select"
+                aria-label={t('medical.emergencyContactN', { n: i + 1 })}
+                value={c.profileId ?? ''}
+                onChange={(e) => setContact(i, { profileId: e.target.value || null })}
+              >
+                <option value="">{t('medical.emergencyContactOther')}</option>
+                {others.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {[p.name, p.relationship && `(${p.relationship})`].filter(Boolean).join(' ')}
+                  </option>
+                ))}
+              </select>
+              {c.profileId ? (
+                <span className="hint ec-phone">{allProfiles.get(c.profileId)?.phone || t('medical.emergencyContactNoPhone')}</span>
+              ) : (
                 <input
-                  type="checkbox"
-                  checked={draft.isMe ?? false}
-                  onChange={(e) =>
-                    set({ isMe: e.target.checked, relationship: e.target.checked && !draft.relationship?.trim() ? t('medical.relationshipMe') : draft.relationship })
-                  }
+                  className="input"
+                  aria-label={t('medical.emergencyContactText', { n: i + 1 })}
+                  placeholder={t('medical.emergencyContactPlaceholder')}
+                  value={c.text}
+                  onChange={(e) => setContact(i, { text: e.target.value })}
                 />
-                {t('medical.isMe')}
-              </label>
-              {draft.isMe && <p className="hint" style={{ margin: 0 }}>{t('medical.isMeHint')}</p>}
-            </>
-          )}
-          {text('emergencyContact', false)}
+              )}
+              <button className="icon-btn" type="button" onClick={() => set({ emergencyContacts: contacts.filter((_, j) => j !== i) })} aria-label={t('medical.removeEmergencyContact')}>
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+          <div className="row-end">
+            <button className="btn" type="button" onClick={() => set({ emergencyContacts: [...contacts, { profileId: others[0]?.id ?? null, text: '' }] })}>
+              <Plus size={18} /> {t('medical.addEmergencyContact')}
+            </button>
+          </div>
+        </section>
+
+        <section className="card stack">
           {text('doctor', false)}
           {text('notes')}
         </section>

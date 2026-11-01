@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Search, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
-import { medScheduleText, phoneIn } from '@/modules/firstAid/medText';
+import { medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
@@ -90,7 +90,8 @@ export function ContactsPage() {
 /** Mi ficha ("Soy yo"): lo que necesita saber quien me asiste, arriba de todo. */
 function MyDataSection() {
   const { t } = useTranslation();
-  const me = useMedical((s) => [...s.profiles.values()].find((p) => p.kind === 'person' && p.isMe));
+  const profiles = useMedical((s) => s.profiles);
+  const me = useMemo(() => [...profiles.values()].find((p) => p.kind === 'person' && p.isMe), [profiles]);
   const loaded = useMedical((s) => s.loaded);
   if (!loaded) return null;
   if (!me) {
@@ -101,7 +102,7 @@ function MyDataSection() {
     );
   }
   const age = me.birthDate ? ageOn(me.birthDate, today()) : null;
-  const contactPhone = phoneIn(me.emergencyContact);
+  const contacts = resolveEmergencyContacts(me, profiles);
   const rows: [string, string][] = [
     [t('medical.bloodType'), me.bloodType],
     [t('medical.allergies'), me.allergies],
@@ -144,13 +145,15 @@ function MyDataSection() {
             </dd>
           </>
         )}
-        {me.emergencyContact.trim() && (
+        {contacts.length > 0 && (
           <>
-            <dt>{t('medical.emergencyContact')}</dt>
-            <dd>
-              {me.emergencyContact}
-              {contactPhone && <PhoneActions phone={contactPhone} />}
-            </dd>
+            <dt>{t('medical.emergencyContacts')}</dt>
+            {contacts.map((c, i) => (
+              <dd key={i} data-testid="my-emergency-contact">
+                {c.label}
+                {c.phone && <PhoneActions phone={c.phone} />}
+              </dd>
+            ))}
           </>
         )}
       </dl>
@@ -192,6 +195,12 @@ function FamilySection() {
                   {[p.relationship, age !== null ? t('medical.age', { count: age }) : null, minor ? t('emergency.minor') : null].filter(Boolean).join(' · ')}
                 </span>
                 {!p.phone && <span className="list-sub">{t('emergency.familyNoPhone')}</span>}
+                {resolveEmergencyContacts(p, profiles).map((c, i) => (
+                  <span key={i} className="family-ec" data-testid="family-emergency-contact">
+                    <span className="list-sub">{t('emergency.familyContact', { name: c.label })}</span>
+                    {c.phone && <PhoneActions phone={c.phone} />}
+                  </span>
+                ))}
               </span>
               <span className="contact-actions">
                 {p.phone && <PhoneActions phone={p.phone} />}

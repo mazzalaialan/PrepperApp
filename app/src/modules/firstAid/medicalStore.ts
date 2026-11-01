@@ -44,7 +44,7 @@ export const useMedical = create<MedicalState>((set, get) => ({
     if (saved.isMe) {
       for (const other of profiles.values()) {
         if (other.id === saved.id || !other.isMe) continue;
-        const unmarked = touch({ ...other, isMe: false });
+        const unmarked = touch({ ...other, isMe: false, relationship: isMeRelationship(other.relationship) ? '' : other.relationship });
         await repos.medicalProfiles.put(unmarked);
         profiles.set(unmarked.id, unmarked);
       }
@@ -106,8 +106,15 @@ export function normalizeProfile(p: MedicalProfile): MedicalProfile {
     phone: p.phone ?? '',
     inContacts: p.inContacts ?? true,
     isMe: p.isMe ?? false,
+    // Antes de 0.11.1 había un solo contacto, en texto.
+    emergencyContacts: p.emergencyContacts ?? (p.emergencyContact?.trim() ? [{ profileId: null, text: p.emergencyContact.trim() }] : []),
     medications: (p.medications ?? []).map((m) => ({ ...m, everyHours: m.everyHours ?? null, firstTime: m.firstTime ?? null })),
   };
+}
+
+/** Parentesco "Yo" (o "Me"): esa ficha es la del usuario. */
+export function isMeRelationship(relationship: string | undefined): boolean {
+  return /^\s*(yo|me)\s*$/i.test(relationship ?? '');
 }
 
 /** Frecuencias que se ofrecen, en horas (0 = solo si hace falta). */

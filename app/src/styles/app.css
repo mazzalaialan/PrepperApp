@@ -2333,3 +2333,50 @@ a.module-card:hover {
   opacity: 0.3;
 }
 
+
+/* ---------- Medicación en una línea y contactos de emergencia de la ficha ---------- */
+
+.med-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.med-line-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ec-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.ec-row .select {
+  grid-column: 1;
+}
+
+.ec-row .icon-btn {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.ec-row .input,
+.ec-row .ec-phone {
+  grid-column: 1;
+  margin: 0;
+}
+
+
+.family-ec {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
