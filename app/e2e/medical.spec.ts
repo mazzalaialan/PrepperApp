@@ -176,7 +176,17 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   // Ya guardados, cada médico en una línea; al abrirlo no se puede cambiar por otro.
   const doctorLines = page.getByTestId('doctor-line');
   await expect(doctorLines).toHaveCount(2);
-  await expect(doctorLines.nth(0)).toHaveText('Pediatra: Dra. Gómez · 4777-8888');
+  await expect(doctorLines.nth(0)).toContainText('Pediatra: Dra. Gómez');
+  // Se puede llamar desde la ficha.
+  await expect(doctorLines.nth(0).getByRole('link', { name: '4777-8888' })).toHaveAttribute('href', 'tel:47778888');
+  const ecRows = page.getByTestId('emergency-contact-row');
+  await expect(ecRows.nth(0).getByRole('link', { name: '11 5555-1234' })).toHaveAttribute('href', 'tel:1155551234');
+  await expect(ecRows.nth(1).getByRole('link', { name: '4222-3333' })).toHaveAttribute('href', 'tel:42223333');
+  // Los teléfonos de la obra social, ya guardados, en una línea cada uno con el botón para llamar.
+  const insLines = page.getByTestId('insurance-phone-line');
+  await expect(insLines).toHaveCount(2);
+  await expect(insLines.nth(0)).toContainText('Riesgo de vida');
+  await expect(insLines.nth(0).getByRole('link', { name: '0810-888-7788' })).toHaveAttribute('href', 'tel:08108887788');
   await page.getByRole('button', { name: 'Editar Dra. Gómez' }).click();
   await expect(page.getByRole('group', { name: 'Médico 1' }).getByLabel('Nombre del médico')).toHaveValue('Dra. Gómez');
   await expect(page.getByLabel('Elegir médico ya cargado')).toHaveCount(0);
@@ -196,12 +206,15 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await juanDoctor.getByLabel('Teléfono').fill('4777-9999');
   // La obra social también se comparte: se elige y trae sus teléfonos; la credencial es de cada uno.
   await page.getByLabel('Elegir obra social ya cargada').selectOption({ label: 'OSDE' });
-  await expect(page.getByLabel('Número del teléfono 1')).toHaveValue('0810-888-7788');
+  await expect(page.getByTestId('insurance-phone-line').nth(0)).toContainText('0810-888-7788');
   await expect(page.getByTestId('insurance-shared')).toContainText('Compartida con Tomi');
   await page.getByLabel('N.º de credencial').fill('61 234567 8 02');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('doctor-line')).toHaveText('Médico de cabecera: Dra. Gómez · 4777-9999');
+  await expect(page.getByTestId('doctor-line')).toContainText('Médico de cabecera: Dra. Gómez');
+  await expect(page.getByTestId('doctor-line').getByRole('link', { name: '4777-9999' })).toBeVisible();
+  // También se llama a la propia persona y a sus contactos de emergencia desde la ficha.
+  await expect(page.getByTestId('profile-call')).toHaveAttribute('href', 'tel:1155551234');
 
   // En Mis contactos: los médicos una sola vez, con para quién son; la obra social y lo escrito en las fichas.
   await page.goto('/#/first-aid/contacts');

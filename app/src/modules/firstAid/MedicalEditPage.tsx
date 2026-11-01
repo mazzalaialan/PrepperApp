@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useDocuments } from '@/modules/documents/store';
 import { emptyContact } from '@/modules/emergency/ContactEditPage';
+import { PhoneActions } from '@/modules/emergency/parts';
 import { useContacts } from '@/modules/emergency/store';
 import { newEntity } from '@/core/model/entity';
 import type { Doctor, EmergencyContact, EmergencyContactRef, HealthInsurance, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
@@ -13,7 +14,7 @@ import { SinglePhoto } from '@/ui/SinglePhoto';
 import { emptyInsurance, emptyPetHealth, insurerKey, isMeRelationship, MED_FREQUENCIES, medTimes, monthsSince, useMedical } from './medicalStore';
 import { InsurancePhonesEditor } from './InsurancePhonesEditor';
 import { COMMON_INSURERS } from './insurers';
-import { doctorLabel, medLine } from './medText';
+import { doctorLabel, medLine, phoneIn } from './medText';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -173,6 +174,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       : [];
   // Igual que la medicación: los ya cargados en una línea, se abren para editarlos.
   const [openDoctors, setOpenDoctors] = useState<Set<number>>(() => new Set());
+  // Teléfonos de la obra social: cargados se ven en una línea con el botón para llamar.
+  const [editInsPhones, setEditInsPhones] = useState(false);
   // Filas agregadas en esta edición: solo en ellas se puede elegir un médico ya cargado.
   const [addedDoctors, setAddedDoctors] = useState<Set<number>>(() => new Set());
   const shiftOut = (s: Set<number>, index: number) => new Set([...s].filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)));
@@ -330,6 +333,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       // Lo guardado (con los médicos y la obra social ya vinculados a sus contactos): si se
       // vuelve a guardar sin salir, no se crean contactos repetidos.
       setDraft(toSave);
+      setEditInsPhones(false);
       setSaved(true);
       setOpenMeds(new Set());
       setOpenDoctors(new Set());
@@ -417,6 +421,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
               <div className="field">
                 <label htmlFor="phone">{t('medical.phone')}</label>
                 <input id="phone" className="input" type="tel" inputMode="tel" value={draft.phone ?? ''} onChange={(e) => set({ phone: e.target.value })} />
+                {draft.phone?.trim() && <PhoneActions phone={draft.phone} testId="profile-call" />}
               </div>
             </div>
           )}
@@ -586,7 +591,13 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                 ))}
               </select>
               {c.profileId ? (
-                <span className="hint ec-phone">{allProfiles.get(c.profileId)?.phone || t('medical.emergencyContactNoPhone')}</span>
+                allProfiles.get(c.profileId)?.phone ? (
+                  <span className="ec-phone">
+                    <PhoneActions phone={allProfiles.get(c.profileId)!.phone!} />
+                  </span>
+                ) : (
+                  <span className="hint ec-phone">{t('medical.emergencyContactNoPhone')}</span>
+                )
               ) : (
                 <input
                   className="input"
@@ -595,6 +606,11 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                   value={c.text}
                   onChange={(e) => setContact(i, { text: e.target.value })}
                 />
+              )}
+              {!c.profileId && phoneIn(c.text) && (
+                <span className="ec-phone">
+                  <PhoneActions phone={phoneIn(c.text)!} />
+                </span>
               )}
               <button className="icon-btn" type="button" onClick={() => set({ emergencyContacts: contacts.filter((_, j) => j !== i) })} aria-label={t('medical.removeEmergencyContact')}>
                 <X size={16} />
@@ -622,7 +638,8 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
               const live = liveDoctor(d);
               return (
                 <div key={i} className="med-line" data-testid="doctor-line">
-                  <span className="med-line-text">{[doctorLabel(live), live.phone].filter(Boolean).join(' · ')}</span>
+                  <span className="med-line-text">{doctorLabel(live)}</span>
+                  {live.phone && <PhoneActions phone={live.phone} />}
                   <button className="icon-btn" type="button" onClick={() => openDoctor(i)} aria-label={t('medical.doctors.edit', { name: live.name })}>
                     <Pencil size={16} />
                   </button>
@@ -721,7 +738,30 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                 <input id="ins-member" className="input" value={insurance.memberNumber} onChange={(e) => setInsurance({ memberNumber: e.target.value })} />
               </div>
             </div>
-            <InsurancePhonesEditor phones={insPhones} onChange={(phones) => setInsurance({ phones })} />
+            {!editInsPhones && insPhones.some((p) => p.number.trim()) ? (
+              <>
+                <h3 className="contact-group-title">{t('medical.insurance.phones')}</h3>
+                {insPhones.map((p, i) => (
+                  <div key={i} className="med-line" data-testid="insurance-phone-line">
+                    <span className="med-line-text">{p.label || t('medical.insurance.emergencyPhone')}</span>
+                    <PhoneActions phone={p.number} />
+                  </div>
+                ))}
+                <div className="row-end">
+                  <button className="btn" type="button" onClick={() => setEditInsPhones(true)}>
+                    <Pencil size={16} /> {t('medical.insurance.editPhones')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <InsurancePhonesEditor
+                phones={insPhones}
+                onChange={(phones) => {
+                  setEditInsPhones(true);
+                  setInsurance({ phones });
+                }}
+              />
+            )}
           </section>
         )}
 

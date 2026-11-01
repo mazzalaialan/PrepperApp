@@ -2557,3 +2557,12 @@ a.module-card:hover {
   color: var(--text-muted);
 }
 
+
+.med-line {
+  flex-wrap: wrap;
+}
+
+.ec-phone .phone-actions {
+  flex-wrap: wrap;
+}
+

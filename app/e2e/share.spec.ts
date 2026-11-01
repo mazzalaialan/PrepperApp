@@ -99,7 +99,8 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await expect(juan.getByLabel('Parentesco')).toHaveValue('Hijo');
   await expect(juan.getByLabel('Grupo sanguíneo')).toHaveValue('A+');
   await expect(juan.getByLabel('Alergias')).toHaveValue('Penicilina');
-  await expect(juan.getByTestId('doctor-line')).toHaveText('Pediatra: Dra. Gómez · 4777-8888');
+  await expect(juan.getByTestId('doctor-line')).toContainText('Pediatra: Dra. Gómez');
+  await expect(juan.getByTestId('doctor-line').getByRole('link', { name: '4777-8888' })).toBeVisible();
   await juan.goto('/#/first-aid/contacts');
   await expect(juan.getByTestId('my-data')).toContainText('Juan');
   await expect(juan.getByTestId('my-contacts')).toContainText('Pediatra de Tomi');
