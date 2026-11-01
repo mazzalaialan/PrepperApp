@@ -3,8 +3,8 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 /**
  * Avisa cuando hay una versión nueva; nunca recarga sola (podría interrumpir una carga de datos).
- * Se registra siempre, pero el aviso solo se ve con la bóveda bloqueada (login o configuración
- * inicial): actualizar recarga la página y bloquea, así que adentro solo molestaría.
+ * Está a nivel de toda la app: se ve también en el login, donde conviene actualizar porque
+ * recargar bloquea la bóveda y adentro obliga a volver a entrar.
  */
 export function UpdatePrompt({ visible }: { visible: boolean }) {
   const { t } = useTranslation();

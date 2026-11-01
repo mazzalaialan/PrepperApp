@@ -134,7 +134,7 @@ export function App() {
   return (
     <>
       <Screen />
-      <UpdatePrompt visible={status === 'locked' || status === 'uninitialized'} />
+      <UpdatePrompt visible={status !== 'loading'} />
     </>
   );
 }
