@@ -441,6 +441,8 @@
     "filters": { "all": "Todo", "police": "Policía", "fire": "Bomberos", "health": "Salud", "civilDefense": "Defensa Civil" },
     "osmLoading": "Buscando también en OpenStreetMap…",
     "osmOffline": "Sin conexión: se muestran los datos oficiales incluidos en la app (bomberos de todo el país; comisarías y salud de la Provincia de Buenos Aires).",
+    "osmOfflinePackage": "Sin conexión: se muestran los datos de {{country}} guardados en el dispositivo (bomberos, policía y centros de salud de OpenStreetMap).",
+    "packageMissing": "Los datos sin conexión de {{country}} todavía no se descargaron: se bajan solos la primera vez que haya conexión.",
     "osmError": "No se pudo consultar OpenStreetMap (sus servidores públicos a veces están saturados): se muestran los datos oficiales incluidos en la app.",
     "retry": "Reintentar OpenStreetMap",
     "found_one": "{{count}} lugar encontrado",
@@ -482,7 +484,7 @@
     "sms": "SMS",
     "whatsapp": "WhatsApp",
     "shareTitle": "Mi ubicación",
-    "call911": "Llamar al 911",
+    "call911": "Llamar al {{number}}",
     "msg": {
       "intro": "Necesito ayuda. Mi ubicación:",
       "coords": "Coordenadas: {{decimal}} ({{dms}}), precisión ±{{accuracy}} m",
@@ -554,6 +556,11 @@
     "nacionalHint": "En un corte de luz o de internet, una radio a pilas es la forma de enterarse de lo que informan las autoridades.",
     "distance": "a {{distance}}",
     "nacionalNote": "AM llega más lejos (de noche, cientos de km); FM se escucha mejor pero solo cerca de la emisora. Frecuencias: Radio Nacional (vía Wikipedia); confirmalas con tu radio.",
+    "nacionalTitleUY": "Radio Uruguay (SODRE) más cercana",
+    "nacionalNoteUY": "Radio pública: Radio Uruguay (AM 1050 en Montevideo) y su red de repetidoras FM en el interior. AM llega más lejos de noche; FM, solo cerca. Frecuencias: Radiodifusión Nacional del Uruguay (vía Wikipedia); confirmalas con tu radio.",
+    "nacionalTitleCL": "Radio con cobertura nacional más cercana",
+    "nacionalNoteCL": "Chile no tiene radio pública nacional: se muestra la red de Radio Bío-Bío (privada, con emisoras en todas las regiones), que informa las emergencias. Las alertas oficiales de SENAPRED llegan además al celular por el Sistema de Alerta de Emergencia (SAE). Frecuencias vía Wikipedia; confirmalas con tu radio.",
+    "packageMissing": "Las emisoras de {{country}} vienen en los datos sin conexión del país: se bajan solos la primera vez que haya conexión.",
     "distressTitle": "Frecuencias internacionales de socorro",
     "distress": {
       "marine": { "name": "Marítima · VHF canal 16", "desc": "Socorro en el mar, ríos y lagos navegables. La escucha Prefectura Naval y los barcos" },
@@ -1229,8 +1236,7 @@
         "town": "{{name}}"
       },
       "nothing": "No se encontró ningún centro de atención cerca: elegí zona agreste.",
-      "noLocation": "No se pudo obtener tu ubicación: elegí a mano.",
-      "onlyAR": "La detección automática por ahora usa datos de Argentina: en tu país elegí ciudad o zona agreste a mano."
+      "noLocation": "No se pudo obtener tu ubicación: elegí a mano."
     },
     "first": {
       "title": "Lo primero",

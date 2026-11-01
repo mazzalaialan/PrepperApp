@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
-import { loadEmergencyData, nearestRadio, type EmergencyData } from './data';
+import { useSettings } from '@/core/settings/settings';
+import { loadCountryData } from './country';
+import { nearestRadio, type EmergencyData } from './data';
 import { CopyButton, formatDistance, MapLink } from './parts';
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
@@ -24,9 +26,20 @@ export function RadioPage() {
   const { t, i18n } = useTranslation();
   const { place, picker } = usePlacePicker();
   const [data, setData] = useState<EmergencyData | null>(null);
+  const country = useSettings((s) => s.settings.country);
+  const [packageMissing, setPackageMissing] = useState(false);
   useEffect(() => {
-    void loadEmergencyData().then(setData);
-  }, []);
+    setPackageMissing(false);
+    loadCountryData(country).then(
+      (d) => setData(d.emergency),
+      () => {
+        setPackageMissing(true);
+        setData(null);
+      },
+    );
+  }, [country]);
+  // Argentina: "Radio Nacional"; los demás países, con su título y su aclaración.
+  const radioKey = (key: 'nacionalTitle' | 'nacionalNote') => (country === 'AR' ? `radio.${key}` : `radio.${key}${country}`);
   const stations = useMemo(() => (data && place ? nearestRadio(data, place.lat, place.lon) : []), [data, place?.lat, place?.lon]);
   const fm = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const contacts = useContacts((s) => s.contacts);
@@ -82,14 +95,16 @@ export function RadioPage() {
       </section>
 
       <section className="card stack" aria-labelledby="rn-title">
-        <h2 id="rn-title" className="section-title" style={{ margin: 0 }}>{t('radio.nacionalTitle')}</h2>
+        <h2 id="rn-title" className="section-title" style={{ margin: 0 }}>{t(radioKey('nacionalTitle'))}</h2>
         <p className="hint" style={{ margin: 0 }}>{t('radio.nacionalHint')}</p>
-        {!place ? (
+        {packageMissing ? (
+          <p className="empty">{t('radio.packageMissing', { country: t(`country.${country}`) })}</p>
+        ) : !place ? (
           <p className="empty">{t('emergency.needPlace')}</p>
         ) : (
           <ul className="list" data-testid="radio-stations">
             {stations.map((s, i) => (
-              <li key={s.call} className="contact-row">
+              <li key={`${s.call}-${s.city}`} className="contact-row">
                 <Radio size={22} aria-hidden className={i === 0 ? 'contact-icon contact-icon-fire' : 'contact-icon'} />
                 <span className="list-main">
                   <span className="list-title">
@@ -107,7 +122,7 @@ export function RadioPage() {
             ))}
           </ul>
         )}
-        <p className="hint" style={{ margin: 0 }}>{t('radio.nacionalNote')}</p>
+        <p className="hint" style={{ margin: 0 }}>{t(radioKey('nacionalNote'))}</p>
       </section>
 
       <section className="card stack" aria-labelledby="distress-title">

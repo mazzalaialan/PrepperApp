@@ -15,6 +15,7 @@ import {
   Sprout,
 } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
+import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
 import { Dialog } from '@/ui/Dialog';
 import { RainNotices } from '@/modules/weather/RainNotices';
@@ -40,6 +41,7 @@ const MORE = [
 export function Shell() {
   const { t } = useTranslation();
   const lock = useVault((s) => s.lock);
+  useCountryPrefetch();
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const inMore = MORE.some((m) => pathname.startsWith(m.to));

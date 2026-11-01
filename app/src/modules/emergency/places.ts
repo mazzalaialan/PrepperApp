@@ -11,7 +11,7 @@ export interface PlaceMatch {
   label: string;
 }
 
-interface PlacesData {
+export interface PlacesData {
   provinces: string[];
   /** [nombre, provincia, lat, lon, relevancia] ordenados de mayor a menor relevancia. */
   places: [string, number, number, number, number][];

@@ -1,6 +1,8 @@
 import { strFromU8, strToU8 } from 'fflate';
 import { blobStore } from '@/core/db/repository';
-import { loadPlaceFinder } from './places';
+import type { Country } from '@/core/settings/settings';
+import { loadCountryData } from './country';
+import { loadPlaceFinder, type PlaceFinder } from './places';
 
 /**
  * Repetidoras de radioaficionados importadas por el usuario desde un archivo
@@ -172,20 +174,35 @@ export function parseRepeaterCsv(text: string): Repeater[] {
   return out;
 }
 
+/** País de una repetidora según la región que trae el archivo (RepeaterBook pone el país en "State"). */
+const regionCountry = (region = ''): Country | null => (/chile/i.test(region) ? 'CL' : /uruguay/i.test(region) ? 'UY' : null);
+
 /**
- * Las que vienen sin coordenadas se ubican en el centro de su localidad, si es
- * de Argentina (único nomenclátor incluido). Devuelve null si no cambió nada.
+ * Las que vienen sin coordenadas se ubican en el centro de su localidad: Argentina
+ * con el nomenclátor incluido; Chile y Uruguay con el paquete del país (si no se
+ * pudo bajar, quedan para la próxima). Devuelve null si no cambió nada.
  */
 export async function locateRepeaters(items: Repeater[]): Promise<Repeater[] | null> {
   const pending = items.filter((r) => r.lat === null && r.approx === undefined);
   if (pending.length === 0) return null;
-  const places = await loadPlaceFinder();
-  return items.map((r) => {
+  const finders = new Map<Country, PlaceFinder | null>();
+  for (const r of pending) {
+    const c = regionCountry(r.region) ?? 'AR';
+    if (!finders.has(c)) finders.set(c, c === 'AR' ? await loadPlaceFinder() : ((await loadCountryData(c).catch(() => null))?.places ?? null));
+  }
+  let changed = false;
+  const out = items.map((r) => {
     if (!pending.includes(r)) return r;
+    const c = regionCountry(r.region);
+    const places = finders.get(c ?? 'AR');
+    if (!places) return r;
+    changed = true;
     // La región (provincia, si la trae) ayuda a desempatar localidades con el mismo nombre.
-    const m = r.location && places.covers(r.region ?? '') ? places.find([r.location, r.region].filter((s) => s && !/^argentina$/i.test(s)).join(', ')) : null;
+    const covered = c !== null || places.covers(r.region ?? '');
+    const m = r.location && covered ? places.find([r.location, c ? '' : r.region].filter((s) => s && !/^argentina$/i.test(s)).join(', ')) : null;
     return m ? { ...r, lat: m.lat, lon: m.lon, approx: m.label } : { ...r, approx: null };
   });
+  return changed ? out : null;
 }
 
 /** Datos sueltos en el texto de un punto GPX/KML (p. ej. "146.970- PL 100.0 LU1ABC Rosario"). */

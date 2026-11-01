@@ -1,7 +1,8 @@
 import { distanceMeters } from '@/core/geo/geo';
-import type { FirstAidEnv } from '@/core/settings/settings';
-import { loadEmergencyData, type EmergencyData } from '@/modules/emergency/data';
-import { loadPlaceFinder, type PlaceFinder } from '@/modules/emergency/places';
+import type { Country, FirstAidEnv } from '@/core/settings/settings';
+import { loadCountryData } from '@/modules/emergency/country';
+import type { EmergencyData } from '@/modules/emergency/data';
+import type { PlaceFinder } from '@/modules/emergency/places';
 
 /**
  * ¿Ciudad o zona agreste? Se estima sin conexión con lo incluido en la app: el
@@ -52,7 +53,8 @@ export function nearestHelp(lat: number, lon: number, data: EmergencyData, place
   return best;
 }
 
-export async function estimateHelp(lat: number, lon: number): Promise<HelpEstimate | null> {
-  const [data, places] = await Promise.all([loadEmergencyData(), loadPlaceFinder()]);
-  return nearestHelp(lat, lon, data, places);
+/** Con los datos del país (Argentina incluidos; Chile y Uruguay, su paquete). Lanza si no hay paquete ni conexión. */
+export async function estimateHelp(lat: number, lon: number, country: Country): Promise<HelpEstimate | null> {
+  const { emergency, places } = await loadCountryData(country);
+  return nearestHelp(lat, lon, emergency, places);
 }

@@ -27,7 +27,8 @@ export default defineConfig({
       injectManifest: {
         // .mjs: el worker de MapLibre (los mapas tienen que andar sin conexión).
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,webp,woff2,json}'],
-        globIgnores: ['sw.mjs'],
+        // data/: paquetes por país (Chile, Uruguay); se bajan solo si se elige ese país.
+        globIgnores: ['sw.mjs', 'data/**'],
       },
       includeAssets: ['favicon.svg', 'brand/*.png'],
       manifest: {

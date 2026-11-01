@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Phone, RefreshCw, Share2 } from 'lucide-react';
 import { bearingDeg, cardinalOf, distanceMeters, formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
+import { useSettings } from '@/core/settings/settings';
+import { CALLS } from '@/modules/firstAid/guides/types';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { describeLocation, type LocationInfo } from './osm';
 import { CopyButton, formatDistance } from './parts';
@@ -14,6 +16,8 @@ const RELOOKUP_M = 150;
 export function MyLocationPage() {
   const { t, i18n } = useTranslation();
   const { fix, error } = useGeolocation();
+  // El número general de emergencias del país (en Chile, Carabineros).
+  const emergencyNumber = CALLS[useSettings((s) => s.settings.country)].emergency ?? '911';
   const waypoints = useWaypoints((s) => s.waypoints);
   const [info, setInfo] = useState<LocationInfo | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
@@ -175,8 +179,8 @@ export function MyLocationPage() {
         </>
       )}
 
-      <a className="btn btn-danger call-911" href="tel:911">
-        <Phone size={20} /> {t('location.call911')}
+      <a className="btn btn-danger call-911" href={`tel:${emergencyNumber}`}>
+        <Phone size={20} /> {t('location.call911', { number: emergencyNumber })}
       </a>
       <p className="hint">{t('location.sources')}</p>
     </div>

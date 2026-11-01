@@ -441,6 +441,8 @@
     "filters": { "all": "All", "police": "Police", "fire": "Fire", "health": "Health", "civilDefense": "Civil Defense" },
     "osmLoading": "Also searching OpenStreetMap…",
     "osmOffline": "Offline: showing the official data included in the app (fire stations nationwide; police and health in Buenos Aires Province).",
+    "osmOfflinePackage": "Offline: showing the {{country}} data saved on the device (fire stations, police and health centers from OpenStreetMap).",
+    "packageMissing": "The offline data for {{country}} has not been downloaded yet: it downloads automatically the first time there is a connection.",
     "osmError": "Couldn't reach OpenStreetMap (its public servers are sometimes overloaded): showing the official data included in the app.",
     "retry": "Retry OpenStreetMap",
     "found_one": "{{count}} place found",
@@ -482,7 +484,7 @@
     "sms": "SMS",
     "whatsapp": "WhatsApp",
     "shareTitle": "My location",
-    "call911": "Call 911",
+    "call911": "Call {{number}}",
     "msg": {
       "intro": "I need help. My location:",
       "coords": "Coordinates: {{decimal}} ({{dms}}), accuracy ±{{accuracy}} m",
@@ -554,6 +556,11 @@
     "nacionalHint": "During a power or internet outage, a battery radio is how you hear what the authorities announce.",
     "distance": "{{distance}} away",
     "nacionalNote": "AM reaches farther (hundreds of km at night); FM sounds better but only near the station. Frequencies: Radio Nacional (via Wikipedia); check them with your radio.",
+    "nacionalTitleUY": "Nearest Radio Uruguay (SODRE) station",
+    "nacionalNoteUY": "Public radio: Radio Uruguay (AM 1050 in Montevideo) and its FM repeater network in the interior. AM reaches farther at night; FM only nearby. Frequencies: Radiodifusión Nacional del Uruguay (via Wikipedia); check them with your radio.",
+    "nacionalTitleCL": "Nearest nationwide radio station",
+    "nacionalNoteCL": "Chile has no national public radio: this shows the Radio Bío-Bío network (private, with stations in every region), which reports emergencies. SENAPRED official alerts also reach phones through the Emergency Alert System (SAE). Frequencies via Wikipedia; check them with your radio.",
+    "packageMissing": "The {{country}} stations come with the country's offline data: it downloads automatically the first time there is a connection.",
     "distressTitle": "International distress frequencies",
     "distress": {
       "marine": { "name": "Marine · VHF channel 16", "desc": "Distress at sea and on navigable rivers and lakes. Monitored by the Coast Guard and ships" },
@@ -1229,8 +1236,7 @@
         "town": "{{name}}"
       },
       "nothing": "No help center found nearby: choose wilderness.",
-      "noLocation": "Could not get your location: choose manually.",
-      "onlyAR": "Automatic detection uses Argentine data for now: in your country, choose city or wilderness by hand."
+      "noLocation": "Could not get your location: choose manually."
     },
     "first": {
       "title": "First things first",

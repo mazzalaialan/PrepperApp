@@ -119,8 +119,6 @@ test('números de emergencia y guía según el país: Chile y Uruguay', async ({
   await page.goto('/#/first-aid/guides/bleeding');
   await expect(page.getByTestId('guide-node')).toContainText('Llamá al 131 o al 133');
   await expect(page.getByTestId('guide-calls').getByRole('link', { name: '131' })).toBeVisible();
-  // La detección de zona es solo con datos de Argentina.
-  await expect(page.getByRole('button', { name: 'Detectar con mi ubicación' })).toHaveCount(0);
 
   // Uruguay: todo por el 911, sin repetir botones; el CIAT para intoxicaciones.
   await page.goto('/#/first-aid/guides');
@@ -130,4 +128,42 @@ test('números de emergencia y guía según el país: Chile y Uruguay', async ({
   await page.goto('/#/first-aid/guides/snakebite');
   await expect(page.getByTestId('guide-node')).toContainText('Llamá al CIAT (centro toxicológico)');
   await expect(page.getByTestId('guide-calls').getByRole('link', { name: '1722' })).toBeVisible();
+});
+
+test('paquete de Chile: se baja al elegir el país, queda guardado y da radio, cercanos y zona sin conexión', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -33.45, longitude: -70.66 });
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  // Al elegir Chile se baja el paquete en segundo plano y queda guardado en el dispositivo.
+  await page.goto('/#/settings');
+  await page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Chile' }).click();
+  await expect
+    .poll(() => page.evaluate(async () => !!(await (await caches.open('vikarg-country')).match(new URL('data/CL.json', location.href).href))), { timeout: 15_000 })
+    .toBe(true);
+
+  // Radio: la red de Bío-Bío, la emisora de Santiago.
+  await page.goto('/#/first-aid/radio');
+  await expect(page.getByRole('heading', { name: 'Radio con cobertura nacional más cercana' })).toBeVisible();
+  await expect(page.getByTestId('radio-stations').locator('li').first()).toContainText('Radio Bío-Bío · Santiago');
+  await expect(page.getByTestId('radio-stations').locator('li').first()).toContainText('FM 99,7');
+
+  // Mi ubicación: el número de emergencias de Chile.
+  await page.goto('/#/first-aid/location');
+  await expect(page.getByRole('link', { name: 'Llamar al 133' })).toHaveAttribute('href', 'tel:133');
+
+  // Sin conexión: cercanos con los datos guardados de Chile y detección de zona.
+  await context.setOffline(true);
+  await page.goto('/#/first-aid/contacts/nearby');
+  await expect(page.getByTestId('nearby-status')).toContainText('datos de Chile guardados en el dispositivo');
+  await page.goto('/#/first-aid/guides');
+  await page.getByRole('button', { name: 'Detectar con mi ubicación' }).click();
+  await expect(page.getByTestId('guide-detect')).toContainText('elegí Ciudad');
+  await context.setOffline(false);
 });

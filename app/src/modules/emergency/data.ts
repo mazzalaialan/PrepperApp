@@ -28,6 +28,8 @@ export interface RadioStation {
 
 export interface EmergencyData {
   sources: Record<'fire' | 'police' | 'health' | 'radio', string>;
+  /** Paquetes de Chile y Uruguay: lugares de OpenStreetMap, no de un listado oficial. */
+  osm?: boolean;
   fire: Place[];
   police: Place[];
   health: Place[];
@@ -74,13 +76,14 @@ export function officialNearby(data: EmergencyData, lat: number, lon: number, ra
       lat: p.lat,
       lon: p.lon,
       distance,
-      source: 'official',
+      source: data.osm ? 'osm' : 'official',
       detail: p.type ?? '',
     });
   };
-  data.fire.forEach((p, i) => add(p, 'fire', 'fire', i));
-  data.police.forEach((p, i) => add(p, 'police', 'police', i));
-  data.health.forEach((p, i) => add(p, healthKind(p.type), 'health', i));
+  const key = data.osm ? 'pkg-' : '';
+  data.fire.forEach((p, i) => add(p, 'fire', `${key}fire`, i));
+  data.police.forEach((p, i) => add(p, 'police', `${key}police`, i));
+  data.health.forEach((p, i) => add(p, healthKind(p.type), `${key}health`, i));
   return out;
 }
 

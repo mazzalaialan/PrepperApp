@@ -5,7 +5,11 @@ import { ArrowLeft, Check, Save } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { emptyContact } from './ContactEditPage';
-import { loadEmergencyData, mergeNearby, officialNearby, type EmergencyData, type NearbyPlace } from './data';
+import { useSettings } from '@/core/settings/settings';
+import { loadCountryData } from './country';
+import { mergeNearby, officialNearby, type EmergencyData, type NearbyPlace } from './data';
+
+const EMPTY_DATA: EmergencyData = { sources: { fire: '', police: '', health: '', radio: '' }, fire: [], police: [], health: [], radio: [] };
 import { fetchOsmNearby } from './osm';
 import { formatDistance, KindIcon, MapLink, PhoneActions } from './parts';
 import { useContacts } from './store';
@@ -29,9 +33,19 @@ export function NearbyPage() {
   const [osmState, setOsmState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
   const [attempt, setAttempt] = useState(0);
 
+  const country = useSettings((s) => s.settings.country);
+  const [packageMissing, setPackageMissing] = useState(false);
   useEffect(() => {
-    void loadEmergencyData().then(setData);
-  }, []);
+    setPackageMissing(false);
+    loadCountryData(country).then(
+      (d) => setData(d.emergency),
+      () => {
+        // Sin conexión y sin el paquete del país: solo lo que encuentre OpenStreetMap cuando haya conexión.
+        setPackageMissing(true);
+        setData(EMPTY_DATA);
+      },
+    );
+  }, [country]);
 
   const searchKey = place ? `${place.lat.toFixed(3)},${place.lon.toFixed(3)},${radiusKm}` : null;
 
@@ -113,7 +127,11 @@ export function NearbyPage() {
         {osmState === 'loading'
           ? t('emergency.osmLoading')
           : osmState === 'offline'
-            ? t('emergency.osmOffline')
+            ? packageMissing
+              ? t('emergency.packageMissing', { country: t(`country.${country}`) })
+              : country === 'AR'
+                ? t('emergency.osmOffline')
+                : t('emergency.osmOfflinePackage', { country: t(`country.${country}`) })
             : osmState === 'error'
               ? t('emergency.osmError')
               : place && data && t('emergency.found', { count: shown.length })}
