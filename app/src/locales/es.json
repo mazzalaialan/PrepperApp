@@ -504,6 +504,7 @@
     "play": "Reproducir las últimas 2 horas",
     "pause": "Pausar",
     "timeline": "Momento",
+    "loadingFrames": "Cargando {{done}}/{{total}}",
     "satelliteAt": "Satélite {{time}}",
     "radarAt": "Radar {{time}}",
     "legend": {

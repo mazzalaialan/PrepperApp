@@ -4,7 +4,8 @@
  * pueden dibujar en el canvas.
  */
 
-const MAX_IMAGES = 160;
+/** Alcanza para la animación completa: 13 cuadros de radar (hasta 16 teselas c/u) más satélite y focos. */
+const MAX_IMAGES = 300;
 const cache = new Map<string, Promise<HTMLImageElement>>();
 
 export function loadImage(url: string): Promise<HTMLImageElement> {
@@ -38,13 +39,24 @@ export function readyImage(url: string): HTMLImageElement | null {
   return ready.get(url) ?? null;
 }
 
+/** Las que fallaron: no se esperan para animar. */
+const failed = new Set<string>();
+
+/** Ya se sabe cómo terminó (descargada o con error). */
+export function imageSettled(url: string): boolean {
+  return ready.has(url) || failed.has(url);
+}
+
 export async function preload(url: string): Promise<HTMLImageElement | null> {
   try {
     const img = await loadImage(url);
+    ready.delete(url);
     ready.set(url, img);
+    failed.delete(url);
     while (ready.size > MAX_IMAGES) ready.delete(ready.keys().next().value!);
     return img;
   } catch {
+    failed.add(url);
     return null;
   }
 }

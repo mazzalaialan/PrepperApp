@@ -1964,7 +1964,14 @@ a.module-card:hover {
 
 .wmap-timeline input {
   flex: 1;
+  min-width: 0;
   accent-color: var(--accent);
+}
+
+.wmap-progress {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .wmap-times {

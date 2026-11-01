@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Locate, Minus, Pause, Play, Plus, RefreshCw, Scan } from 'lucide-react';
@@ -9,7 +9,7 @@ import { useUnits } from '@/modules/weather/parts';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { FullscreenStage } from '@/ui/FullscreenStage';
 import { loadGeoData, type GeoData } from './geo';
-import { preload } from './images';
+import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
 import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, viewBBox, zoomAt, type Size, type View } from './projection';
 import {
@@ -40,6 +40,9 @@ const STALE_MS = 10 * 60_000;
 const FRAME_MS = 700;
 /** Se piden las imágenes de satélite cuando la vista deja de moverse. */
 const SETTLE_MS = 500;
+/** Teselas de radar por cuadro (si hacen falta más, se usa un zoom menor). */
+const RADAR_TILES_MAX = 16;
+const PRELOAD_PARALLEL = 4;
 const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'waypoints'];
 const VALUES: WeatherMapValue[] = ['temp', 'rain', 'wind'];
 type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards';
@@ -205,49 +208,83 @@ export function WeatherMapPage() {
     );
   }, [layers.waypoints]);
 
-  const radarZoom = request ? tileZoom(request.view, RADAR_MAX_ZOOM) : 0;
-  const radarTiles = useMemo(() => (request ? tilesFor(request.view, request.size, radarZoom) : []), [request, radarZoom]);
+  // El radar es de baja resolución: con pocas teselas por cuadro entra la animación entera en memoria.
+  const radarTiles = useMemo(() => {
+    if (!request) return [];
+    for (let z = tileZoom(request.view, RADAR_MAX_ZOOM); ; z--) {
+      const tiles = tilesFor(request.view, request.size, z);
+      if (z === 0 || tiles.length <= RADAR_TILES_MAX) return tiles;
+    }
+  }, [request]);
   const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
   const frameCount = Math.max(satTimes?.length ?? 1, radar?.frames.length ?? 1);
-  const idx = (len: number) => Math.round((Math.min(frame, frameCount - 1) * (len - 1)) / Math.max(1, frameCount - 1));
+  const idxAt = (i: number, len: number) => Math.round((Math.min(i, frameCount - 1) * (len - 1)) / Math.max(1, frameCount - 1));
+  const idx = (len: number) => idxAt(frame, len);
 
-  // Imágenes de toda la animación para la vista quieta; cada una que llega redibuja.
+  /** Satélite y radar de un cuadro de la animación. */
+  const frameOverlays = (i: number): Overlay[] => {
+    if (!request) return [];
+    const out: Overlay[] = [];
+    if (layers.satellite && satTimes?.length) {
+      const time = isoMinute(satTimes[idxAt(i, satTimes.length)]!);
+      out.push({ url: gibsUrl(SATELLITE_LAYER, time, request.view, request.size, ratio), bbox: viewBBox(request.view, request.size), opacity: 0.75 });
+    }
+    if (layers.radar && radar?.frames.length) {
+      const f = radar.frames[idxAt(i, radar.frames.length)]!;
+      for (const tile of radarTiles) out.push({ url: radarTileUrl(radar.host, f.path, tile.z, tile.x, tile.y), bbox: tileBBox(tile.x, tile.y, tile.z), opacity: 0.85 });
+    }
+    return out;
+  };
+  const frameSettled = (i: number) => frameOverlays(i).every((o) => imageSettled(o.url));
+  // `version` cambia con cada imagen que llega: se recalcula cuántos cuadros están listos.
+  const settledFrames = Array.from({ length: frameCount }, (_, i) => frameSettled(i));
+  const settledCount = settledFrames.filter(Boolean).length;
+  const settledRef = useRef(settledFrames);
+  settledRef.current = settledFrames;
+
+  // Imágenes de toda la animación para la vista quieta, de a varias, del cuadro más nuevo al más viejo.
   useEffect(() => {
     if (!request || !online) return;
     let cancelled = false;
     const urls: string[] = [];
-    if (layers.satellite && satTimes) for (const time of [...satTimes].reverse()) urls.push(gibsUrl(SATELLITE_LAYER, isoMinute(time), request.view, request.size, ratio));
+    for (let i = frameCount - 1; i >= 0; i--) for (const o of frameOverlays(i)) if (!urls.includes(o.url)) urls.push(o.url);
     if (layers.fires) for (const day of fireDays()) urls.push(gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio));
-    if (layers.radar && radar)
-      for (const f of [...radar.frames].reverse()) for (const tile of radarTiles) urls.push(radarTileUrl(radar.host, f.path, tile.z, tile.x, tile.y));
-    void (async () => {
-      for (const url of urls) {
-        if (cancelled) return;
-        if (await preload(url)) setVersion((v) => v + 1);
+    let next = 0;
+    const worker = async () => {
+      while (!cancelled && next < urls.length) {
+        const url = urls[next++]!;
+        await preload(url);
+        if (!cancelled) setVersion((v) => v + 1);
       }
-    })();
+    };
+    for (let k = 0; k < PRELOAD_PARALLEL; k++) void worker();
     return () => {
       cancelled = true;
     };
-  }, [request, satTimes, radar, radarTiles, layers.satellite, layers.fires, layers.radar, online, ratio]);
+    // frameOverlays depende de estos mismos datos.
+  }, [request, satTimes, radar, radarTiles, layers.satellite, layers.fires, layers.radar, online, ratio, frameCount]);
 
+  // Se saltean los cuadros que todavía no bajaron (si no, el radar aparece vacío en esa parte).
   useEffect(() => {
     if (!playing || frameCount < 2) return;
-    const timer = setInterval(() => setFrame((f) => (f + 1) % frameCount), FRAME_MS);
+    const timer = setInterval(
+      () =>
+        setFrame((f) => {
+          for (let k = 1; k <= frameCount; k++) {
+            const n = (f + k) % frameCount;
+            if (settledRef.current[n]) return n;
+          }
+          return f;
+        }),
+      FRAME_MS,
+    );
     return () => clearInterval(timer);
   }, [playing, frameCount]);
 
-  const overlays: Overlay[] = [];
-  if (request) {
+  const overlays: Overlay[] = frameOverlays(frame);
+  if (request && layers.fires) {
     const bbox = viewBBox(request.view, request.size);
-    if (layers.satellite && satTimes?.length) {
-      overlays.push({ url: gibsUrl(SATELLITE_LAYER, isoMinute(satTimes[idx(satTimes.length)]!), request.view, request.size, ratio), bbox, opacity: 0.75 });
-    }
-    if (layers.radar && radar?.frames.length) {
-      const f = radar.frames[idx(radar.frames.length)]!;
-      for (const tile of radarTiles) overlays.push({ url: radarTileUrl(radar.host, f.path, tile.z, tile.x, tile.y), bbox: tileBBox(tile.x, tile.y, tile.z), opacity: 0.85 });
-    }
-    if (layers.fires) for (const day of fireDays()) overlays.push({ url: gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio), bbox, opacity: 1, fire: true });
+    for (const day of fireDays()) overlays.push({ url: gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio), bbox, opacity: 1, fire: true });
   }
 
   const waypoints = useMemo(
@@ -342,6 +379,11 @@ export function WeatherMapPage() {
               }}
               aria-label={t('weatherMap.timeline')}
             />
+            {online && settledCount < frameCount && (
+              <span className="wmap-progress" role="status" data-testid="frames-progress">
+                {t('weatherMap.loadingFrames', { done: settledCount, total: frameCount })}
+              </span>
+            )}
           </div>
         )}
       </FullscreenStage>

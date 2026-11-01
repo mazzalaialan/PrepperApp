@@ -504,6 +504,7 @@
     "play": "Play the last 2 hours",
     "pause": "Pause",
     "timeline": "Time",
+    "loadingFrames": "Loading {{done}}/{{total}}",
     "satelliteAt": "Satellite {{time}}",
     "radarAt": "Radar {{time}}",
     "legend": {

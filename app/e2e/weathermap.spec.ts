@@ -99,9 +99,17 @@ test('mapa de tiempo: capas, animación, tocar un sismo o una alerta, y sin cone
   await expect(page.getByRole('slider', { name: 'Momento' })).not.toHaveValue('12');
   await page.getByRole('button', { name: 'Pausar' }).click();
 
-  // Radar: se suma su hora.
+  // Radar: se suma su hora y se bajan los 13 cuadros (2 horas), con pocas teselas cada uno.
+  const radarTiles = new Map<string, Set<string>>();
+  page.on('request', (r) => {
+    const m = r.url().match(/tilecache\.rainviewer\.com\/v2\/radar\/(f\d+)\/(.+)$/);
+    if (m) radarTiles.set(m[1]!, (radarTiles.get(m[1]!) ?? new Set()).add(m[2]!));
+  });
   await page.getByRole('button', { name: 'Radar de lluvia' }).click();
   await expect(page.getByTestId('map-times').first()).toHaveText(/^Satélite \d\d:\d\d · Radar \d\d:\d\d$/);
+  await expect.poll(() => radarTiles.size, { timeout: 15_000 }).toBe(13);
+  await expect(page.getByTestId('frames-progress')).toHaveCount(0, { timeout: 15_000 });
+  for (const tiles of radarTiles.values()) expect(tiles.size).toBeLessThanOrEqual(16);
   await expect(page.getByText('En Argentina solo cubre el noreste')).toBeVisible();
 
   // Tocar un sismo muestra sus datos.
