@@ -151,6 +151,9 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   // El nombre se elige de una lista de obras sociales y prepagas comunes (o se escribe otra).
   await expect(page.getByTestId('insurer-names').locator('option[value="IOMA"]')).toHaveCount(1);
   await expect(page.getByTestId('insurer-names').locator('option[value="PAMI"]')).toHaveCount(1);
+  // También de Chile y Uruguay.
+  await expect(page.getByTestId('insurer-names').locator('option[value="FONASA (Chile)"]')).toHaveCount(1);
+  await expect(page.getByTestId('insurer-names').locator('option[value="CASMU"]')).toHaveCount(1);
   await page.getByLabel('Obra social', { exact: true }).fill('OSDE');
   await page.getByLabel('Plan').fill('310');
   await page.getByLabel('N.º de credencial').fill('61 234567 8 01');

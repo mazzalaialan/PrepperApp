@@ -1,9 +1,10 @@
 /**
- * Obras sociales y prepagas comunes en Argentina, para elegir el nombre de una
- * lista en vez de escribirlo cada uno a su manera (nacionales, provinciales y
- * prepagas). Se puede escribir cualquier otra.
+ * Obras sociales, prepagas, Isapres y mutualistas comunes en Argentina, Chile y
+ * Uruguay, para elegir el nombre de una lista en vez de escribirlo cada uno a su
+ * manera. Se puede escribir cualquier otra: queda guardada y aparece en las demás
+ * fichas.
  */
-export const COMMON_INSURERS = [
+const ARGENTINA = [
   'PAMI',
   'IOMA',
   'OSDE',
@@ -60,4 +61,42 @@ export const COMMON_INSURERS = [
   'Obra Social Provincia (San Juan)',
   'IOSEP (Santiago del Estero)',
   'SEMPRE (La Pampa)',
-] as const;
+];
+
+const CHILE = [
+  'FONASA (Chile)',
+  'Isapre Banmédica',
+  'Isapre Colmena',
+  'Isapre Consalud',
+  'Isapre Cruz Blanca',
+  'Isapre Vida Tres',
+  'Isapre Nueva Masvida',
+  'Isapre Esencial',
+  'Capredena (Chile)',
+  'Dipreca (Chile)',
+];
+
+const URUGUAY = [
+  'ASSE (Uruguay)',
+  'CASMU',
+  'Médica Uruguaya (MUCAM)',
+  'Asociación Española',
+  'Círculo Católico',
+  'SMI (Servicio Médico Integral)',
+  'Hospital Evangélico',
+  'COSEM',
+  'CUDAM',
+  'GREMCA',
+  'Universal',
+  'MP Medicina Personalizada',
+  'SUMMUM',
+  'Blue Cross & Blue Shield (Uruguay)',
+  'Hospital Británico (Uruguay)',
+  'Sanidad Policial (Uruguay)',
+  'Sanidad Militar (Uruguay)',
+  'SEMM (emergencia móvil)',
+  'UCM (emergencia móvil)',
+  'Emergencia Uno',
+];
+
+export const COMMON_INSURERS: readonly string[] = [...ARGENTINA, ...CHILE, ...URUGUAY];
