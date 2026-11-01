@@ -335,7 +335,15 @@
       "memberNumber": "N.º de credencial",
       "emergencyPhone": "Teléfono de emergencias",
       "planShort": "Plan {{plan}}",
-      "memberShort": "Credencial {{n}}"
+      "memberShort": "Credencial {{n}}",
+      "phones": "Teléfonos de la obra social",
+      "phoneLabels": ["Riesgo de vida", "Emergencias", "Urgencias", "Médico a domicilio", "Atención al socio", "Turnos"],
+      "firstPhoneLabel": "Emergencias",
+      "phoneLabel": "Para qué es el teléfono {{n}}",
+      "phoneLabelPlaceholder": "Para qué (ej.: riesgo de vida)",
+      "phoneNumber": "Número del teléfono {{n}}",
+      "addPhone": "Agregar teléfono",
+      "removePhone": "Quitar teléfono"
     },
     "addMedication": "Agregar medicamento",
     "removeMedication": "Quitar medicamento",

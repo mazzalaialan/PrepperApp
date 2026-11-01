@@ -217,8 +217,16 @@ export interface HealthInsurance {
   plan: string;
   /** Número de credencial / afiliado. */
   memberNumber: string;
-  /** Teléfono de emergencias (urgencias, ambulancia) de la obra social. */
+  /** Primer teléfono de `phones`: copia para versiones anteriores a 0.13. */
   emergencyPhone: string;
+  /** Teléfonos de la obra social ("Riesgo de vida", "Emergencias"…), desde 0.13. */
+  phones?: InsurancePhone[];
+}
+
+export interface InsurancePhone {
+  /** Para qué es; vacío = "Teléfono de emergencias" (el único que había antes). */
+  label: string;
+  number: string;
 }
 
 /** Un contacto de emergencia: otra ficha médica (sus datos se leen de ahí) o un texto libre ("María 11 5555-1234"). */

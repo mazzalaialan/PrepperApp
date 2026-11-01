@@ -335,7 +335,15 @@
       "memberNumber": "Member number",
       "emergencyPhone": "Emergency phone",
       "planShort": "Plan {{plan}}",
-      "memberShort": "Member {{n}}"
+      "memberShort": "Member {{n}}",
+      "phones": "Insurer phone numbers",
+      "phoneLabels": ["Life-threatening emergency", "Emergencies", "Urgent care", "Home doctor", "Member services", "Appointments"],
+      "firstPhoneLabel": "Emergencies",
+      "phoneLabel": "What phone {{n}} is for",
+      "phoneLabelPlaceholder": "What for (e.g.: life-threatening)",
+      "phoneNumber": "Number of phone {{n}}",
+      "addPhone": "Add phone",
+      "removePhone": "Remove phone"
     },
     "addMedication": "Add medication",
     "removeMedication": "Remove medication",

@@ -48,7 +48,6 @@ export const CONFLICT_FIELDS = [
   'insurance.name',
   'insurance.plan',
   'insurance.memberNumber',
-  'insurance.emergencyPhone',
   'pet.species',
   'pet.speciesOther',
   'pet.neutered',
@@ -134,8 +133,6 @@ function getField(p: MedicalProfile, f: ConflictField): string {
       return ins.plan;
     case 'insurance.memberNumber':
       return ins.memberNumber;
-    case 'insurance.emergencyPhone':
-      return ins.emergencyPhone;
     case 'pet.species':
       return p.pet ? pet.species : '';
     case 'pet.speciesOther':
@@ -340,6 +337,17 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       }
     }
     merged = { ...merged, medications: meds, doctors, emergencyContacts: contacts };
+    // Teléfonos de la obra social: se suman los que falten.
+    if (l.kind !== 'pet' && p.insurance?.phones?.length) {
+      const phones = [...(merged.insurance?.phones ?? [])];
+      for (const ph of p.insurance.phones) {
+        if (phones.some((x) => digits(x.number) && digits(x.number) === digits(ph.number))) continue;
+        phones.push(ph);
+        additions++;
+      }
+      const ins = merged.insurance ?? emptyInsurance();
+      merged = { ...merged, insurance: { ...ins, phones, emergencyPhone: ins.emergencyPhone || (phones[0]?.number ?? '') } };
+    }
     if (!photoOf(l.id, local.attachments) && photoOf(p.id, incoming.attachments)) {
       copyPhoto(p.id, l.id);
       additions++;

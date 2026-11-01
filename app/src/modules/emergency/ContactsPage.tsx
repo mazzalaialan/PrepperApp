@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Plus, Search, Stethoscope, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
-import { doctorLabel, doctorUses, fichaContacts, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
+import { doctorLabel, doctorUses, fichaContacts, insurancePhones, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
@@ -143,6 +143,7 @@ function MyDataSection() {
     [t('medical.conditions'), me.conditions],
   ];
   const ins = me.insurance;
+  const insPhones = insurancePhones(ins);
   const insuranceText = ins
     ? [ins.name, ins.plan && t('medical.insurance.planShort', { plan: ins.plan }), ins.memberNumber && t('medical.insurance.memberShort', { n: ins.memberNumber })].filter(Boolean).join(' · ')
     : '';
@@ -198,13 +199,16 @@ function MyDataSection() {
             })}
           </>
         )}
-        {(insuranceText || ins?.emergencyPhone) && (
+        {(insuranceText || insPhones.length > 0) && (
           <>
             <dt>{t('medical.insurance.title')}</dt>
-            <dd data-testid="my-insurance">
-              {insuranceText}
-              {ins?.emergencyPhone && <PhoneActions phone={ins.emergencyPhone} />}
-            </dd>
+            {insuranceText && <dd data-testid="my-insurance">{insuranceText}</dd>}
+            {insPhones.map((p, i) => (
+              <dd key={i} data-testid="my-insurance-phone">
+                {p.label || t('medical.insurance.emergencyPhone')}
+                <PhoneActions phone={p.number} />
+              </dd>
+            ))}
           </>
         )}
         {contacts.length > 0 && (

@@ -121,13 +121,20 @@ export function normalizeProfile(p: MedicalProfile): MedicalProfile {
     emergencyContacts: p.emergencyContacts ?? (p.emergencyContact?.trim() ? [{ profileId: null, text: p.emergencyContact.trim() }] : []),
     // Antes de 0.11.1 médico y obra social (o el veterinario) iban en un texto: pasa como un médico, para revisarlo.
     doctors: p.doctors ?? (p.doctor?.trim() ? [legacyDoctor(p.doctor)] : []),
-    insurance: p.insurance ?? emptyInsurance(),
+    insurance: normalizeInsurance(p.insurance),
     medications: (p.medications ?? []).map((m) => ({ ...m, everyHours: m.everyHours ?? null, firstTime: m.firstTime ?? null })),
   };
 }
 
 export function emptyInsurance(): HealthInsurance {
-  return { name: '', plan: '', memberNumber: '', emergencyPhone: '' };
+  return { name: '', plan: '', memberNumber: '', emergencyPhone: '', phones: [] };
+}
+
+/** Antes de 0.13 la obra social tenía un solo teléfono (de emergencias): pasa a ser el primero de la lista. */
+function normalizeInsurance(ins: HealthInsurance | undefined): HealthInsurance {
+  if (!ins) return emptyInsurance();
+  const phones = ins.phones ?? (ins.emergencyPhone.trim() ? [{ label: '', number: ins.emergencyPhone.trim() }] : []);
+  return { ...ins, phones };
 }
 
 function legacyDoctor(text: string): Doctor {

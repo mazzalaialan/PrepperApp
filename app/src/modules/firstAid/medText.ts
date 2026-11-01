@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import type { Doctor, Id, Medication, MedicalProfile } from '@/core/model/types';
+import type { Doctor, HealthInsurance, Id, InsurancePhone, Medication, MedicalProfile } from '@/core/model/types';
 import { medTimes, phoneIn } from './medicalStore';
 
 export { phoneIn };
@@ -26,6 +26,12 @@ export function resolveEmergencyContacts(p: MedicalProfile, profiles: Map<Id, Me
     }
     return [{ label: c.text, phone: phoneIn(c.text) }];
   });
+}
+
+/** Teléfonos de la obra social (las fichas anteriores a 0.13 tenían uno solo, de emergencias). */
+export function insurancePhones(ins: HealthInsurance | undefined): InsurancePhone[] {
+  if (!ins) return [];
+  return (ins.phones ?? (ins.emergencyPhone.trim() ? [{ label: '', number: ins.emergencyPhone }] : [])).filter((p) => p.number.trim());
 }
 
 /** "Psiquiatra: Dr. Pérez" (o solo el nombre si no tiene especialidad). */
@@ -78,8 +84,8 @@ export function fichaContacts(profiles: Map<Id, MedicalProfile>, t: TFunction): 
     }
     if (p.kind !== 'pet') {
       const ins = p.insurance;
-      if (ins?.emergencyPhone.trim()) {
-        add(t('emergency.insuranceEmergency', { name: ins.name || t('medical.insurance.title') }), ins.emergencyPhone, t('emergency.insuranceOf', { name: p.name }));
+      for (const phone of insurancePhones(ins)) {
+        add(`${ins?.name || t('medical.insurance.title')} · ${phone.label || t('medical.insurance.emergencyPhone')}`, phone.number, t('emergency.insuranceOf', { name: p.name }));
       }
     }
     for (const c of p.emergencyContacts ?? []) if (!c.profileId && c.text.trim()) add(c.text, phoneIn(c.text), t('emergency.emergencyContactOf', { name: p.name }));

@@ -6,7 +6,7 @@ import { useDocuments } from '@/modules/documents/store';
 import { emptyContact } from '@/modules/emergency/ContactEditPage';
 import { useContacts } from '@/modules/emergency/store';
 import { newEntity } from '@/core/model/entity';
-import type { Doctor, EmergencyContactRef, HealthInsurance, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
+import type { Doctor, EmergencyContactRef, HealthInsurance, InsurancePhone, Medication, MedicalProfile, PetHealth, PetSpecies, ProfileKind } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
 import { Segmented } from '@/ui/Segmented';
 import { SinglePhoto } from '@/ui/SinglePhoto';
@@ -193,6 +193,9 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   };
   const insurance = draft.insurance ?? emptyInsurance();
   const setInsurance = (changes: Partial<HealthInsurance>) => set({ insurance: { ...insurance, ...changes } });
+  const insPhones = insurance.phones ?? [];
+  const setInsPhone = (index: number, changes: Partial<InsurancePhone>) =>
+    setInsurance({ phones: insPhones.map((p, i) => (i === index ? { ...p, ...changes } : p)) });
   const setContact = (index: number, changes: Partial<EmergencyContactRef>) =>
     set({ emergencyContacts: contacts.map((c, i) => (i === index ? { ...c, ...changes } : c)) });
   const pet = draft.pet ?? emptyPetHealth();
@@ -224,9 +227,17 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       doctors.push(entry);
     }
     const ins = draft.insurance ?? emptyInsurance();
+    const insPhones = (ins.phones ?? []).map((p) => ({ label: p.label.trim(), number: p.number.trim() })).filter((p) => p.number);
     const insurance = isPet
       ? emptyInsurance()
-      : { name: ins.name.trim(), plan: ins.plan.trim(), memberNumber: ins.memberNumber.trim(), emergencyPhone: ins.emergencyPhone.trim() };
+      : {
+          name: ins.name.trim(),
+          plan: ins.plan.trim(),
+          memberNumber: ins.memberNumber.trim(),
+          phones: insPhones,
+          // Copia para versiones anteriores, que tenían un solo teléfono.
+          emergencyPhone: insPhones[0]?.number ?? '',
+        };
     const contacts = (draft.emergencyContacts ?? [])
       .map((c) => ({ profileId: c.profileId, text: c.profileId ? '' : c.text.trim() }))
       .filter((c) => c.profileId || c.text);
@@ -620,10 +631,41 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                 <label htmlFor="ins-member">{t('medical.insurance.memberNumber')}</label>
                 <input id="ins-member" className="input" value={insurance.memberNumber} onChange={(e) => setInsurance({ memberNumber: e.target.value })} />
               </div>
-              <div className="field">
-                <label htmlFor="ins-phone">{t('medical.insurance.emergencyPhone')}</label>
-                <input id="ins-phone" className="input" type="tel" inputMode="tel" value={insurance.emergencyPhone} onChange={(e) => setInsurance({ emergencyPhone: e.target.value })} />
+            </div>
+            <h3 className="contact-group-title">{t('medical.insurance.phones')}</h3>
+            <datalist id="insurance-phone-labels">
+              {(t('medical.insurance.phoneLabels', { returnObjects: true }) as string[]).map((r) => (
+                <option key={r} value={r} />
+              ))}
+            </datalist>
+            {insPhones.map((p, i) => (
+              <div key={i} className="ec-row ins-phone-row" data-testid="insurance-phone">
+                <input
+                  className="input"
+                  list="insurance-phone-labels"
+                  aria-label={t('medical.insurance.phoneLabel', { n: i + 1 })}
+                  placeholder={t('medical.insurance.phoneLabelPlaceholder')}
+                  value={p.label}
+                  onChange={(e) => setInsPhone(i, { label: e.target.value })}
+                />
+                <input
+                  className="input"
+                  type="tel"
+                  inputMode="tel"
+                  aria-label={t('medical.insurance.phoneNumber', { n: i + 1 })}
+                  placeholder={t('medical.doctors.phone')}
+                  value={p.number}
+                  onChange={(e) => setInsPhone(i, { number: e.target.value })}
+                />
+                <button className="icon-btn" type="button" onClick={() => setInsurance({ phones: insPhones.filter((_, j) => j !== i) })} aria-label={t('medical.insurance.removePhone')}>
+                  <X size={16} />
+                </button>
               </div>
+            ))}
+            <div className="row-end">
+              <button className="btn" type="button" onClick={() => setInsurance({ phones: [...insPhones, { label: insPhones.length === 0 ? t('medical.insurance.firstPhoneLabel') : '', number: '' }] })}>
+                <Plus size={18} /> {t('medical.insurance.addPhone')}
+              </button>
             </div>
           </section>
         )}

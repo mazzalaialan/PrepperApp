@@ -151,7 +151,14 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByLabel('Obra social', { exact: true }).fill('OSDE');
   await page.getByLabel('Plan').fill('310');
   await page.getByLabel('N.º de credencial').fill('61 234567 8 01');
-  await page.getByLabel('Teléfono de emergencias').fill('0810-888-7788');
+  // Varios teléfonos de la obra social, cada uno con su nombre.
+  await page.getByRole('button', { name: 'Agregar teléfono' }).click();
+  await expect(page.getByLabel('Para qué es el teléfono 1')).toHaveValue('Emergencias');
+  await page.getByLabel('Para qué es el teléfono 1').fill('Riesgo de vida');
+  await page.getByLabel('Número del teléfono 1').fill('0810-888-7788');
+  await page.getByRole('button', { name: 'Agregar teléfono' }).click();
+  await page.getByLabel('Para qué es el teléfono 2').fill('Emergencias');
+  await page.getByLabel('Número del teléfono 2').fill('0810-555-1234');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Guardado', { exact: true })).toBeVisible();
 
@@ -189,9 +196,12 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await expect(saved.getByRole('link', { name: '4777-9999' })).toBeVisible();
   await expect(saved).toContainText('Psicólogo de Tomi');
   const fromFichas = page.getByTestId('ficha-contacts').locator('li');
-  await expect(fromFichas).toHaveCount(2);
-  await expect(page.getByTestId('ficha-contacts')).toContainText('Emergencias de OSDE');
+  await expect(fromFichas).toHaveCount(3);
+  await expect(page.getByTestId('ficha-contacts')).toContainText('OSDE · Riesgo de vida');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('OSDE · Emergencias');
+  await expect(page.getByTestId('ficha-contacts')).toContainText('Obra social de Tomi');
   await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '0810-888-7788' })).toHaveAttribute('href', 'tel:08108887788');
+  await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '0810-555-1234' })).toHaveAttribute('href', 'tel:08105551234');
   await expect(page.getByTestId('ficha-contacts')).toContainText('Contacto de emergencia de Tomi');
   await expect(page.getByTestId('ficha-contacts').getByRole('link', { name: '4222-3333' })).toHaveAttribute('href', 'tel:42223333');
   await family.nth(1).getByRole('link', { name: 'Ficha médica de Tomi' }).click();

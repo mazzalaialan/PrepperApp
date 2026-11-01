@@ -263,3 +263,20 @@ describe('compartir con un familiar: inventario, waypoints y rutas', () => {
     expect(mergeShare(after, incoming, none()).writes.lots).toHaveLength(0);
   });
 });
+
+describe('obra social con varios teléfonos', () => {
+  it('el teléfono único de antes pasa a ser el primero de la lista', () => {
+    const old = profile({ insurance: { name: 'OSDE', plan: '', memberNumber: '', emergencyPhone: '0810-888-7788' } });
+    expect(normalizeProfile({ ...old, insurance: { name: 'OSDE', plan: '', memberNumber: '', emergencyPhone: '0810-888-7788' } }).insurance!.phones).toEqual([
+      { label: '', number: '0810-888-7788' },
+    ]);
+  });
+
+  it('al compartir se suman los teléfonos que falten, sin duplicar', () => {
+    const ins = (phones: { label: string; number: string }[]) => ({ name: 'OSDE', plan: '', memberNumber: '', emergencyPhone: phones[0]?.number ?? '', phones });
+    const mine = profile({ name: 'Ana', insurance: ins([{ label: 'Emergencias', number: '0810 555 1234' }]) });
+    const theirs = profile({ name: 'Ana', insurance: ins([{ label: 'Riesgo de vida', number: '0810-888-7788' }, { label: 'Emergencias', number: '0810-555-1234' }]) });
+    const r = mergeShare({ ...empty, profiles: [mine] }, payload({ profiles: [theirs] }), none());
+    expect(r.writes.profiles[0]!.insurance!.phones!.map((p) => p.label)).toEqual(['Emergencias', 'Riesgo de vida']);
+  });
+});
