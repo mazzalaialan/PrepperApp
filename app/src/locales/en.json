@@ -372,9 +372,24 @@
       "poisonKids": { "name": "Poisoning in children", "desc": "Toxicology at Ricardo Gutiérrez Children's Hospital, free, 24 hours" },
       "burns": { "name": "Burns Hospital", "desc": "Emergency room of the Burns Hospital (Buenos Aires City). Elsewhere, 107 refers you to the nearest burns center" },
       "mentalHealth": { "name": "Mental health and crisis", "desc": "Ministry of Health line, free, 24 hours: mental health emergencies and suicide risk" },
-      "gender": { "name": "Gender violence", "desc": "144: advice and support, 24 hours" }
+      "gender": { "name": "Gender violence", "desc": "144: advice and support, 24 hours" },
+      "clSamu": { "name": "Ambulance (SAMU)", "desc": "131: medical emergencies" },
+      "clCarabineros": { "name": "Carabineros", "desc": "133: police and general emergencies" },
+      "clFire": { "name": "Fire department", "desc": "132: fires and rescue" },
+      "clPdi": { "name": "Investigations Police (PDI)", "desc": "134" },
+      "clMaritime": { "name": "Maritime rescue", "desc": "137: emergencies at sea, beaches and lakes (Navy)" },
+      "clPoison": { "name": "Poisoning (CITUC)", "desc": "UC Toxicological Information Center, free, 24 hours: also bites and stings" },
+      "clMentalHealth": { "name": "Suicide prevention", "desc": "*4141 from the Ministry of Health, free, 24 hours" },
+      "uyEmergencies": { "name": "Emergencies", "desc": "911: police, ambulances and fire" },
+      "uyFire": { "name": "Fire department", "desc": "104" },
+      "uyPrefectura": { "name": "Coast guard (water rescue)", "desc": "106" },
+      "uyPoison": { "name": "Poisoning (CIAT)", "desc": "Toxicology Information and Advice Center at Hospital de Clínicas, 24 hours: also bites and stings" },
+      "uyMentalHealth": { "name": "Línea Vida", "desc": "Suicide prevention (ASSE), free, 24 hours. From a mobile: *0767" },
+      "uyGender": { "name": "Domestic violence", "desc": "Inmujeres helpline. From a mobile: *4141" }
     },
-    "localNote": "Some numbers change by province or municipality: save your local ones in \"My contacts\" too.",
+    "localNoteAR": "Some numbers change by province or municipality: save your local ones in \"My contacts\" too.",
+    "localNoteCL": "Chile has no single number: 131 ambulance, 132 fire, 133 Carabineros (police). Save your local ones in \"My contacts\" too.",
+    "localNoteUY": "In Uruguay 911 handles every emergency. Save your health provider's mobile emergency service in \"My contacts\" too.",
     "mineTitle": "My contacts",
     "familyTitle": "Family",
     "myDataTitle": "My details",
@@ -1151,6 +1166,12 @@
       "permission-denied": "Notifications are blocked. Allow them in the site permissions."
     }
   },
+  "country": {
+    "label": "Country",
+    "AR": "Argentina",
+    "CL": "Chile",
+    "UY": "Uruguay"
+  },
   "about": {
     "title": "About",
     "link": "About, report a problem and contact",
@@ -1189,7 +1210,7 @@
     "notFound": "Guide not found.",
     "dont": "Do not",
     "myLocation": "My location (for rescuers)",
-    "disclaimer": "Guide based on the first aid recommendations of the European Resuscitation Council, the Red Cross and the Argentine Ministry of Health. It does not replace a course: take a CPR and first aid course. When in doubt, call 107 or 911.",
+    "disclaimer": "Guide based on the first aid recommendations of the European Resuscitation Council, the Red Cross and the Argentine Ministry of Health. It does not replace a course: take a CPR and first aid course. When in doubt, call {{medical}}.",
     "env": {
       "label": "Where you are",
       "city": "City",
@@ -1207,12 +1228,13 @@
         "town": "{{name}}"
       },
       "nothing": "No help center found nearby: choose wilderness.",
-      "noLocation": "Could not get your location: choose manually."
+      "noLocation": "Could not get your location: choose manually.",
+      "onlyAR": "Automatic detection uses Argentine data for now: in your country, choose city or wilderness by hand."
     },
     "first": {
       "title": "First things first",
       "protect": { "title": "1. Protect yourself.", "text": "Make sure the scene is safe before approaching (traffic, fire, wires, water, rocks)." },
-      "call": { "title": "2. Call.", "text": "107 (medical emergencies) or 911. In the wilderness, ask for rescue and give your coordinates." },
+      "call": { "title": "2. Call.", "text": "Call {{medical}}. In the wilderness, ask for rescue and give your coordinates." },
       "responds": { "title": "3. Do they respond?", "text": "Tap their shoulders and speak loudly." },
       "breathing": { "title": "4. Normal breathing?", "text": "If not breathing or only gasping: CPR now, 100 to 120 compressions per minute on the center of the chest." },
       "bleeding": { "title": "5. Heavy bleeding?", "text": "Press hard on the wound; on an arm or leg, if it does not stop, tourniquet." },

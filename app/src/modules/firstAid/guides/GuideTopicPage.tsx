@@ -5,7 +5,7 @@ import { useSettings } from '@/core/settings/settings';
 import { PhoneActions } from '@/modules/emergency/parts';
 import { resolveNext, TOPIC_BY_ID } from './content';
 import { EnvSwitch, useLang } from './parts';
-import { CALLS } from './types';
+import { CALLS, fillGuideText } from './types';
 
 /** Un tema de la guía, paso a paso: cada respuesta lleva al paso siguiente (y "volver" deshace). */
 export function GuideTopicPage() {
@@ -15,6 +15,7 @@ export function GuideTopicPage() {
   const { t } = useTranslation();
   const lang = useLang();
   const env = useSettings((s) => s.settings.firstAidEnv);
+  const country = useSettings((s) => s.settings.country);
   const topic = topicId ? TOPIC_BY_ID.get(topicId) : undefined;
   const nodeId = params.get('paso') ?? topic?.start ?? '';
   const node = topic?.nodes[nodeId];
@@ -33,6 +34,11 @@ export function GuideTopicPage() {
     navigate(`/first-aid/guides/${target.topic}${target.node === startOfTopic ? '' : `?paso=${target.node}`}`);
   };
   const steps = node.steps.filter((s) => !s.env || s.env === env);
+  const fill = (text: string) => fillGuideText(text, country, lang);
+  // Los números del país, sin repetir (en Uruguay casi todo es el 911).
+  const calls = (node.calls ?? [])
+    .map((k) => ({ key: k, number: CALLS[country][k] }))
+    .filter((c, i, all): c is { key: typeof c.key; number: string } => !!c.number && all.findIndex((x) => x.number === c.number) === i);
 
   return (
     <div className="stack guide">
@@ -47,22 +53,22 @@ export function GuideTopicPage() {
 
       <section className="card stack" aria-labelledby="guide-node-title" data-testid="guide-node">
         <h2 id="guide-node-title" className="section-title" style={{ margin: 0 }}>
-          {node.title[lang]}
+          {fill(node.title[lang])}
         </h2>
         <ol className="guide-steps">
           {steps.map((s, i) => (
             <li key={i} className={s.dont ? 'guide-dont' : undefined} data-env={s.env}>
-              {s.dont && <Ban size={16} aria-label={t('guides.dont')} />} {s.text[lang]}
+              {s.dont && <Ban size={16} aria-label={t('guides.dont')} />} {fill(s.text[lang])}
             </li>
           ))}
         </ol>
 
-        {node.calls && (
+        {calls.length > 0 && (
           <div className="guide-calls" data-testid="guide-calls">
-            {node.calls.map((k) => (
-              <span key={k} className="guide-call">
-                <span className="hint">{t(`guides.call.${k}`)}</span>
-                <PhoneActions phone={CALLS[k]} />
+            {calls.map((c) => (
+              <span key={c.key} className="guide-call">
+                <span className="hint">{t(`guides.call.${c.key}`)}</span>
+                <PhoneActions phone={c.number} />
               </span>
             ))}
             {env === 'wild' && (
@@ -73,12 +79,12 @@ export function GuideTopicPage() {
           </div>
         )}
 
-        {node.question && <p className="guide-question">{node.question[lang]}</p>}
+        {node.question && <p className="guide-question">{fill(node.question[lang])}</p>}
         {node.options && (
           <div className="guide-options" data-testid="guide-options">
             {node.options.map((o) => (
               <button key={o.next + o.label.es} className="btn guide-option" type="button" onClick={() => go(o.next)}>
-                {o.label[lang]}
+                {fill(o.label[lang])}
               </button>
             ))}
           </div>
@@ -93,7 +99,7 @@ export function GuideTopicPage() {
           {t('guides.all')}
         </Link>
       </div>
-      <p className="hint">{t('guides.disclaimer')}</p>
+      <p className="hint">{t('guides.disclaimer', { medical: fill('{medical}') })}</p>
     </div>
   );
 }

@@ -372,9 +372,24 @@
       "poisonKids": { "name": "Intoxicaciones en niños", "desc": "Toxicología del Hospital de Niños Ricardo Gutiérrez, gratuito, las 24 horas" },
       "burns": { "name": "Hospital de Quemados", "desc": "Guardia del Hospital de Quemados (Ciudad de Buenos Aires). En el resto del país, el 107 deriva al centro de quemados más cercano" },
       "mentalHealth": { "name": "Salud mental y crisis", "desc": "Línea del Ministerio de Salud, gratuita, las 24 horas: urgencias de salud mental y riesgo de suicidio" },
-      "gender": { "name": "Violencia de género", "desc": "144: asesoramiento y contención las 24 horas" }
+      "gender": { "name": "Violencia de género", "desc": "144: asesoramiento y contención las 24 horas" },
+      "clSamu": { "name": "Ambulancia (SAMU)", "desc": "131: urgencias médicas" },
+      "clCarabineros": { "name": "Carabineros", "desc": "133: policía y emergencias en general" },
+      "clFire": { "name": "Bomberos", "desc": "132: incendios y rescate" },
+      "clPdi": { "name": "Policía de Investigaciones (PDI)", "desc": "134" },
+      "clMaritime": { "name": "Rescate marítimo", "desc": "137: emergencias en el mar, playas y lagos (Armada)" },
+      "clPoison": { "name": "Intoxicaciones (CITUC)", "desc": "Centro de Información Toxicológica UC, gratuito, las 24 horas: también mordeduras y picaduras" },
+      "clMentalHealth": { "name": "Prevención del suicidio", "desc": "*4141 del Ministerio de Salud, gratuito, las 24 horas" },
+      "uyEmergencies": { "name": "Emergencias", "desc": "911: policía, ambulancias y bomberos" },
+      "uyFire": { "name": "Bomberos", "desc": "104" },
+      "uyPrefectura": { "name": "Prefectura (rescate en el agua)", "desc": "106" },
+      "uyPoison": { "name": "Intoxicaciones (CIAT)", "desc": "Centro de Información y Asesoramiento Toxicológico del Hospital de Clínicas, las 24 horas: también mordeduras y picaduras" },
+      "uyMentalHealth": { "name": "Línea Vida", "desc": "Prevención del suicidio (ASSE), gratuita, las 24 horas. Desde el celular: *0767" },
+      "uyGender": { "name": "Violencia doméstica", "desc": "Orientación de Inmujeres. Desde el celular: *4141" }
     },
-    "localNote": "Algunos números cambian según la provincia o el municipio: guardá también los de tu zona en \"Mis contactos\".",
+    "localNoteAR": "Algunos números cambian según la provincia o el municipio: guardá también los de tu zona en \"Mis contactos\".",
+    "localNoteCL": "En Chile no hay un número único: 131 ambulancia, 132 bomberos, 133 Carabineros. Guardá también los de tu comuna en \"Mis contactos\".",
+    "localNoteUY": "En Uruguay el 911 atiende todas las emergencias. Guardá también la emergencia móvil de tu mutualista en \"Mis contactos\".",
     "mineTitle": "Mis contactos",
     "familyTitle": "Familia",
     "myDataTitle": "Mis datos",
@@ -1151,6 +1166,12 @@
       "permission-denied": "Las notificaciones están bloqueadas. Habilitalas en los permisos del sitio."
     }
   },
+  "country": {
+    "label": "País",
+    "AR": "Argentina",
+    "CL": "Chile",
+    "UY": "Uruguay"
+  },
   "about": {
     "title": "Acerca de",
     "link": "Acerca de, reportar un problema y contacto",
@@ -1189,7 +1210,7 @@
     "notFound": "No se encontró esa guía.",
     "dont": "No hacer",
     "myLocation": "Mi ubicación (para el rescate)",
-    "disclaimer": "Guía basada en las recomendaciones de primeros auxilios del Consejo Europeo de Resucitación, la Cruz Roja y el Ministerio de Salud. No reemplaza un curso: hacé uno de RCP y primeros auxilios. Ante la duda, llamá al 107 o al 911.",
+    "disclaimer": "Guía basada en las recomendaciones de primeros auxilios del Consejo Europeo de Resucitación, la Cruz Roja y el Ministerio de Salud. No reemplaza un curso: hacé uno de RCP y primeros auxilios. Ante la duda, llamá al {{medical}}.",
     "env": {
       "label": "Dónde estás",
       "city": "Ciudad",
@@ -1207,12 +1228,13 @@
         "town": "{{name}}"
       },
       "nothing": "No se encontró ningún centro de atención cerca: elegí zona agreste.",
-      "noLocation": "No se pudo obtener tu ubicación: elegí a mano."
+      "noLocation": "No se pudo obtener tu ubicación: elegí a mano.",
+      "onlyAR": "La detección automática por ahora usa datos de Argentina: en tu país elegí ciudad o zona agreste a mano."
     },
     "first": {
       "title": "Lo primero",
       "protect": { "title": "1. Protegete.", "text": "Mirá que el lugar sea seguro antes de acercarte (tránsito, fuego, cables, agua, piedras)." },
-      "call": { "title": "2. Avisá.", "text": "107 (emergencias médicas) o 911. En zona agreste, pedí rescate y pasá tus coordenadas." },
+      "call": { "title": "2. Avisá.", "text": "Llamá al {{medical}}. En zona agreste, pedí rescate y pasá tus coordenadas." },
       "responds": { "title": "3. ¿Responde?", "text": "Tocale los hombros y hablale fuerte." },
       "breathing": { "title": "4. ¿Respira normal?", "text": "Si no respira o solo da bocanadas: RCP ya, 100 a 120 compresiones por minuto en el centro del pecho." },
       "bleeding": { "title": "5. ¿Sangra mucho?", "text": "Apretá fuerte sobre la herida; si es un brazo o una pierna y no para, torniquete." },

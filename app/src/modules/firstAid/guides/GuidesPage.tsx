@@ -4,13 +4,18 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Play, Search } from 'lucide-react';
 import { normalize } from '@/modules/inventory/selectors';
 import { TOPICS } from './content';
+import { useSettings } from '@/core/settings/settings';
+import { CountrySwitch } from '@/modules/emergency/CountrySwitch';
 import { EnvSwitch, useLang } from './parts';
+import { fillGuideText } from './types';
 
 /** Guía de primeros auxilios: lo primero, la evaluación paso a paso y todas las situaciones. */
 export function GuidesPage() {
   const { t } = useTranslation();
   const lang = useLang();
   const [query, setQuery] = useState('');
+  const country = useSettings((s) => s.settings.country);
+  const medical = fillGuideText('{medical}', country, lang);
   const topics = useMemo(() => {
     const q = normalize(query.trim());
     return TOPICS.filter((x) => x.id !== 'assess').filter((x) => !q || normalize(`${x.title[lang]} ${x.keywords[lang]}`).includes(q));
@@ -25,6 +30,7 @@ export function GuidesPage() {
         <h1 className="page-title" style={{ flex: 1 }}>{t('guides.title')}</h1>
       </div>
 
+      <CountrySwitch />
       <EnvSwitch />
 
       <section className="card stack guide-first" aria-labelledby="first-title" data-testid="guide-first">
@@ -32,7 +38,7 @@ export function GuidesPage() {
         <ol className="guide-first-list">
           {(['protect', 'call', 'responds', 'breathing', 'bleeding', 'position'] as const).map((k) => (
             <li key={k}>
-              <strong>{t(`guides.first.${k}.title`)}</strong> {t(`guides.first.${k}.text`)}
+              <strong>{t(`guides.first.${k}.title`)}</strong> {t(`guides.first.${k}.text`, { medical })}
             </li>
           ))}
         </ol>
@@ -61,7 +67,7 @@ export function GuidesPage() {
         </ul>
       </section>
 
-      <p className="hint">{t('guides.disclaimer')}</p>
+      <p className="hint">{t('guides.disclaimer', { medical })}</p>
     </div>
   );
 }

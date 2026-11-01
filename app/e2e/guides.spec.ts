@@ -92,3 +92,38 @@ test('guía de primeros auxilios: detectar ciudad o zona agreste con la ubicaci�
   await expect(page.getByTestId('guide-detect')).toHaveCount(0);
   await context.setOffline(false);
 });
+
+test('números de emergencia y guía según el país: Chile y Uruguay', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  // Chile: números propios en Contactos.
+  await page.goto('/#/first-aid/contacts');
+  await page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Chile' }).click();
+  const national = page.getByTestId('national-numbers');
+  await expect(national).toContainText('Ambulancia (SAMU)');
+  await expect(national.getByRole('link', { name: '131' })).toHaveAttribute('href', 'tel:131');
+  await expect(national.getByRole('link', { name: '*4141' })).toHaveAttribute('href', 'tel:*4141');
+  await expect(national).not.toContainText('Centro Nacional de Intoxicaciones');
+
+  // La guía usa los números de Chile.
+  await page.goto('/#/first-aid/guides/bleeding');
+  await expect(page.getByTestId('guide-node')).toContainText('Llamá al 131 o al 133');
+  await expect(page.getByTestId('guide-calls').getByRole('link', { name: '131' })).toBeVisible();
+  // La detección de zona es solo con datos de Argentina.
+  await expect(page.getByRole('button', { name: 'Detectar con mi ubicación' })).toHaveCount(0);
+
+  // Uruguay: todo por el 911, sin repetir botones; el CIAT para intoxicaciones.
+  await page.goto('/#/first-aid/guides');
+  await page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Uruguay' }).click();
+  await page.goto('/#/first-aid/guides/bleeding');
+  await expect(page.getByTestId('guide-calls').getByRole('link', { name: '911' })).toHaveCount(1);
+  await page.goto('/#/first-aid/guides/snakebite');
+  await expect(page.getByTestId('guide-node')).toContainText('Llamá al CIAT (centro toxicológico)');
+  await expect(page.getByTestId('guide-calls').getByRole('link', { name: '1722' })).toBeVisible();
+});

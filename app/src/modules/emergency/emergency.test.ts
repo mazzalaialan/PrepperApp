@@ -45,6 +45,8 @@ describe('teléfonos y mapas', () => {
     expect(dialable('0336-5408830/36')).toBe('03365408830');
     expect(dialable('+54 11 4361 4444')).toBe('+541143614444');
     expect(dialable('-')).toBe('');
+    // Números cortos de celular (Chile, Uruguay).
+    expect(dialable('*4141')).toBe('*4141');
   });
 
   it('Google Maps: por dirección o, si no hay, por coordenadas', () => {

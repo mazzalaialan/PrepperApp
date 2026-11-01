@@ -5,6 +5,8 @@ import { ArrowLeft, Pencil, Plus, Search, Stethoscope, User } from 'lucide-react
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
 import { doctorLabel, doctorUses, fichaContacts, insurancePhones, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
+import { useSettings } from '@/core/settings/settings';
+import { CountrySwitch } from './CountrySwitch';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
 import { useContacts } from './store';
@@ -20,6 +22,7 @@ export function ContactsPage() {
   // Médicos compartidos: en qué fichas están ("Pediatra de Tomi").
   const profiles = useMedical((s) => s.profiles);
   const uses = useMemo(() => doctorUses(profiles, t), [profiles, t]);
+  const country = useSettings((s) => s.settings.country);
 
   return (
     <div className="stack">
@@ -34,8 +37,9 @@ export function ContactsPage() {
 
       <section className="card stack" aria-labelledby="national-title">
         <h2 id="national-title" className="section-title" style={{ margin: 0 }}>{t('emergency.nationalTitle')}</h2>
-        <ul className="list contact-list">
-          {NATIONAL_NUMBERS.map((n) => (
+        <CountrySwitch />
+        <ul className="list contact-list" data-testid="national-numbers">
+          {NATIONAL_NUMBERS[country].map((n) => (
             <li key={n.id} className="contact-row" data-testid={`national-${n.id}`}>
               <KindIcon kind={n.kind} />
               <span className="list-main">
@@ -46,7 +50,7 @@ export function ContactsPage() {
             </li>
           ))}
         </ul>
-        <p className="hint" style={{ margin: 0 }}>{t('emergency.localNote')}</p>
+        <p className="hint" style={{ margin: 0 }}>{t(`emergency.localNote${country}`)}</p>
       </section>
 
       <section className="card stack" aria-labelledby="mine-title">

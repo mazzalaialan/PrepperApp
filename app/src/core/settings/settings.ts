@@ -49,9 +49,21 @@ export interface Settings {
   mapLayers: MapLayers;
   /** Entorno de la guía de primeros auxilios: con ayuda cerca o lejos. */
   firstAidEnv: FirstAidEnv;
+  /** País: define los números de emergencia y de la guía. */
+  country: Country;
 }
 
 export type FirstAidEnv = 'city' | 'wild';
+export type Country = 'AR' | 'CL' | 'UY';
+export const COUNTRIES: Country[] = ['AR', 'CL', 'UY'];
+
+/** Por la zona horaria del dispositivo (Chile y Uruguay tienen la suya); si no, Argentina. */
+export function detectCountry(): Country {
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? '';
+  if (/^America\/(Santiago|Punta_Arenas)$|^Pacific\/Easter$/.test(zone)) return 'CL';
+  if (zone === 'America/Montevideo') return 'UY';
+  return 'AR';
+}
 
 export interface MapLayers {
   hillshade: boolean;
@@ -118,6 +130,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weatherMapValue: 'temp',
   mapLayers: { hillshade: true, contours: true, mine: true },
   firstAidEnv: 'city',
+  country: detectCountry(),
 };
 
 const SETTINGS_KEY = 'app';

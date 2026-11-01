@@ -18,6 +18,7 @@ export function useLang(): 'es' | 'en' {
 export function EnvSwitch() {
   const { t, i18n } = useTranslation();
   const env = useSettings((s) => s.settings.firstAidEnv);
+  const country = useSettings((s) => s.settings.country);
   const update = useSettings((s) => s.update);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<HelpEstimate | null>(null);
@@ -67,10 +68,18 @@ export function EnvSwitch() {
       <div className="chips" role="group" aria-label={t('guides.env.label')}>
         {option('city', Building2)}
         {option('wild', Trees)}
-        <button type="button" className="chip guide-env" onClick={() => void detect()} disabled={busy}>
-          <LocateFixed size={16} aria-hidden /> {busy ? t('guides.detect.busy') : t('guides.detect.button')}
-        </button>
+        {/* Los datos para estimarlo (bomberos, centros de salud, localidades) son de Argentina. */}
+        {country === 'AR' && (
+          <button type="button" className="chip guide-env" onClick={() => void detect()} disabled={busy}>
+            <LocateFixed size={16} aria-hidden /> {busy ? t('guides.detect.busy') : t('guides.detect.button')}
+          </button>
+        )}
       </div>
+      {country !== 'AR' && (
+        <p className="hint" style={{ margin: 0 }}>
+          {t('guides.detect.onlyAR')}
+        </p>
+      )}
       {result && (
         <p className="hint" role="status" data-testid="guide-detect" style={{ margin: 0 }}>
           {t('guides.detect.result', {

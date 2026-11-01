@@ -18,10 +18,10 @@ const sw = (es: string, en: string): Step => ({ text: l(es, en), env: 'wild' });
 /** Lo que no hay que hacer. */
 const no = (es: string, en: string): Step => ({ text: l(es, en), dont: true });
 
-const CALL_SPEAKER = s('Llamá al 107 o al 911 y poné el altavoz: te van a ir guiando.', 'Call 107 or 911 on speaker: they will guide you.');
+const CALL_SPEAKER = s('Llamá al {medical} y poné el altavoz: te van a ir guiando.', 'Call {medical} on speaker: they will guide you.');
 const WILD_RESCUE = sw(
-  'Pedí rescate al 911 (Policía / rescate de montaña) y pasá las coordenadas de "Mi ubicación". Si no hay señal, probá desde un punto alto o mandá un SMS; si son varios, que alguien vaya a buscar ayuda con la ubicación anotada.',
-  'Ask for rescue on 911 (police / mountain rescue) and give the coordinates from "My location". With no signal, try from higher ground or send an SMS; if there are several of you, send someone for help with the location written down.',
+  'Pedí rescate al {emergency} (Policía / rescate de montaña) y pasá las coordenadas de "Mi ubicación". Si no hay señal, probá desde un punto alto o mandá un SMS; si son varios, que alguien vaya a buscar ayuda con la ubicación anotada.',
+  'Ask for rescue on {emergency} (police / mountain rescue) and give the coordinates from "My location". With no signal, try from higher ground or send an SMS; if there are several of you, send someone for help with the location written down.',
 );
 const KEEP_WARM = s('Abrigala y aislala del suelo (campera, manta, mochila debajo): pierde calor rápido aunque no haga frío.', 'Keep them warm and insulated from the ground (jacket, blanket, backpack underneath): they lose heat fast even when it is not cold.');
 const WATCH = s('Controlá cada pocos minutos si responde y si respira. Anotá la hora y los cambios.', 'Check every few minutes whether they respond and breathe. Write down times and changes.');
@@ -50,7 +50,7 @@ export const TOPICS: Topic[] = [
         steps: [
           s('No te acerques: si te lastimás vos, ya son dos para rescatar.', 'Do not go in: if you get hurt, there are two people to rescue.'),
           s('Si se puede, eliminá el peligro sin arriesgarte: cortá la luz, señalizá el accidente, alejá el fuego.', 'If you can, remove the danger without risk: cut the power, signal the crash, move the fire away.'),
-          sc('Llamá al 911 (o al 100 si hay fuego) y esperá a los que tienen equipo.', 'Call 911 (or 100 for fire) and wait for equipped responders.'),
+          sc('Llamá al {emergency} (o al {fire} si hay fuego) y esperá a los que tienen equipo.', 'Call {emergency} (or {fire} for fire) and wait for equipped responders.'),
           WILD_RESCUE,
         ],
         calls: ['emergency', 'fire'],
@@ -68,7 +68,7 @@ export const TOPICS: Topic[] = [
       breathing: {
         title: l('¿Respira normalmente?', 'Are they breathing normally?'),
         steps: [
-          s('Pedí ayuda a gritos: que alguien llame al 107 o al 911 y traiga un desfibrilador (DEA) si hay.', 'Shout for help: someone should call 107 or 911 and bring a defibrillator (AED) if there is one.'),
+          s('Pedí ayuda a gritos: que alguien llame al {medical} y traiga un desfibrilador (DEA) si hay.', 'Shout for help: someone should call {medical} and bring a defibrillator (AED) if there is one.'),
           s('Abrí la vía aérea: una mano en la frente, inclinala hacia atrás y levantá el mentón con dos dedos.', 'Open the airway: one hand on the forehead, tilt the head back and lift the chin with two fingers.'),
           s('Mirá el pecho, escuchá y sentí el aire hasta 10 segundos.', 'Look at the chest, listen and feel for air for up to 10 seconds.'),
           s('Bocanadas aisladas o ruidos (respiración agónica) NO son respirar normalmente.', 'Occasional gasps or noises (agonal breathing) are NOT normal breathing.'),
@@ -119,7 +119,7 @@ export const TOPICS: Topic[] = [
         title: l('Otra cosa', 'Something else'),
         steps: [
           s('Dejala en la posición más cómoda para ella y no le des de comer ni de beber hasta saber qué tiene.', 'Let them rest in the most comfortable position and do not give food or drink until you know what is wrong.'),
-          sc('Si empeora, tiene dolor intenso, está confundida o dormida, llamá al 107.', 'If they get worse, are in severe pain, confused or drowsy, call 107.'),
+          sc('Si empeora, tiene dolor intenso, está confundida o dormida, llamá al {same}.', 'If they get worse, are in severe pain, confused or drowsy, call {same}.'),
           sw('Si empeora o no puede caminar, pedí rescate en lugar de intentar sacarla vos.', 'If they get worse or cannot walk, ask for rescue instead of trying to carry them out yourself.'),
           KEEP_WARM,
           WATCH,
@@ -213,7 +213,7 @@ export const TOPICS: Topic[] = [
           s('Protegete las manos (guantes, bolsa).', 'Protect your hands (gloves, plastic bag).'),
           s('Acostala. Apretá directo sobre la herida con gasa, un trapo o la ropa, con las dos manos y todo tu peso.', 'Lay them down. Press directly on the wound with gauze, a cloth or clothing, with both hands and your body weight.'),
           s('No levantes la gasa para mirar: si se empapa, poné más encima y apretá más fuerte, al menos 10 minutos.', 'Do not lift the gauze to look: if it soaks through, add more on top and press harder, for at least 10 minutes.'),
-          sc('Llamá al 107 o al 911 (o que otro llame mientras vos apretás).', 'Call 107 or 911 (or have someone call while you press).'),
+          sc('Llamá al {medical} (o que otro llame mientras vos apretás).', 'Call {medical} (or have someone call while you press).'),
           WILD_RESCUE,
         ],
         calls: ['same', 'emergency'],
@@ -358,8 +358,8 @@ export const TOPICS: Topic[] = [
           s('Sacale anillos, relojes y pulseras antes de que se hinche.', 'Remove rings, watches and bracelets before it swells.'),
           s('Inmovilizá el miembro con una férula (como una fractura), a la altura del corazón.', 'Immobilize the limb with a splint (like a fracture), at heart level.'),
           s('Marcá con birome el borde de la hinchazón y anotá la hora; repetilo cada 30 minutos.', 'Mark the edge of the swelling with a pen and write the time; repeat every 30 minutes.'),
-          s('Llamá al Centro Nacional de Intoxicaciones: te dicen a qué hospital ir, el que tiene el antiveneno (suero).', 'Call the National Poison Center: they will tell you which hospital to go to, the one with antivenom.'),
-          sc('Llevala ya a ese hospital (o llamá al 107). El antiveneno es el único tratamiento.', 'Take them to that hospital now (or call 107). Antivenom is the only treatment.'),
+          s('Llamá al {poison}: te dicen a qué hospital ir, el que tiene el antiveneno (suero).', 'Call {poison}: they will tell you which hospital to go to, the one with antivenom.'),
+          sc('Llevala ya a ese hospital (o llamá al {same}). El antiveneno es el único tratamiento.', 'Take them to that hospital now (or call {same}). Antivenom is the only treatment.'),
           sw('Lo ideal es que la saquen otros (camilla, vehículo). Si está sola y tiene que caminar, que lo haga despacio, descansando. Pedí rescate y avisá que es una mordedura de serpiente.', 'Ideally others carry them out (stretcher, vehicle). If they are alone and must walk, walk slowly and rest. Ask for rescue and say it is a snakebite.'),
           no('No hagas torniquete, no cortes, no chupes el veneno, no pongas hielo ni calor, no des alcohol ni remedios caseros.', 'Do not use a tourniquet, cut, suck out the venom, apply ice or heat, or give alcohol or home remedies.'),
         ],
@@ -392,7 +392,7 @@ export const TOPICS: Topic[] = [
           s('Lavá con agua y jabón y poné frío (hielo envuelto en un trapo).', 'Wash with soap and water and apply cold (ice wrapped in a cloth).'),
           s('Es grave en chicos menores de 14 años y en mayores: llevalos ya a un hospital. Puede necesitar antiveneno.', 'It is serious in children under 14 and in the elderly: take them to a hospital now. They may need antivenom.'),
           s('Signos de alarma: vómitos, sudor, babeo, temblores, agitación, dolor de panza.', 'Warning signs: vomiting, sweating, drooling, tremors, agitation, belly pain.'),
-          s('Llamá al Centro de Intoxicaciones para saber dónde hay antiveneno.', 'Call the Poison Center to find out where there is antivenom.'),
+          s('Llamá al {poison} para saber dónde hay antiveneno.', 'Call {poison} to find out where there is antivenom.'),
           sw('En un chico es una evacuación urgente: no esperes a ver si aparecen síntomas.', 'In a child it is an urgent evacuation: do not wait to see if symptoms appear.'),
           no('No cortes ni chupes la picadura.', 'Do not cut or suck the sting.'),
         ],
@@ -403,7 +403,7 @@ export const TOPICS: Topic[] = [
         steps: [
           s('Lavá y poné frío. Si se puede, guardá la araña (en un frasco) o sacale una foto.', 'Wash and apply cold. If possible, keep the spider (in a jar) or photograph it.'),
           s('Viuda negra: dolor que se extiende, calambres, panza dura, sudor. Araña del rincón: herida dolorosa que se pone violeta en horas. Las dos necesitan hospital.', 'Black widow: spreading pain, cramps, rigid belly, sweating. Recluse spider: painful wound turning purple within hours. Both need a hospital.'),
-          s('Llamá al Centro de Intoxicaciones.', 'Call the Poison Center.'),
+          s('Llamá al {poison}.', 'Call {poison}.'),
           no('No cortes, no chupes, no pongas calor.', 'Do not cut, suck or apply heat.'),
         ],
         calls: ['poison', 'same'],
@@ -472,7 +472,7 @@ export const TOPICS: Topic[] = [
           s('Preguntale dónde le duele y si siente y mueve manos y pies (sin que se levante).', 'Ask where it hurts and whether they can feel and move hands and feet (without getting up).'),
           s('Buscá sangrado y controlalo.', 'Look for bleeding and control it.'),
           s('Alarma: dolor de cuello o espalda, hormigueo o no sentir las piernas, confusión, vómitos, sueño, pupilas distintas, sangre o líquido por oído o nariz.', 'Warning signs: neck or back pain, tingling or no feeling in the legs, confusion, vomiting, drowsiness, unequal pupils, blood or fluid from ears or nose.'),
-          sc('Con cualquier señal de alarma, llamá al 107 y que no se mueva hasta que lleguen.', 'With any warning sign, call 107 and keep them still until help arrives.'),
+          sc('Con cualquier señal de alarma, llamá al {same} y que no se mueva hasta que lleguen.', 'With any warning sign, call {same} and keep them still until help arrives.'),
           WILD_RESCUE,
           sw('Prepará una espera larga: abrigo, aislamiento del suelo, reparo del viento y la lluvia. Que no camine con dolor de columna o golpe en la cabeza.', 'Prepare for a long wait: warmth, insulation from the ground, shelter from wind and rain. They must not walk with spinal pain or a head injury.'),
           KEEP_WARM,
@@ -553,7 +553,7 @@ export const TOPICS: Topic[] = [
         steps: [
           s('Va al médico si: es más grande que la palma de su mano, está en cara, manos, pies, genitales o articulaciones, se ve blanca o negra, o es un chico o un mayor.', 'See a doctor if: it is larger than their palm, on the face, hands, feet, genitals or joints, looks white or charred, or the person is a child or elderly.'),
           s('Si respiró humo, tiene hollín en la nariz, ronquera o tos: urgencia, aunque se vea bien.', 'If they breathed smoke, have soot in the nose, hoarseness or cough: emergency, even if they look fine.'),
-          sc('Quemaduras graves: llamá al 107. En la Ciudad de Buenos Aires está el Hospital de Quemados.', 'Severe burns: call 107. In Buenos Aires City there is the Burns Hospital.'),
+          sc('Quemaduras graves: llamá al {same}; te derivan a un centro de quemados.', 'Severe burns: call {same}; they will refer you to a burns center.'),
           sw('Si el agua es poca, usala para enfriar (es lo más importante) y guardá para beber. Quemaduras grandes, en la cara o por humo: evacuación.', 'If water is scarce, use it to cool the burn (it matters most) and keep some for drinking. Large burns, on the face or from smoke: evacuate.'),
           sw('Dale de beber de a sorbos si está consciente: las quemaduras grandes deshidratan.', 'Give sips of water if they are conscious: large burns dehydrate.'),
         ],
@@ -565,7 +565,7 @@ export const TOPICS: Topic[] = [
           s('Protegete las manos. Si es polvo, sacudilo antes de mojar.', 'Protect your hands. If it is a powder, brush it off before wetting.'),
           s('Lavá con mucha agua corriente al menos 20 minutos; en los ojos, con el ojo abierto, desde adentro hacia afuera.', 'Rinse with plenty of running water for at least 20 minutes; for eyes, keep the eye open and rinse from the inside out.'),
           s('Sacale la ropa contaminada. Guardá el envase del producto.', 'Remove contaminated clothing. Keep the product container.'),
-          s('Llamá al Centro de Intoxicaciones.', 'Call the Poison Center.'),
+          s('Llamá al {poison}.', 'Call {poison}.'),
         ],
         calls: ['poison', 'same'],
       },
@@ -573,7 +573,7 @@ export const TOPICS: Topic[] = [
         title: l('Electricidad o rayo', 'Electricity or lightning'),
         steps: [
           s('Cortá la luz antes de tocarla. Si no podés, separala con algo seco que no conduzca (madera, plástico).', 'Cut the power before touching them. If you cannot, push them away with something dry and non-conductive (wood, plastic).'),
-          s('Cables de alta tensión: no te acerques, llamá al 911.', 'High-voltage lines: do not approach, call 911.'),
+          s('Cables de alta tensión: no te acerques, llamá al {emergency}.', 'High-voltage lines: do not approach, call {emergency}.'),
           s('Siempre va al médico: puede tener lesiones por dentro y alteraciones del ritmo del corazón.', 'Always see a doctor: there can be internal injuries and heart rhythm problems.'),
           s('Alguien alcanzado por un rayo no queda "cargado": se lo puede tocar y reanimar enseguida.', 'A lightning victim is not "charged": you can touch them and resuscitate right away.'),
         ],
@@ -617,7 +617,7 @@ export const TOPICS: Topic[] = [
         title: l('Posible ACV: cada minuto cuenta', 'Possible stroke: every minute counts'),
         steps: [
           s('Pedile que sonría (¿se le tuerce la cara?), que levante los dos brazos (¿uno cae?) y que repita una frase (¿habla mal?).', 'Ask them to smile (does the face droop?), raise both arms (does one drift down?) and repeat a sentence (is speech slurred?).'),
-          s('Con cualquiera de las tres, llamá ya al 107: hay tratamientos que solo sirven en las primeras horas.', 'With any of the three, call 107 now: some treatments only work in the first hours.'),
+          s('Con cualquiera de las tres, llamá ya al {same}: hay tratamientos que solo sirven en las primeras horas.', 'With any of the three, call {same} now: some treatments only work in the first hours.'),
           s('Anotá la hora en que empezó (o la última vez que se la vio bien).', 'Write down when it started (or the last time they were seen well).'),
           s('Si se desvanece pero respira, posición lateral de seguridad.', 'If they pass out but breathe, recovery position.'),
           no('No le des de comer, de beber ni remedios: puede atragantarse.', 'Do not give food, drink or medication: they may choke.'),
@@ -643,7 +643,7 @@ export const TOPICS: Topic[] = [
           s('Mirá la hora: importa cuánto dura.', 'Check the time: duration matters.'),
           no('No la sujetes ni le metas nada en la boca (no se traga la lengua).', 'Do not hold them down or put anything in their mouth (they will not swallow their tongue).'),
           s('Cuando termina, ponela de costado y dejala descansar: es normal que esté confundida un rato.', 'When it stops, put them on their side and let them rest: confusion for a while is normal.'),
-          s('Llamá al 107 si dura más de 5 minutos, se repite, es la primera vez, se lastimó, pasó en el agua, está embarazada, es diabética o no se despierta.', 'Call 107 if it lasts more than 5 minutes, repeats, is the first one, they got hurt, it happened in water, they are pregnant, diabetic or do not wake up.'),
+          s('Llamá al {same} si dura más de 5 minutos, se repite, es la primera vez, se lastimó, pasó en el agua, está embarazada, es diabética o no se despierta.', 'Call {same} if it lasts more than 5 minutes, repeats, is the first one, they got hurt, it happened in water, they are pregnant, diabetic or do not wake up.'),
           s('En un chico con fiebre: sacale ropa y bajá la fiebre de a poco, sin bañarlo en agua fría.', 'In a child with fever: remove clothing and lower the fever gradually, without a cold bath.'),
         ],
         calls: ['same'],
@@ -671,7 +671,7 @@ export const TOPICS: Topic[] = [
       swallowed: {
         title: l('Lo tragó', 'Swallowed'),
         steps: [
-          s('Llamá al Centro de Intoxicaciones (en chicos, también Toxicología del Hospital de Niños) y seguí sus indicaciones.', 'Call the Poison Center (for children, also the Children\'s Hospital toxicology line) and follow their advice.'),
+          s('Llamá al {poison} y seguí sus indicaciones.', 'Call {poison} and follow their advice.'),
           no('No la hagas vomitar, no le des leche, aceite ni nada sin que te lo indiquen.', 'Do not make them vomit or give milk, oil or anything unless told to.'),
           s('Si se duerme pero respira, posición lateral de seguridad.', 'If they become drowsy but breathe, recovery position.'),
         ],
@@ -684,7 +684,7 @@ export const TOPICS: Topic[] = [
           s('El monóxido (braseros, estufas, calefones, autos en lugares cerrados) no tiene olor: si varios tienen dolor de cabeza, mareos o náuseas a la vez, sospechalo.', 'Carbon monoxide (braziers, heaters, water heaters, cars in closed spaces) has no smell: if several people have headache, dizziness or nausea at once, suspect it.'),
           s('Abrí puertas y ventanas y sacá a todos al aire libre, sin exponerte de más.', 'Open doors and windows and get everyone outside, without exposing yourself too much.'),
           no('No prendas ni apagues luces ni nada que haga chispa si huele a gas.', 'Do not switch lights or anything that sparks if you smell gas.'),
-          s('Llamá al 107: aunque se recupere, necesita oxígeno y control.', 'Call 107: even if they recover, they need oxygen and a checkup.'),
+          s('Llamá al {same}: aunque se recupere, necesita oxígeno y control.', 'Call {same}: even if they recover, they need oxygen and a checkup.'),
         ],
         calls: ['same', 'emergency', 'poison'],
         options: [{ label: l('No responde', 'Unresponsive'), next: 'topic:assess' }],
@@ -694,7 +694,7 @@ export const TOPICS: Topic[] = [
         steps: [
           s('Sacale la ropa contaminada y lavá con mucha agua 15 a 20 minutos.', 'Remove contaminated clothing and rinse with plenty of water for 15 to 20 minutes.'),
           s('Ojos: con el ojo abierto, agua corriente desde adentro hacia afuera; sacale las lentes de contacto.', 'Eyes: keep the eye open, running water from the inside out; remove contact lenses.'),
-          s('Llamá al Centro de Intoxicaciones con el envase a mano.', 'Call the Poison Center with the container at hand.'),
+          s('Llamá al {poison} con el envase a mano.', 'Call {poison} with the container at hand.'),
         ],
         calls: ['poison', 'same'],
       },
@@ -717,7 +717,7 @@ export const TOPICS: Topic[] = [
           s('Calor en el pecho, axilas e ingle (botellas tibias envueltas), no en brazos y piernas.', 'Heat on the chest, armpits and groin (wrapped warm bottles), not on arms and legs.'),
           s('Con hipotermia grave, movela con mucho cuidado y horizontal: los golpes pueden alterar el corazón.', 'With severe hypothermia, move them very gently and horizontally: jolts can upset the heart rhythm.'),
           no('No la frotes, no le des alcohol ni la metas en agua caliente.', 'Do not rub them, give alcohol or put them in hot water.'),
-          sc('Si está confundida o dejó de temblar, llamá al 107.', 'If confused or no longer shivering, call 107.'),
+          sc('Si está confundida o dejó de temblar, llamá al {same}.', 'If confused or no longer shivering, call {same}.'),
           WILD_RESCUE,
         ],
         calls: ['same', 'emergency'],
@@ -740,7 +740,7 @@ export const TOPICS: Topic[] = [
           s('Lo mejor: sumergirla hasta el cuello en agua fría (río, arroyo, bañera). Si no: mojala entera y abanicá, y poné frío en cuello, axilas e ingle.', 'Best: immerse up to the neck in cold water (river, stream, bathtub). Otherwise: soak them all over and fan, and put cold on the neck, armpits and groin.'),
           s('Si está despierta, que tome agua fresca o con sales de a sorbos.', 'If awake, give cool water or oral rehydration salts in sips.'),
           s('Parás de enfriar cuando vuelve a estar lúcida.', 'Stop cooling when they are clear-headed again.'),
-          sc('Llamá al 107.', 'Call 107.'),
+          sc('Llamá al {same}.', 'Call {same}.'),
           WILD_RESCUE,
         ],
         calls: ['same', 'emergency'],
@@ -761,7 +761,7 @@ export const TOPICS: Topic[] = [
           s('Señales en un diabético: sudor, temblor, palidez, confusión o comportamiento raro.', 'Signs in a diabetic: sweating, shaking, paleness, confusion or odd behavior.'),
           s('Si está despierta y traga bien: azúcar rápida (3 o 4 caramelos, un vaso de gaseosa común o jugo, 2 cucharadas de azúcar en agua).', 'If awake and able to swallow: fast sugar (3 or 4 candies, a glass of regular soda or juice, 2 tablespoons of sugar in water).'),
           s('Si a los 15 minutos no mejora, repetí. Cuando mejora, que coma algo (pan, galletitas).', 'If not better in 15 minutes, repeat. Once better, have them eat something (bread, crackers).'),
-          no('Si no traga o no responde, no le des nada por boca: posición lateral y llamá al 107.', 'If they cannot swallow or do not respond, give nothing by mouth: recovery position and call 107.'),
+          no('Si no traga o no responde, no le des nada por boca: posición lateral y llamá al {same}.', 'If they cannot swallow or do not respond, give nothing by mouth: recovery position and call {same}.'),
         ],
         calls: ['same'],
         options: [{ label: l('No responde', 'Unresponsive'), next: 'topic:assess' }],
