@@ -303,6 +303,21 @@ Restaurar **reemplaza todo** (con confirmación). Para abrir el backup se pide l
 
 Un QR con los datos completos se descartó: un QR guarda ~2,9 KB y un inventario con fotos pesa cientos de KB o más.
 
+### 8.3 Compartir con un familiar (`.vikshare`)
+
+A diferencia del backup (que reemplaza todo y se abre con la contraseña propia), sirve para pasarle datos a **otra persona con su propia bóveda**, y se **suma** a lo que ya tiene (`modules/share`).
+
+- **Contenido elegible:** fichas médicas (con su foto y sus médicos/veterinarios, que viajan siempre con ellas), el resto de los contactos y los documentos (con fotos). Si no van las fichas, los documentos llegan como generales.
+- **Cifrado:** JSON comprimido (gzip) y cifrado con una DEK nueva envuelta con una **contraseña elegida para el envío** (PBKDF2 + AES-GCM, igual que la bóveda). La contraseña se dice por otro medio.
+- **Mezcla (`merge.ts`, función pura con pruebas):** nunca borra.
+  - *Fichas:* la misma si tiene el mismo id (ya compartida antes) o mismo nombre y especie y la fecha de nacimiento no se contradice; el resumen permite separarlas ("no es la misma persona").
+  - *Datos sueltos* (nacimiento, grupo, alergias, enfermedades, notas, teléfono, obra social, datos de mascota): si falta se completa; si difiere se pregunta, y por defecto queda el propio. Fechas de vacunas y desparasitación: la más reciente.
+  - *Listas* (medicamentos, médicos, contactos de emergencia): se suman las que faltan, sin duplicar (teléfonos comparados por sus últimos 8 dígitos).
+  - *No viaja lo que depende de quién mira:* parentesco, "Yo", "Mostrar en contactos" y el orden de los documentos. Las fichas nuevas llegan sin parentesco.
+  - *Contactos:* el mismo si tiene el mismo id o teléfono; solo se completan sus datos vacíos. Las referencias (médico de una ficha, contacto de emergencia que es otra ficha) se reubican a los ids locales.
+  - *Documentos:* se agregan los que no están (por id), con sus fotos.
+- Recibir el mismo archivo dos veces no duplica nada.
+
 ---
 
 ## 9. Servidor VikArg (opcional, autoalojado)

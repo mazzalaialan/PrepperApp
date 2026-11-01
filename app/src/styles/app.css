@@ -2417,3 +2417,28 @@ a.module-card:hover {
   }
 }
 
+
+/* ---------- Compartir con un familiar ---------- */
+
+.share-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.share-match {
+  gap: 8px;
+}
+
+.share-conflict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.share-conflict-field {
+  font-weight: 600;
+}
+

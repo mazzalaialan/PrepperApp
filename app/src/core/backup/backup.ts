@@ -20,36 +20,36 @@ export const BACKUP_EXTENSION = '.vikarg';
 
 // ---------- serialización binaria ----------
 
-function toB64(bytes: Uint8Array | ArrayBuffer): string {
+export function toB64(bytes: Uint8Array | ArrayBuffer): string {
   const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let s = '';
   for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000));
   return btoa(s);
 }
 
-function fromB64(s: string): Uint8Array<ArrayBuffer> {
+export function fromB64(s: string): Uint8Array<ArrayBuffer> {
   const bin = atob(s);
   const u8 = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
   return u8;
 }
 
-interface SealedJson {
+export interface SealedJson {
   iv: string;
   ct: string;
 }
 
-const sealedToJson = (s: Sealed): SealedJson => ({ iv: toB64(s.iv), ct: toB64(s.ct) });
-const sealedFromJson = (s: SealedJson): Sealed => ({ iv: fromB64(s.iv), ct: fromB64(s.ct).buffer });
+export const sealedToJson = (s: Sealed): SealedJson => ({ iv: toB64(s.iv), ct: toB64(s.ct) });
+export const sealedFromJson = (s: SealedJson): Sealed => ({ iv: fromB64(s.iv), ct: fromB64(s.ct).buffer });
 
-interface WrappedJson {
+export interface WrappedJson {
   salt: string;
   iterations: number;
   wrapped: SealedJson;
 }
 
-const wrappedToJson = (w: WrappedKey): WrappedJson => ({ salt: toB64(w.salt), iterations: w.iterations, wrapped: sealedToJson(w.wrapped) });
-const wrappedFromJson = (w: WrappedJson): WrappedKey => ({ salt: fromB64(w.salt), iterations: w.iterations, wrapped: sealedFromJson(w.wrapped) });
+export const wrappedToJson = (w: WrappedKey): WrappedJson => ({ salt: toB64(w.salt), iterations: w.iterations, wrapped: sealedToJson(w.wrapped) });
+export const wrappedFromJson = (w: WrappedJson): WrappedKey => ({ salt: fromB64(w.salt), iterations: w.iterations, wrapped: sealedFromJson(w.wrapped) });
 
 // ---------- formato ----------
 

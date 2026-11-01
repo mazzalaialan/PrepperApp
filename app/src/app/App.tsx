@@ -7,6 +7,7 @@ import { useEffectiveTheme } from '@/core/settings/theme';
 import { useBatterySaver } from '@/core/power/saver';
 import { AstronomyPage } from '@/modules/astronomy/AstronomyPage';
 import { BackupPage } from '@/modules/backup/BackupPage';
+import { SharePage } from '@/modules/share/SharePage';
 import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
 import { DocumentsPage } from '@/modules/documents/DocumentsPage';
 import { KitPage } from '@/modules/firstAid/KitPage';
@@ -62,6 +63,7 @@ const router = createHashRouter([
       { path: '/inventory/categories', element: <CategoriesPage /> },
       { path: '/inventory/alerts', element: <AlertsPage /> },
       { path: '/settings/backup', element: <BackupPage /> },
+      { path: '/settings/share', element: <SharePage /> },
       // Ruta anterior a v0.7.4 (el backup estaba en Inventario).
       { path: '/inventory/backup', element: <Navigate to="/settings/backup" replace /> },
       { path: '/inventory/recommendations', element: <RecommendationsPage /> },

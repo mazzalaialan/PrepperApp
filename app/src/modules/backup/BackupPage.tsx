@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Download, Send } from 'lucide-react';
+import { ArrowLeft, Download, Send, Users } from 'lucide-react';
 import { backupFileName, exportBackup, lastBackupAt, markBackupDone } from '@/core/backup/backup';
 import { TransferError, formatTransferCode, transferLink, uploadTransfer, type TransferTicket } from '@/core/backup/transfer';
 import { useSettings } from '@/core/settings/settings';
@@ -68,6 +68,16 @@ export function BackupPage() {
           </section>
 
           <SendSection onSent={() => void markBackupDone().then(lastBackupAt).then(setLast)} />
+
+          <section className="card stack">
+            <h2 className="section-title" style={{ margin: 0 }}>{t('share.title')}</h2>
+            <p className="hint" style={{ margin: 0 }}>{t('share.linkHint')}</p>
+            <div className="row-end">
+              <Link className="btn" to="/settings/share">
+                <Users size={18} /> {t('share.link')}
+              </Link>
+            </div>
+          </section>
         </>
       )}
 
