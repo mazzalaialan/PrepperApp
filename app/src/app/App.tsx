@@ -43,6 +43,7 @@ import { NewPasswordScreen } from './screens/NewPasswordScreen';
 import { RecoveryKeyScreen } from './screens/RecoveryKeyScreen';
 import { SetupScreen } from './screens/SetupScreen';
 import { UnlockScreen } from './screens/UnlockScreen';
+import { UpdatePrompt } from './UpdatePrompt';
 import { Shell } from './Shell';
 
 // MapLibre pesa ~1 MB: se carga recién al abrir los mapas (igual queda guardado para usarlo sin conexión).
@@ -123,12 +124,23 @@ function useApplyTheme(theme: Theme, saver: boolean) {
 }
 
 export function App() {
-  const { status, setupInProgress, pendingRecoveryKey, mustChangePassword } = useVault();
+  const status = useVault((s) => s.status);
   const autoLockMinutes = useSettings((s) => s.settings.autoLockMinutes);
   const theme = useEffectiveTheme();
 
   useApplyTheme(theme, useBatterySaver());
   useAutoLock(autoLockMinutes);
+
+  return (
+    <>
+      <Screen />
+      <UpdatePrompt visible={status === 'locked' || status === 'uninitialized'} />
+    </>
+  );
+}
+
+function Screen() {
+  const { status, setupInProgress, pendingRecoveryKey, mustChangePassword } = useVault();
 
   if (pendingRecoveryKey) return <RecoveryKeyScreen recoveryKey={pendingRecoveryKey} />;
   if (setupInProgress) return <SetupScreen />;

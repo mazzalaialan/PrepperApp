@@ -20,7 +20,6 @@ import { Dialog } from '@/ui/Dialog';
 import { RainNotices } from '@/modules/weather/RainNotices';
 import { useRainWatcher } from '@/modules/weather/rainWatch';
 import { PortableUpdateNotice } from './PortableUpdateNotice';
-import { UpdatePrompt } from './UpdatePrompt';
 
 // En el celular entran seis botones: cinco secciones y "Más" con el resto.
 // En pantallas anchas el riel lateral muestra todas. Ajustes va en la barra superior.
@@ -104,7 +103,6 @@ export function Shell() {
           <Outlet />
         </main>
       </div>
-      <UpdatePrompt />
     </div>
   );
 }
