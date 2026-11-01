@@ -344,6 +344,7 @@
       "phoneNumber": "Number of phone {{n}}",
       "addPhone": "Add phone",
       "removePhone": "Remove phone",
+      "editPhones": "Edit phones",
       "pick": "Pick a saved health insurance",
       "other": "Other (add a new one)",
       "shared": "Shared with {{names}}: name and phones are the same for everyone; plan and member number belong to each person."

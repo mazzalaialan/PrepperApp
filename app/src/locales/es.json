@@ -344,6 +344,7 @@
       "phoneNumber": "Número del teléfono {{n}}",
       "addPhone": "Agregar teléfono",
       "removePhone": "Quitar teléfono",
+      "editPhones": "Editar teléfonos",
       "pick": "Elegir obra social ya cargada",
       "other": "Otra (cargar una nueva)",
       "shared": "Compartida con {{names}}: el nombre y los teléfonos son los mismos para todos; el plan y la credencial son de cada uno."
