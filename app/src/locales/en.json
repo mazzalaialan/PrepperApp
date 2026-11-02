@@ -1209,7 +1209,8 @@
     "copiedFrom": "Copied from track {{name}}",
     "name": "Name",
     "notes": "Notes",
-    "confirmDelete": "Delete track \"{{name}}\"?"
+    "confirmDelete": "Delete track \"{{name}}\"? Points you copied to your waypoints stay.",
+    "delete": "Delete {{name}}"
   },
   "country": {
     "label": "Country",

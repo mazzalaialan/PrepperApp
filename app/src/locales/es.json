@@ -1209,7 +1209,8 @@
     "copiedFrom": "Copiado del track {{name}}",
     "name": "Nombre",
     "notes": "Notas",
-    "confirmDelete": "¿Eliminar el track \"{{name}}\"?"
+    "confirmDelete": "¿Eliminar el track \"{{name}}\"? Los puntos que copiaste a tus waypoints quedan.",
+    "delete": "Eliminar {{name}}"
   },
   "country": {
     "label": "País",

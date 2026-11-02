@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Footprints, Upload } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Footprints, Trash2, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpxError } from './gpx';
@@ -14,6 +14,10 @@ export function TracksPage() {
   const units = useSettings((s) => s.settings.units);
   const tracks = useTracks((s) => s.tracks);
   const saveTrack = useTracks((s) => s.saveTrack);
+  const deleteTrack = useTracks((s) => s.deleteTrack);
+  async function remove(id: string, name: string) {
+    if (window.confirm(t('tracks.confirmDelete', { name }))) await deleteTrack(id);
+  }
   const file = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const list = useMemo(() => [...tracks.values()].sort((a, b) => a.name.localeCompare(b.name, i18n.language)), [tracks, i18n.language]);
@@ -64,7 +68,7 @@ export function TracksPage() {
       ) : (
         <ul className="list" data-testid="tracks-list">
           {list.map((tr) => (
-            <li key={tr.id}>
+            <li key={tr.id} className="track-row">
               <Link className="list-row" to={`/orientation/tracks/${tr.id}`}>
                 <Footprints size={22} aria-hidden className="contact-icon" />
                 <span className="list-main">
@@ -82,6 +86,9 @@ export function TracksPage() {
                 </span>
                 <ChevronRight size={18} aria-hidden />
               </Link>
+              <button className="icon-btn" type="button" onClick={() => void remove(tr.id, tr.name)} aria-label={t('tracks.delete', { name: tr.name })} title={t('tracks.delete', { name: tr.name })}>
+                <Trash2 size={18} />
+              </button>
             </li>
           ))}
         </ul>

@@ -2613,3 +2613,15 @@ a.module-card:hover {
   margin: 0;
 }
 
+
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.track-row .list-row {
+  flex: 1;
+  min-width: 0;
+}
+
