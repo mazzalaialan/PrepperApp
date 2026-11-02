@@ -71,8 +71,15 @@ describe('seguir un track', () => {
     expect(s.next).toMatchObject({ name: 'Arroyo' });
   });
 
-  it('tiempo a pie: 4 km/h más una hora cada 600 m de subida', () => {
-    expect(walkingMinutes(4000, 0)).toBe(60);
-    expect(walkingMinutes(4000, 600)).toBe(120);
+  it('tiempo a pie: el mayor entre distancia (6 km/h) y altura (300 m/h subiendo, 600 m/h bajando) más la mitad del menor', () => {
+    expect(walkingMinutes(6000, 0, 0)).toBe(60);
+    expect(walkingMinutes(0, 300, 0)).toBe(60);
+    expect(walkingMinutes(0, 0, 600)).toBe(60);
+    // 1 h de distancia y 1 h de subida: 1 + 0,5.
+    expect(walkingMinutes(6000, 300, 0)).toBe(90);
+    // 2 h de distancia contra 1 h de altura (150 m arriba y 300 m abajo): 2 + 0,5.
+    expect(walkingMinutes(12000, 150, 300)).toBe(150);
+    // La altura manda: 3 h de subida contra 1 h de distancia.
+    expect(walkingMinutes(6000, 900, 0)).toBe(210);
   });
 });

@@ -138,7 +138,13 @@ export function isOffTrack(offTrackM: number, accuracyM: number, wasOff: boolean
   return wasOff ? offTrackM > limit * (2 / 3) : offTrackM > limit;
 }
 
-/** Tiempo estimado a pie (regla de Naismith: 4 km/h más 1 hora cada 600 m de subida), en minutos. */
-export function walkingMinutes(distanceM: number, upM: number): number {
-  return Math.round((distanceM / 4000 + upM / 600) * 60);
+/**
+ * Tiempo estimado a pie, en minutos: 6 km/h en distancia y, en altura, 300 m
+ * de subida y 600 m de bajada por hora. Se toma el mayor de los dos tiempos
+ * más la mitad del menor.
+ */
+export function walkingMinutes(distanceM: number, upM: number, downM: number): number {
+  const flat = distanceM / 6000;
+  const climb = upM / 300 + downM / 600;
+  return Math.round((Math.max(flat, climb) + Math.min(flat, climb) / 2) * 60);
 }

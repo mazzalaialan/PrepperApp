@@ -1227,7 +1227,7 @@
       "time": "Estimated time",
       "hours": "{{h}} h {{m}} min",
       "minutes": "{{m}} min",
-      "timeHint": "On foot at an easy pace (4 km/h plus one hour per 600 m of climb), without stops.",
+      "timeHint": "On foot without stops: 6 km/h over distance; in elevation, 300 m of climb or 600 m of descent per hour. The larger of the two counts, plus half of the other.",
       "next": "Next point: {{name}}, {{distance}} along the track",
       "map": "Drawing of the track with your position",
       "farAway": "You are far from the track: your position is outside the drawing."

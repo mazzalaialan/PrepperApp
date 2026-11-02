@@ -87,7 +87,7 @@ function Follow({ track }: { track: Track }) {
 
   const backBearing = fix && state && off ? bearingDeg(fix, state.nearest) : null;
   const turn = backBearing !== null && heading?.trueHeading != null ? angleDiff(heading.trueHeading, backBearing) : null;
-  const minutes = state ? walkingMinutes(state.remainingM, state.upLeftM) : null;
+  const minutes = state ? walkingMinutes(state.remainingM, state.upLeftM, state.downLeftM) : null;
 
   return (
     <div className="stack">

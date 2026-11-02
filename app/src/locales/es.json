@@ -1227,7 +1227,7 @@
       "time": "Tiempo estimado",
       "hours": "{{h}} h {{m}} min",
       "minutes": "{{m}} min",
-      "timeHint": "A pie, a ritmo tranquilo (4 km/h más una hora cada 600 m de subida), sin paradas.",
+      "timeHint": "A pie y sin paradas: 6 km/h en distancia; en altura, 300 m de subida o 600 m de bajada por hora. Cuenta el mayor de los dos más la mitad del otro.",
       "next": "Próximo punto: {{name}}, a {{distance}} por el track",
       "map": "Dibujo del track con tu posición",
       "farAway": "Estás lejos del track: tu posición queda fuera del dibujo."
