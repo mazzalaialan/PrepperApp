@@ -62,6 +62,7 @@
     "inclinometer": { "title": "Inclinometer", "desc": "Slope angle and avalanche risk" },
     "waypoints": { "title": "Waypoints", "desc": "Saved points and how to get back" },
     "routes": { "title": "Routes", "desc": "Lists of points to follow in order" },
+    "tracks": { "title": "Imported tracks", "desc": "Trails from Wikiloc or other apps (GPX), kept apart from your waypoints" },
     "astronomy": { "title": "Sun & moon", "desc": "Sunrise, sunset and moon phases" },
     "weather": { "title": "Weather", "desc": "Forecast when online" },
     "maps": { "title": "Offline maps", "desc": "Downloaded areas with terrain" },
@@ -577,7 +578,7 @@
     "goHere": "Go to my location",
     "center": "Center: {{coords}} · zoom {{zoom}}",
     "layers": "Layers",
-    "layer": { "hillshade": "Terrain", "contours": "Contour lines", "mine": "My waypoints and routes" },
+    "layer": { "hillshade": "Terrain", "contours": "Contour lines", "mine": "My waypoints and routes", "tracks": "Imported tracks" },
     "zones": "Downloaded areas",
     "zonesHint": "Download the places that matter to you (your city, an evacuation route, a shelter) to have them offline, with terrain and contour lines.",
     "downloadHere": "Download an area",
@@ -1174,6 +1175,42 @@
       "permission-denied": "Notifications are blocked. Allow them in the site permissions."
     }
   },
+  "tracks": {
+    "import": "Import GPX",
+    "empty": "No tracks imported yet. Download the GPX of a Wikiloc trail (or from another app) and import it.",
+    "howTo": "How to download a GPX from Wikiloc: open the trail, tap \"Download\" and choose GPX (a free account is needed). The track's points stay apart from your waypoints; copy any you want.",
+    "pointCount_one": "{{count}} point",
+    "pointCount_other": "{{count}} points",
+    "error": {
+      "not-gpx": "The file is not a GPX.",
+      "empty": "The GPX has no track or points."
+    },
+    "notFound": "Track not found.",
+    "stats": "Track details",
+    "distance": "Distance",
+    "ascent": "Elevation gain",
+    "descent": "Elevation loss",
+    "maxEle": "Highest point",
+    "profile": "Elevation profile",
+    "profileRange": "Elevation between {{min}} and {{max}}",
+    "onMap": "Show on map",
+    "goStart": "Go to start",
+    "goEnd": "Go to end",
+    "startOf": "Start of {{name}}",
+    "endOf": "End of {{name}}",
+    "source": "Source: {{source}}",
+    "original": "See the original trail",
+    "points": "Track points",
+    "pointsHint": "They come with the track and do not mix with your waypoints. You can go to one with the compass or copy it to your waypoints.",
+    "noPoints": "This track has no named points.",
+    "goTo": "Go to {{name}}",
+    "copy": "Copy {{name}} to my waypoints",
+    "copied": "{{name}} is already in my waypoints",
+    "copiedFrom": "Copied from track {{name}}",
+    "name": "Name",
+    "notes": "Notes",
+    "confirmDelete": "Delete track \"{{name}}\"?"
+  },
   "country": {
     "label": "Country",
     "AR": "Argentina",
@@ -1268,7 +1305,7 @@
       "contacts": "Contacts (police, neighbors, frequencies…)",
       "documents": "Documents (with photos)",
       "inventory": "Inventory (items, locations, quantities and expiry dates)",
-      "waypoints": "Waypoints and routes"
+      "waypoints": "Waypoints, routes and imported tracks"
     },
     "password": "Password for this file",
     "repeat": "Repeat password",
@@ -1322,7 +1359,8 @@
     "documents": "Documents: {{added}} new ({{existing}} you already had).",
     "inventoryHint": "What you send is added to your family member's inventory: if they have locations with the same name (e.g. \"Pantry\"), quantities go there. Mostly useful if you share the house.",
     "inventory": "Inventory: {{items}} new items, {{lots}} quantities (lots), {{locations}} locations and {{categories}} new categories.",
-    "waypoints": "Waypoints: {{waypoints}} new and {{routes}} routes.",    "neverDeletes": "Nothing you already have is deleted.",
+    "waypoints": "Waypoints: {{waypoints}} new, {{routes}} routes and {{tracks}} tracks.",
+    "neverDeletes": "Nothing you already have is deleted.",
     "apply": "Save",
     "nothingNew": "Nothing new",
     "applied": "Done: {{profiles}} new records, {{updated}} completed, {{contacts}} contacts and {{documents}} new documents."

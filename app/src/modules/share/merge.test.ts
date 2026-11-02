@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newEntity } from '@/core/model/entity';
-import type { Attachment, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, Waypoint } from '@/core/model/types';
+import type { Attachment, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, Track, Waypoint } from '@/core/model/types';
 import { emptyInsurance, insurerKey, normalizeProfile } from '@/modules/firstAid/medicalStore';
 import { mergeShare, type LocalData, type MergeDecisions } from './merge';
 import { decodeShare, encodeShare, ShareError, type SharePayload } from './package';
@@ -48,6 +48,7 @@ const empty: LocalData = {
   inventory: { categories: [], locations: [], items: [], lots: [], stockMins: [] },
   waypoints: [],
   routes: [],
+  tracks: [],
 };
 const none = (): MergeDecisions => ({ separate: new Set(), useTheirs: new Set() });
 
@@ -222,7 +223,7 @@ describe('compartir con un familiar: inventario, waypoints y rutas', () => {
     const lake = waypoint('Lago', -41.2, -71.4);
     const route = newEntity<Route>({ name: 'Al lago', waypointIds: [theirs.id, lake.id], notes: '' });
     const r = mergeShare({ ...empty, waypoints: [mine] }, payload({ waypoints: [theirs, lake], routes: [route] }), none());
-    expect(r.waypoints).toEqual({ waypoints: 1, routes: 1 });
+    expect(r.waypoints).toEqual({ waypoints: 1, routes: 1, tracks: 0 });
     expect(r.writes.waypoints.map((w) => w.name)).toEqual(['Lago']);
     expect(r.writes.routes[0]!.waypointIds).toEqual([mine.id, lake.id]);
   });
@@ -317,5 +318,32 @@ describe('nombre de obra social', () => {
     expect(r.newContacts).toBe(0);
     expect(r.writes.contacts[0]).toMatchObject({ id: mine.id, name: 'OSDE' });
     expect(r.writes.contacts[0]!.phones!.map((p) => p.label)).toEqual(['Emergencias', 'Turnos']);
+  });
+});
+
+describe('tracks importados al compartir', () => {
+  const track = (name: string, start: [number, number], distanceM: number): Track =>
+    newEntity<Track>({
+      name,
+      desc: '',
+      source: 'Wikiloc',
+      link: null,
+      segments: [[[start[0], start[1], 1000], [start[0] + 0.01, start[1], 1100]]],
+      waypoints: [],
+      distanceM,
+      ascentM: 100,
+      descentM: 0,
+      minEle: 1000,
+      maxEle: 1100,
+      notes: '',
+    });
+
+  it('se agregan los que faltan; el mismo track bajado por los dos no se duplica', () => {
+    const mine = track('Refugio Frey', [-41.16, -71.42], 11_000);
+    const sameDownloaded = track('refugio frey', [-41.1601, -71.4201], 11_100);
+    const other = track('Cerro Otto', [-41.14, -71.33], 6000);
+    const r = mergeShare({ ...empty, tracks: [mine] }, payload({ waypoints: [], tracks: [sameDownloaded, other] }), none());
+    expect(r.waypoints).toMatchObject({ tracks: 1 });
+    expect(r.writes.tracks.map((t) => t.name)).toEqual(['Cerro Otto']);
   });
 });

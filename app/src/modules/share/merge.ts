@@ -14,6 +14,7 @@ import type {
   PersonalDocument,
   PetHealth,
   Route,
+  Track,
   StockMin,
   Waypoint,
 } from '@/core/model/types';
@@ -35,6 +36,7 @@ export interface LocalData {
   inventory: InventoryShare;
   waypoints: Waypoint[];
   routes: Route[];
+  tracks: Track[];
 }
 
 /** Datos sueltos de una ficha que pueden estar cargados distinto. */
@@ -88,7 +90,7 @@ export interface MergeResult {
   existingDocuments: number;
   /** Ausentes si el archivo no trae esa sección. */
   inventory: { items: number; lots: number; locations: number; categories: number } | null;
-  waypoints: { waypoints: number; routes: number } | null;
+  waypoints: { waypoints: number; routes: number; tracks: number } | null;
   writes: {
     profiles: MedicalProfile[];
     contacts: EmergencyContact[];
@@ -100,6 +102,7 @@ export interface MergeResult {
     stockMins: StockMin[];
     waypoints: Waypoint[];
     routes: Route[];
+    tracks: Track[];
     /** Adjuntos nuevos y de qué adjunto del paquete salen sus bytes. */
     attachments: { attachment: Attachment; from: Id }[];
   };
@@ -385,6 +388,7 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
   const waypointMap = new Map<Id, Id>();
   const waypointWrites: Waypoint[] = [];
   const routeWrites: Route[] = [];
+  const trackWrites: Track[] = [];
   let waypointSummary: MergeResult['waypoints'] = null;
   if (incoming.waypoints) {
     for (const w of incoming.waypoints) {
@@ -405,7 +409,21 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       if (waypointIds.length < 2) continue;
       routeWrites.push({ ...r, id: freshId(r.id), waypointIds, updatedAt: now, deletedAt: null });
     }
-    waypointSummary = { waypoints: waypointWrites.length, routes: routeWrites.length };
+    // Tracks: el mismo si tiene el mismo id, o el mismo nombre y largo (±2 %) y arranca en el mismo lugar.
+    for (const tr of incoming.tracks ?? []) {
+      const start = tr.segments[0]?.[0];
+      const same = local.tracks.some((l) => {
+        if (l.id === tr.id) return true;
+        const ls = l.segments[0]?.[0];
+        return (
+          norm(l.name) === norm(tr.name) &&
+          Math.abs(l.distanceM - tr.distanceM) <= Math.max(l.distanceM, tr.distanceM) * 0.02 &&
+          !!ls && !!start && metersBetween({ lat: ls[0], lon: ls[1] }, { lat: start[0], lon: start[1] }) < 100
+        );
+      });
+      if (!same) trackWrites.push({ ...tr, id: freshId(tr.id), updatedAt: now, deletedAt: null });
+    }
+    waypointSummary = { waypoints: waypointWrites.length, routes: routeWrites.length, tracks: trackWrites.length };
   }
 
   // ---------- inventario ----------
@@ -527,6 +545,7 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       stockMins: stockMinWrites,
       waypoints: waypointWrites,
       routes: routeWrites,
+      tracks: trackWrites,
       attachments: attachmentWrites,
     },
   };

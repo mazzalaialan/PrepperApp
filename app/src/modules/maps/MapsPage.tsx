@@ -1,20 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FeatureCollection } from 'geojson';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Download, Locate, MapPin, Trash2, X } from 'lucide-react';
 import { formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useSettings, type MapLayers } from '@/core/settings/settings';
+import { useTracks } from '@/modules/tracks/store';
 import { routePoints, useWaypoints } from '@/modules/waypoints/store';
 import { loadGeoData } from '@/modules/weathermap/geo';
 import { FullscreenStage } from '@/ui/FullscreenStage';
-import { MapView, type ViewState } from './MapView';
+import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
 import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress } from './tiles';
 
 const RADII = [2, 5, 10, 20, 50];
-const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'mine'];
+const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'mine', 'tracks'];
+/** Vista que muestra un track entero (centro y zoom según lo que ocupa). */
+function trackView(tr: { segments: [number, number, number | null][][] }): ViewState | null {
+  const pts = tr.segments.flat();
+  if (pts.length === 0) return null;
+  const lats = pts.map((p) => p[0]);
+  const lons = pts.map((p) => p[1]);
+  const span = Math.max(Math.max(...lats) - Math.min(...lats), (Math.max(...lons) - Math.min(...lons)) * Math.cos((lats[0]! * Math.PI) / 180), 0.002);
+  const zoom = Math.min(16, Math.max(7, Math.log2(360 / span) - 1.2));
+  return { lat: (Math.max(...lats) + Math.min(...lats)) / 2, lon: (Math.max(...lons) + Math.min(...lons)) / 2, zoom };
+}
+
 /** Centro de la Argentina, mientras no haya GPS ni zonas. */
 const DEFAULT_VIEW: ViewState = { lat: -38.4, lon: -63.6, zoom: 3.6 };
 /** Última vista, para volver al mismo lugar al reabrir la pantalla. */
@@ -26,6 +38,10 @@ export function MapsPage() {
   const update = useSettings((s) => s.update);
   const waypointMap = useWaypoints((s) => s.waypoints);
   const routeMap = useWaypoints((s) => s.routes);
+  const trackMap = useTracks((s) => s.tracks);
+  // Desde un track ("Ver en el mapa"): el mapa arranca mostrándolo entero.
+  const [params] = useSearchParams();
+  const focusTrack = params.get('track') ? trackMap.get(params.get('track')!) : undefined;
   const { zones, missing, add, remove, loaded, load } = useMapZones();
   // El módulo se carga recién al abrir la pantalla (después de desbloquear): las zonas se leen acá.
   useEffect(() => {
@@ -33,7 +49,7 @@ export function MapsPage() {
   }, [loaded, load]);
   const { fix } = useGeolocation();
   const [online, setOnline] = useState(navigator.onLine);
-  const [initial] = useState<ViewState>(() => lastView ?? (zones[0] ? { lat: zones[0].lat, lon: zones[0].lon, zoom: 11 } : DEFAULT_VIEW));
+  const [initial] = useState<ViewState>(() => (focusTrack ? trackView(focusTrack) : null) ?? lastView ?? (zones[0] ? { lat: zones[0].lat, lon: zones[0].lon, zoom: 11 } : DEFAULT_VIEW));
   const [view, setView] = useState<ViewState>(initial);
   const [flyTo, setFlyTo] = useState<(ViewState & { key: number }) | null>(null);
   const [outline, setOutline] = useState<FeatureCollection | null>(null);
@@ -70,7 +86,7 @@ export function MapsPage() {
   }, [zones]);
 
   // La primera vez que llega el GPS (y sin vista previa), el mapa va a tu ubicación.
-  const [centered, setCentered] = useState(lastView !== null);
+  const [centered, setCentered] = useState(lastView !== null || !!focusTrack);
   useEffect(() => {
     if (fix && !centered) {
       setCentered(true);
@@ -82,6 +98,16 @@ export function MapsPage() {
   const routes = useMemo(
     () => [...routeMap.values()].map((r) => ({ id: r.id, name: r.name, points: routePoints(r, waypointMap).map((w) => [w.lon, w.lat] as [number, number]) })),
     [routeMap, waypointMap],
+  );
+  const tracks = useMemo<MapTrack[]>(
+    () =>
+      [...trackMap.values()].map((tr) => ({
+        id: tr.id,
+        name: tr.name,
+        lines: tr.segments.map((seg) => seg.map(([lat, lon]) => [lon, lat] as [number, number])),
+        points: tr.waypoints.map((w) => ({ name: w.name, lat: w.lat, lon: w.lon })),
+      })),
+    [trackMap],
   );
   const here = useMemo(() => (fix ? { lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy } : null), [fix]);
   const zoneCircles = useMemo(() => zones.map((z) => ({ id: z.id, name: z.name, lat: z.lat, lon: z.lon, radiusKm: z.radiusKm })), [zones]);
@@ -154,6 +180,8 @@ export function MapsPage() {
           showMine={layers.mine}
           waypoints={waypoints}
           routes={routes}
+          tracks={tracks}
+          showTracks={layers.tracks}
           here={here}
           zones={zoneCircles}
           preview={preview}

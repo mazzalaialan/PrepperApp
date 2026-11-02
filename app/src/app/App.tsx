@@ -35,6 +35,9 @@ import { GoToPage } from '@/modules/waypoints/GoToPage';
 import { RouteEditPage } from '@/modules/waypoints/RouteEditPage';
 import { RouteGoPage } from '@/modules/waypoints/RouteGoPage';
 import { RoutesPage } from '@/modules/waypoints/RoutesPage';
+import { TrackGoPage } from '@/modules/tracks/TrackGoPage';
+import { TrackPage } from '@/modules/tracks/TrackPage';
+import { TracksPage } from '@/modules/tracks/TracksPage';
 import { WeatherPage } from '@/modules/weather/WeatherPage';
 import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
 import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
@@ -102,6 +105,9 @@ const router = createHashRouter([
         ),
       },
       { path: '/orientation/routes', element: <RoutesPage /> },
+      { path: '/orientation/tracks', element: <TracksPage /> },
+      { path: '/orientation/tracks/:id', element: <TrackPage /> },
+      { path: '/orientation/tracks/:id/go/:target', element: <TrackGoPage /> },
       { path: '/orientation/routes/:id', element: <RouteEditPage /> },
       { path: '/orientation/routes/:id/go/:step', element: <RouteGoPage /> },
       { path: '/weather', element: <SectionPage section="weather" /> },

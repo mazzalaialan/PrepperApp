@@ -23,6 +23,7 @@ import {
   Tags,
   Triangle,
   Warehouse,
+  Footprints,
 } from 'lucide-react';
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
@@ -64,6 +65,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'inclinometer', section: 'orientation', icon: Triangle, phase: 'F3', implemented: true, path: '/orientation/inclinometer', requires: ['motion'] },
   { id: 'waypoints', section: 'orientation', icon: MapPin, phase: 'F3', implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },
   { id: 'routes', section: 'orientation', icon: RouteIcon, phase: 'F3', implemented: true, path: '/orientation/routes', degradesWithout: ['geolocation'] },
+  { id: 'tracks', section: 'orientation', icon: Footprints, phase: 'F5', implemented: true, path: '/orientation/tracks' },
   { id: 'maps', section: 'orientation', icon: MapIcon, phase: 'F5', implemented: true, path: '/orientation/maps', degradesWithout: ['geolocation'] },
   { id: 'starmap', section: 'orientation', icon: Sparkles, phase: 'F6', implemented: true, path: '/orientation/starmap', degradesWithout: ['orientation'] },
   { id: 'weather', section: 'weather', icon: CloudSun, phase: 'F3', implemented: true, path: '/weather/forecast' },

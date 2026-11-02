@@ -34,6 +34,9 @@ interface Props {
   showMine: boolean;
   waypoints: MapPoint[];
   routes: { id: string; name: string; points: [number, number][] }[];
+  /** Tracks importados (GPX): recorrido y sus puntos, aparte de lo propio. */
+  tracks: MapTrack[];
+  showTracks: boolean;
   here: { lat: number; lon: number; accuracy: number } | null;
   zones: MapCircle[];
   preview: MapCircle | null;
@@ -43,6 +46,14 @@ interface Props {
   flyTo: (ViewState & { key: number }) | null;
   onMove: (view: ViewState) => void;
   onWaypoint: (id: string) => void;
+}
+
+export interface MapTrack {
+  id: string;
+  name: string;
+  /** Segmentos en [lon, lat]. */
+  lines: [number, number][][];
+  points: { name: string; lon: number; lat: number }[];
 }
 
 const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] };
@@ -72,6 +83,14 @@ function data(p: Props) {
       type: 'FeatureCollection',
       features: p.routes.filter((r) => r.points.length > 1).map((r) => ({ type: 'Feature', properties: { id: r.id, name: r.name }, geometry: { type: 'LineString', coordinates: r.points } })),
     } as FeatureCollection,
+    'track-lines': {
+      type: 'FeatureCollection',
+      features: p.tracks.map((t) => ({ type: 'Feature', properties: { id: t.id, name: t.name }, geometry: { type: 'MultiLineString', coordinates: t.lines } })),
+    } as FeatureCollection,
+    'track-points': {
+      type: 'FeatureCollection',
+      features: p.tracks.flatMap((t) => t.points.map((w) => ({ type: 'Feature', properties: { track: t.id, name: w.name }, geometry: { type: 'Point', coordinates: [w.lon, w.lat] } }))),
+    } as FeatureCollection,
     here: (p.here
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { accuracy: p.here.accuracy }, geometry: { type: 'Point', coordinates: [p.here.lon, p.here.lat] } }] }
       : EMPTY) as FeatureCollection,
@@ -91,6 +110,18 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
   map.addLayer({ id: 'zones', type: 'line', source: 'zones', paint: { 'line-color': c.info, 'line-width': 1.5, 'line-dasharray': [3, 2] } });
   map.addLayer({ id: 'preview-fill', type: 'fill', source: 'preview', paint: { 'fill-color': c.accent, 'fill-opacity': 0.12 } });
   map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': c.accent, 'line-width': 2 } });
+  // Tracks importados: en otro color, para no confundirlos con las rutas propias.
+  const tracks = p.showTracks ? 'visible' : 'none';
+  map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.info, 'line-width': 3.5, 'line-opacity': 0.9 } });
+  map.addLayer({ id: 'track-points', type: 'circle', source: 'track-points', layout: { visibility: tracks }, paint: { 'circle-radius': 4.5, 'circle-color': c.info, 'circle-stroke-color': c.bg, 'circle-stroke-width': 1.5 } });
+  map.addLayer({
+    id: 'track-point-names',
+    type: 'symbol',
+    source: 'track-points',
+    minzoom: 12,
+    layout: { visibility: tracks, 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': 11, 'text-offset': [0, 1], 'text-anchor': 'top' },
+    paint: { 'text-color': c.text, 'text-halo-color': c.surface, 'text-halo-width': 2 },
+  });
   map.addLayer({ id: 'mine-routes', type: 'line', source: 'mine-routes', layout: { visibility: mine, 'line-cap': 'round' }, paint: { 'line-color': c.accent, 'line-width': 3, 'line-opacity': 0.85 } });
   map.addLayer({
     id: 'mine-waypoints',
@@ -163,13 +194,14 @@ export function MapView(props: Props) {
     for (const id of ['hillshade']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.hillshade ? 'visible' : 'none');
     for (const id of ['contour-lines', 'contour-labels']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.contours ? 'visible' : 'none');
     for (const id of ['mine-routes', 'mine-waypoints', 'mine-waypoint-names']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.showMine ? 'visible' : 'none');
-  }, [props.layers.hillshade, props.layers.contours, props.showMine]);
+    for (const id of ['track-lines', 'track-points', 'track-point-names']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.showTracks ? 'visible' : 'none');
+  }, [props.layers.hillshade, props.layers.contours, props.showMine, props.showTracks]);
 
   useEffect(() => {
     const m = map.current;
     if (!m) return;
     for (const [id, fc] of Object.entries(data(props))) (m.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
-  }, [props.waypoints, props.routes, props.here, props.zones, props.preview, props.outline]);
+  }, [props.waypoints, props.routes, props.tracks, props.here, props.zones, props.preview, props.outline]);
 
   useEffect(() => {
     if (props.flyTo) map.current?.flyTo({ center: [props.flyTo.lon, props.flyTo.lat], zoom: props.flyTo.zoom, essential: true });

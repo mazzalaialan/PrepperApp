@@ -2,11 +2,12 @@ import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate';
 import { fromB64, sealedFromJson, sealedToJson, toB64, wrappedFromJson, wrappedToJson, type SealedJson, type WrappedJson } from '@/core/backup/backup';
 import { generateDek, open, PBKDF2_ITERATIONS, seal, unwrapDek, wrapDek } from '@/core/crypto/crypto';
 import { blobStore, repos } from '@/core/db/repository';
-import type { Attachment, Category, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, StockMin, Waypoint } from '@/core/model/types';
+import type { Attachment, Category, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, StockMin, Track, Waypoint } from '@/core/model/types';
 import { useDocuments } from '@/modules/documents/store';
 import { useContacts } from '@/modules/emergency/store';
 import { useMedical } from '@/modules/firstAid/medicalStore';
 import { useInventory } from '@/modules/inventory/store';
+import { useTracks } from '@/modules/tracks/store';
 import { useWaypoints } from '@/modules/waypoints/store';
 import type { LocalData, MergeResult } from './merge';
 
@@ -49,6 +50,8 @@ export interface SharePayload {
   /** Ausentes si no se compartieron (y en archivos anteriores). */
   inventory?: InventoryShare;
   waypoints?: Waypoint[];
+  /** Tracks importados (van con "Waypoints y rutas"). */
+  tracks?: Track[];
   routes?: Route[];
   /** Fotos de fichas, documentos, artículos, ubicaciones y waypoints. */
   attachments: Attachment[];
@@ -117,6 +120,7 @@ export async function collectShare(selection: ShareSelection): Promise<SharePayl
     inventory,
     waypoints,
     routes: selection.waypoints ? local.routes : undefined,
+    tracks: selection.waypoints ? local.tracks : undefined,
     attachments: sharedAttachments,
     blobs,
   };
@@ -159,7 +163,7 @@ export const blobBytes = (payload: SharePayload, id: string): Uint8Array<ArrayBu
 
 /** Lo que ya hay en este dispositivo, para mezclar. */
 export async function loadLocalData(): Promise<LocalData> {
-  const [profiles, contacts, documents, attachments, categories, locations, items, lots, stockMins, waypoints, routes] = await Promise.all([
+  const [profiles, contacts, documents, attachments, categories, locations, items, lots, stockMins, waypoints, routes, tracks] = await Promise.all([
     repos.medicalProfiles.loadAll(),
     repos.contacts.loadAll(),
     repos.documents.loadAll(),
@@ -171,8 +175,9 @@ export async function loadLocalData(): Promise<LocalData> {
     repos.stockMins.loadAll(),
     repos.waypoints.loadAll(),
     repos.routes.loadAll(),
+    repos.tracks.loadAll(),
   ]);
-  return { profiles, contacts, documents, attachments, inventory: { categories, locations, items, lots, stockMins }, waypoints, routes };
+  return { profiles, contacts, documents, attachments, inventory: { categories, locations, items, lots, stockMins }, waypoints, routes, tracks };
 }
 
 /** Guarda la mezcla (solo agrega o completa: nunca borra) y recarga las pantallas. */
@@ -181,6 +186,7 @@ export async function applyMerge(result: MergeResult, payload: SharePayload): Pr
   // Primero lo referenciado (waypoints, categorías, ubicaciones) y después lo que lo usa.
   for (const x of w.waypoints) await repos.waypoints.put(x);
   for (const x of w.routes) await repos.routes.put(x);
+  for (const x of w.tracks) await repos.tracks.put(x);
   for (const x of w.categories) await repos.categories.put(x);
   for (const x of w.locations) await repos.locations.put(x);
   for (const x of w.items) await repos.items.put(x);
@@ -201,6 +207,7 @@ export async function applyMerge(result: MergeResult, payload: SharePayload): Pr
     useDocuments.getState().load(),
     useInventory.getState().load(),
     useWaypoints.getState().load(),
+    useTracks.getState().load(),
   ]);
 }
 

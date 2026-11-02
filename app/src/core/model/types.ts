@@ -303,6 +303,39 @@ export interface EntityMap {
   medicalProfiles: MedicalProfile;
   routes: Route;
   contacts: EmergencyContact;
+  tracks: Track;
+}
+
+/** Punto con nombre que trae un track importado (refugio, agua, mirador…). No es un waypoint propio. */
+export interface TrackWaypoint {
+  name: string;
+  lat: number;
+  lon: number;
+  ele: number | null;
+  desc: string;
+}
+
+/**
+ * Recorrido importado de un GPX (Wikiloc u otra app). Va aparte de los
+ * waypoints y rutas propios: sus puntos no se mezclan con los del usuario.
+ */
+export interface Track extends BaseEntity {
+  name: string;
+  desc: string;
+  /** De dónde salió ("Wikiloc", o el nombre del archivo). */
+  source: string;
+  /** Página original (Wikiloc pone el link a la ruta). */
+  link: string | null;
+  /** Segmentos simplificados: [lat, lon, altura o null]. */
+  segments: [number, number, number | null][][];
+  waypoints: TrackWaypoint[];
+  /** Calculados con todos los puntos originales, antes de simplificar. */
+  distanceM: number;
+  ascentM: number;
+  descentM: number;
+  minEle: number | null;
+  maxEle: number | null;
+  notes: string;
 }
 
 export type EntityTable = keyof EntityMap;

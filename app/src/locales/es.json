@@ -62,6 +62,7 @@
     "inclinometer": { "title": "Inclinómetro", "desc": "Pendiente y riesgo de avalancha" },
     "waypoints": { "title": "Waypoints", "desc": "Puntos guardados y cómo volver" },
     "routes": { "title": "Rutas", "desc": "Listas de puntos para recorrer en orden" },
+    "tracks": { "title": "Tracks importados", "desc": "Recorridos de Wikiloc u otras apps (GPX), aparte de tus waypoints" },
     "astronomy": { "title": "Sol y luna", "desc": "Amanecer, anochecer y fases lunares" },
     "weather": { "title": "Clima", "desc": "Pronóstico cuando hay conexión" },
     "maps": { "title": "Mapas offline", "desc": "Zonas descargadas con relieve" },
@@ -577,7 +578,7 @@
     "goHere": "Ir a mi ubicación",
     "center": "Centro: {{coords}} · zoom {{zoom}}",
     "layers": "Capas",
-    "layer": { "hillshade": "Relieve", "contours": "Curvas de nivel", "mine": "Mis waypoints y rutas" },
+    "layer": { "hillshade": "Relieve", "contours": "Curvas de nivel", "mine": "Mis waypoints y rutas", "tracks": "Tracks importados" },
     "zones": "Zonas descargadas",
     "zonesHint": "Bajá el mapa de los lugares que te importan (tu ciudad, la ruta de evacuación, un refugio) para tenerlos sin conexión, con relieve y curvas de nivel.",
     "downloadHere": "Descargar una zona",
@@ -1174,6 +1175,42 @@
       "permission-denied": "Las notificaciones están bloqueadas. Habilitalas en los permisos del sitio."
     }
   },
+  "tracks": {
+    "import": "Importar GPX",
+    "empty": "Todavía no importaste tracks. Bajá el GPX de una ruta de Wikiloc (o de otra app) e importalo.",
+    "howTo": "Cómo bajar un GPX de Wikiloc: abrí la ruta, tocá \"Descargar\" y elegí el formato GPX (hace falta una cuenta gratis). Los puntos del track quedan aparte de tus waypoints; si querés alguno, lo copiás.",
+    "pointCount_one": "{{count}} punto",
+    "pointCount_other": "{{count}} puntos",
+    "error": {
+      "not-gpx": "El archivo no es un GPX.",
+      "empty": "El GPX no trae ningún recorrido ni punto."
+    },
+    "notFound": "No se encontró ese track.",
+    "stats": "Datos del recorrido",
+    "distance": "Distancia",
+    "ascent": "Desnivel +",
+    "descent": "Desnivel −",
+    "maxEle": "Altura máxima",
+    "profile": "Perfil de altura",
+    "profileRange": "Altura entre {{min}} y {{max}}",
+    "onMap": "Ver en el mapa",
+    "goStart": "Ir al inicio",
+    "goEnd": "Ir al final",
+    "startOf": "Inicio de {{name}}",
+    "endOf": "Final de {{name}}",
+    "source": "Fuente: {{source}}",
+    "original": "Ver la ruta original",
+    "points": "Puntos del track",
+    "pointsHint": "Vienen con el track y no se mezclan con tus waypoints. Podés ir hasta uno con la brújula o copiarlo a tus waypoints.",
+    "noPoints": "Este track no trae puntos con nombre.",
+    "goTo": "Ir hasta {{name}}",
+    "copy": "Copiar {{name}} a mis waypoints",
+    "copied": "{{name}} ya está en mis waypoints",
+    "copiedFrom": "Copiado del track {{name}}",
+    "name": "Nombre",
+    "notes": "Notas",
+    "confirmDelete": "¿Eliminar el track \"{{name}}\"?"
+  },
   "country": {
     "label": "País",
     "AR": "Argentina",
@@ -1268,7 +1305,7 @@
       "contacts": "Contactos (policía, vecinos, frecuencias…)",
       "documents": "Documentos (con sus fotos)",
       "inventory": "Inventario (artículos, ubicaciones, cantidades y vencimientos)",
-      "waypoints": "Waypoints y rutas"
+      "waypoints": "Waypoints, rutas y tracks importados"
     },
     "password": "Contraseña del envío",
     "repeat": "Repetir contraseña",
@@ -1322,7 +1359,8 @@
     "documents": "Documentos: {{added}} nuevos ({{existing}} ya los tenías).",
     "inventoryHint": "Lo que llega se suma al inventario de tu familiar: si tienen ubicaciones con el mismo nombre (por ejemplo \"Despensa\"), las cantidades van ahí. Sirve sobre todo si comparten la casa.",
     "inventory": "Inventario: {{items}} artículos nuevos, {{lots}} cantidades (lotes), {{locations}} ubicaciones y {{categories}} categorías nuevas.",
-    "waypoints": "Waypoints: {{waypoints}} nuevos y {{routes}} rutas.",    "neverDeletes": "No se borra nada de lo que ya tenés.",
+    "waypoints": "Waypoints: {{waypoints}} nuevos, {{routes}} rutas y {{tracks}} tracks.",
+    "neverDeletes": "No se borra nada de lo que ya tenés.",
     "apply": "Guardar",
     "nothingNew": "No hay nada nuevo",
     "applied": "Listo: {{profiles}} fichas nuevas, {{updated}} completadas, {{contacts}} contactos y {{documents}} documentos nuevos."

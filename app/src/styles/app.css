@@ -2566,3 +2566,50 @@ a.module-card:hover {
   flex-wrap: wrap;
 }
 
+
+/* ---------- Tracks importados ---------- */
+
+.track-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.track-stats dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.track-stats dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.track-profile {
+  margin: 0;
+}
+
+.track-profile svg {
+  width: 100%;
+  height: 90px;
+  display: block;
+}
+
+.track-profile-area {
+  fill: var(--accent);
+  opacity: 0.18;
+}
+
+.track-profile-line {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.track-desc {
+  white-space: pre-line;
+  margin: 0;
+}
+

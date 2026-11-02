@@ -56,6 +56,7 @@ export const repos = {
   medicalProfiles: new Repository('medicalProfiles'),
   routes: new Repository('routes'),
   contacts: new Repository('contacts'),
+  tracks: new Repository('tracks'),
 } satisfies { [K in EntityTable]: Repository<K> };
 
 /** Binarios cifrados (fotos), leídos bajo demanda. */

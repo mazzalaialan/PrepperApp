@@ -70,6 +70,8 @@ export interface MapLayers {
   contours: boolean;
   /** Mis waypoints y rutas. */
   mine: boolean;
+  /** Tracks importados (GPX). */
+  tracks: boolean;
 }
 
 /** Capas del Mapa de Meteorología. Las que usan internet solo se descargan si están prendidas. */
@@ -128,7 +130,7 @@ export const DEFAULT_SETTINGS: Settings = {
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true },
   weatherMapValue: 'temp',
-  mapLayers: { hillshade: true, contours: true, mine: true },
+  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true },
   firstAidEnv: 'city',
   country: detectCountry(),
 };

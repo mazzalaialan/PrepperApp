@@ -50,7 +50,7 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await page.getByRole('link', { name: 'Compartir con un familiar' }).click();
   // Se elige qué compartir: el inventario viene apagado; waypoints y rutas, prendidos.
   await expect(page.getByLabel('Inventario (artículos, ubicaciones, cantidades y vencimientos)')).not.toBeChecked();
-  await expect(page.getByLabel('Waypoints y rutas')).toBeChecked();
+  await expect(page.getByLabel('Waypoints, rutas y tracks importados')).toBeChecked();
   await page.getByLabel('Contraseña del envío').fill('envio-familia');
   await page.getByLabel('Repetir contraseña').fill('envio-familia');
   const downloadPromise = page.waitForEvent('download');
@@ -87,7 +87,7 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await expect(tomi.getByLabel('Dejar el mío: 0+')).toBeChecked();
   await tomi.getByLabel('Usar el que llega: A+').check();
   await expect(preview).toContainText('Contactos: 1 nuevos, 0 completados.');
-  await expect(juan.getByTestId('share-waypoints')).toHaveText('Waypoints: 1 nuevos y 0 rutas.');
+  await expect(juan.getByTestId('share-waypoints')).toHaveText('Waypoints: 1 nuevos, 0 rutas y 0 tracks.');
   await expect(juan.getByTestId('share-inventory')).toHaveCount(0);
   await juan.getByRole('button', { name: 'Guardar' }).click();
   await expect(juan.getByTestId('share-done')).toContainText('Listo: 1 fichas nuevas, 1 completadas, 1 contactos');
