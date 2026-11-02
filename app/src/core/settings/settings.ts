@@ -47,6 +47,8 @@ export interface Settings {
   weatherMapValue: WeatherMapValue;
   /** Capas de los mapas offline de Orientación. */
   mapLayers: MapLayers;
+  /** Al seguir un track: el dibujo liviano o el mapa (en 2D o 3D). */
+  trackFollowView: 'drawing' | 'map';
   /** Entorno de la guía de primeros auxilios: con ayuda cerca o lejos. */
   firstAidEnv: FirstAidEnv;
   /** País: define los números de emergencia y de la guía. */
@@ -72,6 +74,8 @@ export interface MapLayers {
   mine: boolean;
   /** Tracks importados (GPX). */
   tracks: boolean;
+  /** Relieve en 3D (el mapa se puede inclinar); apagado es el mapa plano. */
+  terrain3d: boolean;
 }
 
 /** Capas del Mapa de Meteorología. Las que usan internet solo se descargan si están prendidas. */
@@ -130,7 +134,8 @@ export const DEFAULT_SETTINGS: Settings = {
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true },
   weatherMapValue: 'temp',
-  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true },
+  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, terrain3d: false },
+  trackFollowView: 'drawing',
   firstAidEnv: 'city',
   country: detectCountry(),
 };

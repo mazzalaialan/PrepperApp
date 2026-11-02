@@ -579,6 +579,14 @@
     "center": "Centro: {{coords}} · zoom {{zoom}}",
     "layers": "Capas",
     "layer": { "hillshade": "Relieve", "contours": "Curvas de nivel", "mine": "Mis waypoints y rutas", "tracks": "Tracks importados" },
+    "camera": {
+      "threeD": "Mapa en 3D",
+      "to3d": "Pasar a 3D (inclinás el mapa con dos dedos)",
+      "to2d": "Volver al mapa plano",
+      "follow": "Seguir mi posición",
+      "toFollow": "Que el mapa me siga y gire hacia donde miro",
+      "toFree": "Vista libre"
+    },
     "zones": "Zonas descargadas",
     "zonesHint": "Bajá el mapa de los lugares que te importan (tu ciudad, la ruta de evacuación, un refugio) para tenerlos sin conexión, con relieve y curvas de nivel.",
     "downloadHere": "Descargar una zona",
@@ -1230,7 +1238,9 @@
       "timeHint": "A pie y sin paradas: 6 km/h en distancia; en altura, 300 m de subida o 600 m de bajada por hora. Cuenta el mayor de los dos más la mitad del otro.",
       "next": "Próximo punto: {{name}}, a {{distance}} por el track",
       "map": "Dibujo del track con tu posición",
-      "farAway": "Estás lejos del track: tu posición queda fuera del dibujo."
+      "farAway": "Estás lejos del track: tu posición queda fuera del dibujo.",
+      "view": "Cómo ver el track",
+      "views": { "drawing": "Dibujo (gasta menos)", "map": "Mapa 2D / 3D" }
     }
   },
   "country": {

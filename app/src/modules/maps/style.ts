@@ -41,7 +41,14 @@ export function themeColors(): MapColors {
 export interface MapLayersOn {
   hillshade: boolean;
   contours: boolean;
+  terrain3d: boolean;
 }
+
+/** Relieve en 3D: un poco exagerado para que se lean las pendientes. */
+export const TERRAIN = { source: 'terrain', exaggeration: 1.3 } as const;
+/** Inclinación al pasar a 3D, y la máxima permitida. */
+export const PITCH_3D = 60;
+export const MAX_PITCH_3D = 75;
 
 const NAME: ExpressionSpecification = ['coalesce', ['get', 'name:es'], ['get', 'name'], ['get', 'name:latin']];
 const FONT = ['Noto Sans Regular'];
@@ -67,8 +74,11 @@ export function buildStyle(c: MapColors, contoursUrl: string, layers: MapLayersO
     sources: {
       osm: { type: 'vector', tiles: ['vktile://{z}/{x}/{y}'], maxzoom: VECTOR_MAX_ZOOM, attribution: ATTRIBUTION },
       dem: { type: 'raster-dem', tiles: ['vkdem://{z}/{x}/{y}'], tileSize: 256, encoding: 'terrarium', maxzoom: DEM_MAX_ZOOM },
+      // Las mismas teselas de altura, en otra fuente: MapLibre pide no compartirla entre el sombreado y el 3D.
+      terrain: { type: 'raster-dem', tiles: ['vkdem://{z}/{x}/{y}'], tileSize: 256, encoding: 'terrarium', maxzoom: DEM_MAX_ZOOM },
       contours: { type: 'vector', tiles: [contoursUrl], maxzoom: 15 },
     },
+    ...(layers.terrain3d ? { terrain: TERRAIN } : {}),
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': c.surface } },
       {

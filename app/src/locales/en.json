@@ -579,6 +579,14 @@
     "center": "Center: {{coords}} · zoom {{zoom}}",
     "layers": "Layers",
     "layer": { "hillshade": "Terrain", "contours": "Contour lines", "mine": "My waypoints and routes", "tracks": "Imported tracks" },
+    "camera": {
+      "threeD": "3D map",
+      "to3d": "Switch to 3D (tilt the map with two fingers)",
+      "to2d": "Back to the flat map",
+      "follow": "Follow my position",
+      "toFollow": "Make the map follow me and turn where I face",
+      "toFree": "Free view"
+    },
     "zones": "Downloaded areas",
     "zonesHint": "Download the places that matter to you (your city, an evacuation route, a shelter) to have them offline, with terrain and contour lines.",
     "downloadHere": "Download an area",
@@ -1230,7 +1238,9 @@
       "timeHint": "On foot without stops: 6 km/h over distance; in elevation, 300 m of climb or 600 m of descent per hour. The larger of the two counts, plus half of the other.",
       "next": "Next point: {{name}}, {{distance}} along the track",
       "map": "Drawing of the track with your position",
-      "farAway": "You are far from the track: your position is outside the drawing."
+      "farAway": "You are far from the track: your position is outside the drawing.",
+      "view": "How to show the track",
+      "views": { "drawing": "Drawing (saves battery)", "map": "Map 2D / 3D" }
     }
   },
   "country": {

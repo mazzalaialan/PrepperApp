@@ -84,3 +84,50 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(page.getByText('Todavía no descargaste ninguna zona.')).toBeVisible();
   expect((await cacheKeys(page)).filter((k) => k.startsWith('https://vikarg.local/tiles/'))).toHaveLength(0);
 });
+
+test('mapa en 3D o plano, y la vista siguiéndome o libre', async ({ page, context }) => {
+  await mockMaps(page);
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  await page.goto('/#/orientation/maps');
+  const map = page.getByTestId('offline-map');
+  await expect(page.getByTestId('map-center')).toContainText('zoom 12', { timeout: 15_000 });
+
+  // Arranca plano; en 3D se inclina con relieve, y queda guardado.
+  const threeD = page.getByRole('button', { name: 'Mapa en 3D' });
+  await expect(threeD).toHaveAttribute('aria-pressed', 'false');
+  await expect(threeD).toHaveText('2D');
+  await threeD.click();
+  await expect(threeD).toHaveText('3D');
+  await expect(map).toHaveAttribute('data-pitch', '60');
+  await expect(map).toHaveAttribute('data-terrain', 'on');
+  await page.goto('/#/orientation');
+  await page.goto('/#/orientation/maps');
+  await expect(page.getByRole('button', { name: 'Mapa en 3D' })).toHaveAttribute('aria-pressed', 'true');
+
+  // Siguiéndome: el mapa va adonde voy.
+  const follow = page.getByRole('button', { name: 'Seguir mi posición' });
+  await follow.click();
+  await expect(follow).toHaveAttribute('aria-pressed', 'true');
+  await context.setGeolocation({ latitude: -34.62, longitude: -58.4 });
+  await expect(page.getByTestId('map-center')).toHaveText(/^Centro: 34°37′1\d(\.\d+)?″ S 58°24′\d+(\.\d+)?″ O/, { timeout: 10_000 });
+
+  // Arrastrar el mapa pasa a vista libre.
+  const box = (await map.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2 + 40, { steps: 8 });
+  await page.mouse.up();
+  await expect(follow).toHaveAttribute('aria-pressed', 'false');
+
+  // De vuelta a plano.
+  await page.getByRole('button', { name: 'Mapa en 3D' }).click();
+  await expect(map).toHaveAttribute('data-pitch', '0');
+  await expect(map).toHaveAttribute('data-terrain', 'off');
+});

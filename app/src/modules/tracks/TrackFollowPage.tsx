@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowLeftRight, CircleCheck, Footprints, TriangleAlert } from 'lucide-react';
@@ -13,6 +13,9 @@ import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpsStatus, useFormatBearing } from '@/modules/waypoints/components';
 import { followState, isOffTrack, prepareFollow, walkingMinutes, type FollowLine } from './follow';
 import { useTracks } from './store';
+
+// MapLibre pesa ~1 MB: se carga recién al elegir ver el track en el mapa.
+const FollowMap = lazy(() => import('./FollowMap').then((m) => ({ default: m.FollowMap })));
 
 export function TrackFollowPage() {
   const { id } = useParams();
@@ -60,6 +63,8 @@ function Follow({ track }: { track: Track }) {
   const { t, i18n } = useTranslation();
   const caps = useCapabilities((s) => s.caps);
   const units = useSettings((s) => s.settings.units);
+  const view = useSettings((s) => s.settings.trackFollowView);
+  const update = useSettings((s) => s.update);
   const formatBearing = useFormatBearing();
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
@@ -171,7 +176,20 @@ function Follow({ track }: { track: Track }) {
         </section>
       )}
 
-      <MiniMap line={line} me={fix} doneM={state?.alongM ?? 0} />
+      <div className="chips" role="group" aria-label={t('tracks.follow.view')}>
+        {(['drawing', 'map'] as const).map((v) => (
+          <button key={v} type="button" className="chip" aria-pressed={view === v} onClick={() => void update({ trackFollowView: v })}>
+            {t(`tracks.follow.views.${v}`)}
+          </button>
+        ))}
+      </div>
+      {view === 'map' ? (
+        <Suspense fallback={null}>
+          <FollowMap track={track} line={line} fix={fix} heading={heading?.trueHeading ?? null} doneM={state?.alongM ?? 0} nearest={state?.nearest ?? null} />
+        </Suspense>
+      ) : (
+        <MiniMap line={line} me={fix} doneM={state?.alongM ?? 0} />
+      )}
       <GpsStatus fix={fix} error={error} />
     </div>
   );

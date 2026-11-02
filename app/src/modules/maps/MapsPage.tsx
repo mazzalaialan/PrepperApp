@@ -3,13 +3,16 @@ import type { FeatureCollection } from 'geojson';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Download, Locate, MapPin, Trash2, X } from 'lucide-react';
+import { useCapabilities } from '@/core/capabilities/capabilities';
 import { formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
+import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings, type MapLayers } from '@/core/settings/settings';
 import { useTracks } from '@/modules/tracks/store';
 import { routePoints, useWaypoints } from '@/modules/waypoints/store';
 import { loadGeoData } from '@/modules/weathermap/geo';
 import { FullscreenStage } from '@/ui/FullscreenStage';
+import { CameraButtons } from './CameraButtons';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
 import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress } from './tiles';
@@ -48,6 +51,10 @@ export function MapsPage() {
     if (!loaded) void load();
   }, [loaded, load]);
   const { fix } = useGeolocation();
+  // Vista que te sigue (y gira con la brújula) o libre; la brújula solo se escucha al seguirte.
+  const [follow, setFollow] = useState(false);
+  const caps = useCapabilities((s) => s.caps);
+  const heading = useHeading(fix, follow && (caps?.orientation ?? false));
   const [online, setOnline] = useState(navigator.onLine);
   const [initial] = useState<ViewState>(() => (focusTrack ? trackView(focusTrack) : null) ?? lastView ?? (zones[0] ? { lat: zones[0].lat, lon: zones[0].lon, zoom: 11 } : DEFAULT_VIEW));
   const [view, setView] = useState<ViewState>(initial);
@@ -187,12 +194,16 @@ export function MapsPage() {
           preview={preview}
           outline={outline}
           flyTo={flyTo}
+          follow={follow && !!fix}
+          heading={heading?.trueHeading ?? null}
+          onFollowBreak={() => setFollow(false)}
           onMove={(v) => {
             lastView = v;
             setView(v);
           }}
           onWaypoint={setSelected}
         />
+        <CameraButtons threeD={layers.terrain3d} onThreeD={(on) => setLayer('terrain3d', on)} follow={follow && !!fix} onFollow={setFollow} canFollow={!!fix} />
         {fix && (
           <button className="icon-btn maps-locate" type="button" onClick={() => setFlyTo({ lat: fix.lat, lon: fix.lon, zoom: Math.max(view.zoom, 13), key: Date.now() })} aria-label={t('maps.goHere')}>
             <Locate size={20} />

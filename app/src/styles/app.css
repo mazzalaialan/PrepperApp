@@ -2059,6 +2059,43 @@ a.module-card:hover {
   margin: 0;
 }
 
+/* 3D o plano, y seguirte o vista libre: encima del botón de ubicación. */
+.maps-camera {
+  position: absolute;
+  right: 10px;
+  bottom: 92px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.maps-camera-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.maps-camera-btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.maps-camera-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* En el seguimiento de un track no hay botón de ubicación: los de cámara bajan. */
+.follow-stage .maps-camera {
+  bottom: 40px;
+}
+
+.follow-stage {
+  height: min(60dvh, 600px);
+  min-height: 320px;
+}
+
 .zone-go {
   border: none;
   background: none;

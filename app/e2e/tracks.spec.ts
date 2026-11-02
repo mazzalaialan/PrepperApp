@@ -139,4 +139,19 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   // Llegada al inicio (que en inverso es el final).
   await context.setGeolocation({ latitude: -41.16, longitude: -71.42 });
   await expect(status).toHaveText('Llegaste al final del track');
+
+  // En el mapa (sin teselas: alcanza con que se dibuje y tenga los botones), siguiéndome de entrada.
+  await context.route(/tiles\.openfreemap\.org|elevation-tiles-prod/, (route) => route.abort());
+  await expect(page.getByTestId('follow-map')).toBeVisible();
+  await page.getByRole('button', { name: 'Mapa 2D / 3D' }).click();
+  await expect(page.getByTestId('offline-map').locator('canvas')).toBeVisible();
+  await expect(page.getByTestId('follow-map')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Seguir mi posición' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Mapa en 3D' }).click();
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-terrain', 'on');
+  // La elección queda guardada.
+  await page.getByRole('link', { name: 'Volver' }).click();
+  await page.getByRole('link', { name: 'Seguir el track' }).click();
+  await expect(page.getByTestId('offline-map').locator('canvas')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mapa en 3D' })).toHaveAttribute('aria-pressed', 'true');
 });

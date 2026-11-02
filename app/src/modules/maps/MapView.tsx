@@ -3,9 +3,10 @@ import * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSource, Map as MlMap } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { angleDiff } from '@/core/sensors/heading';
 import { useEffectiveTheme } from '@/core/settings/theme';
 import { setupProtocols } from './protocols';
-import { buildStyle, themeColors, type MapColors, type MapLayersOn } from './style';
+import { buildStyle, MAX_PITCH_3D, PITCH_3D, TERRAIN, themeColors, type MapColors, type MapLayersOn } from './style';
 
 export interface MapPoint {
   id: string;
@@ -44,6 +45,14 @@ interface Props {
   outline: FeatureCollection | null;
   /** Cambia `key` para mover la vista. */
   flyTo: (ViewState & { key: number }) | null;
+  /** Vista que sigue tu posición (y gira con el rumbo, si hay) o libre. */
+  follow?: boolean;
+  /** Rumbo verdadero hacia donde mirás, para girar el mapa al seguirte. */
+  heading?: number | null;
+  /** Moviste el mapa con la mano: se deja de seguir. */
+  onFollowBreak?: () => void;
+  /** Parte ya recorrida del track que se está siguiendo, en [lon, lat]. */
+  done?: [number, number][] | null;
   onMove: (view: ViewState) => void;
   onWaypoint: (id: string) => void;
 }
@@ -91,6 +100,9 @@ function data(p: Props) {
       type: 'FeatureCollection',
       features: p.tracks.flatMap((t) => t.points.map((w) => ({ type: 'Feature', properties: { track: t.id, name: w.name }, geometry: { type: 'Point', coordinates: [w.lon, w.lat] } }))),
     } as FeatureCollection,
+    'track-done': (p.done && p.done.length > 1
+      ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: p.done } }] }
+      : EMPTY) as FeatureCollection,
     here: (p.here
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { accuracy: p.here.accuracy }, geometry: { type: 'Point', coordinates: [p.here.lon, p.here.lat] } }] }
       : EMPTY) as FeatureCollection,
@@ -113,6 +125,7 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
   // Tracks importados: en otro color, para no confundirlos con las rutas propias.
   const tracks = p.showTracks ? 'visible' : 'none';
   map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.info, 'line-width': 3.5, 'line-opacity': 0.9 } });
+  map.addLayer({ id: 'track-done', type: 'line', source: 'track-done', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.accent, 'line-width': 5 } });
   map.addLayer({ id: 'track-points', type: 'circle', source: 'track-points', layout: { visibility: tracks }, paint: { 'circle-radius': 4.5, 'circle-color': c.info, 'circle-stroke-color': c.bg, 'circle-stroke-width': 1.5 } });
   map.addLayer({
     id: 'track-point-names',
@@ -146,6 +159,28 @@ export function MapView(props: Props) {
   const latest = useRef(props);
   latest.current = props;
   const theme = useEffectiveTheme();
+  const styleReady = useRef(false);
+  /** Inclinación a la que se está yendo al pasar a 3D o a plano (el seguimiento la respeta). */
+  const pendingPitch = useRef<number | null>(null);
+
+  /** Relieve, inclinación permitida y la inclinación actual según 3D o plano. */
+  function syncTerrain(m: MlMap) {
+    const on = latest.current.layers.terrain3d;
+    m.setTerrain(on ? TERRAIN : null);
+    if (on) m.setMaxPitch(MAX_PITCH_3D);
+    const target = on ? (m.getPitch() > 0 ? m.getPitch() : PITCH_3D) : 0;
+    if (m.getPitch() === target) {
+      if (!on) m.setMaxPitch(0);
+      container.current?.setAttribute('data-terrain', on ? 'on' : 'off');
+      return;
+    }
+    pendingPitch.current = target;
+    m.easeTo({ pitch: target, duration: 500 });
+    m.once('moveend', () => {
+      pendingPitch.current = null;
+      if (!latest.current.layers.terrain3d) m.setMaxPitch(0);
+    });
+  }
 
   useEffect(() => {
     const { contoursUrl } = setupProtocols();
@@ -156,14 +191,23 @@ export function MapView(props: Props) {
       zoom: props.initial.zoom,
       attributionControl: { compact: true },
       maxZoom: 17,
+      pitch: props.layers.terrain3d ? PITCH_3D : 0,
+      maxPitch: props.layers.terrain3d ? MAX_PITCH_3D : 0,
     });
     map.current = m;
-    m.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
+    m.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
     m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
-    m.on('style.load', () => addOverlays(m, themeColors(), latest.current));
+    m.on('style.load', () => {
+      addOverlays(m, themeColors(), latest.current);
+      styleReady.current = true;
+      syncTerrain(m);
+    });
     // Los créditos arrancan plegados (botón "i"): abiertos tapan la escala y el botón de ubicación en el celular.
     m.once('load', () => container.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
     m.on('moveend', () => {
+      // Inclinación y relieve a la vista (para las pruebas y para depurar en el celular).
+      container.current?.setAttribute('data-pitch', String(Math.round(m.getPitch())));
+      container.current?.setAttribute('data-terrain', m.getTerrain() ? 'on' : 'off');
       const c = m.getCenter();
       latest.current.onMove({ lat: c.lat, lon: c.lng, zoom: m.getZoom() });
     });
@@ -171,6 +215,12 @@ export function MapView(props: Props) {
       const id = e.features?.[0]?.properties?.id as string | undefined;
       if (id) latest.current.onWaypoint(id);
     });
+    // Arrastrar o girar con la mano corta el seguimiento (acercar o inclinar, no).
+    const breakFollow = (e: { originalEvent?: unknown }) => {
+      if (e.originalEvent && latest.current.follow) latest.current.onFollowBreak?.();
+    };
+    m.on('dragstart', breakFollow);
+    m.on('rotatestart', breakFollow);
     m.on('mouseenter', 'mine-waypoints', () => (m.getCanvas().style.cursor = 'pointer'));
     m.on('mouseleave', 'mine-waypoints', () => (m.getCanvas().style.cursor = ''));
     return () => {
@@ -184,13 +234,17 @@ export function MapView(props: Props) {
   useEffect(() => {
     const m = map.current;
     if (!m) return;
-    const frame = requestAnimationFrame(() => m.setStyle(buildStyle(themeColors(), setupProtocols().contoursUrl, latest.current.layers)));
+    const frame = requestAnimationFrame(() => {
+      styleReady.current = false;
+      m.setStyle(buildStyle(themeColors(), setupProtocols().contoursUrl, latest.current.layers));
+    });
     return () => cancelAnimationFrame(frame);
   }, [theme]);
 
   useEffect(() => {
     const m = map.current;
-    if (!m?.isStyleLoaded()) return;
+    // `isStyleLoaded()` da falso mientras bajan teselas: se usa la carga del estilo en sí.
+    if (!m || !styleReady.current) return;
     for (const id of ['hillshade']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.hillshade ? 'visible' : 'none');
     for (const id of ['contour-lines', 'contour-labels']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.contours ? 'visible' : 'none');
     for (const id of ['mine-routes', 'mine-waypoints', 'mine-waypoint-names']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.showMine ? 'visible' : 'none');
@@ -201,11 +255,40 @@ export function MapView(props: Props) {
     const m = map.current;
     if (!m) return;
     for (const [id, fc] of Object.entries(data(props))) (m.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
-  }, [props.waypoints, props.routes, props.tracks, props.here, props.zones, props.preview, props.outline]);
+  }, [props.waypoints, props.routes, props.tracks, props.done, props.here, props.zones, props.preview, props.outline]);
 
   useEffect(() => {
     if (props.flyTo) map.current?.flyTo({ center: [props.flyTo.lon, props.flyTo.lat], zoom: props.flyTo.zoom, essential: true });
   }, [props.flyTo?.key]);
+
+  // 3D o plano. Si el estilo todavía carga, se aplica al terminar (en `style.load`).
+  useEffect(() => {
+    const m = map.current;
+    if (m && styleReady.current) syncTerrain(m);
+  }, [props.layers.terrain3d]);
+
+  // Seguimiento: el mapa va con tu posición y, si hay brújula, gira para que adelante quede arriba.
+  const followed = useRef<{ lat: number; lon: number; bearing: number | null } | null>(null);
+  useEffect(() => {
+    const m = map.current;
+    if (!props.follow) followed.current = null;
+    if (!m || !props.follow || !props.here) return;
+    const last = followed.current;
+    let bearing = last?.bearing ?? null;
+    // Pequeños temblores de la brújula no giran el mapa.
+    if (props.heading != null && (bearing === null || Math.abs(angleDiff(bearing, props.heading)) > 4)) bearing = props.heading;
+    if (last && last.lat === props.here.lat && last.lon === props.here.lon && last.bearing === bearing) return;
+    followed.current = { lat: props.here.lat, lon: props.here.lon, bearing };
+    m.easeTo({
+      center: [props.here.lon, props.here.lat],
+      bearing: bearing ?? m.getBearing(),
+      zoom: last ? m.getZoom() : Math.max(m.getZoom(), 15),
+      // Si se estaba pasando a 3D o a plano, este movimiento termina esa inclinación.
+      ...(pendingPitch.current !== null ? { pitch: pendingPitch.current } : {}),
+      duration: 500,
+      essential: true,
+    });
+  }, [props.follow, props.here, props.heading]);
 
   return <div ref={container} className="maps-canvas" data-testid="offline-map" />;
 }
