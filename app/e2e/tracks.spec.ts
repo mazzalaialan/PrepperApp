@@ -96,3 +96,47 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir al inicio y copiar un 
   await expect(page).toHaveURL(/#\/orientation\/tracks$/);
   await expect(page.getByText('Todavía no importaste tracks')).toBeVisible();
 });
+
+test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  // En el segundo punto del track.
+  await context.setGeolocation({ latitude: -41.164, longitude: -71.428 });
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  await page.goto('/#/orientation/tracks');
+  await page.getByTestId('tracks-file').setInputFiles({ name: 'frey.gpx', mimeType: 'application/gpx+xml', buffer: Buffer.from(WIKILOC) });
+  await page.getByRole('link', { name: 'Seguir el track' }).click();
+  await expect(page.getByRole('heading', { name: 'Siguiendo Refugio Frey desde Villa Catedral' })).toBeVisible();
+
+  const status = page.getByTestId('follow-status');
+  await expect(status).toHaveText('Vas por el track');
+  const stats = page.getByTestId('follow-stats');
+  await expect(stats).toContainText('Recorrido');
+  await expect(stats).toContainText('Falta');
+  // Quedan la subida al refugio y el repecho del medio.
+  await expect(stats).toContainText('+560 m / −10 m');
+  await expect(page.getByTestId('follow-next')).toContainText('Próximo punto: Arroyo');
+  await expect(page.getByTestId('follow-map')).toBeVisible();
+
+  // A un kilómetro al norte: fuera del track, con el rumbo para volver.
+  await context.setGeolocation({ latitude: -41.155, longitude: -71.428 });
+  await expect(status).toContainText('Te saliste del track');
+  await expect(status).toContainText('S');
+
+  // En sentido inverso, desde el refugio: falta todo y se baja.
+  await context.setGeolocation({ latitude: -41.17, longitude: -71.44 });
+  await page.getByRole('button', { name: 'Recorrer en sentido inverso' }).click();
+  await expect(page.getByText('En sentido inverso: del final al inicio.')).toBeVisible();
+  await expect(status).toHaveText('Vas por el track');
+  await expect(stats).toContainText('+10 m / −710 m');
+
+  // Llegada al inicio (que en inverso es el final).
+  await context.setGeolocation({ latitude: -41.16, longitude: -71.42 });
+  await expect(status).toHaveText('Llegaste al final del track');
+});

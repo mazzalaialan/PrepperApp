@@ -1210,7 +1210,28 @@
     "name": "Name",
     "notes": "Notes",
     "confirmDelete": "Delete track \"{{name}}\"? Points you copied to your waypoints stay.",
-    "delete": "Delete {{name}}"
+    "delete": "Delete {{name}}",
+    "follow": {
+      "start": "Follow the track",
+      "title": "Following {{name}}",
+      "reverse": "Walk it in reverse",
+      "reversed": "In reverse: from the end to the start.",
+      "waiting": "Waiting for the GPS position…",
+      "on": "You are on the track",
+      "off": "You left the track: it is {{distance}} away, towards {{bearing}}",
+      "arrived": "You reached the end of the track",
+      "done": "Covered",
+      "ofTotal": "{{done}} of {{total}}",
+      "left": "Remaining",
+      "climbLeft": "Elevation left",
+      "time": "Estimated time",
+      "hours": "{{h}} h {{m}} min",
+      "minutes": "{{m}} min",
+      "timeHint": "On foot at an easy pace (4 km/h plus one hour per 600 m of climb), without stops.",
+      "next": "Next point: {{name}}, {{distance}} along the track",
+      "map": "Drawing of the track with your position",
+      "farAway": "You are far from the track: your position is outside the drawing."
+    }
   },
   "country": {
     "label": "Country",

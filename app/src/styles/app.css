@@ -2625,3 +2625,78 @@ a.module-card:hover {
   min-width: 0;
 }
 
+/* Seguir un track en vivo */
+.follow-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.follow-on {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.follow-off {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.follow-arrived {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.follow-turn {
+  flex-basis: 100%;
+  font-size: 1rem;
+}
+
+.follow-map {
+  margin: 0;
+  padding: 8px;
+}
+
+.follow-map svg {
+  display: block;
+  width: 100%;
+  max-height: 50vh;
+}
+
+.follow-line {
+  stroke: var(--border);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.follow-done {
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.follow-start {
+  fill: var(--ok);
+}
+
+.follow-end {
+  fill: var(--danger);
+}
+
+.follow-me {
+  fill: var(--warn);
+  stroke: var(--bg, #000);
+  stroke-width: 2;
+}
+

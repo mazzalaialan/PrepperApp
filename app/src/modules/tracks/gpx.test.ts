@@ -70,6 +70,15 @@ describe('GPX de Wikiloc', () => {
     expect(s[0]).toEqual(curve[0]);
     expect(s.at(-1)).toEqual([-40.9, -71.2, null]);
     expect(s.length).toBeLessThan(5);
+    // En línea recta pero con una loma en el medio: se queda la cima.
+    const hill: TrackPoint[] = [
+      [-41, -71, 1000],
+      [-41.001, -71.001, 1010],
+      [-41.002, -71.002, 1100],
+      [-41.003, -71.003, 1010],
+      [-41.004, -71.004, 1000],
+    ];
+    expect(simplify(hill).map((p) => p[2])).toContain(1100);
   });
 });
 

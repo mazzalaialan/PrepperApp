@@ -131,7 +131,10 @@ export function trackStats(segments: TrackPoint[][]): TrackStats {
   return { distanceM, ascentM: Math.round(ascentM), descentM: Math.round(descentM), minEle, maxEle };
 }
 
-/** Distancia perpendicular aproximada (en grados escalados) de p al segmento a–b. */
+/**
+ * Cuánto se aparta p del segmento a–b (en grados escalados): de costado o en
+ * altura, lo que sea mayor. Así una subida en línea recta conserva su perfil.
+ */
 function offset(p: TrackPoint, a: TrackPoint, b: TrackPoint, k: number): number {
   const ax = a[1] * k;
   const ay = a[0];
@@ -141,7 +144,10 @@ function offset(p: TrackPoint, a: TrackPoint, b: TrackPoint, k: number): number 
   const py = p[0] - ay;
   const len = dx * dx + dy * dy;
   const t = len ? Math.max(0, Math.min(1, (px * dx + py * dy) / len)) : 0;
-  return Math.hypot(px - t * dx, py - t * dy);
+  const side = Math.hypot(px - t * dx, py - t * dy);
+  if (p[2] === null || a[2] === null || b[2] === null) return side;
+  const up = Math.abs(p[2] - (a[2] + t * (b[2] - a[2]))) / 111_320;
+  return Math.max(side, up);
 }
 
 /**

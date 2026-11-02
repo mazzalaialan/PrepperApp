@@ -1210,7 +1210,28 @@
     "name": "Nombre",
     "notes": "Notas",
     "confirmDelete": "¿Eliminar el track \"{{name}}\"? Los puntos que copiaste a tus waypoints quedan.",
-    "delete": "Eliminar {{name}}"
+    "delete": "Eliminar {{name}}",
+    "follow": {
+      "start": "Seguir el track",
+      "title": "Siguiendo {{name}}",
+      "reverse": "Recorrer en sentido inverso",
+      "reversed": "En sentido inverso: del final al inicio.",
+      "waiting": "Esperando la posición del GPS…",
+      "on": "Vas por el track",
+      "off": "Te saliste del track: está a {{distance}}, hacia {{bearing}}",
+      "arrived": "Llegaste al final del track",
+      "done": "Recorrido",
+      "ofTotal": "{{done}} de {{total}}",
+      "left": "Falta",
+      "climbLeft": "Desnivel que falta",
+      "time": "Tiempo estimado",
+      "hours": "{{h}} h {{m}} min",
+      "minutes": "{{m}} min",
+      "timeHint": "A pie, a ritmo tranquilo (4 km/h más una hora cada 600 m de subida), sin paradas.",
+      "next": "Próximo punto: {{name}}, a {{distance}} por el track",
+      "map": "Dibujo del track con tu posición",
+      "farAway": "Estás lejos del track: tu posición queda fuera del dibujo."
+    }
   },
   "country": {
     "label": "País",

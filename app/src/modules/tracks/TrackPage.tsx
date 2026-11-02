@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ExternalLink, Flag, Map as MapIcon, MapPinPlus, Navigation, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink, Flag, Footprints, Map as MapIcon, MapPinPlus, Navigation, Trash2 } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -98,9 +98,14 @@ function TrackDetail({ track }: { track: Track }) {
           <Link className="btn" to={`/orientation/tracks/${track.id}/go/end`}>
             <Flag size={18} /> {t('tracks.goEnd')}
           </Link>
-          <Link className="btn btn-primary" to={`/orientation/tracks/${track.id}/go/start`}>
+          <Link className="btn" to={`/orientation/tracks/${track.id}/go/start`}>
             <Navigation size={18} /> {t('tracks.goStart')}
           </Link>
+          {track.segments.flat().length > 1 && (
+            <Link className="btn btn-primary" to={`/orientation/tracks/${track.id}/follow`}>
+              <Footprints size={18} /> {t('tracks.follow.start')}
+            </Link>
+          )}
         </div>
         {track.desc && <p className="hint track-desc">{track.desc}</p>}
         <p className="hint" style={{ margin: 0 }}>
