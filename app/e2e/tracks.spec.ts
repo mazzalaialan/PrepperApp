@@ -24,7 +24,7 @@ const WIKILOC = `<?xml version="1.0" encoding="UTF-8"?>
   </trk>
 </gpx>`;
 
-test('tracks de Wikiloc: importar, ver datos y perfil, ir al inicio y copiar un punto a mis waypoints', async ({ page }) => {
+test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo o sacarlo de mis waypoints', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Repetir contraseña').fill(PASSWORD);
@@ -60,19 +60,30 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir al inicio y copiar un 
   await expect(page.getByText('Refugio Frey')).toHaveCount(0);
   await page.goBack();
   await page.getByRole('button', { name: 'Copiar Refugio Frey a mis waypoints' }).click();
-  await expect(page.getByRole('button', { name: 'Refugio Frey ya está en mis waypoints' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Sacar Refugio Frey de mis waypoints' })).toHaveAttribute('aria-pressed', 'true');
   await page.goto('/#/orientation/waypoints');
   await expect(page.getByText('Refugio Frey')).toBeVisible();
+
+  // Desde el mismo botón se saca, y se puede volver a copiar.
+  await page.goBack();
+  await page.getByRole('button', { name: 'Sacar Refugio Frey de mis waypoints' }).click();
+  await expect(page.getByRole('button', { name: 'Copiar Refugio Frey a mis waypoints' })).toHaveAttribute('aria-pressed', 'false');
+  await page.goto('/#/orientation/waypoints');
+  await expect(page.getByText('Refugio Frey')).toHaveCount(0);
+  await page.goBack();
+  await page.getByRole('button', { name: 'Copiar Refugio Frey a mis waypoints' }).click();
+  await expect(page.getByRole('button', { name: 'Sacar Refugio Frey de mis waypoints' })).toBeVisible();
 
   // En la lista, con distancia y desnivel.
   await page.goto('/#/orientation/tracks');
   await expect(page.getByTestId('tracks-list')).toContainText('Refugio Frey desde Villa Catedral');
   await expect(page.getByTestId('tracks-list')).toContainText('2 puntos · Wikiloc');
 
-  // Ir al inicio con la brújula.
+  // Ir hasta uno de sus puntos con la brújula; ya no hay "ir al inicio" ni "ir al final".
   await page.getByRole('link', { name: /Refugio Frey desde Villa Catedral/ }).click();
-  await page.getByRole('link', { name: 'Ir al inicio' }).click();
-  await expect(page.getByText('Inicio de Refugio Frey desde Villa Catedral')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ir al inicio' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Ir hasta Arroyo' }).click();
+  await expect(page.getByRole('heading', { name: /Arroyo/ })).toBeVisible();
 
   // En el mapa, como capa propia.
   await page.goto('/#/orientation/maps');

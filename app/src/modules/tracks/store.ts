@@ -70,11 +70,3 @@ export function trackFromGpx(text: string, fileName: string): Track {
     notes: '',
   });
 }
-
-/** Primer y último punto del recorrido. */
-export function trackEnds(t: Pick<Track, 'segments'>): { start: [number, number] | null; end: [number, number] | null } {
-  const first = t.segments[0]?.[0];
-  const lastSeg = t.segments.at(-1);
-  const last = lastSeg?.at(-1);
-  return { start: first ? [first[0], first[1]] : null, end: last ? [last[0], last[1]] : null };
-}

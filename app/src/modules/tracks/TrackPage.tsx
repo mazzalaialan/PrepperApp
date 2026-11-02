@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ExternalLink, Flag, Footprints, Map as MapIcon, MapPinPlus, Navigation, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Navigation, Trash2 } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -33,19 +33,31 @@ function TrackDetail({ track }: { track: Track }) {
   const { saveTrack, deleteTrack } = useTracks();
   const saveWaypoint = useWaypoints((s) => s.saveWaypoint);
   const myWaypoints = useWaypoints((s) => s.waypoints);
+  const routes = useWaypoints((s) => s.routes);
+  const deleteWaypoint = useWaypoints((s) => s.deleteWaypoint);
   const [name, setName] = useState(track.name);
   const [notes, setNotes] = useState(track.notes);
   const [saved, setSaved] = useState(false);
   const dist = (m: number) => formatDistance(m, units, i18n.language);
   const alt = (m: number) => formatAltitude(m, units, i18n.language);
 
-  /** Ya copiado a mis waypoints (mismo lugar, a menos de 20 m). */
-  const isCopied = (w: { lat: number; lon: number }) => [...myWaypoints.values()].some((m) => distanceMeters(m, w) < 20);
+  /** Mis waypoints en el mismo lugar que un punto del track (a menos de 20 m). */
+  const sameSpot = (w: { lat: number; lon: number }) => [...myWaypoints.values()].filter((m) => distanceMeters(m, w) < 20);
+  /** La copia de este punto: mismo lugar y mismo nombre (o la nota de copiado), para no borrar un waypoint propio que esté ahí. */
+  const copyOf = (w: Track['waypoints'][number]) =>
+    sameSpot(w).find((m) => m.name.trim() === w.name.trim() || m.notes === t('tracks.copiedFrom', { name: track.name }));
 
   async function copyToMine(w: Track['waypoints'][number]) {
     await saveWaypoint(
       newEntity<Waypoint>({ name: w.name, lat: w.lat, lon: w.lon, alt: w.ele, icon: 'pin', notes: t('tracks.copiedFrom', { name: track.name }), rainAlerts: false }),
     );
+  }
+
+  async function removeCopy(copy: Waypoint) {
+    // Si lo usa alguna ruta, se avisa antes: la ruta sigue sin ese punto.
+    const inRoutes = [...routes.values()].filter((r) => r.waypointIds.includes(copy.id));
+    if (inRoutes.length && !window.confirm(t('tracks.confirmUncopy', { name: copy.name, routes: inRoutes.map((r) => r.name).join(', ') }))) return;
+    await deleteWaypoint(copy.id);
   }
 
   async function save() {
@@ -95,12 +107,6 @@ function TrackDetail({ track }: { track: Track }) {
           <Link className="btn" to={`/orientation/maps?track=${track.id}`}>
             <MapIcon size={18} /> {t('tracks.onMap')}
           </Link>
-          <Link className="btn" to={`/orientation/tracks/${track.id}/go/end`}>
-            <Flag size={18} /> {t('tracks.goEnd')}
-          </Link>
-          <Link className="btn" to={`/orientation/tracks/${track.id}/go/start`}>
-            <Navigation size={18} /> {t('tracks.goStart')}
-          </Link>
           {track.segments.flat().length > 1 && (
             <Link className="btn btn-primary" to={`/orientation/tracks/${track.id}/follow`}>
               <Footprints size={18} /> {t('tracks.follow.start')}
@@ -131,7 +137,10 @@ function TrackDetail({ track }: { track: Track }) {
         ) : (
           <ul className="list" data-testid="track-points">
             {track.waypoints.map((w, i) => {
-              const copied = isCopied(w);
+              const copy = copyOf(w);
+              // Hay un waypoint propio ahí que no es esta copia: no se copia de nuevo ni se borra desde acá.
+              const taken = !copy && sameSpot(w).length > 0;
+              const label = copy ? t('tracks.uncopy', { name: w.name }) : taken ? t('tracks.copied', { name: w.name }) : t('tracks.copy', { name: w.name });
               return (
                 <li key={i} className="contact-row">
                   <span className="list-main">
@@ -145,12 +154,13 @@ function TrackDetail({ track }: { track: Track }) {
                     <button
                       className="icon-btn"
                       type="button"
-                      disabled={copied}
-                      onClick={() => void copyToMine(w)}
-                      aria-label={copied ? t('tracks.copied', { name: w.name }) : t('tracks.copy', { name: w.name })}
-                      title={copied ? t('tracks.copied', { name: w.name }) : t('tracks.copy', { name: w.name })}
+                      disabled={taken}
+                      aria-pressed={!!copy}
+                      onClick={() => void (copy ? removeCopy(copy) : copyToMine(w))}
+                      aria-label={label}
+                      title={label}
                     >
-                      {copied ? <Check size={18} /> : <MapPinPlus size={18} />}
+                      {copy || taken ? <Check size={18} /> : <MapPinPlus size={18} />}
                     </button>
                   </span>
                 </li>
