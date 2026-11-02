@@ -150,7 +150,13 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
     layout: { visibility: mine, 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top' },
     paint: { 'text-color': c.text, 'text-halo-color': c.surface, 'text-halo-width': 2 },
   });
-  map.addLayer({ id: 'here', type: 'circle', source: 'here', paint: { 'circle-radius': 7, 'circle-color': c.info, 'circle-stroke-color': c.text, 'circle-stroke-width': 2 } });
+  // Mirando a la pantalla: en 3D no se aplasta con la inclinación.
+  map.addLayer({
+    id: 'here',
+    type: 'circle',
+    source: 'here',
+    paint: { 'circle-radius': 7, 'circle-color': c.info, 'circle-stroke-color': c.text, 'circle-stroke-width': 2, 'circle-pitch-alignment': 'viewport' },
+  });
 }
 
 export function MapView(props: Props) {
@@ -203,7 +209,10 @@ export function MapView(props: Props) {
       syncTerrain(m);
     });
     // Los créditos arrancan plegados (botón "i"): abiertos tapan la escala y el botón de ubicación en el celular.
-    m.once('load', () => container.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
+    // MapLibre los vuelve a abrir al cambiar de tamaño (pantalla completa): se pliegan de nuevo.
+    const foldAttribution = () => container.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
+    m.once('load', foldAttribution);
+    m.on('resize', foldAttribution);
     m.on('moveend', () => {
       // Inclinación y relieve a la vista (para las pruebas y para depurar en el celular).
       container.current?.setAttribute('data-pitch', String(Math.round(m.getPitch())));

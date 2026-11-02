@@ -1237,6 +1237,7 @@
       "next": "Next point: {{name}}, {{distance}} along the track",
       "map": "Drawing of the track with your position",
       "farAway": "You are far from the track: your position is outside the drawing.",
+      "overlayStats": "{{left}} left · +{{up}} / −{{down}} · {{time}}",
       "view": "How to show the track",
       "views": { "drawing": "Drawing (saves battery)", "map": "Map 2D / 3D" }
     }

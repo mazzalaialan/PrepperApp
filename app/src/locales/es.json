@@ -1237,6 +1237,7 @@
       "next": "Próximo punto: {{name}}, a {{distance}} por el track",
       "map": "Dibujo del track con tu posición",
       "farAway": "Estás lejos del track: tu posición queda fuera del dibujo.",
+      "overlayStats": "Faltan {{left}} · +{{up}} / −{{down}} · {{time}}",
       "view": "Cómo ver el track",
       "views": { "drawing": "Dibujo (gasta menos)", "map": "Mapa 2D / 3D" }
     }

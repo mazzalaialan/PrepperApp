@@ -108,7 +108,7 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
   await expect(page.getByText('Todavía no importaste tracks')).toBeVisible();
 });
 
-test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada', async ({ page, context }) => {
+test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada', async ({ page, context }, testInfo) => {
   await context.grantPermissions(['geolocation']);
   // En el segundo punto del track.
   await context.setGeolocation({ latitude: -41.164, longitude: -71.428 });
@@ -165,4 +165,20 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   await page.getByRole('link', { name: 'Seguir el track' }).click();
   await expect(page.getByTestId('offline-map').locator('canvas')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Mapa en 3D' })).toHaveAttribute('aria-pressed', 'true');
+
+  // En pantalla completa, el estado y los datos van sobre el mapa.
+  await expect(page.getByTestId('follow-overlay')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Pantalla completa' }).click();
+  const overlay = page.getByTestId('follow-overlay');
+  await expect(overlay).toContainText('Vas por el track');
+  await expect(overlay).toContainText('Faltan');
+  await expect(overlay).toContainText('+710 m / −10 m');
+  await expect(overlay).toContainText('Próximo punto: Arroyo');
+  await context.setGeolocation({ latitude: -41.155, longitude: -71.428 });
+  await expect(overlay).toContainText('Te saliste del track');
+  // Que termine el movimiento del mapa hacia la nueva posición antes de la captura.
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-30-track-follow-full.png` });
+  await page.getByRole('button', { name: 'Salir de pantalla completa' }).click();
+  await expect(overlay).toHaveCount(0);
 });

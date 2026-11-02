@@ -2096,6 +2096,61 @@ a.module-card:hover {
   min-height: 320px;
 }
 
+/* En pantalla completa, los datos van arriba entre el botón de salir (izquierda) y el zoom y la brújula (derecha). */
+.follow-stage .fs-overlay {
+  left: 60px;
+  right: 56px;
+  padding: 0;
+  background: none;
+}
+
+.follow-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: rgb(0 0 0 / 0.6);
+  font-size: 0.95rem;
+}
+
+/* Texto blanco siempre (no el color del estado): se lee sobre cualquier fondo. */
+.fs-overlay .follow-overlay {
+  color: #fff;
+}
+
+[data-theme='red'] .fs-overlay .follow-overlay {
+  color: #ff5a40;
+}
+
+.follow-overlay-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.15rem;
+}
+
+.follow-overlay.follow-on {
+  border-color: var(--ok);
+}
+
+/* Fuera del track: que se note de lejos. */
+.follow-overlay.follow-off {
+  border-color: #ff5a40;
+  background: rgb(120 20 0 / 0.75);
+}
+
+.follow-overlay.follow-arrived {
+  border-color: var(--ok);
+}
+
+.follow-overlay .follow-turn {
+  flex-basis: 100%;
+  font-size: 1rem;
+}
+
 .zone-go {
   border: none;
   background: none;

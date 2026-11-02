@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { Track } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { CameraButtons } from '@/modules/maps/CameraButtons';
@@ -19,6 +19,7 @@ export function FollowMap({
   heading,
   doneM,
   nearest,
+  overlay,
 }: {
   track: Track;
   line: FollowLine;
@@ -26,6 +27,8 @@ export function FollowMap({
   heading: number | null;
   doneM: number;
   nearest: { lat: number; lon: number } | null;
+  /** Estado y datos del seguimiento, encima del mapa en pantalla completa. */
+  overlay: ReactNode;
 }) {
   const layers = useSettings((s) => s.settings.mapLayers);
   const update = useSettings((s) => s.update);
@@ -44,7 +47,7 @@ export function FollowMap({
     return out;
   }, [line, doneM, nearest]);
   return (
-    <FullscreenStage className="maps-stage follow-stage">
+    <FullscreenStage className="maps-stage follow-stage" overlay={overlay}>
       <MapView
         initial={initial}
         layers={layers}

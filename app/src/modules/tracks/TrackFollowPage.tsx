@@ -93,6 +93,36 @@ function Follow({ track }: { track: Track }) {
   const backBearing = fix && state && off ? bearingDeg(fix, state.nearest) : null;
   const turn = backBearing !== null && heading?.trueHeading != null ? angleDiff(heading.trueHeading, backBearing) : null;
   const minutes = state ? walkingMinutes(state.remainingM, state.upLeftM, state.downLeftM) : null;
+  const timeText = minutes === null ? '' : minutes >= 60 ? t('tracks.follow.hours', { h: Math.floor(minutes / 60), m: minutes % 60 }) : t('tracks.follow.minutes', { m: minutes });
+  const statusClass = !state ? '' : state.arrived ? ' follow-arrived' : off ? ' follow-off' : ' follow-on';
+  const turnText =
+    turn === null ? null : Math.abs(turn) <= 15 ? t('goto.straight') : turn > 0 ? t('goto.turnRight', { degrees: Math.round(turn) }) : t('goto.turnLeft', { degrees: Math.round(-turn) });
+  const status = !state ? (
+    t('tracks.follow.waiting')
+  ) : state.arrived ? (
+    <>
+      <CircleCheck size={24} aria-hidden /> {t('tracks.follow.arrived')}
+    </>
+  ) : off ? (
+    <>
+      <TriangleAlert size={24} aria-hidden /> {t('tracks.follow.off', { distance: dist(state.offTrackM), bearing: formatBearing(backBearing!) })}
+      {turnText && <span className="follow-turn">{turnText}</span>}
+    </>
+  ) : (
+    <>
+      <Footprints size={24} aria-hidden /> {t('tracks.follow.on')}
+    </>
+  );
+  // Sobre el mapa en pantalla completa: el estado y lo principal, para no tener que salir a mirarlo.
+  const overlay = (
+    <div className={`follow-overlay${statusClass}`} data-testid="follow-overlay">
+      <span className="fs-big follow-overlay-status">{status}</span>
+      {state && !state.arrived && (
+        <span>{t('tracks.follow.overlayStats', { left: dist(state.remainingM), up: alt(state.upLeftM), down: alt(state.downLeftM), time: timeText })}</span>
+      )}
+      {state?.next && !state.arrived && <span>{t('tracks.follow.next', { name: state.next.name, distance: dist(state.next.aheadM) })}</span>}
+    </div>
+  );
 
   return (
     <div className="stack">
@@ -117,32 +147,8 @@ function Follow({ track }: { track: Track }) {
       </div>
       {reversed && <p className="hint" style={{ margin: 0 }}>{t('tracks.follow.reversed')}</p>}
 
-      <p className={`follow-status${!state ? '' : state.arrived ? ' follow-arrived' : off ? ' follow-off' : ' follow-on'}`} role="status" data-testid="follow-status">
-        {!state ? (
-          t('tracks.follow.waiting')
-        ) : state.arrived ? (
-          <>
-            <CircleCheck size={24} aria-hidden /> {t('tracks.follow.arrived')}
-          </>
-        ) : off ? (
-          <>
-            <TriangleAlert size={24} aria-hidden />{' '}
-            {t('tracks.follow.off', { distance: dist(state.offTrackM), bearing: formatBearing(backBearing!) })}
-            {turn !== null && (
-              <span className="follow-turn">
-                {Math.abs(turn) <= 15
-                  ? t('goto.straight')
-                  : turn > 0
-                    ? t('goto.turnRight', { degrees: Math.round(turn) })
-                    : t('goto.turnLeft', { degrees: Math.round(-turn) })}
-              </span>
-            )}
-          </>
-        ) : (
-          <>
-            <Footprints size={24} aria-hidden /> {t('tracks.follow.on')}
-          </>
-        )}
+      <p className={`follow-status${statusClass}`} role="status" data-testid="follow-status">
+        {status}
       </p>
 
       {state && (
@@ -164,7 +170,7 @@ function Follow({ track }: { track: Track }) {
             </div>
             <div>
               <dt>{t('tracks.follow.time')}</dt>
-              <dd>{minutes! >= 60 ? t('tracks.follow.hours', { h: Math.floor(minutes! / 60), m: minutes! % 60 }) : t('tracks.follow.minutes', { m: minutes })}</dd>
+              <dd>{timeText}</dd>
             </div>
           </dl>
           {state.next && (
@@ -185,7 +191,15 @@ function Follow({ track }: { track: Track }) {
       </div>
       {view === 'map' ? (
         <Suspense fallback={null}>
-          <FollowMap track={track} line={line} fix={fix} heading={heading?.trueHeading ?? null} doneM={state?.alongM ?? 0} nearest={state?.nearest ?? null} />
+          <FollowMap
+            track={track}
+            line={line}
+            fix={fix}
+            heading={heading?.trueHeading ?? null}
+            doneM={state?.alongM ?? 0}
+            nearest={state?.nearest ?? null}
+            overlay={overlay}
+          />
         </Suspense>
       ) : (
         <MiniMap line={line} me={fix} doneM={state?.alongM ?? 0} />
