@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Archive, Check, Crosshair, Info, Lock, RefreshCw, X } from 'lucide-react';
+import { Archive, Check, Crosshair, Info, Lock, LockOpen, RefreshCw, X } from 'lucide-react';
 import { lastBackupAt } from '@/core/backup/backup';
 import { daysBetween, today } from '@/modules/inventory/domain/dates';
 import { newerRelease, usePortableUpdate } from '@/core/portable/update';
@@ -321,15 +321,12 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
       <p className="hint">{t('settings.connectionsHint')}</p>
       <div className="field">
         <label htmlFor="server-url">{t('settings.serverUrl')}</label>
-        <input
+        <LockedInput
           id="server-url"
-          className="input"
-          type="url"
-          inputMode="url"
           placeholder="https://"
           value={serverUrl}
-          onChange={(e) => {
-            setServerUrl(e.target.value);
+          onChange={(v) => {
+            setServerUrl(v);
             setSaved(false);
           }}
         />
@@ -343,14 +340,11 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
       </div>
       <div className="field">
         <label htmlFor="weather-url">{t('settings.weatherUrl')}</label>
-        <input
+        <LockedInput
           id="weather-url"
-          className="input"
-          type="url"
-          inputMode="url"
           value={weatherUrl}
-          onChange={(e) => {
-            setWeatherUrl(e.target.value);
+          onChange={(v) => {
+            setWeatherUrl(v);
             setSaved(false);
           }}
         />
@@ -360,6 +354,31 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
         {t('common.save')}
       </button>
     </form>
+  );
+}
+
+/** Dirección que no se cambia por error: hay que abrir el candado para editarla. */
+function LockedInput({ id, value, onChange, placeholder }: { id: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const label = open ? t('settings.lockField') : t('settings.unlockField');
+  return (
+    <div className="locked-input">
+      <input
+        id={id}
+        className="input"
+        type="url"
+        inputMode="url"
+        placeholder={placeholder}
+        value={value}
+        readOnly={!open}
+        aria-readonly={!open}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button className="icon-btn" type="button" aria-pressed={open} onClick={() => setOpen(!open)} aria-label={label} title={label}>
+        {open ? <LockOpen size={20} /> : <Lock size={20} />}
+      </button>
+    </div>
   );
 }
 

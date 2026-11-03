@@ -16,6 +16,8 @@ export interface Settings {
   units: UnitSystem;
   autoLockMinutes: number;
   serverUrl: string;
+  /** Ya se le cargó el servidor por defecto (para no volver a ponerlo si lo vació). */
+  serverDefaulted: boolean;
   weatherUrl: string;
   notificationsEnabled: boolean;
   /** Hora local (0–23) a partir de la cual el servidor envía el aviso del día. */
@@ -114,12 +116,16 @@ function detectLanguage(): Language {
   return globalThis.navigator?.language?.toLowerCase().startsWith('es') === false ? 'en' : 'es';
 }
 
+/** Servidor VikArg que viene cargado (se puede cambiar o vaciar en Ajustes). */
+export const DEFAULT_SERVER_URL = 'https://valhallarust2.ddns.net';
+
 export const DEFAULT_SETTINGS: Settings = {
   language: detectLanguage(),
   theme: 'dark',
   units: 'metric',
   autoLockMinutes: 5,
-  serverUrl: '',
+  serverUrl: DEFAULT_SERVER_URL,
+  serverDefaulted: true,
   weatherUrl: 'https://api.open-meteo.com',
   notificationsEnabled: false,
   notifyHour: 9,
@@ -163,6 +169,10 @@ export const useSettings = create<SettingsState>((set, get) => ({
         starmapLayers: { ...DEFAULT_SETTINGS.starmapLayers, ...stored?.starmapLayers },
         weatherMapLayers: { ...DEFAULT_SETTINGS.weatherMapLayers, ...stored?.weatherMapLayers },
         mapLayers: { ...DEFAULT_SETTINGS.mapLayers, ...stored?.mapLayers },
+        // Quien ya tenía la app sin servidor recibe el que viene cargado, una sola vez:
+        // si después lo vacía a propósito, queda vacío.
+        ...(stored && !stored.serverDefaulted && !stored.serverUrl ? { serverUrl: DEFAULT_SERVER_URL } : {}),
+        serverDefaulted: true,
       },
       loaded: true,
     });

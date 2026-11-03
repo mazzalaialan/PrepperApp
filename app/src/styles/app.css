@@ -2778,6 +2778,26 @@ a.module-card:hover {
   stroke-linecap: round;
 }
 
+/* Direcciones con candado (Ajustes → Conexiones). */
+.locked-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.locked-input .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.locked-input .input[readonly] {
+  color: var(--text-muted);
+}
+
+.locked-input .icon-btn[aria-pressed='true'] {
+  color: var(--accent);
+}
+
 /* Lo grabado: verde, como en el mapa. */
 .follow-rec {
   stroke: var(--ok);

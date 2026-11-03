@@ -17,7 +17,12 @@ test('transferir a un dispositivo nuevo con el QR (link) y código de un solo us
 
   // Configurar y probar el servidor
   await page.goto('/#/settings');
-  await page.getByLabel('Servidor VikArg').fill(`${SERVER}/`);
+  // Con candado: no se puede cambiar por error.
+  const serverInput = page.getByLabel('Servidor VikArg');
+  await expect(serverInput).not.toBeEditable();
+  await expect(page.getByLabel('Fuente de clima')).not.toBeEditable();
+  await page.getByRole('button', { name: 'Desbloquear para modificar' }).first().click();
+  await serverInput.fill(`${SERVER}/`);
   await page.getByRole('button', { name: 'Probar conexión' }).click();
   await expect(page.getByText(/Servidor VikArg .* disponible/)).toBeVisible();
   await page.getByRole('button', { name: 'Guardar' }).last().click();
@@ -65,6 +70,12 @@ test('notificaciones sin servidor', async ({ page, context }) => {
   await context.grantPermissions(['notifications']);
   await createVault(page);
   await page.goto('/#/settings');
+  // Viene cargado el servidor por defecto; vaciado, queda sin servidor.
+  const server = page.getByLabel('Servidor VikArg');
+  await expect(server).toHaveValue('https://valhallarust2.ddns.net');
+  await page.getByRole('button', { name: 'Desbloquear para modificar' }).first().click();
+  await server.fill('');
+  await server.locator('xpath=ancestor::form').getByRole('button', { name: 'Guardar' }).click();
   await page.getByRole('button', { name: 'Activar notificaciones' }).click();
   await expect(page.getByText(/Sin servidor: aviso diario aproximado/)).toBeVisible();
   await page.getByRole('button', { name: 'Probar' }).click();

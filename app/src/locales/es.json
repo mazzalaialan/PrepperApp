@@ -1543,6 +1543,8 @@
     "serverUrl": "Servidor VikArg",
     "serverUrlHint": "Para notificaciones y transferencia. Vacío = sin servidor.",
     "serverTest": "Probar conexión",
+    "unlockField": "Desbloquear para modificar",
+    "lockField": "Bloquear",
     "serverOk": "Servidor VikArg {{version}} disponible.",
     "weatherUrl": "Fuente de clima",
     "device": "Este dispositivo",

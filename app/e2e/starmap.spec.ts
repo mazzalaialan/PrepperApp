@@ -99,7 +99,7 @@ test('rojo nocturno automático: horario fijo y al anochecer', async ({ page }) 
 
   // Se mantiene con la app bloqueada (el tema no depende de los datos cifrados).
   await page.getByRole('button', { name: 'Bloquear ahora' }).first().click();
-  await expect(page.getByRole('button', { name: 'Desbloquear' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Desbloquear', exact: true })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'red');
 });
 
