@@ -18,7 +18,7 @@ export function RouteEditPage() {
   if (id !== 'new' && !stored) {
     return (
       <p className="empty">
-        {t('routes.notFound')} <Link to="/orientation/routes">{t('common.back')}</Link>
+        {t('routes.notFound')} <Link to="/orientation/waypoints">{t('common.back')}</Link>
       </p>
     );
   }
@@ -60,7 +60,7 @@ function RouteForm({ stored }: { stored: Route | undefined }) {
   async function handleDelete() {
     if (!stored || !window.confirm(t('routes.confirmDelete', { name: stored.name }))) return;
     await deleteRoute(stored.id);
-    navigate('/orientation/routes', { replace: true });
+    navigate('/orientation/waypoints', { replace: true });
   }
 
   // Se recorre la ruta guardada: si los puntos cambiaron, primero hay que guardar.
@@ -69,7 +69,7 @@ function RouteForm({ stored }: { stored: Route | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/orientation/routes" aria-label={t('common.back')}>
+        <Link className="icon-btn" to="/orientation/waypoints" aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('routes.new')}</h1>

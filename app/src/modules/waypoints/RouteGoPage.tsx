@@ -19,7 +19,7 @@ export function RouteGoPage() {
   if (!route || !target) {
     return (
       <p className="empty">
-        {t('routes.notFound')} <Link to="/orientation/routes">{t('common.back')}</Link>
+        {t('routes.notFound')} <Link to="/orientation/waypoints">{t('common.back')}</Link>
       </p>
     );
   }

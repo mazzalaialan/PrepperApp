@@ -32,7 +32,9 @@ test('rutas: lista de puntos con nombre, recorrido en orden y llegada', async ({
   await page.goto('/#/orientation/waypoints');
   await expect(page.getByRole('link', { name: 'Ir a Puente' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Rutas' }).click();
+  // Las rutas están abajo, en la misma pantalla.
+  await expect(page.getByRole('heading', { name: 'Waypoints y Rutas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rutas', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Nueva ruta' }).click();
   await page.getByLabel('Nombre de la ruta').fill('Evacuación al refugio');
   const choose = page.getByLabel('Elegí un punto guardado');

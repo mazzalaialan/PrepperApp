@@ -403,8 +403,9 @@ La guía de primeros auxilios escribe los números con marcas (`{medical}`, `{sa
 | Recomendaciones | Calculadora según grupo familiar y reglas del usuario | — |
 | Brújula | Rumbo magnético y verdadero (WMM); integrada con mapas y estrellas | Deshabilitada |
 | Inclinómetro | Pendiente en grados; resalta 30–45° como zona de riesgo de avalancha, con aviso de que es orientativo | Deshabilitado |
-| GPS / Waypoints | Guardar puntos; rumbo y distancia a un waypoint | Coordenadas manuales |
-| Mapas offline | §12 | — |
+| Mapas offline | §12. En Orientación va tercero, después de Brújula e Inclinómetro | — |
+| Waypoints y Rutas | Guardar puntos; rumbo y distancia a un waypoint. Las rutas (puntos unidos en orden) van abajo, en la misma pantalla (`/orientation/routes` redirige ahí) | Coordenadas manuales |
+| Tracks | Importados (GPX) y grabados con la app (§F5) | — |
 | Astronomía | Amanecer, anochecer, crepúsculos, fases lunares | Ubicación por GPS, por ciudad cercana (lista offline GeoNames) o tocando un punto en el mapa |
 | Clima | Pronóstico descargado y cacheado; muestra "actualizado hace X" | Último dato guardado |
 | Mapa estelar | Carta del cielo orientada con la brújula; estrellas hasta mag. ~5,5, constelaciones, planetas; Cruz del Sur destacada para hallar el sur | Rotación manual |

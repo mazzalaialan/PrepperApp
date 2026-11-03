@@ -34,7 +34,6 @@ import { InclinometerPage } from '@/modules/inclinometer/InclinometerPage';
 import { GoToPage } from '@/modules/waypoints/GoToPage';
 import { RouteEditPage } from '@/modules/waypoints/RouteEditPage';
 import { RouteGoPage } from '@/modules/waypoints/RouteGoPage';
-import { RoutesPage } from '@/modules/waypoints/RoutesPage';
 import { TrackFollowPage } from '@/modules/tracks/TrackFollowPage';
 import { TrackGoPage } from '@/modules/tracks/TrackGoPage';
 import { TrackPage } from '@/modules/tracks/TrackPage';
@@ -105,7 +104,8 @@ const router = createHashRouter([
           </Suspense>
         ),
       },
-      { path: '/orientation/routes', element: <RoutesPage /> },
+      // Las rutas se listan abajo de los waypoints (antes tenían pantalla propia).
+      { path: '/orientation/routes', element: <Navigate to="/orientation/waypoints" replace /> },
       { path: '/orientation/tracks', element: <TracksPage /> },
       { path: '/orientation/tracks/:id', element: <TrackPage /> },
       { path: '/orientation/tracks/:id/go/:target', element: <TrackGoPage /> },

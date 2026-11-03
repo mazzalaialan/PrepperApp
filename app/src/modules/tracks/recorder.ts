@@ -32,6 +32,8 @@ interface RecorderState {
   warned: boolean;
   /** Segundos que estuvo con la pantalla apagada (sin grabar), para avisarlo al volver. */
   gapS: number | null;
+  /** Precisión de la última posición del GPS (para mostrar por qué todavía no graba). */
+  accuracy: number | null;
   start: (name: string) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => void;
@@ -39,7 +41,7 @@ interface RecorderState {
   finish: (name?: string) => Promise<Id | null>;
 }
 
-const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null } as const;
+const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, accuracy: null } as const;
 
 /** Más que esto con la pantalla apagada, se avisa que no se grabó. */
 const GAP_NOTICE_MS = 20_000;
@@ -62,8 +64,8 @@ async function persist() {
 function onPosition(p: GeolocationPosition) {
   const s = useRecorder.getState();
   if (s.status !== 'recording' || !s.track) return;
-  if (s.error) useRecorder.setState({ error: null });
   const fix = { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy };
+  if (s.error || s.accuracy !== fix.accuracy) useRecorder.setState({ error: null, accuracy: fix.accuracy });
   const segments = s.track.segments;
   if (!shouldAdd(segments[segments.length - 1]?.at(-1), fix)) return;
   const point: TrackPoint = [fix.lat, fix.lon, p.coords.altitude ?? null];
@@ -118,7 +120,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
       recKey: await newRecKey(),
     });
     prepareLocked(track.recKey!);
-    set({ status: 'recording', track, elapsedMs: 0, since: Date.now(), error: null, warned: false, gapS: null });
+    set({ status: 'recording', track, elapsedMs: 0, since: Date.now(), error: null, warned: false, gapS: null, accuracy: null });
     await persist();
     startWatch();
   },

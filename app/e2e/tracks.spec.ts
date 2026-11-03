@@ -128,6 +128,11 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
   await expect(warn).toContainText('Si bloqueás el celular o se apaga la pantalla, se deja de grabar.');
   await warn.getByRole('button', { name: 'Entendido' }).click();
   await expect(warn).toHaveCount(0);
+  // Con mala señal no graba, y lo dice.
+  await context.setGeolocation({ latitude: -41.16, longitude: -71.42, accuracy: 80 });
+  await expect(page.getByTestId('rec-gps')).toContainText('Señal de GPS débil (±80 m)');
+  await context.setGeolocation({ latitude: -41.16, longitude: -71.42, accuracy: 5 });
+  await expect(page.getByTestId('rec-gps')).toHaveCount(0);
   // Que llegue la primera posición antes de moverse.
   await page.waitForTimeout(500);
   // Cada paso, unos 111 m al sur.

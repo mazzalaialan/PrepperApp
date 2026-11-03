@@ -7,6 +7,7 @@ import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
 import { Dialog } from '@/ui/Dialog';
+import { MAX_ACCURACY_M } from './record';
 import { elapsedS, useRecorder } from './recorder';
 
 /** "0:42", "12:05" o "1:03:20". */
@@ -128,7 +129,7 @@ export function RecordingBar() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const units = useSettings((s) => s.settings.units);
-  const { status, track, error, elapsedMs, since, warned, gapS, pause, resume, finish } = useRecorder();
+  const { status, track, error, elapsedMs, since, warned, gapS, accuracy, pause, resume, finish } = useRecorder();
   const [, tick] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   /** Nombre que se está poniendo al terminar (null: sin el diálogo). */
@@ -142,7 +143,7 @@ export function RecordingBar() {
   }, [status]);
   useEffect(() => {
     if (!notice) return;
-    const id = setTimeout(() => setNotice(null), 6000);
+    const id = setTimeout(() => setNotice(null), 15_000);
     return () => clearTimeout(id);
   }, [notice]);
 
@@ -172,7 +173,19 @@ export function RecordingBar() {
         <span data-testid="rec-stats">
           {formatDistance(track.distanceM, units, i18n.language)} · {formatDuration(elapsedS({ elapsedMs, since }))}
         </span>
-        {error && status === 'recording' && <span className="rec-hint rec-error">{t(`gps.error.${error}`)}</span>}
+        {status === 'recording' &&
+          (error ? (
+            <span className="rec-hint rec-error">{t(`gps.error.${error}`)}</span>
+          ) : accuracy === null ? (
+            <span className="rec-hint">{t('gps.searching')}</span>
+          ) : accuracy > MAX_ACCURACY_M ? (
+            // Con tanto error los puntos no se toman: que se vea por qué no avanza.
+            <span className="rec-hint rec-error" data-testid="rec-gps">
+              {t('tracks.rec.weakGps', { accuracy: formatDistance(accuracy, units, i18n.language), max: formatDistance(MAX_ACCURACY_M, units, i18n.language) })}
+            </span>
+          ) : (
+            points < 2 && <span className="rec-hint">{t('tracks.rec.waitingMove')}</span>
+          ))}
       </span>
       <span className="rec-actions">
         {status === 'recording' ? (
@@ -228,6 +241,11 @@ export function RecordingBar() {
               void stop(naming);
             }}
           >
+            {points < 2 && (
+              <p className="error" role="alert">
+                {t('tracks.rec.nothingYet')}
+              </p>
+            )}
             <label htmlFor="rec-name">{t('tracks.name')}</label>
             <input id="rec-name" className="input" value={naming} onChange={(e) => setNaming(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
           </form>

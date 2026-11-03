@@ -3,7 +3,7 @@ import type { Track } from '@/core/model/types';
 import { simplify, trackStats, type TrackPoint } from './gpx';
 
 /** Peor precisión aceptada: con más error el punto ensucia el recorrido. */
-const MAX_ACCURACY_M = 50;
+export const MAX_ACCURACY_M = 50;
 /** Paso mínimo entre puntos: quieto, el GPS dibuja una maraña alrededor. */
 const MIN_STEP_M = 8;
 

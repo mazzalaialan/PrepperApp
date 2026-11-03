@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, MapPinPlus, Navigation, Plus, Route as RouteIcon } from 'lucide-react';
+import { MapPin, MapPinPlus, Navigation, Plus } from 'lucide-react';
 import { useCapability } from '@/core/capabilities/capabilities';
 import { distanceMeters } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
 import type { Waypoint } from '@/core/model/types';
 import { GpsStatus, useDistanceLabel } from './components';
+import { RoutesSection } from './RoutesPage';
 import { useWaypoints } from './store';
 
 const FRESH_FIX_MS = 10_000;
@@ -60,9 +61,6 @@ export function WaypointsPage() {
     <>
       <div className="page-head">
         <h1 className="page-title" style={{ flex: 1 }}>{t('modules.waypoints.title')}</h1>
-        <Link className="btn" to="/orientation/routes">
-          <RouteIcon size={20} /> {t('modules.routes.title')}
-        </Link>
         <Link className="btn" to="/orientation/waypoints/new">
           <Plus size={20} /> {t('waypoints.new')}
         </Link>
@@ -102,6 +100,8 @@ export function WaypointsPage() {
           ))}
         </ul>
       )}
+
+      <RoutesSection />
     </>
   );
 }
