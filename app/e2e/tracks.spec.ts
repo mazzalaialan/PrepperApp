@@ -79,11 +79,10 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
   await expect(page.getByTestId('tracks-list')).toContainText('Refugio Frey desde Villa Catedral');
   await expect(page.getByTestId('tracks-list')).toContainText('2 puntos · Wikiloc');
 
-  // Ir hasta uno de sus puntos con la brújula; ya no hay "ir al inicio" ni "ir al final".
+  // Sus puntos no tienen "ir hasta": para ir con la brújula se copian a mis waypoints.
   await page.getByRole('link', { name: /Refugio Frey desde Villa Catedral/ }).click();
-  await expect(page.getByRole('link', { name: 'Ir al inicio' })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Ir hasta Arroyo' }).click();
-  await expect(page.getByRole('heading', { name: /Arroyo/ })).toBeVisible();
+  await expect(page.getByTestId('track-points')).toContainText('Arroyo');
+  await expect(page.getByRole('link', { name: /^Ir hasta/ })).toHaveCount(0);
 
   // En el mapa, como capa propia.
   await page.goto('/#/orientation/maps');

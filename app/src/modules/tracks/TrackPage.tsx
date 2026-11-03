@@ -1,7 +1,7 @@
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Navigation, Pencil, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -233,9 +233,6 @@ function TrackDetail({ track }: { track: Track }) {
                     {(w.ele !== null || w.desc) && <span className="list-sub">{[w.ele !== null ? alt(w.ele) : '', w.desc].filter(Boolean).join(' · ')}</span>}
                   </span>
                   <span className="contact-actions">
-                    <Link className="icon-btn" to={`/orientation/tracks/${track.id}/go/${i}`} aria-label={t('tracks.goTo', { name: w.name })}>
-                      <Navigation size={18} />
-                    </Link>
                     <button
                       className="icon-btn"
                       type="button"
