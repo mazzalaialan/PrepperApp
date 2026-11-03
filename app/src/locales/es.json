@@ -1253,7 +1253,9 @@
       "bar": "Grabación del recorrido",
       "recording": "Grabando",
       "paused": "Grabación en pausa",
-      "keepOpen": "Dejá la app abierta (podés bloquearla). Con la pantalla apagada el celular deja de dar la posición: para ahorrar batería usá la pantalla negra.",
+      "screenOff": "Si bloqueás el celular o se apaga la pantalla, se deja de grabar. Podés bloquear la app (candado) y, para ahorrar batería, usar la pantalla negra (luna).",
+      "gap": "Con la pantalla apagada no se grabó durante {{time}}: ese tramo queda como una línea recta. Para ahorrar batería usá la pantalla negra (luna).",
+      "understood": "Entendido",
       "nothing": "No llegó a grabarse ningún tramo: no se guardó nada.",
       "defaultName": "Recorrido del {{date}} {{time}}",
       "inProgress": "Grabando",
@@ -1268,7 +1270,8 @@
   "pocket": {
     "on": "Pantalla negra (ahorra batería)",
     "title": "Pantalla negra",
-    "exit": "Tocá dos veces para volver"
+    "exit": "Tocá dos veces para volver",
+    "dontLock": "No bloquees el celular: se dejaría de grabar."
   },
   "country": {
     "label": "País",

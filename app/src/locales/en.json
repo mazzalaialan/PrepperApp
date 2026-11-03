@@ -1253,7 +1253,9 @@
       "bar": "Trip recording",
       "recording": "Recording",
       "paused": "Recording paused",
-      "keepOpen": "Keep the app open (you can lock it). With the screen off the phone stops giving the position: to save battery use the black screen.",
+      "screenOff": "If you lock the phone or the screen turns off, recording stops. You can lock the app (padlock) and, to save battery, use the black screen (moon).",
+      "gap": "With the screen off nothing was recorded for {{time}}: that stretch shows as a straight line. To save battery use the black screen (moon).",
+      "understood": "Got it",
       "nothing": "Nothing was recorded: nothing was saved.",
       "defaultName": "Trip on {{date}} {{time}}",
       "inProgress": "Recording",
@@ -1268,7 +1270,8 @@
   "pocket": {
     "on": "Black screen (saves battery)",
     "title": "Black screen",
-    "exit": "Tap twice to go back"
+    "exit": "Tap twice to go back",
+    "dontLock": "Do not lock the phone: recording would stop."
   },
   "country": {
     "label": "Country",

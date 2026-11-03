@@ -123,6 +123,11 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
   await page.getByRole('button', { name: 'Grabar mi recorrido' }).click();
   const bar = page.getByTestId('rec-bar');
   await expect(bar).toContainText('Grabando');
+  // Avisa que con el celular bloqueado no se graba, hasta que se lee.
+  const warn = page.getByTestId('rec-warn');
+  await expect(warn).toContainText('Si bloqueás el celular o se apaga la pantalla, se deja de grabar.');
+  await warn.getByRole('button', { name: 'Entendido' }).click();
+  await expect(warn).toHaveCount(0);
   // Que llegue la primera posición antes de moverse.
   await page.waitForTimeout(500);
   // Cada paso, unos 111 m al sur.
@@ -188,6 +193,7 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
   await bar.getByRole('button', { name: 'Pantalla negra (ahorra batería)' }).click();
   const pocket = page.getByTestId('pocket');
   await expect(pocket).toContainText('Grabando');
+  await expect(pocket).toContainText('No bloquees el celular');
   await pocket.dblclick();
   await expect(pocket).toHaveCount(0);
 

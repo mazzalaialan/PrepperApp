@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Circle, Moon, Pause, Play, Square, Undo2 } from 'lucide-react';
+import { Circle, Moon, Pause, Play, Square, TriangleAlert, Undo2 } from 'lucide-react';
 import { usePocket } from '@/core/power/pocket';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
@@ -113,6 +113,7 @@ export function PocketScreen() {
           {formatDuration(elapsedS({ elapsedMs, since }))}
         </p>
       )}
+      {status === 'recording' && <p>{t('pocket.dontLock')}</p>}
       <p>{t('pocket.exit')}</p>
     </div>
   );
@@ -127,7 +128,7 @@ export function RecordingBar() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const units = useSettings((s) => s.settings.units);
-  const { status, track, error, elapsedMs, since, pause, resume, finish } = useRecorder();
+  const { status, track, error, elapsedMs, since, warned, gapS, pause, resume, finish } = useRecorder();
   const [, tick] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   /** Nombre que se está poniendo al terminar (null: sin el diálogo). */
@@ -171,11 +172,7 @@ export function RecordingBar() {
         <span data-testid="rec-stats">
           {formatDistance(track.distanceM, units, i18n.language)} · {formatDuration(elapsedS({ elapsedMs, since }))}
         </span>
-        {error && status === 'recording' ? (
-          <span className="rec-hint rec-error">{t(`gps.error.${error}`)}</span>
-        ) : (
-          status === 'recording' && points < 2 && <span className="rec-hint">{t('tracks.rec.keepOpen')}</span>
-        )}
+        {error && status === 'recording' && <span className="rec-hint rec-error">{t(`gps.error.${error}`)}</span>}
       </span>
       <span className="rec-actions">
         {status === 'recording' ? (
@@ -197,6 +194,16 @@ export function RecordingBar() {
           <Square size={18} fill="currentColor" />
         </button>
       </span>
+      {/* El navegador no da la posición con el celular bloqueado: se avisa al empezar y, si pasó, al volver. */}
+      {status === 'recording' && (gapS !== null || !warned) && (
+        <p className="rec-warn" role="alert" data-testid="rec-warn">
+          <TriangleAlert size={16} aria-hidden className="rec-warn-icon" />
+          <span>{gapS !== null ? t('tracks.rec.gap', { time: formatDuration(gapS) }) : t('tracks.rec.screenOff')}</span>
+          <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true, gapS: null })}>
+            {t('tracks.rec.understood')}
+          </button>
+        </p>
+      )}
       {/* Al terminar se le pone nombre (mientras tanto sigue grabando); después se cambia en el track. */}
       {naming !== null && (
         <Dialog

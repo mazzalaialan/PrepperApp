@@ -28,6 +28,10 @@ interface RecorderState {
   /** Cuándo arrancó el tramo actual (grabando). */
   since: number | null;
   error: GeoError | null;
+  /** Ya leyó el aviso de que con el celular bloqueado no se graba. */
+  warned: boolean;
+  /** Segundos que estuvo con la pantalla apagada (sin grabar), para avisarlo al volver. */
+  gapS: number | null;
   start: (name: string) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => void;
@@ -35,7 +39,11 @@ interface RecorderState {
   finish: (name?: string) => Promise<Id | null>;
 }
 
-const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null } as const;
+const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null } as const;
+
+/** Más que esto con la pantalla apagada, se avisa que no se grabó. */
+const GAP_NOTICE_MS = 20_000;
+let hiddenAt: number | null = null;
 
 let watchId: number | null = null;
 let lastSaved = 0;
@@ -110,7 +118,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
       recKey: await newRecKey(),
     });
     prepareLocked(track.recKey!);
-    set({ status: 'recording', track, elapsedMs: 0, since: Date.now(), error: null });
+    set({ status: 'recording', track, elapsedMs: 0, since: Date.now(), error: null, warned: false, gapS: null });
     await persist();
     startWatch();
   },
@@ -151,8 +159,16 @@ export const useRecorder = create<RecorderState>((set, get) => ({
 }));
 
 // Al ir a segundo plano se guarda enseguida (el navegador puede cerrar la app sin avisar).
+// Con la pantalla apagada el navegador no da posiciones: al volver se avisa cuánto no se grabó.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && useRecorder.getState().status === 'recording') void persist();
+  const recording = useRecorder.getState().status === 'recording';
+  if (document.visibilityState === 'hidden') {
+    hiddenAt = Date.now();
+    if (recording) void persist();
+    return;
+  }
+  if (recording && hiddenAt !== null && Date.now() - hiddenAt >= GAP_NOTICE_MS) useRecorder.setState({ gapS: Math.round((Date.now() - hiddenAt) / 1000) });
+  hiddenAt = null;
 });
 
 // Con la app bloqueada se sigue grabando: los puntos van cifrados con la clave

@@ -2852,6 +2852,38 @@ a.module-card:hover {
   flex: none;
 }
 
+.rec-bar {
+  flex-wrap: wrap;
+}
+
+/* Aviso: con el celular bloqueado no se graba. */
+.rec-warn {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--warn);
+}
+
+.rec-warn span {
+  flex: 1;
+}
+
+.rec-warn-icon {
+  flex: none;
+}
+
+.rec-warn-ok {
+  flex: none;
+  min-height: 32px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+}
+
 .rec-notice {
   max-width: 1100px;
   width: calc(100% - 32px);
