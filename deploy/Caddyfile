@@ -1,7 +1,5 @@
-{
-	email {$CONTACT_EMAIL}
-}
-
+# Sin mail: Let's Encrypt lo acepta y Caddy renueva el certificado solo
+# (el mail solo sirve para avisos de vencimiento si la renovación fallara).
 {$DOMAIN} {
 	encode gzip
 	# Los backups de transferencia pueden pesar decenas de MB.

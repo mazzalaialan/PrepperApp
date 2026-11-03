@@ -1,5 +1,5 @@
 # VikArg Prepping Tools autoalojado con HTTPS automático (Caddy + Let's Encrypt).
-# Uso: copiar .env.example a .env, completar DOMAIN y CONTACT_EMAIL, y correr
+# Uso: copiar .env.example a .env, completar DOMAIN, y correr
 #   docker compose up -d --build
 # Guía completa: docs/SERVIDOR.md
 
@@ -10,7 +10,8 @@ services:
     image: vikarg-survival:latest
     restart: unless-stopped
     environment:
-      VAPID_SUBJECT: mailto:${CONTACT_EMAIL}
+      # Contacto que exige Web Push: un mailto: o, si no se quiere dar un mail, la URL del servidor.
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-https://${DOMAIN}}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
       TRANSFER_MAX_MB: ${TRANSFER_MAX_MB:-50}
     volumes:
@@ -24,7 +25,6 @@ services:
       - "443:443"
     environment:
       DOMAIN: ${DOMAIN}
-      CONTACT_EMAIL: ${CONTACT_EMAIL}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

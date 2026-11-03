@@ -32,7 +32,7 @@ Con eso, el `docker-compose.yml` incluido obtiene y renueva el certificado HTTPS
 git clone https://github.com/mazzalaialan/PrepperApp.git
 cd PrepperApp/deploy
 cp .env.example .env
-nano .env            # completar DOMAIN y CONTACT_EMAIL
+nano .env            # completar DOMAIN (el mail es opcional)
 docker compose up -d --build
 ```
 
@@ -59,7 +59,7 @@ La app queda servida en `https://TU_DOMINIO/` y se puede instalar desde ahí.
 |---|---|---|
 | `PORT` | `8080` | Puerto interno del servidor |
 | `DATA_DIR` | `/data` | Dónde se guarda la base SQLite |
-| `VAPID_SUBJECT` | `mailto:admin@localhost` | Contacto que exige Web Push (`mailto:` o `https:`) |
+| `VAPID_SUBJECT` | `https://DOMAIN` (con el compose) | Contacto que exige Web Push (`mailto:` o `https:`). Sin mail se usa la URL del servidor; Let's Encrypt tampoco lo necesita |
 | `ALLOWED_ORIGINS` | `*` | Orígenes permitidos (CORS), separados por coma |
 | `TRANSFER_MAX_MB` | `50` | Tamaño máximo de un backup transferido |
 | `TRANSFER_TTL_HOURS` | `24` | Validez de un código de transferencia |
