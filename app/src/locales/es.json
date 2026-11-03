@@ -1215,6 +1215,10 @@
     "copiedFrom": "Copiado del track {{name}}",
     "name": "Nombre",
     "notes": "Notas",
+    "editName": "Editar el nombre",
+    "editNotes": "Editar las notas",
+    "addNotes": "Agregar notas",
+    "noNotes": "Sin notas",
     "confirmDelete": "¿Eliminar el track \"{{name}}\"? Los puntos que copiaste a tus waypoints quedan.",
     "delete": "Eliminar {{name}}",
     "follow": {

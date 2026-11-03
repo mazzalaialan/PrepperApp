@@ -214,10 +214,21 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
   await expect(page.getByRole('heading', { name: 'Ida y vuelta' })).toBeVisible();
   await expect(page.getByText(/^Grabado el/)).toBeVisible();
   await expect(bar).toHaveCount(0);
-  // Y el nombre se cambia después, en el track.
+  // Y el nombre y las notas se cambian después, en el track, con el lápiz.
+  await page.getByRole('button', { name: 'Editar el nombre' }).click();
+  await page.getByLabel('Nombre').fill('Nombre descartado');
+  await page.getByLabel('Nombre').press('Escape');
+  await expect(page.getByRole('heading', { name: 'Ida y vuelta' })).toBeVisible();
+  await page.getByRole('button', { name: 'Editar el nombre' }).click();
   await page.getByLabel('Nombre').fill('Ida y vuelta al arroyo');
-  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await page.getByLabel('Nombre').press('Enter');
   await expect(page.getByRole('heading', { name: 'Ida y vuelta al arroyo' })).toBeVisible();
+  await expect(page.getByTestId('track-notes')).toContainText('Sin notas');
+  await page.getByRole('button', { name: 'Agregar notas' }).click();
+  await page.getByLabel('Notas').fill('Hay agua en el arroyo');
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await expect(page.getByTestId('track-notes')).toContainText('Hay agua en el arroyo');
+  await expect(page.getByRole('button', { name: 'Editar las notas' })).toBeVisible();
   await page.goto('/#/orientation/tracks');
   await expect(page.getByTestId('tracks-list')).toContainText('Ida y vuelta al arroyo');
   await expect(page.getByTestId('tracks-list')).toContainText('Grabado por mí');

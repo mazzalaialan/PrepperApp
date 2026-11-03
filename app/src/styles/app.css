@@ -2705,6 +2705,32 @@ a.module-card:hover {
   margin: 0;
 }
 
+/* Título y notas del track, con lápiz para editarlos en el lugar. */
+.page-head .track-title-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.track-notes {
+  margin-top: -8px;
+}
+
+.track-notes-view {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.track-notes-text {
+  flex: 1;
+  margin: 0;
+  padding-top: 8px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 
 .track-row {
   display: flex;

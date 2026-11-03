@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Navigation, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Navigation, Pencil, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -37,9 +37,8 @@ function TrackDetail({ track }: { track: Track }) {
   const myWaypoints = useWaypoints((s) => s.waypoints);
   const routes = useWaypoints((s) => s.routes);
   const deleteWaypoint = useWaypoints((s) => s.deleteWaypoint);
-  const [name, setName] = useState(track.name);
-  const [notes, setNotes] = useState(track.notes);
-  const [saved, setSaved] = useState(false);
+  /** Lo que se está editando (nombre o notas) y su borrador; null si no se edita nada. */
+  const [editing, setEditing] = useState<{ field: 'name' | 'notes'; value: string } | null>(null);
   const dist = (m: number) => formatDistance(m, units, i18n.language);
   const alt = (m: number) => formatAltitude(m, units, i18n.language);
 
@@ -63,11 +62,21 @@ function TrackDetail({ track }: { track: Track }) {
   }
 
   async function save() {
-    const changes = { name: name.trim() || track.name, notes };
+    if (!editing) return;
+    const changes = editing.field === 'name' ? { name: editing.value.trim() || track.name } : { notes: editing.value.trim() };
     // Si se está grabando, el grabador guarda su copia: que lleve el nombre nuevo.
     if (track.recording) useRecorder.setState((s) => (s.track?.id === track.id ? { track: { ...s.track, ...changes } } : {}));
     await saveTrack({ ...track, ...changes });
-    setSaved(true);
+    setEditing(null);
+  }
+
+  /** Enter guarda (en las notas, Ctrl+Enter, porque Enter es salto de línea) y Escape cancela. */
+  function onEditKey(e: KeyboardEvent, multiline: boolean) {
+    if (e.key === 'Escape') setEditing(null);
+    else if (e.key === 'Enter' && (!multiline || e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      void save();
+    }
   }
 
   async function remove() {
@@ -82,8 +91,72 @@ function TrackDetail({ track }: { track: Track }) {
         <Link className="icon-btn" to="/orientation/tracks" aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="page-title" style={{ flex: 1 }}>{track.name}</h1>
+        {editing?.field === 'name' ? (
+          <>
+            <input
+              className="input track-title-input"
+              aria-label={t('tracks.name')}
+              value={editing.value}
+              autoFocus
+              onChange={(e) => setEditing({ field: 'name', value: e.target.value })}
+              onKeyDown={(e) => onEditKey(e, false)}
+            />
+            <button className="icon-btn" type="button" onClick={() => void save()} aria-label={t('common.save')} title={t('common.save')}>
+              <Check size={20} />
+            </button>
+            <button className="icon-btn" type="button" onClick={() => setEditing(null)} aria-label={t('common.cancel')} title={t('common.cancel')}>
+              <X size={20} />
+            </button>
+          </>
+        ) : (
+          <>
+            <h1 className="page-title">{track.name}</h1>
+            <button
+              className="icon-btn"
+              type="button"
+              onClick={() => setEditing({ field: 'name', value: track.name })}
+              aria-label={t('tracks.editName')}
+              title={t('tracks.editName')}
+            >
+              <Pencil size={18} />
+            </button>
+          </>
+        )}
       </div>
+
+      {editing?.field === 'notes' ? (
+        <div className="stack track-notes">
+          <textarea
+            className="input textarea"
+            aria-label={t('tracks.notes')}
+            value={editing.value}
+            autoFocus
+            onChange={(e) => setEditing({ field: 'notes', value: e.target.value })}
+            onKeyDown={(e) => onEditKey(e, true)}
+          />
+          <div className="row-end">
+            <button className="btn" type="button" onClick={() => setEditing(null)}>
+              {t('common.cancel')}
+            </button>
+            <button className="btn btn-primary" type="button" onClick={() => void save()}>
+              {t('common.save')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="track-notes track-notes-view" data-testid="track-notes">
+          {track.notes ? <p className="track-notes-text">{track.notes}</p> : <p className="hint track-notes-text">{t('tracks.noNotes')}</p>}
+          <button
+            className="icon-btn"
+            type="button"
+            onClick={() => setEditing({ field: 'notes', value: track.notes })}
+            aria-label={t(track.notes ? 'tracks.editNotes' : 'tracks.addNotes')}
+            title={t(track.notes ? 'tracks.editNotes' : 'tracks.addNotes')}
+          >
+            <Pencil size={16} />
+          </button>
+        </div>
+      )}
 
       <section className="card stack" aria-labelledby="track-stats">
         <h2 id="track-stats" className="sr-only">{t('tracks.stats')}</h2>
@@ -182,43 +255,13 @@ function TrackDetail({ track }: { track: Track }) {
         )}
       </section>
 
-      <section className="card stack">
-        <div className="field">
-          <label htmlFor="track-name">{t('tracks.name')}</label>
-          <input
-            id="track-name"
-            className="input"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setSaved(false);
-            }}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="track-notes">{t('tracks.notes')}</label>
-          <textarea
-            id="track-notes"
-            className="input textarea"
-            value={notes}
-            onChange={(e) => {
-              setNotes(e.target.value);
-              setSaved(false);
-            }}
-          />
-        </div>
-        {saved && <p className="success" role="status">{t('common.saved')}</p>}
+      {!track.recording && (
         <div className="row-end">
-          {!track.recording && (
-            <button className="btn btn-danger-outline" type="button" onClick={() => void remove()}>
-              <Trash2 size={18} /> {t('common.delete')}
-            </button>
-          )}
-          <button className="btn btn-primary" type="button" onClick={() => void save()}>
-            {t('common.save')}
+          <button className="btn btn-danger-outline" type="button" onClick={() => void remove()}>
+            <Trash2 size={18} /> {t('common.delete')}
           </button>
         </div>
-      </section>
+      )}
     </div>
   );
 }

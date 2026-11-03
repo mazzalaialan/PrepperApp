@@ -1215,6 +1215,10 @@
     "copiedFrom": "Copied from track {{name}}",
     "name": "Name",
     "notes": "Notes",
+    "editName": "Edit name",
+    "editNotes": "Edit notes",
+    "addNotes": "Add notes",
+    "noNotes": "No notes",
     "confirmDelete": "Delete track \"{{name}}\"? Points you copied to your waypoints stay.",
     "delete": "Delete {{name}}",
     "follow": {
