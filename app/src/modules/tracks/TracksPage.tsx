@@ -1,15 +1,19 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Footprints, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Circle, Footprints, Route, Trash2, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpxError } from './gpx';
+import { useRecorder } from './recorder';
+import { formatDuration, useStartRecording } from './Recording';
 import { trackFromGpx, useTracks } from './store';
 
-/** Tracks importados de un GPX (Wikiloc u otra app): aparte de los waypoints y rutas propios. */
+/** Tracks importados de un GPX (Wikiloc u otra app) y grabados con la app: aparte de los waypoints y rutas propios. */
 export function TracksPage() {
   const { t, i18n } = useTranslation();
+  const recStatus = useRecorder((s) => s.status);
+  const startRecording = useStartRecording();
   const navigate = useNavigate();
   const units = useSettings((s) => s.settings.units);
   const tracks = useTracks((s) => s.tracks);
@@ -62,6 +66,11 @@ export function TracksPage() {
           {error}
         </p>
       )}
+      {recStatus === 'idle' && (
+        <button className="btn" type="button" onClick={() => void startRecording()}>
+          <Circle size={16} fill="currentColor" className="rec-icon" /> {t('tracks.rec.start')}
+        </button>
+      )}
 
       {list.length === 0 ? (
         <p className="empty">{t('tracks.empty')}</p>
@@ -70,15 +79,17 @@ export function TracksPage() {
           {list.map((tr) => (
             <li key={tr.id} className="track-row">
               <Link className="list-row" to={`/orientation/tracks/${tr.id}`}>
-                <Footprints size={22} aria-hidden className="contact-icon" />
+                {tr.recorded ? <Route size={22} aria-hidden className="contact-icon rec-track-icon" /> : <Footprints size={22} aria-hidden className="contact-icon" />}
                 <span className="list-main">
                   <span className="list-title">{tr.name}</span>
                   <span className="list-sub">
                     {[
+                      tr.recording ? t('tracks.rec.inProgress') : '',
                       formatDistance(tr.distanceM, units, i18n.language),
                       tr.ascentM ? `↑ ${formatAltitude(tr.ascentM, units, i18n.language)} ↓ ${formatAltitude(tr.descentM, units, i18n.language)}` : '',
+                      tr.recorded && tr.durationS ? formatDuration(tr.durationS) : '',
                       tr.waypoints.length ? t('tracks.pointCount', { count: tr.waypoints.length }) : '',
-                      tr.source,
+                      tr.recorded ? t('tracks.rec.mine') : tr.source,
                     ]
                       .filter(Boolean)
                       .join(' · ')}
@@ -86,9 +97,12 @@ export function TracksPage() {
                 </span>
                 <ChevronRight size={18} aria-hidden />
               </Link>
-              <button className="icon-btn" type="button" onClick={() => void remove(tr.id, tr.name)} aria-label={t('tracks.delete', { name: tr.name })} title={t('tracks.delete', { name: tr.name })}>
-                <Trash2 size={18} />
-              </button>
+              {/* La que se está grabando se termina desde la barra de grabación. */}
+              {!tr.recording && (
+                <button className="icon-btn" type="button" onClick={() => void remove(tr.id, tr.name)} aria-label={t('tracks.delete', { name: tr.name })} title={t('tracks.delete', { name: tr.name })}>
+                  <Trash2 size={18} />
+                </button>
+              )}
             </li>
           ))}
         </ul>

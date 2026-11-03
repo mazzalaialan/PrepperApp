@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigation } from 'lucide-react';
 
 /**
- * Botones sobre el mapa: 3D o plano, y la vista siguiéndote o libre.
+ * Botones sobre el mapa: 3D o plano, y la vista siguiéndote o libre (y,
+ * arriba, los que se agreguen, como grabar el recorrido).
  * Van abajo a la derecha, encima del de "ir a mi ubicación" si lo hay.
  */
 export function CameraButtons({
@@ -11,16 +13,19 @@ export function CameraButtons({
   follow,
   onFollow,
   canFollow,
+  children,
 }: {
   threeD: boolean;
   onThreeD: (on: boolean) => void;
   follow: boolean;
   onFollow: (on: boolean) => void;
   canFollow: boolean;
+  children?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
     <div className="maps-camera">
+      {children}
       <button
         className="icon-btn maps-camera-btn"
         type="button"

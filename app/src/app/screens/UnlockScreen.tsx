@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WrongSecretError } from '@/core/crypto/crypto';
 import { useVault } from '@/core/security/useVault';
+import { useRecorder } from '@/modules/tracks/recorder';
 import { BrandHeader } from '@/ui/Brand';
 
 type Mode = 'password' | 'recovery';
@@ -10,6 +11,7 @@ export function UnlockScreen() {
   const { t } = useTranslation();
   const unlock = useVault((s) => s.unlock);
   const recover = useVault((s) => s.recover);
+  const recording = useRecorder((s) => s.status === 'recording');
   const [mode, setMode] = useState<Mode>('password');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,12 @@ export function UnlockScreen() {
     <main className="gate">
       <div className="gate-panel">
         <BrandHeader />
+        {/* Sin datos del recorrido: con la app bloqueada no se muestra nada propio. */}
+        {recording && (
+          <p className="hint rec-locked" role="status" data-testid="rec-locked">
+            {t('tracks.rec.whileLocked')}
+          </p>
+        )}
         <form className="card stack" onSubmit={handleSubmit}>
           <h2>{t(isPassword ? 'unlock.title' : 'unlock.recoveryTitle')}</h2>
           <div className="field">

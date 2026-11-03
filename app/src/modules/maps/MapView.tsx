@@ -53,6 +53,8 @@ interface Props {
   onFollowBreak?: () => void;
   /** Parte ya recorrida del track que se está siguiendo, en [lon, lat]. */
   done?: [number, number][] | null;
+  /** Recorrido que se está grabando, en tramos de [lon, lat]. */
+  recorded?: [number, number][][] | null;
   onMove: (view: ViewState) => void;
   onWaypoint: (id: string) => void;
 }
@@ -103,6 +105,9 @@ function data(p: Props) {
     'track-done': (p.done && p.done.length > 1
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: p.done } }] }
       : EMPTY) as FeatureCollection,
+    'track-rec': (p.recorded?.some((s) => s.length > 1)
+      ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: p.recorded.filter((s) => s.length > 1) } }] }
+      : EMPTY) as FeatureCollection,
     here: (p.here
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { accuracy: p.here.accuracy }, geometry: { type: 'Point', coordinates: [p.here.lon, p.here.lat] } }] }
       : EMPTY) as FeatureCollection,
@@ -126,6 +131,14 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
   const tracks = p.showTracks ? 'visible' : 'none';
   map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.info, 'line-width': 3.5, 'line-opacity': 0.9 } });
   map.addLayer({ id: 'track-done', type: 'line', source: 'track-done', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.accent, 'line-width': 5 } });
+  // Lo que vas grabando: en verde, encima del track que seguís.
+  map.addLayer({
+    id: 'track-rec',
+    type: 'line',
+    source: 'track-rec',
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': c.ok, 'line-width': 4, 'line-opacity': 0.95 },
+  });
   map.addLayer({ id: 'track-points', type: 'circle', source: 'track-points', layout: { visibility: tracks }, paint: { 'circle-radius': 4.5, 'circle-color': c.info, 'circle-stroke-color': c.bg, 'circle-stroke-width': 1.5 } });
   map.addLayer({
     id: 'track-point-names',
@@ -264,7 +277,9 @@ export function MapView(props: Props) {
     const m = map.current;
     if (!m) return;
     for (const [id, fc] of Object.entries(data(props))) (m.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
-  }, [props.waypoints, props.routes, props.tracks, props.done, props.here, props.zones, props.preview, props.outline]);
+    // Puntos grabados a la vista (para las pruebas).
+    container.current?.setAttribute('data-recorded', String(props.recorded?.flat().length ?? 0));
+  }, [props.waypoints, props.routes, props.tracks, props.done, props.recorded, props.here, props.zones, props.preview, props.outline]);
 
   useEffect(() => {
     if (props.flyTo) map.current?.flyTo({ center: [props.flyTo.lon, props.flyTo.lat], zoom: props.flyTo.zoom, essential: true });

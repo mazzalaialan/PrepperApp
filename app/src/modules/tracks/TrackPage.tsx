@@ -8,6 +8,8 @@ import type { Track, Waypoint } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { useWaypoints } from '@/modules/waypoints/store';
+import { useRecorder } from './recorder';
+import { formatDuration } from './Recording';
 import { useTracks } from './store';
 
 export function TrackPage() {
@@ -61,7 +63,10 @@ function TrackDetail({ track }: { track: Track }) {
   }
 
   async function save() {
-    await saveTrack({ ...track, name: name.trim() || track.name, notes });
+    const changes = { name: name.trim() || track.name, notes };
+    // Si se está grabando, el grabador guarda su copia: que lleve el nombre nuevo.
+    if (track.recording) useRecorder.setState((s) => (s.track?.id === track.id ? { track: { ...s.track, ...changes } } : {}));
+    await saveTrack({ ...track, ...changes });
     setSaved(true);
   }
 
@@ -114,8 +119,15 @@ function TrackDetail({ track }: { track: Track }) {
           )}
         </div>
         {track.desc && <p className="hint track-desc">{track.desc}</p>}
+        {track.recording && (
+          <p className="hint" style={{ margin: 0 }} role="status">
+            {t('tracks.rec.inProgressHint')}
+          </p>
+        )}
         <p className="hint" style={{ margin: 0 }}>
-          {t('tracks.source', { source: track.source })}
+          {track.recorded
+            ? t('tracks.rec.recordedOn', { date: new Date(track.createdAt).toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' }), time: formatDuration(track.durationS ?? 0) })
+            : t('tracks.source', { source: track.source })}
           {track.link && (
             <>
               {' · '}
@@ -197,9 +209,11 @@ function TrackDetail({ track }: { track: Track }) {
         </div>
         {saved && <p className="success" role="status">{t('common.saved')}</p>}
         <div className="row-end">
-          <button className="btn btn-danger-outline" type="button" onClick={() => void remove()}>
-            <Trash2 size={18} /> {t('common.delete')}
-          </button>
+          {!track.recording && (
+            <button className="btn btn-danger-outline" type="button" onClick={() => void remove()}>
+              <Trash2 size={18} /> {t('common.delete')}
+            </button>
+          )}
           <button className="btn btn-primary" type="button" onClick={() => void save()}>
             {t('common.save')}
           </button>

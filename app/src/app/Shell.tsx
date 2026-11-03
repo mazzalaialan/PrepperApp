@@ -18,6 +18,7 @@ import { useVault } from '@/core/security/useVault';
 import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
 import { Dialog } from '@/ui/Dialog';
+import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
 import { RainNotices } from '@/modules/weather/RainNotices';
 import { useRainWatcher } from '@/modules/weather/rainWatch';
 import { PortableUpdateNotice } from './PortableUpdateNotice';
@@ -101,6 +102,8 @@ export function Shell() {
         </header>
         <PortableUpdateNotice />
         <RainNotices />
+        <RecordingBar />
+        <PocketScreen />
         <main className="content">
           <Outlet />
         </main>

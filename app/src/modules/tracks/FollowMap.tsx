@@ -5,6 +5,7 @@ import { CameraButtons } from '@/modules/maps/CameraButtons';
 import { MapView, type MapTrack, type ViewState } from '@/modules/maps/MapView';
 import { FullscreenStage } from '@/ui/FullscreenStage';
 import type { FollowLine } from './follow';
+import { RecordButton } from './Recording';
 
 const NONE: never[] = [];
 
@@ -19,6 +20,7 @@ export function FollowMap({
   heading,
   doneM,
   nearest,
+  recorded,
   overlay,
 }: {
   track: Track;
@@ -27,6 +29,8 @@ export function FollowMap({
   heading: number | null;
   doneM: number;
   nearest: { lat: number; lon: number } | null;
+  /** Lo que se va grabando, en [lon, lat]. */
+  recorded: [number, number][][] | null;
   /** Estado y datos del seguimiento, encima del mapa en pantalla completa. */
   overlay: ReactNode;
 }) {
@@ -64,6 +68,7 @@ export function FollowMap({
         follow={follow && !!fix}
         heading={heading}
         done={done}
+        recorded={recorded}
         onFollowBreak={() => setFollow(false)}
         onMove={() => undefined}
         onWaypoint={() => undefined}
@@ -74,7 +79,9 @@ export function FollowMap({
         follow={follow && !!fix}
         onFollow={setFollow}
         canFollow={!!fix}
-      />
+      >
+        <RecordButton />
+      </CameraButtons>
     </FullscreenStage>
   );
 }

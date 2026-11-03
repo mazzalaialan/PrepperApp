@@ -8,6 +8,7 @@ import { formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings, type MapLayers } from '@/core/settings/settings';
+import { RecordButton, useRecordedLines } from '@/modules/tracks/Recording';
 import { useTracks } from '@/modules/tracks/store';
 import { routePoints, useWaypoints } from '@/modules/waypoints/store';
 import { loadGeoData } from '@/modules/weathermap/geo';
@@ -108,7 +109,8 @@ export function MapsPage() {
   );
   const tracks = useMemo<MapTrack[]>(
     () =>
-      [...trackMap.values()].map((tr) => ({
+      // El que se está grabando va aparte, en su color.
+      [...trackMap.values()].filter((tr) => !tr.recording).map((tr) => ({
         id: tr.id,
         name: tr.name,
         lines: tr.segments.map((seg) => seg.map(([lat, lon]) => [lon, lat] as [number, number])),
@@ -116,6 +118,7 @@ export function MapsPage() {
       })),
     [trackMap],
   );
+  const recorded = useRecordedLines();
   const here = useMemo(() => (fix ? { lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy } : null), [fix]);
   const zoneCircles = useMemo(() => zones.map((z) => ({ id: z.id, name: z.name, lat: z.lat, lon: z.lon, radiusKm: z.radiusKm })), [zones]);
   const maxZoom = panel ? DETAILS.find((d) => d.id === panel.detail)!.maxZoom : 0;
@@ -197,13 +200,16 @@ export function MapsPage() {
           follow={follow && !!fix}
           heading={heading?.trueHeading ?? null}
           onFollowBreak={() => setFollow(false)}
+          recorded={recorded}
           onMove={(v) => {
             lastView = v;
             setView(v);
           }}
           onWaypoint={setSelected}
         />
-        <CameraButtons threeD={layers.terrain3d} onThreeD={(on) => setLayer('terrain3d', on)} follow={follow && !!fix} onFollow={setFollow} canFollow={!!fix} />
+        <CameraButtons threeD={layers.terrain3d} onThreeD={(on) => setLayer('terrain3d', on)} follow={follow && !!fix} onFollow={setFollow} canFollow={!!fix}>
+          <RecordButton />
+        </CameraButtons>
         {fix && (
           <button className="icon-btn maps-locate" type="button" onClick={() => setFlyTo({ lat: fix.lat, lon: fix.lon, zoom: Math.max(view.zoom, 13), key: Date.now() })} aria-label={t('maps.goHere')}>
             <Locate size={20} />

@@ -62,7 +62,7 @@
     "inclinometer": { "title": "Inclinometer", "desc": "Slope angle and avalanche risk" },
     "waypoints": { "title": "Waypoints", "desc": "Saved points and how to get back" },
     "routes": { "title": "Routes", "desc": "Lists of points to follow in order" },
-    "tracks": { "title": "Imported tracks", "desc": "Trails from Wikiloc or other apps (GPX), kept apart from your waypoints" },
+    "tracks": { "title": "Tracks", "desc": "Your recorded trips and trails from Wikiloc or other apps (GPX), kept apart from your waypoints" },
     "astronomy": { "title": "Sun & moon", "desc": "Sunrise, sunset and moon phases" },
     "weather": { "title": "Weather", "desc": "Forecast when online" },
     "maps": { "title": "Offline maps", "desc": "Downloaded areas with terrain" },
@@ -578,7 +578,7 @@
     "goHere": "Go to my location",
     "center": "Center: {{coords}} · zoom {{zoom}}",
     "layers": "Layers",
-    "layer": { "hillshade": "Terrain", "contours": "Contour lines", "mine": "My waypoints and routes", "tracks": "Imported tracks" },
+    "layer": { "hillshade": "Terrain", "contours": "Contour lines", "mine": "My waypoints and routes", "tracks": "Tracks" },
     "camera": {
       "threeD": "3D map",
       "to3d": "Switch to 3D (tilt the map with two fingers)",
@@ -1185,8 +1185,8 @@
   },
   "tracks": {
     "import": "Import GPX",
-    "empty": "No tracks imported yet. Download the GPX of a Wikiloc trail (or from another app) and import it.",
-    "howTo": "How to download a GPX from Wikiloc: open the trail, tap \"Download\" and choose GPX (a free account is needed). The track's points stay apart from your waypoints; copy any you want.",
+    "empty": "No tracks yet. Record your trip, or download the GPX of a Wikiloc trail (or from another app) and import it.",
+    "howTo": "To record your trip: tap \"Record my trip\" here, on the map or while following a track. How to download a GPX from Wikiloc: open the trail, tap \"Download\" and choose GPX (a free account is needed). The track's points stay apart from your waypoints; copy any you want.",
     "pointCount_one": "{{count}} point",
     "pointCount_other": "{{count}} points",
     "error": {
@@ -1226,6 +1226,9 @@
       "on": "You are on the track",
       "off": "You left the track: it is {{distance}} away, towards {{bearing}}",
       "arrived": "You reached the end of the track",
+      "arrivedBack": "You are back at the start",
+      "backTitle": "Going back to the start",
+      "backHint": "Along the same path you recorded, from where you were back to the start.",
       "done": "Covered",
       "ofTotal": "{{done}} of {{total}}",
       "left": "Remaining",
@@ -1240,7 +1243,32 @@
       "overlayStats": "{{left}} left · +{{up}} / −{{down}} · {{time}}",
       "view": "How to show the track",
       "views": { "drawing": "Drawing (saves battery)", "map": "Map 2D / 3D" }
+    },
+    "rec": {
+      "start": "Record my trip",
+      "pause": "Pause recording",
+      "resume": "Resume recording",
+      "finish": "Finish and save the recording",
+      "back": "Go back to the start",
+      "bar": "Trip recording",
+      "recording": "Recording",
+      "paused": "Recording paused",
+      "keepOpen": "Keep the app open (you can lock it). With the screen off the phone stops giving the position: to save battery use the black screen.",
+      "nothing": "Nothing was recorded: nothing was saved.",
+      "defaultName": "Trip on {{date}} {{time}}",
+      "inProgress": "Recording",
+      "inProgressHint": "Being recorded. Pause or finish it from the recording bar at the top.",
+      "mine": "Recorded by me",
+      "recordedOn": "Recorded on {{date}} · {{time}} recording",
+      "whileLocked": "Your trip is still being recorded.",
+      "saveTitle": "Save the recording",
+      "keepRecording": "Keep recording"
     }
+  },
+  "pocket": {
+    "on": "Black screen (saves battery)",
+    "title": "Black screen",
+    "exit": "Tap twice to go back"
   },
   "country": {
     "label": "Country",
@@ -1336,7 +1364,7 @@
       "contacts": "Contacts (police, neighbors, frequencies…)",
       "documents": "Documents (with photos)",
       "inventory": "Inventory (items, locations, quantities and expiry dates)",
-      "waypoints": "Waypoints, routes and imported tracks"
+      "waypoints": "Waypoints, routes and tracks"
     },
     "password": "Password for this file",
     "repeat": "Repeat password",

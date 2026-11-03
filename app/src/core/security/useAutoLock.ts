@@ -1,16 +1,21 @@
 import { useEffect } from 'react';
+import { useLockHold } from './lockHold';
 import { useVault } from './useVault';
 
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 const CHECK_INTERVAL_MS = 15_000;
 
-/** Bloquea la bóveda tras `minutes` sin interacción (también si la app quedó en segundo plano). */
+/**
+ * Bloquea la bóveda tras `minutes` sin interacción (también si la app quedó en
+ * segundo plano). Mientras se navega (seguir un track, grabar) no corre.
+ */
 export function useAutoLock(minutes: number): void {
   const status = useVault((s) => s.status);
   const lock = useVault((s) => s.lock);
+  const held = useLockHold((s) => s.count > 0);
 
   useEffect(() => {
-    if (status !== 'unlocked') return;
+    if (status !== 'unlocked' || held) return;
     let last = Date.now();
     const touch = () => (last = Date.now());
     const check = () => {
@@ -25,5 +30,5 @@ export function useAutoLock(minutes: number): void {
       document.removeEventListener('visibilitychange', check);
       clearInterval(timer);
     };
-  }, [status, minutes, lock]);
+  }, [status, minutes, lock, held]);
 }

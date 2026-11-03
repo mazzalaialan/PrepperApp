@@ -50,7 +50,7 @@ test('compartir con un familiar: se suma sin borrar y se elige qué dato dejar',
   await page.getByRole('link', { name: 'Compartir con un familiar' }).click();
   // Se elige qué compartir: el inventario viene apagado; waypoints y rutas, prendidos.
   await expect(page.getByLabel('Inventario (artículos, ubicaciones, cantidades y vencimientos)')).not.toBeChecked();
-  await expect(page.getByLabel('Waypoints, rutas y tracks importados')).toBeChecked();
+  await expect(page.getByLabel('Waypoints, rutas y tracks')).toBeChecked();
   await page.getByLabel('Contraseña del envío').fill('envio-familia');
   await page.getByLabel('Repetir contraseña').fill('envio-familia');
   const downloadPromise = page.waitForEvent('download');

@@ -1,17 +1,22 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowLeftRight, CircleCheck, Footprints, TriangleAlert } from 'lucide-react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, ArrowLeftRight, Circle, CircleCheck, Footprints, TriangleAlert } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { bearingDeg } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import type { Track } from '@/core/model/types';
+import { useWakeLock } from '@/core/power/useWakeLock';
+import { useHoldLock } from '@/core/security/lockHold';
 import { angleDiff } from '@/core/sensors/heading';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpsStatus, useFormatBearing } from '@/modules/waypoints/components';
 import { followState, isOffTrack, prepareFollow, walkingMinutes, type FollowLine } from './follow';
+import { firstPoints } from './record';
+import { useRecorder } from './recorder';
+import { PocketButton, useRecordedLines, useStartRecording } from './Recording';
 import { useTracks } from './store';
 
 // MapLibre pesa ~1 MB: se carga recién al elegir ver el track en el mapa.
@@ -20,7 +25,11 @@ const FollowMap = lazy(() => import('./FollowMap').then((m) => ({ default: m.Fol
 export function TrackFollowPage() {
   const { id } = useParams();
   const { t } = useTranslation();
-  const track = useTracks((s) => (id ? s.tracks.get(id) : undefined));
+  const [params] = useSearchParams();
+  const stored = useTracks((s) => (id ? s.tracks.get(id) : undefined));
+  // El que se está grabando, con lo último (lo guardado puede venir unos segundos atrás).
+  const live = useRecorder((s) => (s.track?.id === id ? s.track : undefined));
+  const track = live ?? stored;
   const loaded = useTracks((s) => s.loaded);
   if (!loaded) return null;
   if (!track || track.segments.flat().length < 2) {
@@ -30,36 +39,16 @@ export function TrackFollowPage() {
       </p>
     );
   }
-  return <Follow key={track.id} track={track} />;
+  const back = params.get('back');
+  return <Follow key={track.id} track={back ? firstPoints(track, Number(back)) : track} back={!!back} />;
 }
 
-/** Que la pantalla no se apague mientras se sigue el track (si el navegador lo permite). */
-function useWakeLock() {
-  useEffect(() => {
-    let lock: WakeLockSentinel | null = null;
-    let active = true;
-    const request = () => {
-      if (document.visibilityState !== 'visible' || !('wakeLock' in navigator)) return;
-      navigator.wakeLock.request('screen').then(
-        (l) => {
-          if (active) lock = l;
-          else void l.release();
-        },
-        () => undefined,
-      );
-    };
-    request();
-    // El navegador la suelta al ir a segundo plano: se pide de nuevo al volver.
-    document.addEventListener('visibilitychange', request);
-    return () => {
-      active = false;
-      document.removeEventListener('visibilitychange', request);
-      void lock?.release();
-    };
-  }, []);
-}
-
-function Follow({ track }: { track: Track }) {
+/**
+ * Seguir un track. Con `back`, volver al origen por el mismo camino: el
+ * recorrido grabado hasta ese momento, al revés. El sentido va en la
+ * dirección (`rev`), para volver igual después de bloquear la app.
+ */
+function Follow({ track: current, back }: { track: Track; back: boolean }) {
   const { t, i18n } = useTranslation();
   const caps = useCapabilities((s) => s.caps);
   const units = useSettings((s) => s.settings.units);
@@ -68,12 +57,27 @@ function Follow({ track }: { track: Track }) {
   const formatBearing = useFormatBearing();
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
-  const [reversed, setReversed] = useState(false);
+  // Fijo desde que se empieza: si es el que se está grabando, la vuelta no se mezcla con la ida.
+  const [track] = useState(current);
+  const [params, setParams] = useSearchParams();
+  const reversed = params.has('rev') ? params.get('rev') === '1' : back;
+  const setReversed = (on: boolean) =>
+    setParams(
+      (p) => {
+        p.set('rev', on ? '1' : '0');
+        return p;
+      },
+      { replace: true },
+    );
   const line = useMemo(() => prepareFollow(track, reversed), [track, reversed]);
   const state = fix ? followState(line, fix.lat, fix.lon) : null;
   const dist = (m: number) => formatDistance(m, units, i18n.language);
   const alt = (m: number) => formatAltitude(m, units, i18n.language);
+  const recStatus = useRecorder((s) => s.status);
+  const recorded = useRecordedLines();
+  const startRecording = useStartRecording();
   useWakeLock();
+  useHoldLock();
 
   // Fuera del track, con margen para que el aviso no titile; vibra al salir y al llegar.
   const [off, setOff] = useState(false);
@@ -101,7 +105,7 @@ function Follow({ track }: { track: Track }) {
     t('tracks.follow.waiting')
   ) : state.arrived ? (
     <>
-      <CircleCheck size={24} aria-hidden /> {t('tracks.follow.arrived')}
+      <CircleCheck size={24} aria-hidden /> {back ? t('tracks.follow.arrivedBack') : t('tracks.follow.arrived')}
     </>
   ) : off ? (
     <>
@@ -130,7 +134,7 @@ function Follow({ track }: { track: Track }) {
         <Link className="icon-btn" to={`/orientation/tracks/${track.id}`} aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="page-title" style={{ flex: 1 }}>{t('tracks.follow.title', { name: track.name })}</h1>
+        <h1 className="page-title" style={{ flex: 1 }}>{back ? t('tracks.follow.backTitle') : t('tracks.follow.title', { name: track.name })}</h1>
         <button
           className="icon-btn"
           type="button"
@@ -144,8 +148,18 @@ function Follow({ track }: { track: Track }) {
         >
           <ArrowLeftRight size={22} />
         </button>
+        <PocketButton />
       </div>
-      {reversed && <p className="hint" style={{ margin: 0 }}>{t('tracks.follow.reversed')}</p>}
+      {back ? (
+        <p className="hint" style={{ margin: 0 }}>{t('tracks.follow.backHint')}</p>
+      ) : (
+        reversed && <p className="hint" style={{ margin: 0 }}>{t('tracks.follow.reversed')}</p>
+      )}
+      {recStatus === 'idle' && (
+        <button className="btn" type="button" onClick={() => void startRecording()}>
+          <Circle size={16} fill="currentColor" className="rec-icon" /> {t('tracks.rec.start')}
+        </button>
+      )}
 
       <p className={`follow-status${statusClass}`} role="status" data-testid="follow-status">
         {status}
@@ -198,11 +212,12 @@ function Follow({ track }: { track: Track }) {
             heading={heading?.trueHeading ?? null}
             doneM={state?.alongM ?? 0}
             nearest={state?.nearest ?? null}
+            recorded={recorded}
             overlay={overlay}
           />
         </Suspense>
       ) : (
-        <MiniMap line={line} me={fix} doneM={state?.alongM ?? 0} />
+        <MiniMap line={line} me={fix} doneM={state?.alongM ?? 0} recorded={recorded} />
       )}
       <GpsStatus fix={fix} error={error} />
     </div>
@@ -210,7 +225,18 @@ function Follow({ track }: { track: Track }) {
 }
 
 /** Dibujo del recorrido con lo hecho resaltado y dónde estoy (sin mapa de fondo: anda sin nada descargado). */
-function MiniMap({ line, me, doneM }: { line: FollowLine; me: { lat: number; lon: number } | null; doneM: number }) {
+function MiniMap({
+  line,
+  me,
+  doneM,
+  recorded,
+}: {
+  line: FollowLine;
+  me: { lat: number; lon: number } | null;
+  doneM: number;
+  /** Lo grabado, en [lon, lat]. */
+  recorded: [number, number][][] | null;
+}) {
   const { t } = useTranslation();
   const geo = useMemo(() => {
     const k = Math.cos(((line.lat.reduce((a, b) => a + b, 0) / line.lat.length) * Math.PI) / 180);
@@ -238,6 +264,11 @@ function MiniMap({ line, me, doneM }: { line: FollowLine; me: { lat: number; lon
       <svg viewBox="0 0 300 300" role="img" aria-label={t('tracks.follow.map')}>
         <polyline points={geo.points.map(fmt).join(' ')} className="follow-line" fill="none" />
         {done.length > 1 && <polyline points={done.map(fmt).join(' ')} className="follow-done" fill="none" />}
+        {recorded
+          ?.filter((s) => s.length > 1)
+          .map((s, i) => (
+            <polyline key={i} points={s.map(([lon, lat]) => fmt(geo.xy(lat, lon))).join(' ')} className="follow-rec" fill="none" data-testid="follow-rec" />
+          ))}
         <circle cx={start[0]} cy={start[1]} r={5} className="follow-start" />
         <rect x={end[0] - 5} y={end[1] - 5} width={10} height={10} className="follow-end" />
         {pos && inside && <circle cx={pos[0]} cy={pos[1]} r={7} className="follow-me" />}

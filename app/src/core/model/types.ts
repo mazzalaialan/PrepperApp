@@ -316,10 +316,19 @@ export interface TrackWaypoint {
 }
 
 /**
- * Recorrido importado de un GPX (Wikiloc u otra app). Va aparte de los
- * waypoints y rutas propios: sus puntos no se mezclan con los del usuario.
+ * Recorrido importado de un GPX (Wikiloc u otra app) o grabado con la app.
+ * Va aparte de los waypoints y rutas propios: sus puntos no se mezclan con
+ * los del usuario.
  */
 export interface Track extends BaseEntity {
+  /** Grabado con la app (no importado). */
+  recorded?: boolean;
+  /** Grabación en curso: se guarda a medida que avanza, para no perderla si la app se cierra. */
+  recording?: boolean;
+  /** Tiempo grabando, sin contar las pausas. */
+  durationS?: number;
+  /** Mientras se graba: clave privada para leer los puntos grabados con la app bloqueada (ver tracks/lockedBuffer). */
+  recKey?: JsonWebKey;
   name: string;
   desc: string;
   /** De dónde salió ("Wikiloc", o el nombre del archivo). */

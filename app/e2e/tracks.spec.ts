@@ -35,8 +35,8 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
 
   // Está en Orientación.
   await page.goto('/#/orientation');
-  await page.getByRole('link', { name: /Tracks importados/ }).click();
-  await expect(page.getByText('Todavía no importaste tracks')).toBeVisible();
+  await page.getByRole('link', { name: /^Tracks/ }).click();
+  await expect(page.getByText('Todavía no tenés tracks')).toBeVisible();
 
   // Un archivo que no es GPX avisa.
   await page.getByTestId('tracks-file').setInputFiles({ name: 'mal.gpx', mimeType: 'application/gpx+xml', buffer: Buffer.from('<kml></kml>') });
@@ -87,14 +87,14 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
 
   // En el mapa, como capa propia.
   await page.goto('/#/orientation/maps');
-  await expect(page.getByRole('button', { name: 'Tracks importados' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Tracks', exact: true })).toHaveAttribute('aria-pressed', 'true');
 
   // Se elimina desde la lista (con confirmación); el punto copiado queda en mis waypoints.
   await page.goto('/#/orientation/tracks');
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar Refugio Frey desde Villa Catedral' }).click();
   await expect(page.getByTestId('tracks-list')).toHaveCount(0);
-  await expect(page.getByText('Todavía no importaste tracks')).toBeVisible();
+  await expect(page.getByText('Todavía no tenés tracks')).toBeVisible();
   await page.goto('/#/orientation/waypoints');
   await expect(page.getByText('Refugio Frey')).toBeVisible();
 
@@ -105,7 +105,112 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar', exact: true }).click();
   await expect(page).toHaveURL(/#\/orientation\/tracks$/);
-  await expect(page.getByText('Todavía no importaste tracks')).toBeVisible();
+  await expect(page.getByText('Todavía no tenés tracks')).toBeVisible();
+});
+
+test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al origen, pantalla negra y guardado', async ({ page, context }, testInfo) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -41.16, longitude: -71.42, accuracy: 5 });
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  await page.goto('/#/orientation/tracks');
+  await page.getByRole('button', { name: 'Grabar mi recorrido' }).click();
+  const bar = page.getByTestId('rec-bar');
+  await expect(bar).toContainText('Grabando');
+  // Que llegue la primera posición antes de moverse.
+  await page.waitForTimeout(500);
+  // Cada paso, unos 111 m al sur.
+  const walk = async (lat: number) => {
+    await context.setGeolocation({ latitude: lat, longitude: -71.42, accuracy: 5 });
+    await page.waitForTimeout(300);
+  };
+  await walk(-41.161);
+  await walk(-41.162);
+  await expect(page.getByTestId('rec-stats')).toContainText('222 m');
+  // Aparece en la lista mientras se graba, sin poder borrarse.
+  await expect(page.getByTestId('tracks-list')).toContainText('Grabando');
+
+  // Con la app bloqueada se sigue grabando; al desbloquear vuelve a la misma pantalla con todo.
+  await page.getByRole('button', { name: 'Bloquear ahora' }).first().click();
+  await expect(page.getByTestId('rec-locked')).toHaveText('Se sigue grabando tu recorrido.');
+  await walk(-41.163);
+  await page.getByLabel('Contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await expect(page).toHaveURL(/#\/orientation\/tracks$/);
+  await expect(page.getByTestId('rec-stats')).toContainText(/33\d m/);
+
+  // Si el sistema cierra la app estando bloqueada, lo grabado mientras tanto (cifrado aparte) no se pierde:
+  // al volver a entrar se suma y la grabación queda en pausa.
+  await page.getByRole('button', { name: 'Bloquear ahora' }).first().click();
+  await walk(-41.164);
+  await page.reload();
+  await page.getByLabel('Contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await expect(bar).toContainText('Grabación en pausa');
+  await expect(page.getByTestId('rec-stats')).toContainText(/44\d m/);
+
+  // En pausa no suma; al seguir arranca otro tramo.
+  await walk(-41.17);
+  await expect(page.getByTestId('rec-stats')).toContainText(/44\d m/);
+  // El tramo nuevo arranca donde estás al seguir (no donde pausaste).
+  await bar.getByRole('button', { name: 'Seguir grabando' }).click();
+  await page.waitForTimeout(500);
+  await walk(-41.171);
+  await walk(-41.172);
+  await expect(page.getByTestId('rec-stats')).toContainText(/66\d m/);
+  await bar.getByRole('button', { name: 'Pausar la grabación' }).click();
+  await expect(bar).toContainText('Grabación en pausa');
+  await bar.getByRole('button', { name: 'Seguir grabando' }).click();
+
+  // En el mapa offline, con su botón y lo grabado dibujado.
+  await context.route(/tiles\.openfreemap\.org|elevation-tiles-prod/, (route) => route.abort());
+  await page.goto('/#/orientation/maps');
+  await expect(page.locator('.maps-camera').getByRole('button', { name: 'Pausar la grabación' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-recorded', '9');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-31-track-recording.png` });
+
+  // Volver al origen por el mismo camino.
+  await bar.getByRole('link', { name: 'Volver al origen' }).click();
+  await expect(page.getByRole('heading', { name: 'Volviendo al origen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Recorrer en sentido inverso' })).toHaveAttribute('aria-pressed', 'true');
+  // Lo grabado (los dos tramos) va dibujado encima.
+  await expect(page.getByTestId('follow-rec')).toHaveCount(2);
+  await walk(-41.16);
+  await expect(page.getByTestId('follow-status')).toHaveText('Llegaste al origen');
+
+  // Pantalla negra: dos toques para volver.
+  await bar.getByRole('button', { name: 'Pantalla negra (ahorra batería)' }).click();
+  const pocket = page.getByTestId('pocket');
+  await expect(pocket).toContainText('Grabando');
+  await pocket.dblclick();
+  await expect(pocket).toHaveCount(0);
+
+  // Terminar: se le pone nombre (o se sigue grabando) y aparece en los tracks.
+  await bar.getByRole('button', { name: 'Terminar y guardar la grabación' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Guardar la grabación' });
+  await expect(dialog.getByLabel('Nombre')).toHaveValue(/^Recorrido del/);
+  await dialog.getByRole('button', { name: 'Seguir grabando' }).click();
+  await expect(bar).toContainText('Grabando');
+  await bar.getByRole('button', { name: 'Terminar y guardar la grabación' }).click();
+  await dialog.getByLabel('Nombre').fill('Ida y vuelta');
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByRole('heading', { name: 'Ida y vuelta' })).toBeVisible();
+  await expect(page.getByText(/^Grabado el/)).toBeVisible();
+  await expect(bar).toHaveCount(0);
+  // Y el nombre se cambia después, en el track.
+  await page.getByLabel('Nombre').fill('Ida y vuelta al arroyo');
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Ida y vuelta al arroyo' })).toBeVisible();
+  await page.goto('/#/orientation/tracks');
+  await expect(page.getByTestId('tracks-list')).toContainText('Ida y vuelta al arroyo');
+  await expect(page.getByTestId('tracks-list')).toContainText('Grabado por mí');
+  await expect(page.getByRole('button', { name: 'Grabar mi recorrido' })).toBeVisible();
 });
 
 test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada', async ({ page, context }, testInfo) => {

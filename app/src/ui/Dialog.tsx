@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 
@@ -13,6 +13,7 @@ interface Props {
 export function Dialog({ title, onClose, children, footer }: Props) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -24,13 +25,14 @@ export function Dialog({ title, onClose, children, footer }: Props) {
     <dialog
       ref={ref}
       className="dialog"
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
       }}
     >
       <header className="dialog-header">
-        <h2>{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <button className="icon-btn" type="button" onClick={onClose} aria-label={t('common.close')}>
           <X size={22} />
         </button>
