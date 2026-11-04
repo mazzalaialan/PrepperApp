@@ -13,14 +13,17 @@ import { useTracks } from '@/modules/tracks/store';
 import { routePoints, useWaypoints } from '@/modules/waypoints/store';
 import { loadGeoData } from '@/modules/weathermap/geo';
 import { FullscreenStage } from '@/ui/FullscreenStage';
+import './appSources';
 import { CameraButtons } from './CameraButtons';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
 import { carryPrevailing, chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsLivePrevailing, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
 import { compassList, fetchPrevailing, leeAspects } from './wind';
-import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress } from './tiles';
+import { serverMaps, type ServerMaps } from './sources';
+import { DETAILS, downloadZone, planZone, zoneSource, type DetailId, type DownloadProgress } from './tiles';
 
-const RADII = [2, 5, 10, 20, 50];
+// 100 y 200 km solo entran en el límite del servidor propio.
+const RADII = [2, 5, 10, 20, 50, 100, 200];
 const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'slope', 'mine', 'tracks'];
 const SLOPE_ZONES = ['low', 'caution', 'avalanche', 'steep'] as const;
 /** Vista que muestra un track entero (centro y zoom según lo que ocupa). */
@@ -73,6 +76,21 @@ export function MapsPage() {
   const snowlineManual = useSettings((s) => s.settings.snowlineManual);
   const snowlineFallback = useSettings((s) => s.settings.snowlineFallback);
   const weatherUrl = useSettings((s) => s.settings.weatherUrl);
+  const serverUrl = useSettings((s) => s.settings.serverUrl);
+  const sourceMode = useSettings((s) => s.settings.mapSource);
+  // Qué mapas tiene el servidor propio (undefined: todavía no se sabe).
+  const [serverInfo, setServerInfo] = useState<ServerMaps | null | undefined>(undefined);
+  useEffect(() => {
+    if (!online || sourceMode === 'public' || !serverUrl.trim()) {
+      setServerInfo(null);
+      return;
+    }
+    let cancelled = false;
+    void serverMaps(serverUrl).then((v) => !cancelled && setServerInfo(v));
+    return () => {
+      cancelled = true;
+    };
+  }, [online, sourceMode, serverUrl]);
   const [snowline, setSnowline] = useState<Snowline | null>(null);
   const [snowlineError, setSnowlineError] = useState(false);
 
@@ -213,6 +231,7 @@ export function MapsPage() {
   const zoneCircles = useMemo(() => zones.map((z) => ({ id: z.id, name: z.name, lat: z.lat, lon: z.lon, radiusKm: z.radiusKm })), [zones]);
   const maxZoom = panel ? DETAILS.find((d) => d.id === panel.detail)!.maxZoom : 0;
   const plan = useMemo(() => (panel ? planZone(view.lat, view.lon, panel.radiusKm, maxZoom) : null), [panel, view.lat, view.lon, maxZoom]);
+  const source = plan && serverInfo !== undefined ? zoneSource(plan, serverInfo, sourceMode) : null;
   const preview = useMemo(() => (panel ? { id: 'preview', name: panel.name, lat: view.lat, lon: view.lon, radiusKm: panel.radiusKm } : null), [panel, view.lat, view.lon]);
 
   const mb = (bytes: number) => new Intl.NumberFormat(i18n.language, { maximumFractionDigits: bytes < 10 * 1024 * 1024 ? 1 : 0 }).format(bytes / 1024 / 1024);
@@ -225,7 +244,7 @@ export function MapsPage() {
   }
 
   async function startDownload() {
-    if (!panel || !plan) return;
+    if (!panel || !plan || !source?.ok) return;
     const controller = new AbortController();
     setAbort(controller);
     setProgress({ done: 0, total: 1, bytes: 0, failed: 0 });
@@ -233,7 +252,7 @@ export function MapsPage() {
     // Que el navegador no borre los mapas si se queda sin espacio.
     void navigator.storage?.persist?.();
     try {
-      const result = await downloadZone(plan, setProgress, controller.signal);
+      const result = await downloadZone(plan, setProgress, controller.signal, { vectorPublic: source.vectorPublic });
       // La isoterma de 0 °C de los próximos días, para la capa de avalanchas sin conexión (si falla, la zona igual sirve).
       // Y el viento habitual con nieve (histórico), para el rayado de sotavento sin datos recientes.
       const [freezing, prevailing] = await Promise.all([
@@ -472,9 +491,13 @@ export function MapsPage() {
             </div>
             <p className="hint" style={{ margin: 0 }}>{t('maps.centerHint')}</p>
             {plan && (
-              <p className={plan.withinLimits ? 'hint' : 'error'} style={{ margin: 0 }} data-testid="zone-estimate">
+              <p className={!source || source.ok ? 'hint' : 'error'} style={{ margin: 0 }} data-testid="zone-estimate">
                 {t('maps.estimate', { tiles: plan.vectorTiles + plan.demTiles, mb: mb(plan.bytes) })}
-                {!plan.withinLimits && ` ${t('maps.tooBig')}`}
+                {source && ' '}
+                {source &&
+                  (source.ok
+                    ? t(source.from === 'server' ? 'maps.fromServer' : 'maps.fromPublic')
+                    : t(`maps.${source.reason}`, { tiles: serverInfo?.maxZoneTiles ?? 0, mb: serverInfo?.maxZoneMb ?? 0 }))}
               </p>
             )}
             {progress && (
@@ -495,7 +518,7 @@ export function MapsPage() {
                   <button className="btn" type="button" onClick={() => setPanel(null)}>
                     {t('common.cancel')}
                   </button>
-                  <button className="btn btn-primary" type="button" onClick={() => void startDownload()} disabled={!online || !plan?.withinLimits}>
+                  <button className="btn btn-primary" type="button" onClick={() => void startDownload()} disabled={!online || !source?.ok}>
                     <Download size={18} /> {t('maps.download')}
                   </button>
                 </>
@@ -530,6 +553,9 @@ export function MapsPage() {
           </ul>
         )}
         {usage !== null && <p className="hint" style={{ margin: 0 }}>{t('maps.usage', { mb: mb(usage) })}</p>}
+        <p className="hint" style={{ margin: 0 }} data-testid="map-source-hint">
+          {t('maps.sourceHint', { mode: t(`maps.source.${sourceMode}`) })}
+        </p>
       </section>
 
       <p className="hint">{t('maps.attribution')}</p>

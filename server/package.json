@@ -12,13 +12,16 @@
     "start": "node src/main.ts",
     "dev": "node --watch src/main.ts",
     "test": "node --test \"test/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "maps:elevation": "node src/maps/buildElevation.ts",
+    "maps:vector": "sh src/maps/build-vector.sh"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",
     "@fastify/static": "^10.1.8",
     "fastify": "^5.12.7",
     "h5wasm": "^0.10.3",
+    "pmtiles": "4.5.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

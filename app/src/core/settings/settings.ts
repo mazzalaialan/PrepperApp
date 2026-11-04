@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { db } from '@/core/db/db';
 import type { UnitSystem } from '@/core/units/units';
+import type { MapSourceMode } from '@/modules/maps/sources';
 
 /**
  * Ajustes no sensibles: se guardan en claro porque se necesitan antes de
@@ -57,6 +58,11 @@ export interface Settings {
   weatherMapLayers: WeatherMapLayers;
   /** Qué dato del clima se dibuja en cada provincia. */
   weatherMapValue: WeatherMapValue;
+  /**
+   * De dónde bajar los mapas offline: el servidor propio y, si falla, las
+   * fuentes públicas (`auto`); solo el servidor; o solo las públicas.
+   */
+  mapSource: MapSourceMode;
   /** Capas de los mapas offline de Orientación. */
   mapLayers: MapLayers;
   /** Línea de nieve puesta a mano para la capa de avalanchas (m); `null` = la estima la app con la isoterma de 0 °C. */
@@ -167,6 +173,7 @@ export const DEFAULT_SETTINGS: Settings = {
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
   weatherMapValue: 'temp',
+  mapSource: 'auto',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, windLoad: true, terrain3d: false },
   snowlineManual: null,
   snowlineFallback: 1500,

@@ -14,8 +14,11 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT:-https://${DOMAIN}}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
       TRANSFER_MAX_MB: ${TRANSFER_MAX_MB:-50}
+      MAPS_DIR: /maps
     volumes:
       - vikarg-data:/data
+      # Mapas offline (vector.pmtiles y elevation.pmtiles); vacía, la app usa las fuentes públicas. Ver docs/SERVIDOR.md.
+      - ${MAPS_PATH:-./maps}:/maps:ro
 
   caddy:
     image: caddy:2-alpine

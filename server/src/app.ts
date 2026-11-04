@@ -7,10 +7,12 @@ import type { Config } from './config.ts';
 import type { Db } from './db.ts';
 import type { PushSender } from './push.ts';
 import { createLightningStore, type LightningStore } from './lightning/store.ts';
+import { createMapsService, type MapsService } from './maps/service.ts';
 import { createRainMapStore, type RainMapStore } from './rain/map.ts';
 import { createObservedRainStatus, type ObservedRainStatus } from './rain/noaaWatch.ts';
 import { deviceRoutes } from './routes/devices.ts';
 import { lightningRoutes } from './routes/lightning.ts';
+import { mapRoutes } from './routes/maps.ts';
 import { rainMapRoutes } from './routes/rainMap.ts';
 import { transferRoutes } from './routes/transfers.ts';
 
@@ -24,6 +26,7 @@ export async function buildApp(
   lightning: { store: LightningStore; wake: () => void } = { store: createLightningStore(), wake: () => undefined },
   observedRain: ObservedRainStatus = createObservedRainStatus(),
   rainMap: { store: RainMapStore; wake: () => void } = { store: createRainMapStore(), wake: () => undefined },
+  maps: MapsService = createMapsService(config.mapsDir),
 ): Promise<FastifyInstance> {
   const app = Fastify({ logger, trustProxy: true });
 
@@ -35,6 +38,8 @@ export async function buildApp(
   transferRoutes(app, db, config);
   lightningRoutes(app, lightning.store, lightning.wake);
   rainMapRoutes(app, rainMap.store, rainMap.wake);
+  mapRoutes(app, maps, config);
+  app.addHook('onClose', () => maps.close());
 
   // Opcional: servir la propia PWA para una instalación 100% autónoma.
   if (config.appDir) {

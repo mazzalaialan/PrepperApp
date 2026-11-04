@@ -2,6 +2,7 @@ import sharp from 'sharp';
 import { expect, test, type Page } from '@playwright/test';
 
 const PASSWORD = 'prueba-segura-123';
+const SERVER = 'https://valhallarust2.ddns.net';
 
 test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'] });
 
@@ -14,6 +15,8 @@ async function mockMaps(page: Page) {
   await ctx.route('https://tiles.openfreemap.org/planet/test/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://tiles.openfreemap.org/fonts/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://s3.amazonaws.com/elevation-tiles-prod/**', (route) => route.fulfill({ body: dem, contentType: 'image/png' }));
+  // El servidor propio que viene cargado, sin mapas (cada prueba lo cambia si hace falta).
+  await ctx.route(`${SERVER}/api/maps**`, (route) => route.fulfill({ status: 404, json: { error: 'not_found' } }));
   // Isoterma de 0 °C (para la línea de nieve de la capa de avalanchas) y viento del oeste con nieve, por hora.
   await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) => {
     const H = 3_600_000;
@@ -87,7 +90,7 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(page.getByTestId('zone-estimate')).toHaveText(/^Unas \d+ teselas, ~[\d,]+ MB/);
   // 50 km con todo el detalle supera lo que permite el servicio.
   await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '50 km' });
-  await expect(page.getByTestId('zone-estimate')).toContainText('Es demasiado para una sola descarga');
+  await expect(page.getByTestId('zone-estimate')).toContainText('Es demasiado para bajar de los servidores públicos');
   await expect(page.getByRole('button', { name: 'Descargar', exact: true })).toBeDisabled();
   await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '2 km' });
   await page.getByRole('button', { name: 'Descargar', exact: true }).click();
@@ -212,4 +215,75 @@ test('mapa en 3D o plano, y la vista siguiéndome o libre', async ({ page, conte
   await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2 + 40, { steps: 8 });
   await page.mouse.up();
   await expect(follow).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('mapas offline desde el servidor propio, con las fuentes públicas de respaldo', async ({ page }) => {
+  test.setTimeout(120_000);
+  await mockMaps(page);
+  const dem = await sharp({ create: { width: 256, height: 256, channels: 3, background: { r: 128, g: 0, b: 0 } } }).png().toBuffer();
+  const info = {
+    vector: { minZoom: 0, maxZoom: 14, bounds: [-76, -56, -53, -17.4], updatedAt: '2026-11-01T00:00:00Z' },
+    elevation: { minZoom: 0, maxZoom: 12, bounds: [-76, -56, -53, -17.4], updatedAt: '2026-11-01T00:00:00Z' },
+    maxZoneTiles: 60000,
+    maxZoneMb: 1500,
+  };
+  let busy = false;
+  let fromServer = 0;
+  await page.context().route(`${SERVER}/api/maps**`, (route) => {
+    const url = route.request().url();
+    if (url.endsWith('/api/maps')) return route.fulfill({ json: info });
+    if (busy) return route.fulfill({ status: 503, headers: { 'retry-after': '60' }, body: '' });
+    fromServer++;
+    return url.includes('/elevation/') ? route.fulfill({ body: dem, contentType: 'image/png' }) : route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' });
+  });
+  const fromPublic = { n: 0 };
+  page.on('request', (r) => {
+    if (r.url().includes('openfreemap.org/planet/test/')) fromPublic.n++;
+  });
+
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  // El origen se elige en Ajustes → Conexiones; por defecto, automático.
+  await page.goto('/#/settings');
+  await expect(page.getByLabel('Bajar los mapas de')).toHaveValue('auto');
+  await expect(page.getByTestId('map-source-status')).toContainText('Tu servidor tiene mapas');
+  await page.goto('/#/orientation/maps');
+  await expect(page.getByTestId('map-source-hint')).toContainText('Origen de los mapas: Automático');
+
+  // Con el servidor, 50 km con todo el detalle sí se puede.
+  await page.getByRole('button', { name: 'Descargar una zona' }).click();
+  await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '50 km' });
+  await expect(page.getByTestId('zone-estimate')).toContainText('Se baja de tu servidor.');
+  await expect(page.getByRole('button', { name: 'Descargar', exact: true })).toBeEnabled();
+
+  // Una zona chica: sale del servidor.
+  await page.getByLabel('Nombre').fill('Del servidor');
+  await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '2 km' });
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
+  await expect(page.getByTestId('zone-message')).toHaveText(/^Listo: "Del servidor"/, { timeout: 30_000 });
+  expect(fromServer).toBeGreaterThan(50);
+  const publicBefore = fromPublic.n;
+
+  // Servidor sobrecargado: la zona igual se baja, de las fuentes públicas.
+  busy = true;
+  await page.getByRole('button', { name: 'Descargar una zona' }).click();
+  await page.getByLabel('Nombre').fill('De respaldo');
+  await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '5 km' });
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
+  await expect(page.getByTestId('zone-message')).toHaveText(/^Listo: "De respaldo"/, { timeout: 60_000 });
+  expect(fromPublic.n).toBeGreaterThan(publicBefore);
+
+  // Solo servidores públicos: vuelve el límite de siempre.
+  await page.goto('/#/settings');
+  await page.getByLabel('Bajar los mapas de').selectOption({ label: 'Solo servidores públicos' });
+  await expect(page.getByTestId('map-source-status')).toContainText('Se usan OpenFreeMap');
+  await page.goto('/#/orientation/maps');
+  await page.getByRole('button', { name: 'Descargar una zona' }).click();
+  await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '50 km' });
+  await expect(page.getByTestId('zone-estimate')).toContainText('Es demasiado para bajar de los servidores públicos');
 });

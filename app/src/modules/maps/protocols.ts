@@ -2,14 +2,16 @@ import * as maplibregl from 'maplibre-gl';
 import mlcontour from 'maplibre-contour';
 // MapLibre 6 dibuja con un worker aparte: con Vite hay que indicarle dónde queda el archivo.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import './appSources';
 import { HATCH_RECENT, HATCH_USUAL, slopeTile } from './slope';
 import { themeColors } from './style';
-import { cachedOrNetwork, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, vectorTemplate } from './tiles';
+import { cachedOr, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, networkTile, networkUrl } from './tiles';
 
 /**
  * Protocolos propios de MapLibre: cada pedido busca primero en lo descargado
- * y, si falta y hay conexión, en internet. Así una zona descargada sigue
- * andando aunque OpenFreeMap publique una versión nueva del mapa.
+ * y, si falta y hay conexión, en el servidor propio o las fuentes públicas
+ * (sources.ts). Así una zona descargada sigue andando aunque OpenFreeMap
+ * publique una versión nueva del mapa.
  */
 
 let ready = false;
@@ -27,15 +29,14 @@ export function setupProtocols(): { contoursUrl: string } {
 
   maplibregl.addProtocol('vktile', async (params) => {
     const { z, x, y } = parseZxy(params.url);
-    const data = await cachedOrNetwork(fill(LOCAL_TILE, z, x, y), async () => fill(await vectorTemplate(), z, x, y));
+    const data = await cachedOr(fill(LOCAL_TILE, z, x, y), networkTile('vector', z, x, y));
     // Sin datos: tesela vacía (se ve el fondo y el contorno), no un error.
     return { data: data ?? new ArrayBuffer(0) };
   });
 
   maplibregl.addProtocol('vkdem', async (params) => {
     const { z, x, y } = parseZxy(params.url);
-    const url = fill(DEM_URL, z, x, y);
-    const data = await cachedOrNetwork(url, async () => url);
+    const data = await cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y));
     if (!data) throw new Error('sin elevación');
     return { data };
   });
@@ -48,8 +49,7 @@ export function setupProtocols(): { contoursUrl: string } {
     const q = new URLSearchParams(query ?? '');
     const minElevation = Number(q.get('min') ?? 0) || 0;
     const list = (k: string) => (q.get(k) ?? '').split(',').filter(Boolean).map(Number).filter(Number.isFinite);
-    const url = fill(DEM_URL, z, x, y);
-    const dem = await cachedOrNetwork(url, async () => url);
+    const dem = await cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y));
     if (!dem) throw new Error('sin elevación');
     const c = themeColors();
     return { data: await slopeTile(dem, z, x, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: HATCH_RECENT, hatchUsual: HATCH_USUAL }, minElevation, list('lee'), list('usual')) };
@@ -58,13 +58,23 @@ export function setupProtocols(): { contoursUrl: string } {
   maplibregl.addProtocol('vkglyph', async (params) => {
     const [fontstack, range] = params.url.replace('vkglyph://', '').split('/');
     const url = GLYPHS_URL.replace('{fontstack}', fontstack!).replace('{range}', range!);
-    const data = await cachedOrNetwork(url, async () => url);
+    const data = await cachedOr(url, networkUrl(url));
     if (!data) throw new Error('sin letras');
     return { data };
   });
 
-  // Curvas de nivel: maplibre-contour baja la elevación con fetch (el service worker la sirve de lo descargado).
+  // Curvas de nivel: maplibre-contour pide la elevación por su cuenta; se le cambia la forma de pedirla
+  // para que use lo descargado y, si falta, la misma fuente que el resto del mapa (servidor propio o públicas).
   const dem = new mlcontour.DemSource({ url: DEM_URL, encoding: 'terrarium', maxzoom: DEM_MAX_ZOOM, worker: false });
+  const manager = (dem as unknown as { manager?: { getTile?: unknown } }).manager;
+  if (manager && 'getTile' in manager) {
+    manager.getTile = async (url: string) => {
+      const m = /\/(\d+)\/(\d+)\/(\d+)\.png$/.exec(url);
+      const data = m ? await cachedOr(url, networkTile('dem', Number(m[1]), Number(m[2]), Number(m[3]))) : null;
+      if (!data) throw new Error('sin elevación');
+      return { data: new Blob([data], { type: 'image/png' }) };
+    };
+  }
   dem.setupMaplibre(maplibregl);
   contoursUrl = dem.contourProtocolUrl({
     // Equidistancia [fina, maestra] en metros, según el zoom.

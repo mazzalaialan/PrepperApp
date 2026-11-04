@@ -19,6 +19,7 @@ import {
 import { currentPosition, GeoPositionError } from '@/core/geo/useGeolocation';
 import { AUTO_LOCK_OPTIONS, COUNTRIES, LANGUAGES, THEMES, useSettings, type RedSchedule, type Settings } from '@/core/settings/settings';
 import { roundForDusk } from '@/core/settings/theme';
+import { serverIsDown, serverMaps, type MapSourceMode, type ServerMaps } from '@/modules/maps/sources';
 import { Segmented } from '@/ui/Segmented';
 import { NotificationsSection } from './NotificationsSection';
 
@@ -353,7 +354,52 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
       <button className="btn" type="submit">
         {t('common.save')}
       </button>
+      <MapSourceField settings={settings} onSave={onSave} />
     </form>
+  );
+}
+
+const MAP_SOURCE_MODES: MapSourceMode[] = ['auto', 'server', 'public'];
+
+/** De dónde bajar los mapas offline (se guarda al elegir) y qué tiene el servidor propio. */
+function MapSourceField({ settings, onSave }: { settings: Settings; onSave: (c: Partial<Settings>) => Promise<void> }) {
+  const { t, i18n } = useTranslation();
+  const { mapSource, serverUrl } = settings;
+  // undefined: todavía no se sabe; null: no tiene mapas o no responde.
+  const [info, setInfo] = useState<ServerMaps | null | undefined>(undefined);
+  useEffect(() => {
+    if (mapSource === 'public' || !serverUrl.trim()) return;
+    let cancelled = false;
+    setInfo(undefined);
+    void serverMaps(serverUrl).then((v) => !cancelled && setInfo(v));
+    return () => {
+      cancelled = true;
+    };
+  }, [mapSource, serverUrl]);
+
+  const status =
+    mapSource === 'public'
+      ? t('maps.source.usingPublic')
+      : !serverUrl.trim()
+        ? t('maps.source.noServerUrl')
+        : info === undefined
+          ? t('maps.source.checking')
+          : info?.vector
+            ? t(serverIsDown() ? 'maps.source.serverBusy' : 'maps.source.serverHas', { date: new Date(info.vector.updatedAt).toLocaleDateString(i18n.language) })
+            : t(mapSource === 'auto' ? 'maps.source.serverNoneAuto' : 'maps.source.serverNone');
+
+  return (
+    <div className="field">
+      <label htmlFor="map-source">{t('maps.source.label')}</label>
+      <select id="map-source" className="select" value={mapSource} onChange={(e) => void onSave({ mapSource: e.target.value as MapSourceMode })}>
+        {MAP_SOURCE_MODES.map((m) => (
+          <option key={m} value={m}>
+            {t(`maps.source.${m}`)}
+          </option>
+        ))}
+      </select>
+      <p className="hint" data-testid="map-source-status">{status}</p>
+    </div>
   );
 }
 

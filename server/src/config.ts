@@ -31,6 +31,13 @@ export interface Config {
   rainObserved: boolean;
   /** Avisos de peligros naturales (sismos de USGS y eventos de GDACS). */
   hazardsEnabled: boolean;
+  /** Carpeta con vector.pmtiles y elevation.pmtiles (mapas offline); sin archivos, la app usa las fuentes públicas. */
+  mapsDir: string | null;
+  /** Pedidos de teselas a la vez; más que eso responde 503 y la app pasa a las fuentes públicas. */
+  mapsMaxConcurrent: number;
+  /** Tamaño máximo de una zona que se baja del servidor (teselas y MB). */
+  mapsMaxZoneTiles: number;
+  mapsMaxZoneMb: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -55,5 +62,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     lightningRadiusKm: Number(env.LIGHTNING_RADIUS_KM ?? 30),
     rainObserved: (env.RAIN_OBSERVED ?? 'true') !== 'false',
     hazardsEnabled: (env.HAZARDS_ENABLED ?? 'true') !== 'false',
+    mapsDir: env.MAPS_DIR === '' ? null : (env.MAPS_DIR ?? `${env.DATA_DIR ?? './data'}/maps`),
+    mapsMaxConcurrent: Number(env.MAPS_MAX_CONCURRENT ?? 48),
+    mapsMaxZoneTiles: Number(env.MAPS_MAX_ZONE_TILES ?? 60_000),
+    mapsMaxZoneMb: Number(env.MAPS_MAX_ZONE_MB ?? 1_500),
   };
 }

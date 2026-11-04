@@ -1,8 +1,11 @@
+import { archiveContains, fetchTile, type MapSourceMode, type ServerMaps, type TileKind } from './sources';
+
 /**
  * Mapas offline (ARQUITECTURA §12): fuentes, cuentas de teselas y descarga
  * por zona.
  *
- * Fuentes mientras no haya servidor propio:
+ * Cada tesela se pide primero al servidor VikArg propio y, si no la tiene o
+ * no responde, a las fuentes públicas (ver sources.ts). Fuentes públicas:
  * - Mapa vectorial: OpenFreeMap (OpenStreetMap, esquema OpenMapTiles), sin
  *   clave. Sus condiciones permiten descargas offline de hasta 3.000 teselas
  *   o 50 MB por zona, con 4 pedidos en paralelo como máximo.
@@ -89,6 +92,8 @@ export const DETAILS = [
 export type DetailId = (typeof DETAILS)[number]['id'];
 
 export interface ZonePlan {
+  bounds: ReturnType<typeof circleBounds>;
+  maxZoom: number;
   vector: TileRange[];
   dem: TileRange[];
   vectorTiles: number;
@@ -96,6 +101,7 @@ export interface ZonePlan {
   /** Estimación: el tamaño real depende de cuánto hay dibujado en la zona. */
   bytes: number;
   vectorBytes: number;
+  /** Dentro del límite de OpenFreeMap (las fuentes públicas). */
   withinLimits: boolean;
 }
 
@@ -111,7 +117,7 @@ export function planZone(lat: number, lon: number, radiusKm: number, maxZoom: nu
   const demTiles = countTiles(dem);
   const vectorBytes = vector.reduce((n, r) => n + (r.maxX - r.minX + 1) * (r.maxY - r.minY + 1) * AVG_VECTOR_BYTES(r.z), 0);
   const bytes = vectorBytes + demTiles * AVG_DEM_BYTES;
-  return { vector, dem, vectorTiles, demTiles, bytes, vectorBytes, withinLimits: vectorTiles <= MAX_VECTOR_TILES && vectorBytes <= MAX_VECTOR_BYTES };
+  return { bounds, maxZoom, vector, dem, vectorTiles, demTiles, bytes, vectorBytes, withinLimits: vectorTiles <= MAX_VECTOR_TILES && vectorBytes <= MAX_VECTOR_BYTES };
 }
 
 /** URL vigente de las teselas de OpenFreeMap (cambia con cada versión semanal del mapa). */
@@ -130,6 +136,27 @@ export function vectorTemplate(): Promise<string> {
   return templatePromise;
 }
 
+/** De dónde se bajaría una zona y si se puede. */
+export type ZoneSource =
+  | { ok: true; from: 'server' | 'public'; vectorPublic: boolean }
+  | { ok: false; reason: 'tooBig' | 'tooBigServer' | 'outsideServer' | 'noServer' };
+
+/**
+ * El servidor propio no tiene el límite de OpenFreeMap: si cubre la zona
+ * entera, se baja de ahí (con su propio límite). Si la zona entra en el
+ * límite público, en modo automático las teselas que el servidor no pueda
+ * dar salen de las fuentes públicas; si es más grande, solo del servidor.
+ */
+export function zoneSource(plan: ZonePlan, maps: ServerMaps | null, mode: MapSourceMode): ZoneSource {
+  const covered = mode !== 'public' && archiveContains(maps?.vector, plan.bounds, plan.maxZoom);
+  if (covered && maps) {
+    if (plan.vectorTiles + plan.demTiles <= maps.maxZoneTiles && plan.bytes <= maps.maxZoneMb * 1024 * 1024) return { ok: true, from: 'server', vectorPublic: mode === 'auto' && plan.withinLimits };
+    if (mode === 'server' || !plan.withinLimits) return { ok: false, reason: 'tooBigServer' };
+  }
+  if (mode === 'server') return { ok: false, reason: maps?.vector ? 'outsideServer' : 'noServer' };
+  return plan.withinLimits ? { ok: true, from: 'public', vectorPublic: true } : { ok: false, reason: 'tooBig' };
+}
+
 export interface DownloadProgress {
   done: number;
   total: number;
@@ -140,24 +167,35 @@ export interface DownloadProgress {
 /**
  * Baja las teselas de la zona que todavía no estén guardadas, de a 4 en
  * paralelo. Devuelve las claves de caché de la zona (para poder borrarla).
+ * Con `vectorPublic: false` las teselas del mapa salen solo del servidor
+ * propio (zona más grande que el límite de OpenFreeMap).
  */
 export async function downloadZone(
   plan: ZonePlan,
   onProgress: (p: DownloadProgress) => void,
   signal: AbortSignal,
+  opts: { vectorPublic: boolean } = { vectorPublic: true },
 ): Promise<{ keys: string[]; bytes: number; failed: number }> {
   const cache = await caches.open(MAP_CACHE);
-  const template = await vectorTemplate();
-  const jobs: { key: string; url: string }[] = [];
-  for (const t of eachTile(plan.vector)) jobs.push({ key: fill(LOCAL_TILE, t.z, t.x, t.y), url: fill(template, t.z, t.x, t.y) });
-  for (const t of eachTile(plan.dem)) {
-    const url = fill(DEM_URL, t.z, t.x, t.y);
-    jobs.push({ key: url, url });
-  }
+  type Job = { key: string; load: () => Promise<{ data: ArrayBuffer | null; type: string }> };
+  const jobs: Job[] = [];
+  const tile = (kind: TileKind, z: number, x: number, y: number, allowPublic: boolean) => async () => {
+    const r = await fetchTile(kind, z, x, y, { allowPublic, signal });
+    return { data: r.data, type: kind === 'vector' ? 'application/x-protobuf' : 'image/png' };
+  };
+  for (const t of eachTile(plan.vector)) jobs.push({ key: fill(LOCAL_TILE, t.z, t.x, t.y), load: tile('vector', t.z, t.x, t.y, opts.vectorPublic) });
+  for (const t of eachTile(plan.dem)) jobs.push({ key: fill(DEM_URL, t.z, t.x, t.y), load: tile('dem', t.z, t.x, t.y, true) });
   for (const font of FONTS) {
     for (const range of GLYPH_RANGES) {
       const url = GLYPHS_URL.replace('{fontstack}', encodeURIComponent(font)).replace('{range}', range);
-      jobs.push({ key: url, url });
+      jobs.push({
+        key: url,
+        load: async () => {
+          const res = await fetch(url, { signal });
+          if (!res.ok) throw new Error(String(res.status));
+          return { data: await res.arrayBuffer(), type: 'application/x-protobuf' };
+        },
+      });
     }
   }
 
@@ -172,15 +210,11 @@ export async function downloadZone(
         if (hit) {
           progress.bytes += Number(hit.headers.get('content-length') ?? 0);
         } else {
-          const res = await fetch(job.url, { signal });
-          // Fuera de la zona con datos, OpenFreeMap responde 204 (sin contenido): igual cuenta como bajada.
-          if (!res.ok) throw new Error(String(res.status));
-          const body = await res.arrayBuffer();
+          // Sin datos en ese lugar (mar, fuera del mapa): igual cuenta como bajada.
+          const { data, type } = await job.load();
+          const body = data ?? new ArrayBuffer(0);
           progress.bytes += body.byteLength;
-          await cache.put(
-            job.key,
-            new Response(body, { headers: { 'content-type': res.headers.get('content-type') ?? 'application/octet-stream', 'content-length': String(body.byteLength) } }),
-          );
+          await cache.put(job.key, new Response(body, { headers: { 'content-type': type, 'content-length': String(body.byteLength) } }));
         }
       } catch {
         if (signal.aborted) return;
@@ -201,16 +235,23 @@ export async function removeZoneTiles(keys: string[], keepKeys: Set<string>): Pr
   await Promise.all(keys.filter((k) => !keepKeys.has(k)).map((k) => cache.delete(k)));
 }
 
-/** Busca en lo descargado y, si no está y hay conexión, en internet (sin guardarlo). */
-export async function cachedOrNetwork(key: string, networkUrl: () => Promise<string>): Promise<ArrayBuffer | null> {
+/** Busca en lo descargado y, si no está y hay conexión, lo baja (sin guardarlo). null: no hay datos o no se pudo. */
+export async function cachedOr(key: string, load: () => Promise<ArrayBuffer | null>): Promise<ArrayBuffer | null> {
   const hit = await (await caches.open(MAP_CACHE)).match(key);
   if (hit) return hit.arrayBuffer();
   if (!navigator.onLine) return null;
   try {
-    const res = await fetch(await networkUrl());
-    if (res.status === 204 || !res.ok) return null;
-    return await res.arrayBuffer();
+    return await load();
   } catch {
     return null;
   }
 }
+
+/** Una tesela fuera de lo descargado, según la fuente elegida (servidor propio o públicas). */
+export const networkTile = (kind: TileKind, z: number, x: number, y: number) => async () => (await fetchTile(kind, z, x, y)).data;
+
+/** Lo que no son teselas (letras): directo de su URL. */
+export const networkUrl = (url: string) => async () => {
+  const res = await fetch(url);
+  return res.status === 204 || !res.ok ? null : res.arrayBuffer();
+};

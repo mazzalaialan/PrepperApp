@@ -77,6 +77,40 @@ La app queda servida en `https://TU_DOMINIO/` y se puede instalar desde ahí.
 | `LIGHTNING_FILES_PER_POLL` | `3` | Archivos que lee como mucho por pasada (si se atrasa, se pone al día) |
 | `LIGHTNING_PARTIAL` | `true` | Bajar solo las coordenadas de los rayos de cada archivo (~36 KB, ~155 MB por día con los tres por minuto); `false` baja el archivo completo (~380 KB, ~1,6 GB por día) |
 | `LIGHTNING_RADIUS_KM` | `30` | Distancia para avisar de rayos |
+| `MAPS_DIR` | `/maps` (con el compose; si no, `DATA_DIR/maps`) | Carpeta con `vector.pmtiles` y `elevation.pmtiles`; vacío = sin mapas |
+| `MAPS_PATH` | `./maps` | (Solo compose) carpeta del host que se monta en `/maps`, de solo lectura |
+| `MAPS_MAX_CONCURRENT` | `48` | Teselas que entrega a la vez; con más responde 503 y la app usa las fuentes públicas un rato |
+| `MAPS_MAX_ZONE_TILES` | `60000` | Teselas máximas de una zona que la app baja del servidor |
+| `MAPS_MAX_ZONE_MB` | `1500` | MB máximos de una zona que la app baja del servidor |
+
+## Mapas offline (opcional)
+
+Con los mapas en el servidor, la app baja de acá las zonas offline en vez de OpenFreeMap y AWS. Así no depende de terceros, y las zonas pueden ser mucho más grandes: los servicios públicos permiten hasta 3.000 teselas o 50 MB por zona, y el servidor deja hasta `MAPS_MAX_ZONE_TILES` y `MAPS_MAX_ZONE_MB`. Sin los archivos, todo sigue como antes.
+
+**Archivos.** En la carpeta `deploy/maps/` (o la que diga `MAPS_PATH`):
+- `vector.pmtiles`: el mapa, con el esquema OpenMapTiles, el mismo de OpenFreeMap.
+- `elevation.pmtiles`: la elevación en formato Terrarium, la misma de Terrain Tiles (AWS). Sirve para el relieve, las curvas de nivel y la capa de avalanchas.
+
+Puede haber uno solo. Para lo que falte, la app usa las fuentes públicas. Para actualizar el mapa, se reemplaza el archivo: el servidor lo vuelve a abrir solo, sin reiniciar.
+
+**Armar el paquete de Argentina, Chile y Uruguay** (desde una copia del repo, con Node 24+):
+```bash
+cd server
+# Elevación hasta zoom 12: ~160.000 teselas bajadas de AWS Open Data, que permite descarga masiva.
+# Se puede cortar y volver a correr; sigue desde donde quedó.
+npm run maps:elevation -- --out ../deploy/maps/elevation.pmtiles
+# Mapa: Planetiler en Docker. Baja el extracto de Sudamérica de Geofabrik y recorta los tres países.
+# Necesita ~10 GB de RAM libres y ~30 GB de disco temporal; tarda de una a varias horas.
+npm run maps:vector -- ../deploy/maps
+```
+Para otra zona: `--bounds oeste,sur,este,norte` en la elevación, y `AREA=` y `BOUNDS=` en el mapa (ver `server/src/maps/build-vector.sh`).
+
+**Cómo lo usa la app.** En *Mapas offline → Origen de los mapas* se elige entre tres opciones:
+- **Automático** (por defecto): pide cada tesela a este servidor. Si no responde, está sobrecargado (503) o no tiene esa zona, la pide a las fuentes públicas, y deja de lado al servidor por un rato (lo que diga `Retry-After`, o 5 minutos). Una zona más grande que el límite público se baja solo del servidor: si falla a mitad de camino, quedan teselas sin bajar y se completa repitiendo la descarga más tarde.
+- **Solo mi servidor.**
+- **Solo servidores públicos**, como antes.
+
+API: `GET /api/maps` informa los archivos (zooms, zona, fecha) y los límites, y `GET /api/maps/{vector|elevation}/z/x/y` entrega una tesela (204 si no hay datos en ese lugar). Las teselas del mapa salen comprimidas tal como están en el archivo (`Content-Encoding: gzip`).
 
 ## Mantenimiento
 
