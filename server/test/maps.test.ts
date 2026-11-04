@@ -145,6 +145,25 @@ describe('Rutas de mapas', () => {
     await a.close();
   });
 
+  it('muchos pedidos juntos al arrancar abren el archivo una sola vez', async () => {
+    const opens: unknown[] = [];
+    const original = PmtilesReader.open;
+    PmtilesReader.open = async (path: string) => {
+      const r = await original.call(PmtilesReader, path);
+      opens.push(r);
+      return r;
+    };
+    try {
+      const maps = createMapsService(mapsDir);
+      const tiles = await Promise.all(Array.from({ length: 20 }, () => maps.tile('vector', 1, 0, 1)));
+      assert.ok(tiles.every((t) => t && gunzipSync(t.data).toString() === 'sur'));
+      assert.equal(opens.length, 1);
+      await maps.close();
+    } finally {
+      PmtilesReader.open = original;
+    }
+  });
+
   it('sin carpeta de mapas no tiene nada que ofrecer', async () => {
     const a = await app({ mapsDir: null });
     const info = (await a.inject({ url: '/api/maps' })).json();

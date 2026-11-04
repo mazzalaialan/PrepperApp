@@ -31,25 +31,33 @@ export interface MapsService {
 }
 
 export function createMapsService(dir: string | null): MapsService {
-  const open = new Map<MapKind, { reader: PmtilesReader; mtimeMs: number }>();
+  type Open = { reader: PmtilesReader; mtimeMs: number };
+  // Se guarda la promesa de apertura: si llegan muchas peticiones juntas
+  // (la app pide decenas de teselas a la vez), todas comparten la misma
+  // apertura en lugar de abrir el archivo varias veces y dejar handles sueltos.
+  const open = new Map<MapKind, { mtimeMs: number; ready: Promise<Open> }>();
 
-  async function reader(kind: MapKind): Promise<{ reader: PmtilesReader; mtimeMs: number } | null> {
+  async function reader(kind: MapKind): Promise<Open | null> {
     if (!dir) return null;
+    const path = join(dir, MAP_FILES[kind]);
     let mtimeMs: number;
     try {
-      mtimeMs = statSync(join(dir, MAP_FILES[kind])).mtimeMs;
+      mtimeMs = statSync(path).mtimeMs;
     } catch {
       return null;
     }
     const current = open.get(kind);
-    if (current && current.mtimeMs === mtimeMs) return current;
+    if (current && current.mtimeMs === mtimeMs) return current.ready;
     if (current) {
       open.delete(kind);
-      void current.reader.close().catch(() => undefined);
+      void current.ready.then((o) => o.reader.close()).catch(() => undefined);
     }
-    const next = { reader: await PmtilesReader.open(join(dir, MAP_FILES[kind])), mtimeMs };
-    open.set(kind, next);
-    return next;
+    const entry = { mtimeMs, ready: PmtilesReader.open(path).then((reader) => ({ reader, mtimeMs })) };
+    open.set(kind, entry);
+    entry.ready.catch(() => {
+      if (open.get(kind) === entry) open.delete(kind);
+    });
+    return entry.ready;
   }
 
   return {
@@ -64,8 +72,9 @@ export function createMapsService(dir: string | null): MapsService {
       return r ? r.reader.tile(z, x, y) : null;
     },
     async close() {
-      await Promise.all([...open.values()].map((o) => o.reader.close()));
+      const all = [...open.values()];
       open.clear();
+      await Promise.all(all.map((o) => o.ready.then((r) => r.reader.close()).catch(() => undefined)));
     },
   };
 }
