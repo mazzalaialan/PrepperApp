@@ -55,8 +55,8 @@ function base64UrlToBytes(s: string): Uint8Array<ArrayBuffer> {
 }
 
 function prefs() {
-  const { language, notifyHour, updateNotices } = useSettings.getState().settings;
-  return { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, notifyHour, language, updates: updateNotices };
+  const { language, notifyHour, updateNotices, hazardNotices } = useSettings.getState().settings;
+  return { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, notifyHour, language, updates: updateNotices, hazards: hazardNotices };
 }
 
 async function registerPush(serverUrl: string): Promise<PushRegistration> {

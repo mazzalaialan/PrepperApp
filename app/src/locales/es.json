@@ -801,7 +801,7 @@
     "source": "Pronóstico de Open-Meteo para {{place}}. Se guarda en el dispositivo para verlo sin conexión."
   },
   "rainAlerts": {
-    "backgroundOn": "Con la app cerrada te avisa el servidor de lluvia y de rayos a menos de 30 km, en estos waypoints y, si está activado en Ajustes → Notificaciones, donde estás.",
+    "backgroundOn": "Con la app cerrada te avisa el servidor de lluvia, de rayos a menos de 30 km y de peligros naturales cerca (sismos, incendios, inundaciones, ciclones y erupciones), en estos waypoints y, si está activado en Ajustes → Notificaciones, donde estás.",
     "title": "Avisos de lluvia",
     "here": "Avisarme si va a llover donde estoy",
     "noWaypoints": "Para recibir avisos de un lugar guardado, activalos en la ficha de ese waypoint.",
@@ -1073,7 +1073,7 @@
     "notes": "Notas",
     "copy": "Copiar coordenadas",
     "alerts": "Avisos",
-    "rainAlerts": "Avisarme de lluvia y rayos en este punto",
+    "rainAlerts": "Avisarme de lluvia, rayos y peligros naturales en este punto",
     "lightningSoon": "Los avisos de rayos llegan con el servidor propio.",
     "confirmDelete": "¿Eliminar el punto \"{{name}}\"?",
     "navigation": "Cómo llegar",
@@ -1210,6 +1210,8 @@
   "notifications": {
     "serverLocationHint": "El servidor recibe la última ubicación que leyó la app abierta (solo si ya le diste permiso de GPS), redondeada a ~1 km, y te avisa con la app cerrada si va a llover o caen rayos a menos de 30 km. Con la app cerrada el celular no le da el GPS a la app: una ubicación de más de 24 horas no se usa. Si estás cerca de un waypoint con aviso, avisa solo el waypoint. Al apagarlo, el servidor la borra.",
     "serverLocation": "Usar mi última ubicación conocida para avisos de lluvia y rayos",
+    "hazards": "Avisarme de sismos, incendios, inundaciones, ciclones y erupciones cerca",
+    "hazardsHint": "En los mismos lugares que lluvia y rayos (los waypoints con aviso y donde estás). Sismos de USGS: de magnitud 3,5 a menos de 40 km, de 4 a 100 km, de 5 a 300 km, de 6 a 600 km y de 7 o más a 1500 km. Incendios, inundaciones, ciclones y erupciones de GDACS (ONU y Comisión Europea): alerta verde a menos de 100 km, naranja a 500 km y roja a 800 km. Cada evento se avisa una vez (otra vez si empeora). Son avisos informativos, no oficiales.",
     "updates": "Avisarme de actualizaciones importantes de la app",
     "updatesHint": "Solo cuando una versión trae algo importante, no en cada actualización. El aviso no lleva ningún dato tuyo.",
     "title": "Notificaciones",

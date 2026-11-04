@@ -70,6 +70,7 @@ La app queda servida en `https://TU_DOMINIO/` y se puede instalar desde ahí.
 | `WEATHER_URL` | `https://api.open-meteo.com` | Pronóstico para los avisos de lluvia (API compatible con Open-Meteo; puede ser una instancia propia) |
 | `RAIN_INTERVAL_MINUTES` | `15` | Cada cuánto revisa la lluvia en los lugares con aviso |
 | `RAIN_HERE_MAX_AGE_HOURS` | `24` | Hasta qué antigüedad usa la última ubicación conocida para "donde estoy" (lluvia y rayos) |
+| `HAZARDS_ENABLED` | `true` | Avisos de peligros naturales cerca (sismos de USGS y eventos de GDACS). |
 | `RAIN_OBSERVED` | `true` | Lluvia estimada con el infrarrojo del GOES-19 en los avisos (además del pronóstico) |
 | `LIGHTNING_ENABLED` | `true` | Avisos de rayos (GOES-19 GLM); `false` los apaga |
 | `LIGHTNING_INTERVAL_SECONDS` | `20` | Cada cuánto busca rayos nuevos (el satélite saca un archivo cada 20 s) |
@@ -116,6 +117,7 @@ docker compose logs -f vikarg
 - **Lluvia estimada propia:** mientras tanto, el servidor estima la lluvia con el infrarrojo del GOES-19 (banda 13), leyendo solo las franjas que cubren los lugares con aviso (~400 KB cada 10 minutos por franja). Si en el lugar el satélite ve lluvia, el aviso es "está lloviendo" con la intensidad estimada. Es orientativa: nubes altas muy frías que no llueven pueden dar falsas alarmas. En el mapa del tiempo, la capa "Lluvia estimada (satélite)" muestra la misma estimación para toda la región: mientras alguien la mira, cada 10 minutos el servidor lee la región entera (~5,4 MB) y arma una imagen de ~30 KB. `RAIN_OBSERVED=false` la apaga (avisos y mapa).
 - Es pronóstico, no radar: en Argentina el horario es orientativo, con margen de una hora. La fuente es intercambiable (`server/src/rain/source.ts`), para sumar lluvia observada (GOES-19 o el radar del SMN) más adelante.
 
+- **Peligros naturales:** en los mismos lugares, el servidor avisa de sismos (USGS, `2.5_day.geojson`, ~50 KB cada 5 minutos) y de incendios forestales, inundaciones, ciclones y erupciones (GDACS, de la ONU y la Comisión Europea; cada 30 minutos, las páginas con eventos vigentes, ~270 KB). Solo si hay lugares con aviso. Los sismos se avisan según la magnitud: 3,5 a menos de 40 km, 4 a 100 km, 5 a 300 km, 6 a 600 km y 7 o más a 1500 km, y solo si son de las últimas 3 horas. Los de GDACS: alerta verde a menos de 100 km, naranja a 500 km y roja a 800 km. Cada evento se avisa una vez por lugar, y otra vez si sube de nivel (tabla `hazard_notices`, se limpia a los 30 días). Se apagan por dispositivo en **Ajustes → Notificaciones**, y en todo el servidor con `HAZARDS_ENABLED=false`.
 - Son **avisos informativos, no alertas oficiales**. En Argentina, la emisión de alertas meteorológicas y avisos oficiales a la población es competencia exclusiva del SMN: la app lo aclara en Clima, el mapa del clima, Notificaciones y Acerca de, y cada notificación de lluvia o rayos lo dice al final.
 
 ## Avisos de actualizaciones importantes

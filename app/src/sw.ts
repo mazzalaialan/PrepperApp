@@ -8,7 +8,9 @@ import {
   rainNotification,
   testNotification,
   updateNotification,
+  hazardNotification,
   type AlertSummary,
+  type HazardPush,
   type LightningPush,
   type RainPush,
   type UpdatePush,
@@ -54,7 +56,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -73,6 +75,18 @@ self.addEventListener('push', (event) => {
           renotify: true,
           vibrate: [300, 150, 300, 150, 300],
           data: { url: '#/weather/forecast' },
+        } as NotificationOptions);
+      } else if (payload.type === 'hazard' && payload.hazard) {
+        const { title, body } = hazardNotification(payload.hazard, lang);
+        const urgent = payload.hazard.tsunami || payload.hazard.level === 'Red' || (payload.hazard.magnitude ?? 0) >= 6;
+        await self.registration.showNotification(title, {
+          body,
+          icon: ICON,
+          badge: ICON,
+          tag: `hazard-${payload.hazard.placeId}-${payload.hazard.kind}`,
+          renotify: true,
+          ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
+          data: { url: '#/weather/map' },
         } as NotificationOptions);
       } else if (payload.type === 'update' && payload.update) {
         // Al abrir la app, el service worker baja la versión nueva (y la app ofrece actualizar).

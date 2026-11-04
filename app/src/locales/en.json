@@ -801,7 +801,7 @@
     "source": "Open-Meteo forecast for {{place}}. Saved on this device to view offline."
   },
   "rainAlerts": {
-    "backgroundOn": "With the app closed the server warns you about rain and lightning within 30 km, at these waypoints and, if enabled in Settings → Notifications, where you are.",
+    "backgroundOn": "With the app closed the server warns you about rain, lightning within 30 km and nearby natural hazards (earthquakes, wildfires, floods, cyclones and eruptions), at these waypoints and, if enabled in Settings → Notifications, where you are.",
     "title": "Rain alerts",
     "here": "Warn me if it's going to rain where I am",
     "noWaypoints": "To get alerts for a saved place, turn them on in that waypoint's page.",
@@ -1073,7 +1073,7 @@
     "notes": "Notes",
     "copy": "Copy coordinates",
     "alerts": "Alerts",
-    "rainAlerts": "Warn me about rain and lightning at this point",
+    "rainAlerts": "Warn me about rain, lightning and natural hazards at this point",
     "lightningSoon": "Lightning alerts will come with your own server.",
     "confirmDelete": "Delete the point \"{{name}}\"?",
     "navigation": "How to get there",
@@ -1210,6 +1210,8 @@
   "notifications": {
     "serverLocationHint": "The server receives the last location read with the app open (only if you already allowed GPS), rounded to ~1 km, and warns you with the app closed about rain or lightning within 30 km. With the app closed the phone doesn't give GPS to the app: a location older than 24 hours is not used. If you are near a waypoint with alerts, only the waypoint alerts. Turning it off makes the server delete it.",
     "serverLocation": "Use my last known location for rain and lightning alerts",
+    "hazards": "Tell me about nearby earthquakes, wildfires, floods, cyclones and eruptions",
+    "hazardsHint": "At the same places as rain and lightning (waypoints with notices and where you are). USGS earthquakes: magnitude 3.5 within 40 km, 4 within 100 km, 5 within 300 km, 6 within 600 km and 7 or more within 1500 km. Wildfires, floods, cyclones and eruptions from GDACS (UN and European Commission): green alert within 100 km, orange within 500 km and red within 800 km. Each event is notified once (again if it gets worse). These are informational, not official.",
     "updates": "Tell me about important app updates",
     "updatesHint": "Only when a version brings something important, not on every update. The notice carries none of your data.",
     "title": "Notifications",

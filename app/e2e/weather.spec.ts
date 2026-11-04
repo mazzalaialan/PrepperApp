@@ -214,7 +214,7 @@ test('aviso de lluvia por waypoint, activado desde su ficha', async ({ page, con
   await page.goto('/#/orientation/waypoints/new');
   await page.getByLabel('Nombre').fill('Refugio');
   await page.getByLabel('Coordenadas').fill('-41.13, -71.31');
-  await page.getByLabel('Avisarme de lluvia y rayos en este punto').check();
+  await page.getByLabel('Avisarme de lluvia, rayos y peligros naturales en este punto').check();
   await page.getByRole('button', { name: 'Guardar' }).click();
 
   // El vigilante revisa enseguida y muestra el aviso arriba, en cualquier pantalla.
@@ -229,7 +229,7 @@ test('aviso de lluvia por waypoint, activado desde su ficha', async ({ page, con
   // Desactivado en la ficha, deja de figurar.
   await page.goto('/#/orientation/waypoints');
   await page.getByRole('link', { name: /^Refugio/ }).first().click();
-  await page.getByLabel('Avisarme de lluvia y rayos en este punto').uncheck();
+  await page.getByLabel('Avisarme de lluvia, rayos y peligros naturales en este punto').uncheck();
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.goto('/#/weather/forecast');
   await expect(page.getByText('Para recibir avisos de un lugar guardado')).toBeVisible();

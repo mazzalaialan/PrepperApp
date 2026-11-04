@@ -267,10 +267,19 @@ export function parseHazards(json: { features: GdacsFeature[] }): Hazard[] {
     }));
 }
 
+const GDACS_LIST = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC;FL;DR;WF;VO&alertlevel=green;orange;red';
+/** GDACS devuelve de a 100 (los vigentes primero): se siguen pidiendo páginas mientras haya vigentes. */
+const GDACS_MAX_PAGES = 4;
+
 export async function fetchHazards(): Promise<Hazard[]> {
-  return parseHazards(
-    await getJson('https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC;FL;DR;WF;VO&alertlevel=green;orange;red', 'hazards'),
-  );
+  const features: GdacsFeature[] = [];
+  for (let page = 1; page <= GDACS_MAX_PAGES; page++) {
+    const json = await getJson<{ features?: (GdacsFeature & { properties: { iscurrent?: string } })[] }>(`${GDACS_LIST}&pagenumber=${page}`, 'hazards');
+    const batch = json.features ?? [];
+    features.push(...batch.filter((f) => f.properties.iscurrent !== 'false'));
+    if (batch.length < 100 || !batch.some((f) => f.properties.iscurrent === 'true')) break;
+  }
+  return parseHazards({ features });
 }
 
 // ---------- Clima por zona (Open-Meteo) ----------

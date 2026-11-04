@@ -17,7 +17,7 @@ const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
 export function NotificationsSection() {
   const { t } = useTranslation();
-  const { notificationsEnabled, notifyHour, serverUrl, serverLocation, updateNotices } = useSettings((s) => s.settings);
+  const { notificationsEnabled, notifyHour, serverUrl, serverLocation, updateNotices, hazardNotices } = useSettings((s) => s.settings);
   const update = useSettings((s) => s.update);
   const [state, setState] = useState<NotificationState | null>(null);
   const [result, setResult] = useState<EnableResult | null>(null);
@@ -89,6 +89,11 @@ export function NotificationsSection() {
                 {t('notifications.serverLocation')}
               </label>
               <p className="hint" style={{ margin: 0 }} data-testid="server-location-hint">{t('notifications.serverLocationHint')}</p>
+              <label className="check">
+                <input type="checkbox" checked={hazardNotices} onChange={(e) => void update({ hazardNotices: e.target.checked }).then(syncPushAlerts)} />
+                {t('notifications.hazards')}
+              </label>
+              <p className="hint" style={{ margin: 0 }}>{t('notifications.hazardsHint')}</p>
               <OfficialWeatherNotice />
               <label className="check">
                 <input type="checkbox" checked={updateNotices} onChange={(e) => void update({ updateNotices: e.target.checked }).then(syncPushAlerts)} />

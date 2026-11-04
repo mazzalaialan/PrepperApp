@@ -52,6 +52,8 @@ const prefsProperties = {
   language: { type: 'string', enum: ['es', 'en'] },
   /** Avisos de actualizaciones importantes (por defecto, sí). */
   updates: { type: 'boolean' },
+  /** Avisos de peligros naturales cerca (por defecto, sí). */
+  hazards: { type: 'boolean' },
 } as const;
 
 const alertSchema = {
@@ -71,6 +73,7 @@ interface Prefs {
   notifyHour: number;
   language: 'es' | 'en';
   updates?: boolean;
+  hazards?: boolean;
 }
 
 interface AlertInput {
@@ -104,15 +107,15 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
       },
     },
     async (req, reply) => {
-      const { subscription, timezone, notifyHour, language, updates } = req.body;
+      const { subscription, timezone, notifyHour, language, updates, hazards } = req.body;
       if (!isValidTimeZone(timezone)) return reply.code(400).send({ error: 'invalid-timezone' });
       const id = randomUUID();
       const token = randomBytes(32).toString('base64url');
       const now = new Date().toISOString();
       db.prepare(
-        `INSERT INTO devices (id, token_hash, subscription, timezone, notify_hour, language, updates, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).run(id, hashToken(token).toString('hex'), JSON.stringify(subscription), timezone, notifyHour, language, updates === false ? 0 : 1, now, now);
+        `INSERT INTO devices (id, token_hash, subscription, timezone, notify_hour, language, updates, hazards, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(id, hashToken(token).toString('hex'), JSON.stringify(subscription), timezone, notifyHour, language, updates === false ? 0 : 1, hazards === false ? 0 : 1, now, now);
       // El token se devuelve una sola vez; el servidor solo guarda su hash.
       return reply.code(201).send({ deviceId: id, token });
     },
@@ -137,7 +140,7 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
     async (req, reply) => {
       if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
       const { id } = req.params;
-      const { subscription, timezone, notifyHour, language, updates, alerts } = req.body;
+      const { subscription, timezone, notifyHour, language, updates, hazards, alerts } = req.body;
       if (timezone && !isValidTimeZone(timezone)) return reply.code(400).send({ error: 'invalid-timezone' });
 
       db.exec('BEGIN');
@@ -149,6 +152,7 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
              notify_hour = COALESCE(?, notify_hour),
              language = COALESCE(?, language),
              updates = COALESCE(?, updates),
+             hazards = COALESCE(?, hazards),
              updated_at = ?
            WHERE id = ?`,
         ).run(
@@ -157,6 +161,7 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
           notifyHour ?? null,
           language ?? null,
           updates === undefined ? null : updates ? 1 : 0,
+          hazards === undefined ? null : hazards ? 1 : 0,
           new Date().toISOString(),
           id,
         );

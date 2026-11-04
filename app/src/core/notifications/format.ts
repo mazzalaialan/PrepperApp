@@ -34,6 +34,14 @@ const TEXT = {
     dirs: ['norte', 'noreste', 'este', 'sudeste', 'sur', 'sudoeste', 'oeste', 'noroeste'],
     informative: 'Aviso informativo, no oficial: las alertas oficiales son del SMN.',
     updateTap: 'Tocá para abrir la app y actualizarla.',
+    quake: (mag: string, km: number, dir: string, place: string) => `Sismo de magnitud ${mag} a ${km} km al ${dir} · ${place}`,
+    quakeBody: (where: string) => `${where}. Datos de USGS (Servicio Geológico de EE. UU.), sin revisar por el INPRES.`,
+    tsunami: 'USGS indica posible tsunami: si estás cerca de la costa, alejate y buscá un lugar alto.',
+    hazard: (kind: string, km: number, dir: string, place: string) => `${kind} a ${km} km al ${dir} · ${place}`,
+    hazardKinds: { TC: 'Ciclón tropical', FL: 'Inundación', WF: 'Incendio forestal', VO: 'Erupción volcánica' },
+    hazardBody: (name: string, level: string) => `${name}. Alerta ${level} de GDACS (ONU y Comisión Europea).`,
+    levels: { Green: 'verde', Orange: 'naranja', Red: 'roja' },
+    hazardInformative: 'Aviso informativo, no oficial: seguí las indicaciones de los organismos oficiales (INPRES, SMN, Protección Civil).',
   },
   en: {
     title: (n: number) => (n === 1 ? '1 pending alert' : `${n} pending alerts`),
@@ -57,6 +65,14 @@ const TEXT = {
     dirs: ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'],
     informative: 'Informational, not official: official alerts come from the SMN.',
     updateTap: 'Tap to open the app and update it.',
+    quake: (mag: string, km: number, dir: string, place: string) => `Magnitude ${mag} earthquake ${km} km ${dir} · ${place}`,
+    quakeBody: (where: string) => `${where}. Data from USGS, not reviewed by the national seismic agency.`,
+    tsunami: 'USGS reports a possible tsunami: if you are near the coast, move away and to high ground.',
+    hazard: (kind: string, km: number, dir: string, place: string) => `${kind} ${km} km ${dir} · ${place}`,
+    hazardKinds: { TC: 'Tropical cyclone', FL: 'Flood', WF: 'Wildfire', VO: 'Volcanic eruption' },
+    hazardBody: (name: string, level: string) => `${name}. GDACS ${level} alert (UN and European Commission).`,
+    levels: { Green: 'green', Orange: 'orange', Red: 'red' },
+    hazardInformative: 'Informational, not official: follow the instructions of the official agencies.',
   },
 } as const;
 
@@ -129,6 +145,38 @@ function lastFixNote(fixAt: string | null, lang: Lang, now: number): string {
   if (minutes < 30) return '';
   const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
   return `\n${TEXT[lang].lastFix(minutes < 90 ? rtf.format(-minutes, 'minute') : rtf.format(-Math.round(minutes / 60), 'hour'))}`;
+}
+
+/** Peligro natural cerca que manda el servidor (ver server/src/hazards/watch.ts). */
+export interface HazardPush {
+  placeId: string;
+  label: string | null;
+  fixAt: string | null;
+  kind: 'quake' | 'TC' | 'FL' | 'WF' | 'VO';
+  name: string;
+  distanceKm: number;
+  bearing: number;
+  magnitude?: number;
+  tsunami?: boolean;
+  level?: 'Green' | 'Orange' | 'Red';
+  url: string;
+}
+
+export function hazardNotification(h: HazardPush, lang: Lang, now = Date.now()): { title: string; body: string } {
+  const tx = TEXT[lang];
+  const dir = tx.dirs[Math.round((((h.bearing % 360) + 360) % 360) / 45) % 8]!;
+  const place = h.label ?? tx.here;
+  const km = Math.max(1, h.distanceKm);
+  const fix = lastFixNote(h.fixAt, lang, now);
+  if (h.kind === 'quake') {
+    const mag = new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(h.magnitude ?? 0);
+    const tsunami = h.tsunami ? `\n${tx.tsunami}` : '';
+    return { title: tx.quake(mag, km, dir, place), body: tx.quakeBody(h.name) + tsunami + fix + `\n${tx.hazardInformative}` };
+  }
+  return {
+    title: tx.hazard(tx.hazardKinds[h.kind], km, dir, place),
+    body: tx.hazardBody(h.name, tx.levels[h.level ?? 'Green']) + fix + `\n${tx.hazardInformative}`,
+  };
 }
 
 export function lightningNotification(l: LightningPush, lang: Lang, now = Date.now()): { title: string; body: string } {

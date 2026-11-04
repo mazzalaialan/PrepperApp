@@ -616,3 +616,8 @@ Ninguno. Documento aprobado para iniciar F0.
 ## Aclaración del SMN (avisos meteorológicos)
 
 El Servicio Meteorológico Nacional pidió aclarar (2026-11) que, según el marco normativo vigente, la emisión de alertas meteorológicas y avisos oficiales a la población en Argentina es competencia exclusiva del SMN, y que las herramientas de terceros pueden usar datos meteorológicos como insumo informativo pero no sustituir, emitir ni superponerse con el Sistema de Alerta Temprana (SAT) ni con sus funciones de vigilancia. La app lo muestra (`ui/OfficialWeatherNotice.tsx`, clave `legal.smn`, con enlace a smn.gob.ar/alertas) en Clima, el mapa del clima, Notificaciones y Acerca de, y cada notificación de lluvia o rayos termina con "Aviso informativo, no oficial: las alertas oficiales son del SMN.". Los textos de la app hablan de "avisos" informativos, nunca de alertas oficiales. La API del SMN es paga: por ahora no se usa.
+
+## Avisos de peligros naturales (servidor)
+
+`server/src/hazards/`: con los mismos lugares que lluvia y rayos (`rain_places`), avisa sismos de USGS y eventos de GDACS (incendio forestal, inundación, ciclón tropical, erupción; la sequía no, porque no es urgente) con distancia y rumbo. El radio crece con la magnitud o el nivel de alerta (ver docs/SERVIDOR.md). Cada evento se avisa una vez por lugar y otra si empeora (`hazard_notices`). Se apaga por dispositivo (`devices.hazards`, `hazardNotices` en la app). La notificación (`hazardNotification`) lleva la fuente y la aclaración de que es informativa; los sismos fuertes, con posible tsunami o con alerta roja vibran más y quedan fijos hasta tocarlos. GDACS devuelve de a 100 eventos, los vigentes primero: el servidor y el mapa del clima piden páginas mientras haya vigentes.
+

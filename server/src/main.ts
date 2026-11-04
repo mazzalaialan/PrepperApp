@@ -12,6 +12,8 @@ import { createRainMapStore, RAIN_MAP_ACTIVE_MS, updateRainMap } from './rain/ma
 import { irObserver, withObservedRain } from './rain/observer.ts';
 import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
+import { fetchGdacs, fetchQuakes, type HazardEvent } from './hazards/sources.ts';
+import { HAZARD_DEFAULTS, runHazardWatch } from './hazards/watch.ts';
 
 const config = loadConfig();
 const db = openDb(config.dataDir);
@@ -116,6 +118,33 @@ async function rainMapTick() {
   }
 }
 
+// Peligros naturales: sismos cada 5 minutos y GDACS cada 30 (cambia despacio), solo si hay lugares con aviso.
+let gdacsEvents: HazardEvent[] = [];
+let gdacsAt = 0;
+async function hazardTick() {
+  if (!config.hazardsEnabled || !hasPlaces(db)) return;
+  try {
+    const quakes = await fetchQuakes().catch((err) => {
+      app.log.warn(err, 'no se pudieron leer los sismos de USGS');
+      return [];
+    });
+    if (Date.now() - gdacsAt > 30 * 60_000) {
+      try {
+        gdacsEvents = await fetchGdacs();
+        gdacsAt = Date.now();
+      } catch (err) {
+        app.log.warn(err, 'no se pudieron leer los eventos de GDACS');
+      }
+    }
+    const { sent, removed } = await runHazardWatch(db, push, [...quakes, ...gdacsEvents], new Date(), { ...HAZARD_DEFAULTS, hereMaxAgeMs: config.rainHereMaxAgeMs });
+    if (sent || removed) app.log.info({ sent, removed }, 'avisos de peligros naturales enviados');
+  } catch (err) {
+    app.log.error(err, 'fallaron los avisos de peligros naturales');
+  }
+}
+const hazardTimer = setInterval(() => void hazardTick(), 5 * 60_000);
+setTimeout(() => void hazardTick(), 30_000);
+
 const timer = setInterval(() => void tick(), config.schedulerIntervalMs);
 const rainMapTimer = setInterval(() => void rainMapTick(), 2 * 60_000);
 const observedRainTimer = setInterval(() => void observedRainTick(), 24 * 3_600_000);
@@ -132,6 +161,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     clearInterval(rainMapTimer);
     clearInterval(observedRainTimer);
     clearInterval(lightningTimer);
+    clearInterval(hazardTimer);
     await app.close();
     db.close();
     process.exit(0);

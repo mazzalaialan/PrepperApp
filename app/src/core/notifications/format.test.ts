@@ -72,3 +72,23 @@ describe('aviso de actualización', () => {
     expect(updateNotification(u, 'en').title).toBe('VikArg 0.23 is out');
   });
 });
+
+describe('aviso de peligro natural', () => {
+  const base = { placeId: 'w1', label: 'Casa', fixAt: null, name: '50 km NW of Mendoza', distanceKm: 84, bearing: 300, url: 'u' };
+  it('sismo, con magnitud, distancia y rumbo, y la aclaración de que no es oficial', async () => {
+    const { hazardNotification } = await import('./format');
+    const n = hazardNotification({ ...base, kind: 'quake', magnitude: 5.1 }, 'es');
+    expect(n.title).toBe('Sismo de magnitud 5,1 a 84 km al noroeste · Casa');
+    expect(n.body).toMatch(/^50 km NW of Mendoza\. Datos de USGS/);
+    expect(n.body).toMatch(/no oficial/);
+    expect(n.body).not.toMatch(/tsunami/);
+    expect(hazardNotification({ ...base, kind: 'quake', magnitude: 7, tsunami: true }, 'es').body).toMatch(/posible tsunami/);
+  });
+  it('evento de GDACS con su nivel', async () => {
+    const { hazardNotification } = await import('./format');
+    const n = hazardNotification({ ...base, kind: 'WF', name: 'Incendio en Córdoba', level: 'Orange', label: null }, 'es');
+    expect(n.title).toBe('Incendio forestal a 84 km al noroeste · Donde estás');
+    expect(n.body).toMatch(/^Incendio en Córdoba\. Alerta naranja de GDACS/);
+  });
+});
+

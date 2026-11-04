@@ -55,6 +55,16 @@ const MIGRATIONS = [
      devices INTEGER NOT NULL,
      delivered INTEGER NOT NULL
    );`,
+  // Peligros naturales cerca (sismos, GDACS): se pueden apagar en la app; qué evento ya se avisó en cada lugar y con qué nivel.
+  `ALTER TABLE devices ADD COLUMN hazards INTEGER NOT NULL DEFAULT 1;
+   CREATE TABLE hazard_notices (
+     device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+     place_id TEXT NOT NULL,
+     event_key TEXT NOT NULL,
+     level INTEGER NOT NULL,
+     notified_at INTEGER NOT NULL,
+     PRIMARY KEY (device_id, place_id, event_key)
+   );`,
 ];
 
 export type Db = DatabaseSync;

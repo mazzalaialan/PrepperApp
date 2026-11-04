@@ -29,6 +29,8 @@ export interface Config {
   lightningRadiusKm: number;
   /** Lluvia estimada con el infrarrojo del GOES-19 para los avisos (además del pronóstico). */
   rainObserved: boolean;
+  /** Avisos de peligros naturales (sismos de USGS y eventos de GDACS). */
+  hazardsEnabled: boolean;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -52,5 +54,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     lightningPartial: (env.LIGHTNING_PARTIAL ?? 'true') !== 'false',
     lightningRadiusKm: Number(env.LIGHTNING_RADIUS_KM ?? 30),
     rainObserved: (env.RAIN_OBSERVED ?? 'true') !== 'false',
+    hazardsEnabled: (env.HAZARDS_ENABLED ?? 'true') !== 'false',
   };
 }

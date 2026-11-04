@@ -8,12 +8,26 @@ export interface PushSubscriptionJson {
 
 /** Contenido de la notificación; la app la arma en el idioma del usuario (ver app/src/sw.ts). */
 export interface PushPayload {
-  type: 'alerts' | 'rain' | 'lightning' | 'test' | 'update';
+  type: 'alerts' | 'rain' | 'lightning' | 'test' | 'update' | 'hazard';
   alerts?: { itemName: string; kind: string; dueDate: string | null }[];
   /** Aviso de lluvia en un lugar; `label` null = "donde estoy", y `fixAt` es de cuándo es esa ubicación. */
   rain?: { placeId: string; label: string | null; state: 'raining' | 'soon'; inMinutes: number; mm: number; fixAt: string | null; observedMmH?: number };
   /** Rayo cercano: distancia (km) y rumbo (grados desde el lugar hacia el rayo). */
   lightning?: { placeId: string; label: string | null; distanceKm: number; bearing: number; fixAt: string | null };
+  /** Peligro natural cerca: sismo (USGS) o evento de GDACS, con distancia y rumbo desde el lugar. */
+  hazard?: {
+    placeId: string;
+    label: string | null;
+    fixAt: string | null;
+    kind: 'quake' | 'TC' | 'FL' | 'WF' | 'VO';
+    name: string;
+    distanceKm: number;
+    bearing: number;
+    magnitude?: number;
+    tsunami?: boolean;
+    level?: 'Green' | 'Orange' | 'Red';
+    url: string;
+  };
   /** Actualización importante: la app muestra el texto en su idioma (ver announce.ts). */
   update?: { version: string; title: { es: string; en: string }; body: { es: string; en: string } };
 }

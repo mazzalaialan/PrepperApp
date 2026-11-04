@@ -39,6 +39,8 @@ export interface Settings {
   serverLocation: boolean;
   /** Avisos de actualizaciones importantes de la app (los manda el servidor, a mano; ver server/src/announce.ts). */
   updateNotices: boolean;
+  /** Avisos de peligros naturales cerca (sismos, incendios, inundaciones, ciclones, erupciones), con la app cerrada. */
+  hazardNotices: boolean;
   /** Rojo nocturno automático: nunca, en un horario fijo o desde el anochecer hasta el amanecer. */
   redSchedule: RedSchedule;
   /** Horario fijo, "HH:MM" (si `redFrom` > `redTo`, cruza la medianoche). */
@@ -156,6 +158,7 @@ export const DEFAULT_SETTINGS: Settings = {
   rainAlertsHere: false,
   serverLocation: true,
   updateNotices: true,
+  hazardNotices: true,
   redSchedule: 'off',
   redFrom: '21:00',
   redTo: '07:00',
