@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Copy, Crosshair, Navigation, Trash2 } from 'lucide-react';
 import { useCapability } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, formatDecimal, formatDms, parseCoordinates } from '@/core/geo/geo';
@@ -12,6 +12,14 @@ import { altitudeForInput, altitudeToMeters, altitudeUnit, formatDistance } from
 import { parseNum } from '@/ui/numbers';
 import { GpsStatus, useFormatBearing } from './components';
 import { useWaypoints } from './store';
+
+/** Datos para arrancar un waypoint nuevo desde otra pantalla (p. ej. Mi ubicación), en el estado de la navegación. */
+export interface NewWaypointDraft {
+  lat: number;
+  lon: number;
+  alt: number | null;
+  notes?: string;
+}
 
 export function WaypointEditPage() {
   const { id } = useParams();
@@ -31,7 +39,12 @@ export function WaypointEditPage() {
 }
 
 function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
-  const [initial] = useState(() => stored ?? newEntity<Waypoint>({ name: '', lat: 0, lon: 0, alt: null, icon: 'pin', notes: '', rainAlerts: false }));
+  const draft = useLocation().state as NewWaypointDraft | null;
+  const [initial] = useState(
+    () =>
+      stored ??
+      newEntity<Waypoint>({ name: '', lat: draft?.lat ?? 0, lon: draft?.lon ?? 0, alt: draft?.alt ?? null, icon: 'pin', notes: draft?.notes ?? '', rainAlerts: false }),
+  );
   const isNew = !stored;
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,7 +53,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   const hasGps = useCapability('geolocation');
 
   const [name, setName] = useState(initial.name);
-  const [coords, setCoords] = useState(stored ? formatDecimal(stored) : '');
+  const [coords, setCoords] = useState(stored || draft ? formatDecimal(initial) : '');
   const [alt, setAlt] = useState(altitudeForInput(initial.alt, units));
   const [notes, setNotes] = useState(initial.notes);
   const [rainAlerts, setRainAlerts] = useState(initial.rainAlerts);

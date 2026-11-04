@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, Phone, RefreshCw, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPinPlus, MessageSquare, Phone, RefreshCw, Share2 } from 'lucide-react';
 import { bearingDeg, cardinalOf, distanceMeters, formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useSettings } from '@/core/settings/settings';
 import { CALLS } from '@/modules/firstAid/guides/types';
+import type { NewWaypointDraft } from '@/modules/waypoints/WaypointEditPage';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { describeLocation, type LocationInfo } from './osm';
 import { CopyButton, formatDistance } from './parts';
@@ -113,6 +114,14 @@ export function MyLocationPage() {
               <a className="btn" href={mapUrl} target="_blank" rel="noreferrer">
                 {t('emergency.openMaps')}
               </a>
+              {/* Las coordenadas van en el estado de la navegación, no en la URL (no quedan en el historial). */}
+              <Link
+                className="btn"
+                to="/orientation/waypoints/new"
+                state={{ lat: fix.lat, lon: fix.lon, alt: fix.alt, notes: [info?.address, info?.locality].filter(Boolean).join(', ') } satisfies NewWaypointDraft}
+              >
+                <MapPinPlus size={18} /> {t('location.saveWaypoint')}
+              </Link>
             </div>
           </section>
 

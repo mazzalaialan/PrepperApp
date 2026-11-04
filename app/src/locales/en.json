@@ -468,6 +468,7 @@
     "coordsTitle": "Coordinates",
     "accuracy": "Accuracy ±{{m}} m",
     "altitude": "altitude {{m}} m",
+    "saveWaypoint": "Save as waypoint",
     "copyCoords": "Copy coordinates",
     "referencesTitle": "Landmarks",
     "refresh": "Search again",
