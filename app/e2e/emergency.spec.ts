@@ -152,6 +152,13 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(stations.locator('li').first()).toContainText('AM 590');
   await expect(stations.locator('li').first()).toContainText('FM 95,5');
   await expect(page.getByText('156,800 MHz')).toBeVisible();
+  // Montaña: las de Argentina y Chile juntas (en la cordillera se está a pocos km del otro país).
+  const mountain = page.getByTestId('mountain-frequencies');
+  await expect(mountain).toContainText('Argentina · FEM · emergencias en montaña');
+  await expect(mountain).toContainText('140,970 MHz');
+  await expect(mountain).toContainText('139,970 MHz');
+  await expect(mountain).toContainText('Chile · Cuerpo de Socorro Andino');
+  await expect(mountain).not.toContainText('142,800');
   await expect(page.getByText(/No se incluyen frecuencias de Gendarmería/)).toBeVisible();
 
   // Una frecuencia que me dieron en el refugio, con el lugar donde estoy.

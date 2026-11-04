@@ -22,6 +22,20 @@ const DISTRESS = [
   { id: 'air', freq: '121,500 MHz' },
 ] as const;
 
+/**
+ * Montaña, para Argentina y Chile juntos: en la cordillera se está a pocos km
+ * del otro país. Argentina: FEM (Frecuencia de Emergencias en Montaña) y las
+ * dos de uso libre de la Resolución 5/2015 (Federación Andinistas Argentinos,
+ * 2021). Chile no tiene una frecuencia oficial de montaña: la del Cuerpo de
+ * Socorro Andino sale de guías de montaña, sin confirmación oficial.
+ */
+const MOUNTAIN = [
+  { id: 'fem', country: 'AR', freq: '140,970 MHz' },
+  { id: 'free1', country: 'AR', freq: '139,970 MHz' },
+  { id: 'free2', country: 'AR', freq: '138,510 MHz' },
+  { id: 'csa', country: 'CL', freq: '150,625 MHz' },
+] as const;
+
 export function RadioPage() {
   const { t, i18n } = useTranslation();
   const { place, picker } = usePlacePicker();
@@ -140,6 +154,31 @@ export function RadioPage() {
         </ul>
         <p className="hint" style={{ margin: 0 }}>{t('radio.distressNote')}</p>
       </section>
+
+      {(country === 'AR' || country === 'CL') && (
+        <section className="card stack" aria-labelledby="mountain-title" data-testid="mountain-frequencies">
+          <h2 id="mountain-title" className="section-title" style={{ margin: 0 }}>{t('radio.mountainTitle')}</h2>
+          <p className="hint" style={{ margin: 0 }}>{t('radio.mountainIntro')}</p>
+          <ul className="list">
+            {MOUNTAIN.map((m) => (
+              <li key={m.id} className="contact-row">
+                <span className="list-main">
+                  <span className="list-title">
+                    {t(`country.${m.country}`)} · {t(`radio.mountain.${m.id}.name`)}
+                  </span>
+                  <span className="list-sub">{t(`radio.mountain.${m.id}.desc`)}</span>
+                </span>
+                <span className="contact-actions">
+                  <strong className="radio-freqs">{m.freq}</strong>
+                  <CopyButton text={m.freq} label={t('radio.copyFrequency', { name: t(`radio.mountain.${m.id}.name`) })} />
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="hint" style={{ margin: 0 }}>{t('radio.mountainNote')}</p>
+          <p className="hint" style={{ margin: 0 }}>{t('radio.mountainSources')}</p>
+        </section>
+      )}
 
       <RepeatersSection place={place} />
 

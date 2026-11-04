@@ -572,6 +572,11 @@
       "marine": { "name": "Marine · VHF channel 16", "desc": "Distress at sea and on navigable rivers and lakes. Monitored by the Coast Guard and ships" },
       "air": { "name": "Aviation · emergency", "desc": "Monitored by aircraft and control towers" }
     },
+    "mountainTitle": "Mountain frequencies (Argentina and Chile)",
+    "mountainIntro": "In the Andes you are a few kilometers from the other country: both sides' frequencies are useful. They need a VHF radio (dual-band handhelds, 144 to 174 MHz); UHF walkie-talkies cannot reach them.",
+    "mountain": {"fem": {"name": "FEM · mountain emergencies", "desc": "Emergencies only: keep it clear. Monitor it whenever you are in the mountains. Once contact is made, move to 139.970 or 138.510 to talk."}, "free1": {"name": "Free use · general communication", "desc": "To talk between groups and expeditions, and to continue after a call on 140.970."}, "free2": {"name": "Free use · secondary", "desc": "Another free-use channel, if 139.970 is busy."}, "csa": {"name": "Cuerpo de Socorro Andino", "desc": "Listed in mountain guides as the Chilean Andean Rescue Corps frequency; we found no official confirmation. Chile has no official mountain frequency: on the Chilean side of the Andes, also monitor 140.970."}},
+    "mountainNote": "The three Argentine ones are free to use without a license under Resolution 5/2015 (in Argentina). Outside an emergency, transmitting on other frequencies or on the Chilean side requires the proper authorization. A radio does not replace calling 911, the ranger station or 131 if there is signal.",
+    "mountainSources": "Sources: Federación Andinistas Argentinos (FEM, 2021), Club Andino Mercedario (2024) and Wikiexplora. Confirm the ones for your area at the hut or ranger station and save them in \"My frequencies\".",
     "distressNote": "Transmitting needs a radio for that band. Use them only when a life is truly at risk: a false call is a crime.",
     "hamTitle": "Amateur radio",
     "hamText": "Radio amateurs set up emergency networks when communications fail (for example, in the 2013 La Plata floods). Transmitting requires an ENACOM license; Radio Club Argentino and local clubs run the courses. Nearby repeaters will be added once your own server is set up.",
