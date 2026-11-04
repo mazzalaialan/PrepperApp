@@ -7,9 +7,11 @@ import {
   lightningNotification,
   rainNotification,
   testNotification,
+  updateNotification,
   type AlertSummary,
   type LightningPush,
   type RainPush,
+  type UpdatePush,
 } from '@/core/notifications/format';
 import { selectNotifiable } from '@/core/notifications/notifiable';
 import { readNotificationState, updateNotificationState } from '@/core/notifications/state';
@@ -52,7 +54,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -72,6 +74,10 @@ self.addEventListener('push', (event) => {
           vibrate: [300, 150, 300, 150, 300],
           data: { url: '#/weather/forecast' },
         } as NotificationOptions);
+      } else if (payload.type === 'update' && payload.update) {
+        // Al abrir la app, el service worker baja la versión nueva (y la app ofrece actualizar).
+        const { title, body } = updateNotification(payload.update, lang);
+        await self.registration.showNotification(title, { body, icon: ICON, badge: ICON, tag: 'vikarg-update', data: { url: '' } });
       } else if (payload.type === 'alerts' && payload.alerts?.length) {
         const { title, body } = alertsNotification(payload.alerts, lang, today());
         await show(title, body);

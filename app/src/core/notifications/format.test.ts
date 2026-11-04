@@ -63,3 +63,12 @@ describe('texto de notificaciones', () => {
     expect(rainNotification(rain, 'es').body).toBe('El satélite ve lluvia de unos 6,2 mm/h ahora (estimación por infrarrojo, orientativa).\nAviso informativo, no oficial: las alertas oficiales son del SMN.');
   });
 });
+
+describe('aviso de actualización', () => {
+  it('en el idioma del usuario, con la indicación para actualizar', async () => {
+    const { updateNotification } = await import('./format');
+    const u = { version: '0.23.0', title: { es: 'VikArg 0.23', en: 'VikArg 0.23 is out' }, body: { es: 'Avisos de actualizaciones.', en: 'Update notices.' } };
+    expect(updateNotification(u, 'es')).toEqual({ title: 'VikArg 0.23', body: 'Avisos de actualizaciones.\nTocá para abrir la app y actualizarla.' });
+    expect(updateNotification(u, 'en').title).toBe('VikArg 0.23 is out');
+  });
+});

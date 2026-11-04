@@ -1207,6 +1207,8 @@
   "notifications": {
     "serverLocationHint": "El servidor recibe la última ubicación que leyó la app abierta (solo si ya le diste permiso de GPS), redondeada a ~1 km, y te avisa con la app cerrada si va a llover o caen rayos a menos de 30 km. Con la app cerrada el celular no le da el GPS a la app: una ubicación de más de 24 horas no se usa. Si estás cerca de un waypoint con aviso, avisa solo el waypoint. Al apagarlo, el servidor la borra.",
     "serverLocation": "Usar mi última ubicación conocida para avisos de lluvia y rayos",
+    "updates": "Avisarme de actualizaciones importantes de la app",
+    "updatesHint": "Solo cuando una versión trae algo importante, no en cada actualización. El aviso no lleva ningún dato tuyo.",
     "title": "Notificaciones",
     "intro": "Avisos de vencimientos y faltantes. Solo se avisa lo nuevo, no se repite todos los días.",
     "unsupported": "Este navegador no admite notificaciones. Las alertas se ven al abrir la app.",

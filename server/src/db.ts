@@ -47,6 +47,14 @@ const MIGRATIONS = [
    );`,
   // Avisos de rayos en los mismos lugares: cuándo se avisó por última vez (como mucho uno cada 10 minutos).
   `ALTER TABLE rain_places ADD COLUMN lightning_notified_at INTEGER;`,
+  // Avisos de actualizaciones importantes (se pueden apagar en la app) y qué versiones ya se anunciaron.
+  `ALTER TABLE devices ADD COLUMN updates INTEGER NOT NULL DEFAULT 1;
+   CREATE TABLE announcements (
+     version TEXT PRIMARY KEY,
+     sent_at TEXT NOT NULL,
+     devices INTEGER NOT NULL,
+     delivered INTEGER NOT NULL
+   );`,
 ];
 
 export type Db = DatabaseSync;

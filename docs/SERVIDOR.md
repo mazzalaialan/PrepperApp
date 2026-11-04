@@ -116,6 +116,23 @@ docker compose logs -f vikarg
 - **Lluvia estimada propia:** mientras tanto, el servidor estima la lluvia con el infrarrojo del GOES-19 (banda 13), leyendo solo las franjas que cubren los lugares con aviso (~400 KB cada 10 minutos por franja). Si en el lugar el satélite ve lluvia, el aviso es "está lloviendo" con la intensidad estimada. Es orientativa: nubes altas muy frías que no llueven pueden dar falsas alarmas. En el mapa del tiempo, la capa "Lluvia estimada (satélite)" muestra la misma estimación para toda la región: mientras alguien la mira, cada 10 minutos el servidor lee la región entera (~5,4 MB) y arma una imagen de ~30 KB. `RAIN_OBSERVED=false` la apaga (avisos y mapa).
 - Es pronóstico, no radar: en Argentina el horario es orientativo, con margen de una hora. La fuente es intercambiable (`server/src/rain/source.ts`), para sumar lluvia observada (GOES-19 o el radar del SMN) más adelante.
 
+- Son **avisos informativos, no alertas oficiales**. En Argentina, la emisión de alertas meteorológicas y avisos oficiales a la población es competencia exclusiva del SMN: la app lo aclara en Clima, el mapa del clima, Notificaciones y Acerca de, y cada notificación de lluvia o rayos lo dice al final.
+
+## Avisos de actualizaciones importantes
+
+No salen solos con cada versión: se mandan a mano, solo cuando una versión trae algo importante. Llegan a los dispositivos con notificaciones que no apagaron **Ajustes → Notificaciones → "Avisarme de actualizaciones importantes de la app"** (viene prendido). Al tocarlo se abre la app, que baja la versión nueva. Cada versión se anuncia una sola vez: el servidor anota cuáles ya mandó (tabla `announcements`).
+
+```bash
+cd PrepperApp/deploy
+# Prueba: cuántos dispositivos lo recibirían, sin mandar nada.
+docker compose exec vikarg node src/announce.ts --version 0.23.0 \
+  --title-es "VikArg 0.23" --body-es "Ahora te avisamos de las actualizaciones importantes." \
+  --title-en "VikArg 0.23" --body-en "We now let you know about important updates." --dry-run
+# El envío: lo mismo sin --dry-run. Para repetir una versión ya anunciada, --force.
+```
+
+Título hasta 80 caracteres y texto hasta 300, en español y en inglés (cada celular muestra el de su idioma). El comando dice cuántos se entregaron y borra las suscripciones que ya no existen.
+
 ## Seguridad
 
 - Cada dispositivo recibe un token propio al registrarse. El servidor guarda solo su hash.

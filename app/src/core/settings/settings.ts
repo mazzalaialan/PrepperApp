@@ -37,6 +37,8 @@ export interface Settings {
    * cerrada. Prendido por defecto; se apaga en Ajustes → Notificaciones.
    */
   serverLocation: boolean;
+  /** Avisos de actualizaciones importantes de la app (los manda el servidor, a mano; ver server/src/announce.ts). */
+  updateNotices: boolean;
   /** Rojo nocturno automático: nunca, en un horario fijo o desde el anochecer hasta el amanecer. */
   redSchedule: RedSchedule;
   /** Horario fijo, "HH:MM" (si `redFrom` > `redTo`, cruza la medianoche). */
@@ -151,6 +153,7 @@ export const DEFAULT_SETTINGS: Settings = {
   placeWaypointId: null,
   rainAlertsHere: false,
   serverLocation: true,
+  updateNotices: true,
   redSchedule: 'off',
   redFrom: '21:00',
   redTo: '07:00',

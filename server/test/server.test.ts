@@ -7,6 +7,7 @@ import { openDb, type Db } from '../src/db.ts';
 import type { PushPayload, PushSender, PushSubscriptionJson } from '../src/push.ts';
 import { runScheduler } from '../src/scheduler.ts';
 import { generateCode, normalizeCode } from '../src/routes/transfers.ts';
+import { announce, parseAnnouncement } from '../src/announce.ts';
 
 class FakePush implements PushSender {
   publicKey = 'test-public-key';
@@ -138,6 +139,39 @@ describe('servidor', () => {
     let last = 0;
     for (let i = 0; i < 21; i++) last = (await app.inject(`/api/transfers/${generateCode()}`)).statusCode;
     assert.equal(last, 429);
+  });
+
+  it('anuncia una actualización una sola vez, salvo a quien lo apagó', async () => {
+    const on = await register();
+    const off = await register();
+    const put = await app.inject({ method: 'PUT', url: `/api/devices/${off.deviceId}`, headers: { authorization: `Bearer ${off.token}` }, payload: { updates: false, alerts: [] } });
+    assert.equal(put.statusCode, 204);
+    // Registrado con los avisos apagados desde el principio.
+    await app.inject({ method: 'POST', url: '/api/devices', payload: { subscription, ...prefs, updates: false } });
+    const a = { version: '0.23.0', title: { es: 'VikArg 0.23', en: 'VikArg 0.23' }, body: { es: 'Novedades', en: 'News' } };
+
+    assert.deepEqual(await announce(db, push, a, { dryRun: true }), { devices: 1, delivered: 0, removed: 0, failed: 0, already: false });
+    assert.equal(push.sent.length, 0);
+    const r = await announce(db, push, a);
+    assert.equal(r.delivered, 1);
+    assert.deepEqual(push.sent[0]!.payload, { type: 'update', update: a });
+    // La misma versión no se vuelve a mandar (salvo con force).
+    assert.equal((await announce(db, push, a)).already, true);
+    assert.equal(push.sent.length, 1);
+    await announce(db, push, a, { force: true });
+    assert.equal(push.sent.length, 2);
+    // Una suscripción que ya no existe se borra.
+    push.gone = true;
+    assert.equal((await announce(db, push, { ...a, version: '0.24.0' })).removed, 1);
+    assert.equal(db.prepare('SELECT 1 FROM devices WHERE id = ?').get(on.deviceId), undefined);
+  });
+
+  it('valida los argumentos del anuncio', () => {
+    const base = ['--version', '0.23.0', '--title-es', 'T', '--body-es', 'B', '--title-en', 'T', '--body-en', 'B'];
+    assert.equal(parseAnnouncement(base).announcement.version, '0.23.0');
+    assert.throws(() => parseAnnouncement(base.slice(0, 8)), /--body-en/);
+    assert.throws(() => parseAnnouncement(['--version', 'v1', ...base.slice(2)]), /0\.23\.0/);
+    assert.throws(() => parseAnnouncement([...base.slice(0, 2), '--title-es', 'x'.repeat(81), ...base.slice(4)]), /largo/);
   });
 
   it('normaliza códigos tipeados', () => {

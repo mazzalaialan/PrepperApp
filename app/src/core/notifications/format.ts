@@ -33,6 +33,7 @@ const TEXT = {
     lightningBody: 'Buscá refugio: un edificio o un auto cerrado. Alejate de árboles, alambrados y lugares altos. Detectado por satélite (±8 km).',
     dirs: ['norte', 'noreste', 'este', 'sudeste', 'sur', 'sudoeste', 'oeste', 'noroeste'],
     informative: 'Aviso informativo, no oficial: las alertas oficiales son del SMN.',
+    updateTap: 'Tocá para abrir la app y actualizarla.',
   },
   en: {
     title: (n: number) => (n === 1 ? '1 pending alert' : `${n} pending alerts`),
@@ -55,6 +56,7 @@ const TEXT = {
     lightningBody: 'Take shelter: a building or a closed car. Stay away from trees, wire fences and high ground. Detected by satellite (±8 km).',
     dirs: ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'],
     informative: 'Informational, not official: official alerts come from the SMN.',
+    updateTap: 'Tap to open the app and update it.',
   },
 } as const;
 
@@ -84,6 +86,17 @@ export function alertsNotification(alerts: AlertSummary[], lang: Lang, today: st
 
 export function testNotification(lang: Lang): { title: string; body: string } {
   return { title: TEXT[lang].testTitle, body: TEXT[lang].testBody };
+}
+
+/** Actualización importante que manda el servidor (ver server/src/announce.ts). */
+export interface UpdatePush {
+  version: string;
+  title: { es: string; en: string };
+  body: { es: string; en: string };
+}
+
+export function updateNotification(u: UpdatePush, lang: Lang): { title: string; body: string } {
+  return { title: u.title[lang] || u.title.es, body: `${u.body[lang] || u.body.es}\n${TEXT[lang].updateTap}` };
 }
 
 /** Aviso de lluvia que manda el servidor (ver server/src/rain/watch.ts). */

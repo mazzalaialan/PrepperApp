@@ -1207,6 +1207,8 @@
   "notifications": {
     "serverLocationHint": "The server receives the last location read with the app open (only if you already allowed GPS), rounded to ~1 km, and warns you with the app closed about rain or lightning within 30 km. With the app closed the phone doesn't give GPS to the app: a location older than 24 hours is not used. If you are near a waypoint with alerts, only the waypoint alerts. Turning it off makes the server delete it.",
     "serverLocation": "Use my last known location for rain and lightning alerts",
+    "updates": "Tell me about important app updates",
+    "updatesHint": "Only when a version brings something important, not on every update. The notice carries none of your data.",
     "title": "Notifications",
     "intro": "Alerts for expiring items and shortages. Only new alerts are sent; they are not repeated every day.",
     "unsupported": "This browser doesn't support notifications. Alerts show up when you open the app.",
