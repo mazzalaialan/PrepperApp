@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Ban, LocateFixed, RotateCcw } from 'lucide-react';
+import { useEffect, useRef, type MouseEvent } from 'react';
+import { ArrowLeft, Ban, LocateFixed, Repeat, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { useSettings } from '@/core/settings/settings';
 import { PhoneActions } from '@/modules/emergency/parts';
 import { resolveNext, TOPIC_BY_ID } from './content';
@@ -16,9 +18,46 @@ export function GuideTopicPage() {
   const lang = useLang();
   const env = useSettings((s) => s.settings.firstAidEnv);
   const country = useSettings((s) => s.settings.country);
+  const voiceOn = useSettings((s) => s.settings.guideVoice);
+  const update = useSettings((s) => s.update);
+  const voice = useSpeechVoice(lang);
   const topic = topicId ? TOPIC_BY_ID.get(topicId) : undefined;
   const nodeId = params.get('paso') ?? topic?.start ?? '';
   const node = topic?.nodes[nodeId];
+
+  // Lo que se lee del paso actual: título, instrucciones, pregunta y opciones.
+  const spoken = useRef<string[]>([]);
+  const fillText = (text: string) => fillGuideText(text, country, lang);
+  spoken.current = node
+    ? [
+        fillText(node.title[lang]),
+        ...node.steps.filter((s) => !s.env || s.env === env).map((s) => fillText(s.text[lang])),
+        node.question ? fillText(node.question[lang]) : '',
+        node.options && node.options.length > 1 ? t('guides.optionsSpoken', { options: node.options.map((o) => fillText(o.label[lang])).join(', ') }) : '',
+      ]
+    : [];
+
+  // Al llegar a un paso, se lee (si está activado y la app está a la vista).
+  useEffect(() => {
+    if (!voiceOn || !voice || document.visibilityState !== 'visible') return;
+    speak(spoken.current, voice);
+    return stopSpeaking;
+  }, [voiceOn, voice, topicId, nodeId, env, lang]);
+
+  // Si la app pasa a segundo plano (se abrió el marcador, otra app) se corta, y al volver no sigue sola.
+  useEffect(() => {
+    const hide = () => document.visibilityState === 'hidden' && stopSpeaking();
+    document.addEventListener('visibilitychange', hide);
+    return () => {
+      document.removeEventListener('visibilitychange', hide);
+      stopSpeaking();
+    };
+  }, []);
+
+  /** Al tocar un botón de llamar se calla enseguida: no puede sonar encima de la llamada. */
+  const stopOnCall = (e: MouseEvent) => {
+    if ((e.target as Element).closest('a[href^="tel:"]')) stopSpeaking();
+  };
 
   if (!topic || !node) {
     return (
@@ -34,19 +73,39 @@ export function GuideTopicPage() {
     navigate(`/first-aid/guides/${target.topic}${target.node === startOfTopic ? '' : `?paso=${target.node}`}`);
   };
   const steps = node.steps.filter((s) => !s.env || s.env === env);
-  const fill = (text: string) => fillGuideText(text, country, lang);
+  const fill = fillText;
   // Los números del país, sin repetir (en Uruguay casi todo es el 911).
   const calls = (node.calls ?? [])
     .map((k) => ({ key: k, number: CALLS[country][k] }))
     .filter((c, i, all): c is { key: typeof c.key; number: string } => !!c.number && all.findIndex((x) => x.number === c.number) === i);
 
   return (
-    <div className="stack guide">
+    <div className="stack guide" onClickCapture={stopOnCall}>
       <div className="page-head">
         <button className="icon-btn" type="button" onClick={() => navigate(-1)} aria-label={t('common.back')}>
           <ArrowLeft size={22} />
         </button>
         <h1 className="page-title" style={{ flex: 1 }}>{topic.title[lang]}</h1>
+        {voice && voiceOn && (
+          <button className="icon-btn" type="button" onClick={() => speak(spoken.current, voice)} aria-label={t('guides.voiceRepeat')} title={t('guides.voiceRepeat')}>
+            <Repeat size={20} />
+          </button>
+        )}
+        {voice && (
+          <button
+            className="icon-btn"
+            type="button"
+            aria-pressed={voiceOn}
+            onClick={() => {
+              if (voiceOn) stopSpeaking();
+              void update({ guideVoice: !voiceOn });
+            }}
+            aria-label={t('guides.voice')}
+            title={t('guides.voice')}
+          >
+            {voiceOn ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+        )}
       </div>
 
       <EnvSwitch />

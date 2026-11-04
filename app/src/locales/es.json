@@ -1321,6 +1321,9 @@
     "coffee": "Invitame un cafecito"
   },
   "guides": {
+    "voice": "Leer los pasos en voz alta",
+    "voiceRepeat": "Repetir en voz alta",
+    "optionsSpoken": "Opciones: {{options}}.",
     "title": "Primeros auxilios",
     "start": "Empezar evaluación",
     "topics": "Situaciones",

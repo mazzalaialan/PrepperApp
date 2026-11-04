@@ -56,6 +56,8 @@ export interface Settings {
   mapLayers: MapLayers;
   /** Al seguir un track: el dibujo liviano o el mapa (en 2D o 3D). */
   trackFollowView: 'drawing' | 'map';
+  /** Leer en voz alta los pasos de las guías de primeros auxilios. */
+  guideVoice: boolean;
   /** Entorno de la guía de primeros auxilios: con ayuda cerca o lejos. */
   firstAidEnv: FirstAidEnv;
   /** País: define los números de emergencia y de la guía. */
@@ -148,6 +150,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weatherMapValue: 'temp',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, terrain3d: false },
   trackFollowView: 'drawing',
+  guideVoice: false,
   firstAidEnv: 'city',
   country: detectCountry(),
 };

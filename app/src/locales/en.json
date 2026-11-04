@@ -1321,6 +1321,9 @@
     "coffee": "Buy me a cafecito"
   },
   "guides": {
+    "voice": "Read the steps aloud",
+    "voiceRepeat": "Repeat aloud",
+    "optionsSpoken": "Options: {{options}}.",
     "title": "First aid",
     "start": "Start assessment",
     "topics": "Situations",

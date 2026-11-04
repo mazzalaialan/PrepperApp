@@ -167,3 +167,81 @@ test('paquete de Chile: se baja al elegir el país, queda guardado y da radio, c
   await expect(page.getByTestId('guide-detect')).toContainText('elegí Ciudad');
   await context.setOffline(false);
 });
+
+test('guía en voz alta: lee cada paso, se corta al llamar y se repite', async ({ page }) => {
+  // Voz simulada: Chromium sin ventana no trae voces. Anota lo leído y las cancelaciones.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __spoken: string[]; __cancels: number };
+    w.__spoken = [];
+    w.__cancels = 0;
+    const voice = { lang: 'es-AR', localService: true, name: 'Prueba', default: true, voiceURI: 'prueba' };
+    class FakeUtterance {
+      text: string;
+      voice: unknown = null;
+      lang = '';
+      rate = 1;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { value: FakeUtterance });
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: {
+        getVoices: () => [voice],
+        speak: (u: FakeUtterance) => w.__spoken.push(u.text),
+        cancel: () => w.__cancels++,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      },
+    });
+    // Los botones de llamar no abren el marcador en la prueba.
+    document.addEventListener('click', (e) => (e.target as Element).closest?.('a[href^="tel:"]') && e.preventDefault());
+  });
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  const spoken = () => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken);
+  const cancels = () => page.evaluate(() => (window as unknown as { __cancels: number }).__cancels);
+
+  await page.goto('/#/first-aid/guides/assess');
+  const toggle = page.getByRole('button', { name: 'Leer los pasos en voz alta' });
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  expect(await spoken()).toEqual([]);
+
+  // Al activarlo lee el paso: título, instrucciones, pregunta y opciones.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(spoken).toContain('¿El lugar es seguro?');
+  const first = await spoken();
+  expect(first).toContain('¿Podés acercarte sin ponerte en peligro?');
+  expect(first).toContain('Opciones: Sí, es seguro, No.');
+
+  // Al elegir una respuesta, lee el paso siguiente.
+  await page.getByRole('button', { name: 'No', exact: true }).click();
+  await expect.poll(spoken).toContain('No es seguro');
+
+  // Tocar "llamar" corta la lectura enseguida, y no vuelve a leer sola.
+  const before = await cancels();
+  const read = (await spoken()).length;
+  await page.getByTestId('guide-calls').getByRole('link', { name: '911' }).click();
+  expect(await cancels()).toBeGreaterThan(before);
+  await page.waitForTimeout(300);
+  expect((await spoken()).length).toBe(read);
+
+  // "Repetir" vuelve a leer el paso.
+  await page.getByRole('button', { name: 'Repetir en voz alta' }).click();
+  await expect.poll(async () => (await spoken()).length).toBeGreaterThan(read);
+
+  // Queda guardado: al apagarlo se calla y no lee más.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  const total = (await spoken()).length;
+  await page.getByRole('button', { name: 'Ya es seguro' }).click();
+  await page.waitForTimeout(300);
+  expect((await spoken()).length).toBe(total);
+});
