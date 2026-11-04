@@ -1352,12 +1352,12 @@
     },
     "first": {
       "title": "First things first",
-      "protect": { "title": "1. Protect yourself.", "text": "Make sure the scene is safe before approaching (traffic, fire, wires, water, rocks)." },
-      "call": { "title": "2. Call.", "text": "Call {{medical}}. In the wilderness, ask for rescue and give your coordinates." },
-      "responds": { "title": "3. Do they respond?", "text": "Tap their shoulders and speak loudly." },
-      "breathing": { "title": "4. Normal breathing?", "text": "If not breathing or only gasping: CPR now, 100 to 120 compressions per minute on the center of the chest." },
-      "bleeding": { "title": "5. Heavy bleeding?", "text": "Press hard on the wound; on an arm or leg, if it does not stop, tourniquet." },
-      "position": { "title": "6. Keep them warm and still", "text": "unless in danger. If unresponsive but breathing, on their side (recovery position)." }
+      "protect": { "title": "Protect yourself.", "text": "Make sure the scene is safe before approaching (traffic, fire, wires, water, rocks)." },
+      "call": { "title": "Call.", "text": "Call {{medical}}. In the wilderness, ask for rescue and give your coordinates." },
+      "responds": { "title": "Do they respond?", "text": "Tap their shoulders and speak loudly." },
+      "breathing": { "title": "Normal breathing?", "text": "If not breathing or only gasping: CPR now, 100 to 120 compressions per minute on the center of the chest." },
+      "bleeding": { "title": "Heavy bleeding?", "text": "Press hard on the wound; on an arm or leg, if it does not stop, tourniquet." },
+      "position": { "title": "Keep them warm and still", "text": "unless in danger. If unresponsive but breathing, on their side (recovery position)." }
     },
     "call": {
       "emergency": "Emergencies / Police",

@@ -1352,12 +1352,12 @@
     },
     "first": {
       "title": "Lo primero",
-      "protect": { "title": "1. Protegete.", "text": "Mirá que el lugar sea seguro antes de acercarte (tránsito, fuego, cables, agua, piedras)." },
-      "call": { "title": "2. Avisá.", "text": "Llamá al {{medical}}. En zona agreste, pedí rescate y pasá tus coordenadas." },
-      "responds": { "title": "3. ¿Responde?", "text": "Tocale los hombros y hablale fuerte." },
-      "breathing": { "title": "4. ¿Respira normal?", "text": "Si no respira o solo da bocanadas: RCP ya, 100 a 120 compresiones por minuto en el centro del pecho." },
-      "bleeding": { "title": "5. ¿Sangra mucho?", "text": "Apretá fuerte sobre la herida; si es un brazo o una pierna y no para, torniquete." },
-      "position": { "title": "6. Abrigala y no la muevas", "text": "salvo peligro. Si no responde pero respira, de costado (posición lateral de seguridad)." }
+      "protect": { "title": "Protegete.", "text": "Mirá que el lugar sea seguro antes de acercarte (tránsito, fuego, cables, agua, piedras)." },
+      "call": { "title": "Avisá.", "text": "Llamá al {{medical}}. En zona agreste, pedí rescate y pasá tus coordenadas." },
+      "responds": { "title": "¿Responde?", "text": "Tocale los hombros y hablale fuerte." },
+      "breathing": { "title": "¿Respira normal?", "text": "Si no respira o solo da bocanadas: RCP ya, 100 a 120 compresiones por minuto en el centro del pecho." },
+      "bleeding": { "title": "¿Sangra mucho?", "text": "Apretá fuerte sobre la herida; si es un brazo o una pierna y no para, torniquete." },
+      "position": { "title": "Abrigala y no la muevas", "text": "salvo peligro. Si no responde pero respira, de costado (posición lateral de seguridad)." }
     },
     "call": {
       "emergency": "Emergencias / Policía",
