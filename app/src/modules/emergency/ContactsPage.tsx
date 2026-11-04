@@ -10,15 +10,22 @@ import { CountrySwitch } from './CountrySwitch';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
 import { useContacts } from './store';
+import type { ContactKind, EmergencyContact as Contact } from '@/core/model/types';
+
+/** Servicios de emergencia (lo que trae "Buscar cercanos" o se carga a mano): van en su propia sección. */
+const SERVICE_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense'];
+export const isService = (c: Pick<Contact, 'kind'>) => SERVICE_KINDS.includes(c.kind);
 
 export function ContactsPage() {
   const { t, i18n } = useTranslation();
   const contacts = useContacts((s) => s.contacts);
-  // Las frecuencias de radio se ven en Radio.
-  const mine = useMemo(
+  // Las frecuencias de radio se ven en Radio; los servicios de emergencia, en su sección.
+  const saved = useMemo(
     () => [...contacts.values()].filter((c) => c.kind !== 'radio').sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
     [contacts, i18n.language],
   );
+  const services = saved.filter(isService);
+  const mine = saved.filter((c) => !isService(c));
   // Médicos compartidos: en qué fichas están ("Pediatra de Tomi").
   const profiles = useMedical((s) => s.profiles);
   const uses = useMemo(() => doctorUses(profiles, t), [profiles, t]);
@@ -53,12 +60,23 @@ export function ContactsPage() {
         <p className="hint" style={{ margin: 0 }}>{t(`emergency.localNote${country}`)}</p>
       </section>
 
+      <section className="card stack" aria-labelledby="services-title">
+        <h2 id="services-title" className="section-title" style={{ margin: 0 }}>{t('emergency.servicesTitle')}</h2>
+        {services.length === 0 ? (
+          <p className="hint" style={{ margin: 0 }}>{t('emergency.servicesEmpty')}</p>
+        ) : (
+          <SavedContacts contacts={services} uses={uses} testId="my-services" />
+        )}
+        <div className="row-end wrap">
+          <Link className="btn btn-primary" to="/first-aid/contacts/nearby">
+            <Search size={18} /> {t('emergency.searchNearby')}
+          </Link>
+        </div>
+      </section>
+
       <section className="card stack" aria-labelledby="mine-title">
         <h2 id="mine-title" className="section-title" style={{ margin: 0 }}>{t('emergency.mineTitle')}</h2>
         <div className="row-end wrap">
-          <Link className="btn" to="/first-aid/contacts/nearby">
-            <Search size={18} /> {t('emergency.searchNearby')}
-          </Link>
           <Link className="btn btn-primary" to="/first-aid/contacts/new">
             <Plus size={20} /> {t('emergency.newContact')}
           </Link>
@@ -69,43 +87,49 @@ export function ContactsPage() {
           <p className="empty" style={{ margin: 0 }}>{t('emergency.noContacts')}</p>
         ) : (
           <>
-          <h3 className="contact-group-title">{t('emergency.savedTitle')}</h3>
-          <ul className="list contact-list" data-testid="my-contacts">
-            {mine.map((c) => (
-              <li key={c.id} className="contact-row">
-                <KindIcon kind={c.kind} />
-                <span className="list-main">
-                  <span className="list-title">{c.name}</span>
-                  <span className="list-sub">
-                    {[t(`emergency.kind.${c.kind}`), c.specialty, ...(uses.get(c.id) ?? [])].filter(Boolean).join(' · ')}
-                  </span>
-                  <MapLink address={c.address} lat={c.lat} lon={c.lon} />
-                  {c.notes && <span className="list-sub">{c.notes}</span>}
-                </span>
-                <span className="contact-actions">
-                  {c.phones?.length ? (
-                    // Obra social: cada teléfono con su nombre ("Riesgo de vida", "Emergencias").
-                    c.phones.map((p, i) => (
-                      <span key={i} className="labeled-phone" data-testid="saved-insurance-phone">
-                        <span className="hint">{p.label || t('medical.insurance.emergencyPhone')}</span>
-                        <PhoneActions phone={p.number} />
-                      </span>
-                    ))
-                  ) : (
-                    <PhoneActions phone={c.phone} />
-                  )}
-                  {c.phone2 && <PhoneActions phone={c.phone2} />}
-                  <Link className="icon-btn" to={`/first-aid/contacts/${c.id}`} aria-label={t('emergency.editContact', { name: c.name })}>
-                    <Pencil size={18} />
-                  </Link>
-                </span>
-              </li>
-            ))}
-          </ul>
+            <h3 className="contact-group-title">{t('emergency.savedTitle')}</h3>
+            <SavedContacts contacts={mine} uses={uses} testId="my-contacts" />
           </>
         )}
       </section>
     </div>
+  );
+}
+
+/** Contactos guardados: nombre, tipo, dirección, notas, teléfonos y editar. */
+function SavedContacts({ contacts, uses, testId }: { contacts: Contact[]; uses: Map<string, string[]>; testId: string }) {
+  const { t } = useTranslation();
+  return (
+    <ul className="list contact-list" data-testid={testId}>
+      {contacts.map((c) => (
+        <li key={c.id} className="contact-row">
+          <KindIcon kind={c.kind} />
+          <span className="list-main">
+            <span className="list-title">{c.name}</span>
+            <span className="list-sub">{[t(`emergency.kind.${c.kind}`), c.specialty, ...(uses.get(c.id) ?? [])].filter(Boolean).join(' · ')}</span>
+            <MapLink address={c.address} lat={c.lat} lon={c.lon} />
+            {c.notes && <span className="list-sub">{c.notes}</span>}
+          </span>
+          <span className="contact-actions">
+            {c.phones?.length ? (
+              // Obra social: cada teléfono con su nombre ("Riesgo de vida", "Emergencias").
+              c.phones.map((p, i) => (
+                <span key={i} className="labeled-phone" data-testid="saved-insurance-phone">
+                  <span className="hint">{p.label || t('medical.insurance.emergencyPhone')}</span>
+                  <PhoneActions phone={p.number} />
+                </span>
+              ))
+            ) : (
+              <PhoneActions phone={c.phone} />
+            )}
+            {c.phone2 && <PhoneActions phone={c.phone2} />}
+            <Link className="icon-btn" to={`/first-aid/contacts/${c.id}`} aria-label={t('emergency.editContact', { name: c.name })}>
+              <Pencil size={18} />
+            </Link>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

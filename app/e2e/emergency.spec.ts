@@ -80,9 +80,14 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await expect(list.locator('li').first()).toBeVisible();
   await context.setOffline(false);
 
-  // Mis contactos: el guardado, más uno cargado a mano.
+  // La comisaría guardada va en "Servicios de emergencia cercanos", antes de Mis contactos; uno cargado a mano, en Mis contactos.
   await page.getByRole('link', { name: 'Volver' }).click();
-  await expect(page.getByTestId('my-contacts')).toContainText('Comisaría 28');
+  const services = page.getByTestId('my-services');
+  await expect(services).toContainText('Comisaría 28');
+  const order = await page.locator('h2').allTextContents();
+  expect(order.indexOf('Servicios de emergencia cercanos')).toBeLessThan(order.indexOf('Mis contactos'));
+  expect(order.indexOf('Servicios de emergencia cercanos')).toBeGreaterThan(-1);
+  await expect(page.getByTestId('my-contacts')).toHaveCount(0);
   await page.getByRole('link', { name: 'Nuevo contacto' }).click();
   await page.getByLabel('Tipo').selectOption({ label: 'Otro' });
   await page.getByLabel('Nombre').fill('Dr. Pérez');
@@ -98,11 +103,13 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await page.getByLabel('Notas').fill('Clínico de la familia');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(mine).toContainText('Clínico de la familia');
+  await expect(mine).not.toContainText('Comisaría 28');
   await page.getByRole('link', { name: 'Editar Comisaría 28' }).click();
   await expect(page.getByText('Fuente: OpenStreetMap')).toBeVisible();
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar' }).click();
-  await expect(mine).not.toContainText('Comisaría 28');
+  await expect(services).toHaveCount(0);
+  await expect(page.getByText('Buscá los bomberos, comisarías, hospitales y ambulancias más cercanos')).toBeVisible();
 });
 
 test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
@@ -177,7 +184,7 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(mine).toContainText('Escuchan de 8 a 20 h');
   // No se mezcla con los contactos.
   await page.goto('/#/first-aid/contacts');
-  await expect(page.getByText('Todavía no guardaste contactos.')).toBeVisible();
+  await expect(page.getByText(/^Todavía no guardaste contactos/)).toBeVisible();
   // Editar.
   await page.goto('/#/first-aid/radio');
   await page.getByRole('link', { name: 'Editar Refugio Frey' }).click();
