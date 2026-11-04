@@ -7,6 +7,7 @@ import type { Config } from './config.ts';
 import type { Db } from './db.ts';
 import type { PushSender } from './push.ts';
 import { createLightningStore, type LightningStore } from './lightning/store.ts';
+import { createObservedRainStatus, type ObservedRainStatus } from './rain/noaaWatch.ts';
 import { deviceRoutes } from './routes/devices.ts';
 import { lightningRoutes } from './routes/lightning.ts';
 import { transferRoutes } from './routes/transfers.ts';
@@ -19,12 +20,14 @@ export async function buildApp(
   push: PushSender,
   logger = true,
   lightning: { store: LightningStore; wake: () => void } = { store: createLightningStore(), wake: () => undefined },
+  observedRain: ObservedRainStatus = createObservedRainStatus(),
 ): Promise<FastifyInstance> {
   const app = Fastify({ logger, trustProxy: true });
 
   await app.register(cors, { origin: config.allowedOrigins === '*' ? true : config.allowedOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] });
 
-  app.get('/api/health', async () => ({ ok: true, version: VERSION, vapidPublicKey: push.publicKey }));
+  // `observedRain`: si NOAA volvió a publicar lluvia estimada en el bucket abierto (ver rain/noaaWatch.ts).
+  app.get('/api/health', async () => ({ ok: true, version: VERSION, vapidPublicKey: push.publicKey, observedRain }));
   deviceRoutes(app, db, push);
   transferRoutes(app, db, config);
   lightningRoutes(app, lightning.store, lightning.wake);

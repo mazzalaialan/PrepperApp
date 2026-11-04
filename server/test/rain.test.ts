@@ -7,6 +7,7 @@ import { openDb, type Db } from '../src/db.ts';
 import type { PushPayload, PushSender, PushSubscriptionJson } from '../src/push.ts';
 import { rainOutlook, type RainOutlook } from '../src/rain/outlook.ts';
 import { openMeteoSource, type RainPoint, type RainSource } from '../src/rain/source.ts';
+import { checkObservedRain } from '../src/rain/noaaWatch.ts';
 import { runRainWatch } from '../src/rain/watch.ts';
 
 class FakePush implements PushSender {
@@ -178,5 +179,23 @@ describe('avisos de lluvia', () => {
       { time: '2026-11-03T15:15', mm: 0.1 },
     ];
     assert.deepEqual(rainOutlook({ now: '2026-11-03T15:00', slots }), { state: 'dry' });
+  });
+
+  it('revisa si NOAA publica la lluvia estimada de reemplazo', async () => {
+    let prefixes = ['ABI-L2-CMIPF/', 'ABI-L2-RRQPEF/', 'GLM-L2-LCFA/'];
+    let todayFiles = '';
+    const fake = (async (url: string) => {
+      if (url.includes('delimiter=/')) return new Response(prefixes.map((p) => `<CommonPrefixes><Prefix>${p}</Prefix></CommonPrefixes>`).join(''));
+      return new Response(todayFiles);
+    }) as typeof fetch;
+    const now = new Date('2026-11-04T12:00:00Z');
+    assert.deepEqual(await checkObservedRain(now, fake), []);
+    todayFiles = '<Key>ABI-L2-RRQPEF/2026/308/12/x.nc</Key>';
+    assert.deepEqual(await checkObservedRain(now, fake), ['ABI-L2-RRQPEF/']);
+    todayFiles = '';
+    prefixes = [...prefixes, 'ABI-L2-FLDK-RRQPE-AWIPS/'];
+    assert.deepEqual(await checkObservedRain(now, fake), ['ABI-L2-FLDK-RRQPE-AWIPS/']);
+    const health = (await app.inject('/api/health')).json() as { observedRain: { available: string[] } };
+    assert.deepEqual(health.observedRain.available, []);
   });
 });

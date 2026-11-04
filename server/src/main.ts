@@ -6,6 +6,7 @@ import { glmFeed } from './lightning/glm.ts';
 import { readGlmPartial } from './lightning/partial.ts';
 import { createLightningStore, mapActive } from './lightning/store.ts';
 import { hasPlaces, LIGHTNING_DEFAULTS, runLightningWatch } from './lightning/watch.ts';
+import { checkObservedRain, createObservedRainStatus } from './rain/noaaWatch.ts';
 import { runRainWatch } from './rain/watch.ts';
 import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
@@ -15,7 +16,8 @@ const db = openDb(config.dataDir);
 const push = createPushSender(db, config.vapidSubject);
 const lightningStore = createLightningStore();
 // `lightningTick` se define más abajo; la ruta solo lo despierta.
-const app = await buildApp(config, db, push, true, { store: lightningStore, wake: () => void lightningTick() });
+const observedRain = createObservedRainStatus();
+const app = await buildApp(config, db, push, true, { store: lightningStore, wake: () => void lightningTick() }, observedRain);
 
 async function tick() {
   try {
@@ -71,7 +73,19 @@ async function lightningTick() {
   }
 }
 
+async function observedRainTick() {
+  try {
+    observedRain.available = await checkObservedRain();
+    observedRain.checkedAt = new Date().toISOString();
+    if (observedRain.available.length) app.log.warn({ available: observedRain.available }, 'NOAA publicó lluvia estimada en el bucket abierto: se puede sumar como fuente');
+  } catch (err) {
+    app.log.error(err, 'no se pudo revisar la lluvia estimada de NOAA');
+  }
+}
+
 const timer = setInterval(() => void tick(), config.schedulerIntervalMs);
+const observedRainTimer = setInterval(() => void observedRainTick(), 24 * 3_600_000);
+void observedRainTick();
 const lightningTimer = config.lightningEnabled ? setInterval(() => void lightningTick(), config.lightningIntervalMs) : undefined;
 const rainTimer = setInterval(() => void rainTick(), config.rainIntervalMs);
 void tick();
@@ -81,6 +95,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, async () => {
     clearInterval(timer);
     clearInterval(rainTimer);
+    clearInterval(observedRainTimer);
     clearInterval(lightningTimer);
     await app.close();
     db.close();
