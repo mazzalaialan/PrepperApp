@@ -277,8 +277,8 @@ export function MapView(props: Props) {
   // Nueva línea de nieve: se vuelven a pintar las teselas de pendiente.
   useEffect(() => {
     const src = map.current?.getSource('slope') as { setTiles?: (tiles: string[]) => void } | undefined;
-    if (styleReady.current) src?.setTiles?.(slopeTiles(props.layers.slopeMin, props.layers.slopeLee));
-  }, [props.layers.slopeMin, props.layers.slopeLee?.join(',')]);
+    if (styleReady.current) src?.setTiles?.(slopeTiles(props.layers.slopeMin, props.layers.slopeLee, props.layers.slopeLeeUsual));
+  }, [props.layers.slopeMin, props.layers.slopeLee?.join(','), props.layers.slopeLeeUsual?.join(',')]);
 
   useEffect(() => {
     const m = map.current;

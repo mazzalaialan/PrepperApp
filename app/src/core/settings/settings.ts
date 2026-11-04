@@ -92,6 +92,8 @@ export interface MapLayers {
   tracks: boolean;
   /** Riesgo de avalancha por pendiente (con los colores del inclinómetro), calculado con la elevación descargada. */
   slope: boolean;
+  /** Dentro del riesgo de avalancha: rayar las laderas cargadas por viento (recientes y habituales). */
+  windLoad: boolean;
   /** Relieve en 3D (el mapa se puede inclinar); apagado es el mapa plano. */
   terrain3d: boolean;
 }
@@ -162,7 +164,7 @@ export const DEFAULT_SETTINGS: Settings = {
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
   weatherMapValue: 'temp',
-  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, terrain3d: false },
+  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, windLoad: true, terrain3d: false },
   snowlineManual: null,
   snowlineFallback: 1500,
   trackFollowView: 'drawing',

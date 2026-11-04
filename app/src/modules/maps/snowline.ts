@@ -223,47 +223,41 @@ export function windLoadAt(series: FreezingSeries, now = Date.now()): number[] |
   return windLoadFrom(series.windDir.slice(from, to), series.windSpeed.slice(from, to), series.snow.slice(from, to));
 }
 
-/** Consulta de los últimos días sin carga por viento (de dónde salió el dato). */
-export interface QuietWind {
-  at: number;
-  zone?: string;
+/**
+ * Viento para el rayado de sotavento, en dos capas que se ven juntas:
+ * - `recent`: el que cargó nieve en los últimos 7 días (`from` vacío = no hubo
+ *   carga), consultado o guardado con la zona; `null` si no hay datos.
+ * - `usual`: el sotavento habitual, donde pueden quedar placas viejas: el de la
+ *   zona descargada más cercana o el del lugar consultado; si no, del oeste.
+ */
+export interface WindChoice {
+  recent: { from: number[]; at: number; zone?: string } | null;
+  usual: { source: 'prevailing'; from: number[]; zone?: string } | { source: 'default'; from: number[] };
 }
-
-export type WindChoice =
-  | { source: 'recent'; from: number[]; at: number; zone?: string }
-  /** `zone` ausente: el habitual del lugar consultado con conexión. `quiet`: no hubo carga reciente. */
-  | { source: 'prevailing'; from: number[]; zone?: string; quiet?: QuietWind }
-  | { source: 'default'; from: number[]; quiet?: QuietWind };
 
 const liveFresh = (live: Snowline | null, at: { lat: number; lon: number }, now: number): live is Snowline =>
   !!live && km(live, at) <= REFRESH_KM && now - live.at <= 2 * REFRESH_MS;
 
-/**
- * De dónde vino el viento que cargó nieve en el lugar que se mira: el de los
- * últimos 7 días (consultado o guardado con la zona). Si no hubo carga, o no
- * hay datos, el sotavento habitual (donde pueden quedar placas viejas): el de
- * la zona descargada más cercana o el del lugar consultado; si no, del oeste.
- */
 export function chooseWind(at: { lat: number; lon: number }, live: Snowline | null, zones: ZoneWithSeries[], now = Date.now()): WindChoice {
   const near = zones.filter((z) => km(z, at) <= z.radiusKm + ZONE_MARGIN_KM).sort((a, b) => km(a, at) - km(b, at));
-  let quiet: QuietWind | undefined;
-  if (liveFresh(live, at, now) && live.windFrom) {
-    if (live.windFrom.length) return { source: 'recent', from: live.windFrom, at: live.at };
-    quiet = { at: live.at };
-  } else {
+  let recent: WindChoice['recent'] = null;
+  if (liveFresh(live, at, now) && live.windFrom) recent = { from: live.windFrom, at: live.at };
+  else {
     for (const z of near) {
       const from = z.freezing ? windLoadAt(z.freezing, now) : null;
-      if (!from) continue;
-      if (from.length) return { source: 'recent', from, at: z.freezing!.at, zone: z.name };
-      quiet = { at: z.freezing!.at, zone: z.name };
-      break;
+      if (from) {
+        recent = { from, at: z.freezing!.at, zone: z.name };
+        break;
+      }
     }
   }
-  const q = quiet ? { quiet } : {};
   const withPrevailing = near.find((z) => z.prevailing?.from.length);
-  if (withPrevailing) return { source: 'prevailing', from: withPrevailing.prevailing!.from, zone: withPrevailing.name, ...q };
-  if (live && km(live, at) <= REFRESH_KM && live.prevailing?.length) return { source: 'prevailing', from: live.prevailing, ...q };
-  return { source: 'default', from: DEFAULT_FROM, ...q };
+  const usual: WindChoice['usual'] = withPrevailing
+    ? { source: 'prevailing', from: withPrevailing.prevailing!.from, zone: withPrevailing.name }
+    : live && km(live, at) <= REFRESH_KM && live.prevailing?.length
+      ? { source: 'prevailing', from: live.prevailing }
+      : { source: 'default', from: DEFAULT_FROM };
+  return { recent, usual };
 }
 
 /** Al renovar la consulta del lugar, se conserva el viento habitual si es el mismo lugar. */
@@ -271,7 +265,7 @@ export function carryPrevailing(saved: Snowline | null, fresh: Snowline): Snowli
   return saved?.prevailing && km(saved, fresh) <= REFRESH_KM ? { ...fresh, prevailing: saved.prevailing } : fresh;
 }
 
-/** ¿Hace falta pedir el viento habitual del lugar? (sin carga reciente y sin zona descargada con el suyo). */
+/** ¿Hace falta pedir el viento habitual del lugar? (sin zona descargada cerca con el suyo; una vez por lugar). */
 export function needsLivePrevailing(at: { lat: number; lon: number }, live: Snowline | null, zones: ZoneWithSeries[]): boolean {
   if (!live || live.prevailing || km(live, at) > REFRESH_KM) return false;
   return !zones.some((z) => z.prevailing?.from.length && km(z, at) <= z.radiusKm + ZONE_MARGIN_KM);

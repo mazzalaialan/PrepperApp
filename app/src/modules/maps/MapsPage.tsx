@@ -102,9 +102,15 @@ export function MapsPage() {
     }, 1500);
     return () => clearTimeout(timer);
   }, [layers.slope, online, snowKey, weatherUrl]);
-  // Sin carga reciente (o sin viento) y sin zona descargada cerca: el viento habitual del lugar, una vez (~50 KB).
+  // Con conexión, la del lugar; sin conexión, la del pronóstico guardado con la zona más cercana; nunca una de otro lugar.
+  const choice = chooseSnowline({ lat: view.lat, lon: view.lon }, snowline, zones);
+  // Sin isoterma para esta zona: la altura que eligió el usuario para ese caso.
+  const slopeMin = snowlineManual ?? (choice.source === 'none' ? snowlineFallback : choice.meters);
+  // Carga por viento (subopción del riesgo de avalancha): la de los últimos 7 días y el sotavento habitual, rayados juntos.
+  const windOn = layers.slope && layers.windLoad;
+  // Sin zona descargada cerca con el suyo: el viento habitual del lugar, una vez por lugar (~50 KB).
   const [prevailingFailed, setPrevailingFailed] = useState(false);
-  const wantPrevailing = layers.slope && online && !!snowline && !(snowline.windFrom?.length) && needsLivePrevailing({ lat: view.lat, lon: view.lon }, snowline, zones);
+  const wantPrevailing = windOn && online && !!snowline && needsLivePrevailing({ lat: view.lat, lon: view.lon }, snowline, zones);
   useEffect(() => {
     if (!wantPrevailing || !snowline) return;
     let cancelled = false;
@@ -122,32 +128,28 @@ export function MapsPage() {
       cancelled = true;
     };
   }, [wantPrevailing, snowline?.at, weatherUrl]);
-  // Con conexión, la del lugar; sin conexión, la del pronóstico guardado con la zona más cercana; nunca una de otro lugar.
-  const choice = chooseSnowline({ lat: view.lat, lon: view.lon }, snowline, zones);
-  // Sin isoterma para esta zona: la altura que eligió el usuario para ese caso.
-  const slopeMin = snowlineManual ?? (choice.source === 'none' ? snowlineFallback : choice.meters);
-  // Viento que cargó nieve: el reciente, el habitual de la zona o, sin nada, del oeste (ver wind.ts).
   const wind = chooseWind({ lat: view.lat, lon: view.lon }, snowline, zones);
-  // Con conexión, mientras llega el viento del lugar no se raya: el habitual o el del oeste solo sin conexión o si la consulta falla.
-  const windPending =
-    online && wind.source !== 'recent' && ((!snowlineError && needsRefresh(snowline, { lat: view.lat, lon: view.lon })) || (wantPrevailing && !prevailingFailed));
-  const slopeLee = windPending ? [] : leeAspects(wind.from);
-  const windText = () => {
-    const lee = compassList(slopeLee, i18n.language);
-    const from = compassList(wind.from, i18n.language);
-    if (windPending) return t('maps.windLoading');
-    if (wind.source === 'recent') return wind.zone ? t('maps.windZone', { lee, from, zone: wind.zone, ago: ago(wind.at) }) : t('maps.windRecent', { lee, from, ago: ago(wind.at) });
-    // Sin carga reciente o sin datos: el sotavento habitual, donde pueden quedar placas viejas.
-    const why = wind.quiet
-      ? wind.quiet.zone
-        ? t('maps.windQuietZone', { zone: wind.quiet.zone, ago: ago(wind.quiet.at) })
-        : t('maps.windQuietLive', { ago: ago(wind.quiet.at) })
-      : t('maps.windNoData');
-    const usual =
-      wind.source === 'default'
-        ? t('maps.windUsualDefault', { lee })
-        : t('maps.windUsual', { lee, from, place: wind.zone ? t('maps.windPlaceZone', { zone: wind.zone }) : t('maps.windPlaceHere') });
-    return `${why} ${usual}`;
+  // Con conexión, mientras llega el dato del lugar no se raya: lo supuesto (del oeste) solo sin conexión o si la consulta falla.
+  const livePending = online && !snowlineError && needsRefresh(snowline, { lat: view.lat, lon: view.lon });
+  const recentPending = livePending && !wind.recent?.zone;
+  const usualPending = online && wind.usual.source === 'default' && (livePending || (wantPrevailing && !prevailingFailed));
+  const slopeLee = windOn && !recentPending && wind.recent ? leeAspects(wind.recent.from) : [];
+  const slopeLeeUsual = windOn && !usualPending ? leeAspects(wind.usual.from) : [];
+  const recentText = () => {
+    const r = wind.recent;
+    if (recentPending) return t('maps.windLoading');
+    if (!r) return t('maps.windNoData');
+    const lee = compassList(leeAspects(r.from), i18n.language);
+    const from = compassList(r.from, i18n.language);
+    if (r.from.length === 0) return r.zone ? t('maps.windQuietZone', { zone: r.zone, ago: ago(r.at) }) : t('maps.windQuietLive', { ago: ago(r.at) });
+    return r.zone ? t('maps.windZone', { lee, from, zone: r.zone, ago: ago(r.at) }) : t('maps.windRecent', { lee, from, ago: ago(r.at) });
+  };
+  const usualText = () => {
+    const u = wind.usual;
+    if (usualPending) return t('maps.windUsualLoading');
+    const lee = compassList(leeAspects(u.from), i18n.language);
+    if (u.source === 'default') return t('maps.windUsualDefault', { lee });
+    return t('maps.windUsual', { lee, from: compassList(u.from, i18n.language), place: u.zone ? t('maps.windPlaceZone', { zone: u.zone }) : t('maps.windPlaceHere') });
   };
   const fmtM = (m: number) => `${new Intl.NumberFormat(i18n.language).format(m)} m`;
   const ago = (at: number) => {
@@ -282,7 +284,7 @@ export function MapsPage() {
       <FullscreenStage className="maps-stage">
         <MapView
           initial={initial}
-          layers={{ ...layers, slopeMin, slopeLee }}
+          layers={{ ...layers, slopeMin, slopeLee, slopeLeeUsual }}
           showMine={layers.mine}
           waypoints={waypoints}
           routes={routes}
@@ -348,10 +350,18 @@ export function MapsPage() {
                   {t(`inclinometer.legend.${z}`)}
                 </li>
               ))}
-              <li>
-                <span className="incl-swatch hatched" aria-hidden />
-                {t('maps.windLegend')}
-              </li>
+              {layers.windLoad && (
+                <>
+                  <li>
+                    <span className="incl-swatch hatched" aria-hidden />
+                    {t('maps.windLegend')}
+                  </li>
+                  <li>
+                    <span className="incl-swatch hatched-usual" aria-hidden />
+                    {t('maps.windLegendUsual')}
+                  </li>
+                </>
+              )}
             </ul>
             <p className="hint" style={{ margin: 0 }} data-testid="snowline-status">
               {snowlineManual !== null
@@ -364,9 +374,20 @@ export function MapsPage() {
                       ? t('maps.snowlineNone', { m: fmtM(snowlineFallback) })
                       : t('maps.snowlineLoading')}
             </p>
-            <p className="hint" style={{ margin: 0 }} data-testid="wind-status">
-              {windText()}
-            </p>
+            <label className="check">
+              <input type="checkbox" checked={layers.windLoad} onChange={(e) => setLayer('windLoad', e.target.checked)} />
+              {t('maps.windToggle')}
+            </label>
+            {layers.windLoad && (
+              <>
+                <p className="hint" style={{ margin: 0 }} data-testid="wind-recent">
+                  {recentText()}
+                </p>
+                <p className="hint" style={{ margin: 0 }} data-testid="wind-usual">
+                  {usualText()}
+                </p>
+              </>
+            )}
             <label className="check">
               <input
                 type="checkbox"

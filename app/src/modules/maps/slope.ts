@@ -53,8 +53,10 @@ export interface SlopeColors {
   caution: string;
   avalanche: string;
   steep: string;
-  /** Rayas de las laderas cargadas por viento. */
+  /** Rayas de las laderas cargadas por viento en los últimos días. */
   hatch?: string;
+  /** Rayas (en la otra diagonal) del sotavento habitual. */
+  hatchUsual?: string;
 }
 
 export interface PaintOptions {
@@ -62,9 +64,10 @@ export interface PaintOptions {
   /** Altura de cada píxel y línea de nieve: debajo queda sin color. */
   elev?: Float32Array;
   minElevation?: number;
-  /** Orientación de cada píxel y orientaciones de sotavento a rayar. */
+  /** Orientación de cada píxel y orientaciones de sotavento a rayar: de los últimos días y el habitual. */
   aspect?: Float32Array;
   lee?: number[];
+  leeUsual?: number[];
   /** Posición de la tesela en píxeles, para que las rayas sigan de una tesela a otra. */
   originX?: number;
   originY?: number;
@@ -91,8 +94,9 @@ const rgb = (hex: string): [number, number, number] => {
  * que miran a sotavento (`lee`, con `aspect`) llevan rayas diagonales.
  */
 export function paintSlope(slope: Float32Array, colors: SlopeColors, options: PaintOptions = {}): Uint8ClampedArray {
-  const { alpha = 190, elev, minElevation = 0, aspect, lee = [], originX = 0, originY = 0, size = Math.round(Math.sqrt(slope.length)) } = options;
+  const { alpha = 190, elev, minElevation = 0, aspect, lee = [], leeUsual = [], originX = 0, originY = 0, size = Math.round(Math.sqrt(slope.length)) } = options;
   const hatch = colors.hatch && aspect && lee.length > 0 ? rgb(colors.hatch) : null;
+  const hatchUsual = colors.hatchUsual && aspect && leeUsual.length > 0 ? rgb(colors.hatchUsual) : null;
   const table: Record<SlopeZone, [number, number, number] | null> = {
     low: rgb(colors.low),
     caution: rgb(colors.caution),
@@ -105,11 +109,15 @@ export function paintSlope(slope: Float32Array, colors: SlopeColors, options: Pa
     let c = table[slopeZone(slope[p]!)];
     if (!c) continue;
     let a = alpha;
-    if (hatch && slope[p]! >= HATCH_MIN_DEG && isLee(aspect![p]!, lee)) {
+    if ((hatch || hatchUsual) && slope[p]! >= HATCH_MIN_DEG) {
       const gx = originX + (p % size);
       const gy = originY + Math.floor(p / size);
-      if ((gx + gy) % HATCH_EVERY < HATCH_WIDTH) {
+      // Reciente en una diagonal y habitual en la otra: donde coinciden, se cruzan.
+      if (hatch && (gx + gy) % HATCH_EVERY < HATCH_WIDTH && isLee(aspect![p]!, lee)) {
         c = hatch;
+        a = 255;
+      } else if (hatchUsual && (((gx - gy) % HATCH_EVERY) + HATCH_EVERY) % HATCH_EVERY < HATCH_WIDTH && isLee(aspect![p]!, leeUsual)) {
+        c = hatchUsual;
         a = 255;
       }
     }
@@ -122,7 +130,7 @@ export function paintSlope(slope: Float32Array, colors: SlopeColors, options: Pa
 }
 
 /** De una tesela Terrarium (PNG) a la tesela pintada (PNG). */
-export async function slopeTile(png: ArrayBuffer, z: number, x: number, y: number, colors: SlopeColors, minElevation = 0, lee: number[] = []): Promise<ArrayBuffer> {
+export async function slopeTile(png: ArrayBuffer, z: number, x: number, y: number, colors: SlopeColors, minElevation = 0, lee: number[] = [], leeUsual: number[] = []): Promise<ArrayBuffer> {
   const bitmap = await createImageBitmap(new Blob([png]));
   const canvas = new OffscreenCanvas(SLOPE_TILE, SLOPE_TILE);
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
@@ -131,9 +139,9 @@ export async function slopeTile(png: ArrayBuffer, z: number, x: number, y: numbe
   const src = ctx.getImageData(0, 0, SLOPE_TILE, SLOPE_TILE).data;
   const elev = new Float32Array(SLOPE_TILE * SLOPE_TILE);
   for (let p = 0; p < elev.length; p++) elev[p] = terrarium(src[p * 4]!, src[p * 4 + 1]!, src[p * 4 + 2]!);
-  const aspect = lee.length > 0 ? new Float32Array(elev.length) : undefined;
+  const aspect = lee.length > 0 || leeUsual.length > 0 ? new Float32Array(elev.length) : undefined;
   const slope = slopeDegrees(elev, z, y, SLOPE_TILE, aspect);
-  const painted = paintSlope(slope, colors, { elev, minElevation, aspect, lee, originX: x * SLOPE_TILE, originY: y * SLOPE_TILE, size: SLOPE_TILE });
+  const painted = paintSlope(slope, colors, { elev, minElevation, aspect, lee, leeUsual, originX: x * SLOPE_TILE, originY: y * SLOPE_TILE, size: SLOPE_TILE });
   ctx.putImageData(new ImageData(painted as Uint8ClampedArray<ArrayBuffer>, SLOPE_TILE, SLOPE_TILE), 0, 0);
   return (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
 }

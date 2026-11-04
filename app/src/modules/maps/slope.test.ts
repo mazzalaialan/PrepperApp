@@ -75,4 +75,21 @@ describe('pendiente para la capa de avalanchas', () => {
     const flat = paintSlope(new Float32Array(size * size).fill(15), colors, { aspect: facingEast, lee: [90], size });
     expect(flat.some((v, i) => i % 4 === 3 && v === 255)).toBe(false);
   });
+
+  it('el habitual va en la otra diagonal y en otro color', () => {
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b', hatch: '#000000', hatchUsual: '#0000ff' };
+    const size = 12;
+    const slope = new Float32Array(size * size).fill(38);
+    const east = new Float32Array(size * size).fill(90);
+    const px = paintSlope(slope, colors, { aspect: east, lee: [90], leeUsual: [90], size });
+    const at = (x: number, y: number) => [...px.slice((y * size + x) * 4, (y * size + x) * 4 + 3)];
+    // (0,0): las dos diagonales; gana la reciente.
+    expect(at(0, 0)).toEqual([0, 0, 0]);
+    expect(at(3, 2)).toEqual([0, 0, 255]); // 3 − 2 = 1 (< 2): habitual; 3 + 2 = 5: no reciente
+    expect(at(2, 2)).toEqual([0, 0, 255]); // 2 − 2 = 0: habitual; 2 + 2 = 4: no reciente
+    // Solo el habitual: sin rayas negras.
+    const onlyUsual = paintSlope(slope, colors, { aspect: east, leeUsual: [90], size });
+    expect(Array.from({ length: size * size }, (_, p) => onlyUsual[p * 4 + 2] === 255).filter(Boolean).length).toBeGreaterThan(0);
+    expect(Array.from({ length: size * size }, (_, p) => onlyUsual[p * 4 + 3] === 255 && onlyUsual[p * 4 + 2] === 0).filter(Boolean).length).toBe(0);
+  });
 });

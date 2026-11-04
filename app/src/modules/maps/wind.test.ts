@@ -82,23 +82,23 @@ describe('qué viento usar', () => {
 
   it('con la serie guardada de la zona, la carga reciente', () => {
     expect(windLoadAt(series, now)).toEqual([270]);
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [zone], now)).toEqual({ source: 'recent', from: [270], at: start, zone: 'Catedral' });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [zone], now)).toEqual({ recent: { from: [270], at: start, zone: 'Catedral' }, usual: { source: 'prevailing', from: [225], zone: 'Catedral' } });
   });
 
   it('con la consulta reciente del lugar, esa', () => {
     const live = { meters: 1500, freezingMin: 1800, lat: -41.2, lon: -71.4, at: now - H, windFrom: [] };
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, { ...live, windFrom: [225] }, [zone], now)).toEqual({ source: 'recent', from: [225], at: now - H });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, { ...live, windFrom: [225] }, [zone], now)).toEqual({ recent: { from: [225], at: now - H }, usual: { source: 'prevailing', from: [225], zone: 'Catedral' } });
   });
 
-  it('sin carga reciente: el sotavento habitual igual, avisando que no hubo carga', () => {
+  it('sin carga reciente: el habitual igual, por separado', () => {
     const live = { meters: 1500, freezingMin: 1800, lat: -41.2, lon: -71.4, at: now - H, windFrom: [] };
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [zone], now)).toEqual({ source: 'prevailing', from: [225], zone: 'Catedral', quiet: { at: now - H } });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [zone], now)).toEqual({ recent: { from: [], at: now - H }, usual: { source: 'prevailing', from: [225], zone: 'Catedral' } });
     // Sin zona descargada: el habitual del lugar, si se pidió; si no, del oeste.
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, { ...live, prevailing: [315] }, [], now)).toEqual({ source: 'prevailing', from: [315], quiet: { at: now - H } });
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [], now)).toEqual({ source: 'default', from: [270], quiet: { at: now - H } });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, { ...live, prevailing: [315] }, [], now)).toEqual({ recent: { from: [], at: now - H }, usual: { source: 'prevailing', from: [315] } });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [], now)).toEqual({ recent: { from: [], at: now - H }, usual: { source: 'default', from: [270] } });
     // Con la serie de la zona sin carga (sin nieve).
     const calm = { ...zone, freezing: { ...series, snow: repeat(n, 0) } };
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [calm], now)).toEqual({ source: 'prevailing', from: [225], zone: 'Catedral', quiet: { at: start, zone: 'Catedral' } });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [calm], now)).toEqual({ recent: { from: [], at: start, zone: 'Catedral' }, usual: { source: 'prevailing', from: [225], zone: 'Catedral' } });
   });
 
   it('el habitual del lugar se pide una vez, y solo sin zona con el suyo', async () => {
@@ -106,6 +106,8 @@ describe('qué viento usar', () => {
     const live = { meters: 1500, freezingMin: 1800, lat: -41.2, lon: -71.4, at: now - H, windFrom: [] };
     expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, live, [])).toBe(true);
     expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, live, [zone])).toBe(false);
+    // También con carga reciente: el habitual se marca igual.
+    expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, { ...live, windFrom: [270] }, [])).toBe(true);
     expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, { ...live, prevailing: [] }, [])).toBe(false);
     // Al renovar en el mismo lugar se conserva; en otro, no.
     expect(carryPrevailing({ ...live, prevailing: [315] }, live).prevailing).toEqual([315]);
@@ -113,8 +115,8 @@ describe('qué viento usar', () => {
   });
 
   it('pronóstico vencido: el habitual; lejos de todo: del oeste', () => {
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [zone], start + 30 * 24 * H)).toEqual({ source: 'prevailing', from: [225], zone: 'Catedral' });
-    expect(chooseWind({ lat: -32.65, lon: -70 }, null, [zone], now)).toEqual({ source: 'default', from: [270] });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [zone], start + 30 * 24 * H)).toEqual({ recent: null, usual: { source: 'prevailing', from: [225], zone: 'Catedral' } });
+    expect(chooseWind({ lat: -32.65, lon: -70 }, null, [zone], now)).toEqual({ recent: null, usual: { source: 'default', from: [270] } });
   });
 
   it('la limpieza recorta también el viento', () => {

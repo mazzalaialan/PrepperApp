@@ -48,13 +48,16 @@ export interface MapLayersOn {
   slope: boolean;
   /** Línea de nieve: la pendiente se pinta desde esta altura (m). */
   slopeMin?: number;
-  /** Orientaciones de sotavento que se rayan (ver wind.ts). */
+  /** Orientaciones de sotavento que se rayan: de los últimos días y el habitual (ver wind.ts). */
   slopeLee?: number[];
+  slopeLeeUsual?: number[];
   terrain3d: boolean;
 }
 
 /** Teselas de la capa de pendiente para una línea de nieve y un sotavento. */
-export const slopeTiles = (min = 0, lee: number[] = []) => [`vkslope://{z}/{x}/{y}?min=${Math.round(min)}${lee.length ? `&lee=${lee.join(',')}` : ''}`];
+export const slopeTiles = (min = 0, lee: number[] = [], usual: number[] = []) => [
+  `vkslope://{z}/{x}/{y}?min=${Math.round(min)}${lee.length ? `&lee=${lee.join(',')}` : ''}${usual.length ? `&usual=${usual.join(',')}` : ''}`,
+];
 
 /** Relieve en 3D: un poco exagerado para que se lean las pendientes. */
 export const TERRAIN = { source: 'terrain', exaggeration: 1.3 } as const;
@@ -90,7 +93,7 @@ export function buildStyle(c: MapColors, contoursUrl: string, layers: MapLayersO
       terrain: { type: 'raster-dem', tiles: ['vkdem://{z}/{x}/{y}'], tileSize: 256, encoding: 'terrarium', maxzoom: DEM_MAX_ZOOM },
       contours: { type: 'vector', tiles: [contoursUrl], maxzoom: 15 },
       // Pendiente pintada con los colores del inclinómetro (ver slope.ts y protocols.ts).
-      slope: { type: 'raster', tiles: slopeTiles(layers.slopeMin, layers.slopeLee), tileSize: 256, maxzoom: DEM_MAX_ZOOM },
+      slope: { type: 'raster', tiles: slopeTiles(layers.slopeMin, layers.slopeLee, layers.slopeLeeUsual), tileSize: 256, maxzoom: DEM_MAX_ZOOM },
     },
     ...(layers.terrain3d ? { terrain: TERRAIN } : {}),
     layers: [

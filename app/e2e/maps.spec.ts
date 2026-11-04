@@ -114,7 +114,8 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await avalanche.click();
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Sin datos de isoterma para esta zona.*se pinta desde los 1500 m que elegiste/);
   // Sin datos de viento (la zona tiene el habitual: del sudoeste, sotavento al noreste).
-  await expect(page.getByTestId('wind-status')).toHaveText(/^Sin datos de viento recientes\. Rayado igual el sotavento habitual de “Casa”, las laderas que miran al NE/);
+  await expect(page.getByTestId('wind-recent')).toHaveText('Últimos 7 días: sin datos de viento.');
+  await expect(page.getByTestId('wind-usual')).toHaveText(/^Habitual: cuando nieva en “Casa”, el viento suele venir del SO .*las laderas que miran al NE/);
   await page.getByLabel('Sin datos de isoterma, hay nieve desde (m)').fill('1800');
   await expect(page.getByTestId('snowline-status')).toContainText('se pinta desde los 1800 m que elegiste');
   // Con datos otra vez, manda la isoterma.
@@ -125,9 +126,18 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(legend).toContainText('menos de 25°');
   await expect(legend).toContainText('30° a 45°');
   await expect(legend).toContainText('más de 45°');
-  await expect(legend).toContainText('Cargada por viento (sotavento)');
-  // Viento del oeste con nieve en los últimos días: se rayan las laderas que miran al este.
-  await expect(page.getByTestId('wind-status')).toHaveText(/^Rayadas las laderas que miran al E: el viento del O cargó nieve en los últimos 7 días/);
+  await expect(legend).toContainText('Cargada por viento en los últimos 7 días');
+  await expect(legend).toContainText('Sotavento habitual');
+  // Viento del oeste con nieve en los últimos días (laderas al este) y, aparte, el habitual de la zona (al noreste).
+  await expect(page.getByTestId('wind-recent')).toHaveText(/^Últimos 7 días: el viento del O cargó nieve en las laderas que miran al E/);
+  await expect(page.getByTestId('wind-usual')).toContainText('las laderas que miran al NE');
+  // Es una subopción: se apaga sin apagar el riesgo de avalancha.
+  await page.getByLabel('Marcar las laderas cargadas por viento').uncheck();
+  await expect(page.getByTestId('wind-recent')).toHaveCount(0);
+  await expect(legend).not.toContainText('Sotavento habitual');
+  await expect(legend).toContainText('30° a 45°');
+  await page.getByLabel('Marcar las laderas cargadas por viento').check();
+  await expect(page.getByTestId('wind-recent')).toBeVisible();
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Se pinta desde los 1100 m: la isoterma de 0 °C más baja de los últimos días en esta zona \(1380 m, Open-Meteo/);
   await page.getByLabel('Poner la línea de nieve a mano').check();
   await page.getByLabel('Hay nieve desde (m)').fill('2500');

@@ -522,6 +522,8 @@ a {
 
 .page-head {
   display: flex;
+  /* Si los botones no entran al lado del título, bajan a otra línea: nunca más ancho que la pantalla. */
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
@@ -1389,6 +1391,11 @@ a.module-card:hover {
 /* Laderas cargadas por viento: las mismas rayas que en el mapa. */
 .incl-swatch.hatched {
   background: repeating-linear-gradient(-45deg, var(--text) 0 2px, var(--danger) 2px 6px);
+}
+
+/* Sotavento habitual: en la otra diagonal y en otro color. */
+.incl-swatch.hatched-usual {
+  background: repeating-linear-gradient(45deg, var(--info) 0 2px, var(--danger) 2px 6px);
 }
 
 /* ---------- Sol y luna ---------- */
