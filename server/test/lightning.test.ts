@@ -5,7 +5,10 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.ts';
 import { loadConfig } from '../src/config.ts';
 import { openDb, type Db } from '../src/db.ts';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { glmFeed, parseGlm, startOfKey, type Flash } from '../src/lightning/glm.ts';
+import { readGlmPartial } from '../src/lightning/partial.ts';
 import { hasPlaces, runLightningWatch } from '../src/lightning/watch.ts';
 import { distanceKm, withoutDuplicateHere } from '../src/places.ts';
 import type { PushPayload, PushSender, PushSubscriptionJson } from '../src/push.ts';
@@ -104,25 +107,58 @@ describe('avisos de rayos', () => {
     assert.equal(withoutDuplicateHere(places).length, 2);
   });
 
-  it('el feed baja solo los archivos nuevos (como mucho uno por pasada)', async () => {
+  it('el feed baja solo los archivos nuevos, en parcial, y si falla la parcial baja el archivo completo', async () => {
     const sample = await readFile(new URL('./fixtures/glm-sample.nc', import.meta.url));
     const downloads: string[] = [];
     let keys = ['OR_GLM-L2-LCFA_G19_s20263081800000_e_c.nc', 'OR_GLM-L2-LCFA_G19_s20263081800200_e_c.nc'];
+    const listing = (url: string) =>
+      url.includes('/18/') ? keys.map((k) => `<Contents><Key>GLM-L2-LCFA/2026/308/18/${k}</Key><Size>${sample.length}</Size></Contents>`).join('') : '';
     const fake = (async (url: string) => {
-      if (url.includes('list-type=2')) {
-        const xml = url.includes('/18/') ? keys.map((k) => `<Key>GLM-L2-LCFA/2026/308/18/${k}</Key>`).join('') : '';
-        return new Response(xml, { status: 200 });
-      }
+      if (url.includes('list-type=2')) return new Response(listing(url), { status: 200 });
       downloads.push(url.split('/').pop()!);
       return new Response(sample, { status: 200 });
     }) as typeof fetch;
-    const feed = glmFeed(1, fake);
+    const partialCalls: string[] = [];
+    let partialFails = false;
+    const partial = async (url: string, size: number, at: number) => {
+      partialCalls.push(url.split('/').pop()!);
+      assert.equal(size, sample.length);
+      if (partialFails) throw new Error('sin rangos');
+      return { flashes: [{ lat: -34, lon: -58, at }], bytes: 1000 };
+    };
+    const feed = glmFeed({ maxFiles: 3, partial, fetchImpl: fake });
     const now = new Date('2026-11-04T18:00:30Z');
-    assert.ok((await feed.poll(now)).length > 0);
-    assert.deepEqual(downloads, ['OR_GLM-L2-LCFA_G19_s20263081800200_e_c.nc']);
-    assert.equal((await feed.poll(now)).length, 0);
+    assert.equal((await feed.poll(now)).length, 2);
+    assert.deepEqual(downloads, []);
+    assert.equal(partialCalls.length, 2);
+    assert.equal((await feed.poll(now)).length, 0); // nada nuevo
+
     keys = [...keys, 'OR_GLM-L2-LCFA_G19_s20263081800400_e_c.nc'];
-    await feed.poll(now);
-    assert.equal(downloads.length, 2);
+    partialFails = true;
+    assert.ok((await feed.poll(now)).length > 50); // cae al archivo completo
+    assert.deepEqual(downloads, ['OR_GLM-L2-LCFA_G19_s20263081800400_e_c.nc']);
+    assert.deepEqual(feed.stats(), { files: 3, bytes: 2000 + sample.length, partialFailures: 1 });
+  });
+
+  it('la lectura parcial real (worker y HTTP Range) da los mismos rayos bajando una fracción', async () => {
+    const sample = await readFile(new URL('./fixtures/glm-sample.nc', import.meta.url));
+    const server = createServer((req, res) => {
+      const m = /bytes=(\d+)-(\d+)/.exec(req.headers.range ?? '');
+      if (!m) {
+        res.writeHead(200).end(sample);
+        return;
+      }
+      const [start, end] = [Number(m[1]), Math.min(Number(m[2]), sample.length - 1)];
+      res.writeHead(206, { 'content-range': `bytes ${start}-${end}/${sample.length}` }).end(sample.subarray(start, end + 1));
+    });
+    await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
+    try {
+      const { port } = server.address() as AddressInfo;
+      const result = await readGlmPartial(`http://127.0.0.1:${port}/glm.nc`, sample.length, 7);
+      assert.deepEqual(result.flashes, await parseGlm(new Uint8Array(sample), 7));
+      assert.ok(result.bytes < sample.length * 0.2, `bajó ${result.bytes} de ${sample.length}`);
+    } finally {
+      server.close();
+    }
   });
 });

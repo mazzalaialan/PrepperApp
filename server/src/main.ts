@@ -3,6 +3,7 @@ import { loadConfig } from './config.ts';
 import { openDb } from './db.ts';
 import { createPushSender } from './push.ts';
 import { glmFeed } from './lightning/glm.ts';
+import { readGlmPartial } from './lightning/partial.ts';
 import { hasPlaces, LIGHTNING_DEFAULTS, runLightningWatch } from './lightning/watch.ts';
 import { runRainWatch } from './rain/watch.ts';
 import { openMeteoSource } from './rain/source.ts';
@@ -33,7 +34,8 @@ async function rainTick() {
   }
 }
 
-const glm = glmFeed(config.lightningFilesPerPoll);
+const glm = glmFeed({ maxFiles: config.lightningFilesPerPoll, partial: config.lightningPartial ? readGlmPartial : null });
+let lightningLoggedAt = 0;
 let lightningBusy = false;
 
 async function lightningTick() {
@@ -48,6 +50,11 @@ async function lightningTick() {
       hereMaxAgeMs: config.rainHereMaxAgeMs,
     });
     if (sent || removed) app.log.info({ sent, removed }, 'avisos de rayos enviados');
+    // Una vez por hora, cuánto se bajó del satélite.
+    if (Date.now() - lightningLoggedAt > 3_600_000) {
+      lightningLoggedAt = Date.now();
+      app.log.info(glm.stats(), 'rayos: archivos leídos y bytes bajados desde el arranque');
+    }
   } catch (err) {
     app.log.error(err, 'fallaron los avisos de rayos');
   } finally {
