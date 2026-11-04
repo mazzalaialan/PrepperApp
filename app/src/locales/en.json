@@ -603,12 +603,15 @@
     "slopeHint": "Terrain slope with the inclinometer colors, only above the snow line, computed from the area elevation (works offline if you downloaded it). Below the snow line, no color. Hatched: lee slopes of 25° or more, where wind piles snow into slabs and cornices. It is a guide only: the model wind does not see how valleys deflect it, and neither slope nor wind tells whether the snow is unstable: check the local avalanche bulletin. With ~30 m elevation data, short very steep slopes may not show.",
     "windLegend": "Wind-loaded (lee side)",
     "windLoading": "Looking up the wind of the last few days in this area…",
-    "windRecent": "Hatched: slopes facing {{lee}}, loaded by {{from}} wind in the last 3 days (Open-Meteo, {{ago}}).",
-    "windRecentNone": "No wind loading in the last 3 days (Open-Meteo, {{ago}}): no hatching.",
-    "windZone": "Offline: hatched slopes facing {{lee}}, from the {{from}} wind of the last 3 days in the forecast saved with “{{zone}}” ({{ago}}).",
-    "windZoneNone": "Offline: the forecast saved with “{{zone}}” ({{ago}}) shows no wind loading in the last 3 days.",
-    "windPrevailing": "No recent wind data: hatched the usual lee side of “{{zone}}”, slopes facing {{lee}} (when it snows, wind usually comes from the {{from}}, from 5 years of history).",
-    "windDefault": "No wind data: hatched slopes facing {{lee}}, assuming west wind, the most common with snow in the Andes.",
+    "windRecent": "Hatched: slopes facing {{lee}}, loaded by {{from}} wind in the last 7 days (Open-Meteo, {{ago}}).",
+    "windZone": "From the forecast saved with “{{zone}}” ({{ago}}): hatched slopes facing {{lee}}, from the {{from}} wind of the last 7 days.",
+    "windQuietLive": "No wind loading in the last 7 days (Open-Meteo, {{ago}}).",
+    "windQuietZone": "The forecast saved with “{{zone}}” ({{ago}}) shows no wind loading in the last 7 days.",
+    "windNoData": "No recent wind data.",
+    "windUsual": "Still hatched: the usual lee side {{place}}, slopes facing {{lee}} (when it snows, wind usually comes from the {{from}}, from 5 years of history): old slabs may remain.",
+    "windUsualDefault": "Still hatched: slopes facing {{lee}}, the most common lee side with snow in the Andes (west wind): old slabs may remain.",
+    "windPlaceZone": "of “{{zone}}”",
+    "windPlaceHere": "of this area",
     "camera": {
       "threeD": "3D map",
       "to3d": "Switch to 3D (tilt the map with two fingers)",
@@ -1327,6 +1330,10 @@
     "CL": "Chile",
     "UY": "Uruguay",
     "hint": "Sets the emergency numbers, poison center and first aid guide. It can also be changed in Emergency contacts and in the guide."
+  },
+  "legal": {
+    "smn": "Under current regulations, issuing weather alerts and official warnings to the public in Argentina is the exclusive responsibility of the National Weather Service (Servicio Meteorológico Nacional, SMN). VikArg uses weather data and products only as guidance: it does not replace, issue or overlap with the Early Warning System (SAT) or the SMN's official monitoring. The app's rain and lightning notices are informational, not official alerts.",
+    "smnLink": "See the official SMN alerts"
   },
   "about": {
     "title": "About",

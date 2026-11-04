@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare } from 'lucide-react';
 import { CAFECITO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
@@ -53,6 +54,7 @@ export function AboutPage() {
         <PortableUpdateCheck />
         <p className="hint" style={{ margin: 0 }}>{t('about.description')}</p>
         <p className="hint" style={{ margin: 0 }}>{t('about.privacy')}</p>
+        <OfficialWeatherNotice />
         <p className="hint" style={{ margin: 0, fontStyle: 'italic' }}>{t('app.motto')}</p>
         <a className="btn" href={REPO_URL} target="_blank" rel="noreferrer">
           <Code size={18} /> {t('about.source')}

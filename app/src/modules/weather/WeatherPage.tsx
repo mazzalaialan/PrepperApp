@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Droplets, Gauge, Minus, RefreshCw, TriangleAlert, Wind } from 'lucide-react';
 import { cardinalOf } from '@/core/geo/geo';
@@ -185,6 +186,7 @@ export function WeatherPage() {
       )}
 
       <RainAlertsSettings />
+      <OfficialWeatherNotice />
     </div>
   );
 }

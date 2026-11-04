@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Locate, Minus, Pause, Play, Plus, RefreshCw, Scan } from 'lucide-react';
 import { currentPosition } from '@/core/geo/useGeolocation';
@@ -530,6 +531,7 @@ export function WeatherMapPage() {
       </section>
 
       <p className="hint">{t('weatherMap.disclaimer')}</p>
+      <OfficialWeatherNotice />
     </div>
   );
 }

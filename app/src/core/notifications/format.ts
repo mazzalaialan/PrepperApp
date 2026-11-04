@@ -32,6 +32,7 @@ const TEXT = {
     lightning: (km: number, dir: string, place: string) => `Rayos a ${km} km al ${dir} · ${place}`,
     lightningBody: 'Buscá refugio: un edificio o un auto cerrado. Alejate de árboles, alambrados y lugares altos. Detectado por satélite (±8 km).',
     dirs: ['norte', 'noreste', 'este', 'sudeste', 'sur', 'sudoeste', 'oeste', 'noroeste'],
+    informative: 'Aviso informativo, no oficial: las alertas oficiales son del SMN.',
   },
   en: {
     title: (n: number) => (n === 1 ? '1 pending alert' : `${n} pending alerts`),
@@ -53,6 +54,7 @@ const TEXT = {
     lightning: (km: number, dir: string, place: string) => `Lightning ${km} km ${dir} · ${place}`,
     lightningBody: 'Take shelter: a building or a closed car. Stay away from trees, wire fences and high ground. Detected by satellite (±8 km).',
     dirs: ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'],
+    informative: 'Informational, not official: official alerts come from the SMN.',
   },
 } as const;
 
@@ -119,7 +121,7 @@ function lastFixNote(fixAt: string | null, lang: Lang, now: number): string {
 export function lightningNotification(l: LightningPush, lang: Lang, now = Date.now()): { title: string; body: string } {
   const tx = TEXT[lang];
   const dir = tx.dirs[Math.round((((l.bearing % 360) + 360) % 360) / 45) % 8]!;
-  return { title: tx.lightning(Math.max(1, l.distanceKm), dir, l.label ?? tx.here), body: tx.lightningBody + lastFixNote(l.fixAt, lang, now) };
+  return { title: tx.lightning(Math.max(1, l.distanceKm), dir, l.label ?? tx.here), body: tx.lightningBody + lastFixNote(l.fixAt, lang, now) + `\n${tx.informative}` };
 }
 
 export function rainNotification(rain: RainPush, lang: Lang, now = Date.now()): { title: string; body: string } {
@@ -128,6 +130,6 @@ export function rainNotification(rain: RainPush, lang: Lang, now = Date.now()): 
   const title = rain.state === 'raining' ? tx.raining(place) : tx.rainSoon(rain.inMinutes, place);
   const fmt = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
   const main = rain.observedMmH !== undefined ? tx.rainObserved(fmt.format(rain.observedMmH)) : tx.rainBody(fmt.format(rain.mm));
-  const body = main + lastFixNote(rain.fixAt, lang, now);
+  const body = main + lastFixNote(rain.fixAt, lang, now) + `\n${tx.informative}`;
   return { title, body };
 }

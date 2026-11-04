@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Bell, BellOff, Send } from 'lucide-react';
 import {
   ServerError,
@@ -88,6 +89,7 @@ export function NotificationsSection() {
                 {t('notifications.serverLocation')}
               </label>
               <p className="hint" style={{ margin: 0 }} data-testid="server-location-hint">{t('notifications.serverLocationHint')}</p>
+              <OfficialWeatherNotice />
             </div>
           )}
           <div className="row-end">

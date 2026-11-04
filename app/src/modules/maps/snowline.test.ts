@@ -81,18 +81,18 @@ describe('renovar el pronóstico de las zonas', () => {
 });
 
 describe('limpieza del pronóstico guardado', () => {
-  it('saca las horas de más de 3 días atrás y borra lo vencido', async () => {
+  it('saca las horas de más de 7 días atrás (las que usa el viento) y borra lo vencido', async () => {
     const { pruneSeries, snowlineAt } = await import('./snowline');
     const H = 3_600_000;
     const start = Date.UTC(2026, 10, 1);
     const series = { start, at: start, values: Array.from({ length: 10 * 24 }, (_, i) => 1000 + i) };
-    const now = start + 5 * 24 * H;
+    const now = start + 9 * 24 * H;
     const pruned = pruneSeries(series, now)!;
     expect(pruned.values.length).toBe(8 * 24);
     expect(pruned.start).toBe(start + 2 * 24 * H);
     // La línea de nieve de hoy no cambia.
     expect(snowlineAt(pruned, now)).toEqual(snowlineAt(series, now));
     expect(pruneSeries(series, start + H)).toBe(series);
-    expect(pruneSeries(series, start + 14 * 24 * H)).toBeNull();
+    expect(pruneSeries(series, start + 18 * 24 * H)).toBeNull();
   });
 });

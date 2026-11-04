@@ -37,14 +37,14 @@ describe('texto de notificaciones', () => {
   it('aviso de lluvia: lugar, "donde estás" y antigüedad de la ubicación', () => {
     const now = Date.parse('2026-11-03T15:00:00Z');
     const rain = { placeId: 'w1', label: 'Refugio', state: 'soon' as const, inMinutes: 45, mm: 3.5, fixAt: null };
-    expect(rainNotification(rain, 'es', now)).toEqual({ title: 'Lluvia en unos 45 min · Refugio', body: 'Se esperan 3,5 mm en las próximas 2 horas.' });
+    expect(rainNotification(rain, 'es', now)).toEqual({ title: 'Lluvia en unos 45 min · Refugio', body: 'Se esperan 3,5 mm en las próximas 2 horas.\nAviso informativo, no oficial: las alertas oficiales son del SMN.' });
     const here = { ...rain, placeId: 'here', label: null, state: 'raining' as const, fixAt: '2026-11-03T12:00:00Z' };
     expect(rainNotification(here, 'es', now)).toEqual({
       title: 'Está lloviendo · Donde estás',
-      body: 'Se esperan 3,5 mm en las próximas 2 horas.\nSegún tu última ubicación conocida (hace 3 horas).',
+      body: 'Se esperan 3,5 mm en las próximas 2 horas.\nSegún tu última ubicación conocida (hace 3 horas).\nAviso informativo, no oficial: las alertas oficiales son del SMN.',
     });
     // Ubicación reciente: no se aclara.
-    expect(rainNotification({ ...here, fixAt: '2026-11-03T14:50:00Z' }, 'en', now).body).toBe('3.5 mm expected in the next 2 hours.');
+    expect(rainNotification({ ...here, fixAt: '2026-11-03T14:50:00Z' }, 'en', now).body).toBe('3.5 mm expected in the next 2 hours.\nInformational, not official: official alerts come from the SMN.');
   });
 
   it('aviso de rayos: distancia, dirección y qué hacer', () => {
@@ -53,12 +53,13 @@ describe('texto de notificaciones', () => {
     const es = lightningNotification(l, 'es', now);
     expect(es.title).toBe('Rayos a 12 km al noroeste · Casa');
     expect(es.body).toMatch(/^Buscá refugio/);
+    expect(es.body).toMatch(/las alertas oficiales son del SMN\.$/);
     expect(lightningNotification({ ...l, label: null, bearing: 359, distanceKm: 0 }, 'en', now).title).toBe('Lightning 1 km north · Where you are');
     expect(lightningNotification({ ...l, fixAt: '2026-11-04T15:00:00Z' }, 'es', now).body).toMatch(/hace 3 horas/);
   });
 
   it('aviso de lluvia vista por el satélite', () => {
     const rain = { placeId: 'w1', label: 'Casa', state: 'raining' as const, inMinutes: 0, mm: 6, fixAt: null, observedMmH: 6.2 };
-    expect(rainNotification(rain, 'es').body).toBe('El satélite ve lluvia de unos 6,2 mm/h ahora (estimación por infrarrojo, orientativa).');
+    expect(rainNotification(rain, 'es').body).toBe('El satélite ve lluvia de unos 6,2 mm/h ahora (estimación por infrarrojo, orientativa).\nAviso informativo, no oficial: las alertas oficiales son del SMN.');
   });
 });

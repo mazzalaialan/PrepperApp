@@ -603,12 +603,15 @@
     "slopeHint": "Pendiente del terreno con los colores del inclinómetro, solo por encima de la línea de nieve, calculada con la elevación de la zona (sirve sin conexión si la bajaste). Debajo de la línea de nieve, sin color. Rayadas, las laderas de 25° o más a sotavento, donde el viento acumula nieve en placas y cornisas. Es orientativo: el viento del modelo no ve cómo lo desvían los valles, y ni la pendiente ni el viento dicen si la nieve está inestable: consultá el parte de avalanchas de la zona. Con elevación de ~30 m, las laderas cortas muy empinadas pueden no aparecer.",
     "windLegend": "Cargada por viento (sotavento)",
     "windLoading": "Buscando el viento de los últimos días en esta zona…",
-    "windRecent": "Rayadas las laderas que miran al {{lee}}: el viento del {{from}} cargó nieve en los últimos 3 días (Open-Meteo, {{ago}}).",
-    "windRecentNone": "Sin carga de nieve por viento en los últimos 3 días (Open-Meteo, {{ago}}): no hay rayado.",
-    "windZone": "Sin conexión: rayadas las laderas que miran al {{lee}}, por el viento del {{from}} de los últimos 3 días según el pronóstico guardado con “{{zone}}” ({{ago}}).",
-    "windZoneNone": "Sin conexión: según el pronóstico guardado con “{{zone}}” ({{ago}}), no hubo carga por viento en los últimos 3 días.",
-    "windPrevailing": "Sin datos de viento recientes: rayado el sotavento habitual de “{{zone}}”, las laderas que miran al {{lee}} (cuando nieva, el viento suele venir del {{from}}, según 5 años de historial).",
-    "windDefault": "Sin datos de viento: rayadas las laderas que miran al {{lee}}, suponiendo viento del oeste, el más común con nieve en los Andes.",
+    "windRecent": "Rayadas las laderas que miran al {{lee}}: el viento del {{from}} cargó nieve en los últimos 7 días (Open-Meteo, {{ago}}).",
+    "windZone": "Según el pronóstico guardado con “{{zone}}” ({{ago}}): rayadas las laderas que miran al {{lee}}, por el viento del {{from}} de los últimos 7 días.",
+    "windQuietLive": "Sin carga de nieve por viento en los últimos 7 días (Open-Meteo, {{ago}}).",
+    "windQuietZone": "Según el pronóstico guardado con “{{zone}}” ({{ago}}), no hubo carga por viento en los últimos 7 días.",
+    "windNoData": "Sin datos de viento recientes.",
+    "windUsual": "Rayado igual el sotavento habitual {{place}}, las laderas que miran al {{lee}} (cuando nieva, el viento suele venir del {{from}}, según 5 años de historial): pueden quedar placas viejas.",
+    "windUsualDefault": "Rayadas igual las laderas que miran al {{lee}}, el sotavento más común con nieve en los Andes (viento del oeste): pueden quedar placas viejas.",
+    "windPlaceZone": "de “{{zone}}”",
+    "windPlaceHere": "de esta zona",
     "camera": {
       "threeD": "Mapa en 3D",
       "to3d": "Pasar a 3D (inclinás el mapa con dos dedos)",
@@ -1327,6 +1330,10 @@
     "CL": "Chile",
     "UY": "Uruguay",
     "hint": "Define los números de emergencia, el centro toxicológico y la guía de primeros auxilios. También se cambia en Contactos de emergencia y en la guía."
+  },
+  "legal": {
+    "smn": "De acuerdo con el marco normativo vigente, la emisión de alertas meteorológicas y avisos oficiales a la población en el territorio argentino es competencia exclusiva del Servicio Meteorológico Nacional (SMN). VikArg usa datos y productos meteorológicos solo como información orientativa: no sustituye, no emite ni se superpone con el Sistema de Alerta Temprana (SAT) ni con las funciones oficiales de vigilancia del SMN. Los avisos de lluvia y rayos de la app son informativos, no alertas oficiales.",
+    "smnLink": "Ver las alertas oficiales del SMN"
   },
   "about": {
     "title": "Acerca de",

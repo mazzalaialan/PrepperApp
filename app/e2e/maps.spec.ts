@@ -14,20 +14,28 @@ async function mockMaps(page: Page) {
   await ctx.route('https://tiles.openfreemap.org/planet/test/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://tiles.openfreemap.org/fonts/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://s3.amazonaws.com/elevation-tiles-prod/**', (route) => route.fulfill({ body: dem, contentType: 'image/png' }));
-  // Isoterma de 0 °C de los últimos días (para la línea de nieve de la capa de avalanchas), y viento del oeste con nieve.
-  await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) =>
+  // Isoterma de 0 °C (para la línea de nieve de la capa de avalanchas) y viento del oeste con nieve, por hora.
+  await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) => {
+    const H = 3_600_000;
+    // La del lugar: de 7 días atrás a 2 adelante. La de la zona (14 días): una vieja, ya vencida, para probar sin isoterma.
+    const live = !route.request().url().includes('forecast_days=14');
+    const first = live ? Math.floor(Date.now() / H) * H - 7 * 24 * H : Date.UTC(2026, 0, 1);
+    const n = live ? 9 * 24 : 4;
+    const time = Array.from({ length: n }, (_, i) => new Date(first + i * H).toISOString().slice(0, 16));
+    // Lo más bajo de los últimos 3 días: 1380 m (hace un día); hace 5 días, 900 m (no entra en la línea de nieve).
+    const freezing = time.map((_, i) => (live && i === 6 * 24 ? 1380 : live && i === 2 * 24 ? 900 : i % 7 === 3 ? null : 2250));
     route.fulfill({
       json: {
         hourly: {
-          time: ['2026-11-01T00:00', '2026-11-01T01:00', '2026-11-01T02:00', '2026-11-01T03:00'],
-          freezing_level_height: [2250, 1380, null, 1900],
-          wind_direction_700hPa: [270, 265, 275, 270],
-          wind_speed_700hPa: [15, 16, 14, 15],
-          snowfall: [1, 0.5, 0, 0],
+          time,
+          freezing_level_height: freezing,
+          wind_direction_700hPa: time.map((_, i) => 265 + (i % 3) * 5),
+          wind_speed_700hPa: time.map(() => 15),
+          snowfall: time.map((_, i) => (i < 6 ? 1 : 0)),
         },
       },
-    }),
-  );
+    });
+  });
   // Histórico: con nieve, el viento suele venir del sudoeste.
   await ctx.route('https://archive-api.open-meteo.com/v1/archive**', (route) => {
     const days = 20;
@@ -106,7 +114,7 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await avalanche.click();
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Sin datos de isoterma para esta zona.*se pinta desde los 1500 m que elegiste/);
   // Sin datos de viento (la zona tiene el habitual: del sudoeste, sotavento al noreste).
-  await expect(page.getByTestId('wind-status')).toHaveText(/^Sin datos de viento recientes: rayado el sotavento habitual de “Casa”, las laderas que miran al NE/);
+  await expect(page.getByTestId('wind-status')).toHaveText(/^Sin datos de viento recientes\. Rayado igual el sotavento habitual de “Casa”, las laderas que miran al NE/);
   await page.getByLabel('Sin datos de isoterma, hay nieve desde (m)').fill('1800');
   await expect(page.getByTestId('snowline-status')).toContainText('se pinta desde los 1800 m que elegiste');
   // Con datos otra vez, manda la isoterma.
@@ -119,7 +127,7 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(legend).toContainText('más de 45°');
   await expect(legend).toContainText('Cargada por viento (sotavento)');
   // Viento del oeste con nieve en los últimos días: se rayan las laderas que miran al este.
-  await expect(page.getByTestId('wind-status')).toHaveText(/^Rayadas las laderas que miran al E: el viento del O cargó nieve en los últimos 3 días/);
+  await expect(page.getByTestId('wind-status')).toHaveText(/^Rayadas las laderas que miran al E: el viento del O cargó nieve en los últimos 7 días/);
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Se pinta desde los 1100 m: la isoterma de 0 °C más baja de los últimos días en esta zona \(1380 m, Open-Meteo/);
   await page.getByLabel('Poner la línea de nieve a mano').check();
   await page.getByLabel('Hay nieve desde (m)').fill('2500');

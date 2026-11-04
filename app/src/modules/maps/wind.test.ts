@@ -87,7 +87,29 @@ describe('qué viento usar', () => {
 
   it('con la consulta reciente del lugar, esa', () => {
     const live = { meters: 1500, freezingMin: 1800, lat: -41.2, lon: -71.4, at: now - H, windFrom: [] };
-    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [zone], now)).toEqual({ source: 'recent', from: [], at: now - H });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, { ...live, windFrom: [225] }, [zone], now)).toEqual({ source: 'recent', from: [225], at: now - H });
+  });
+
+  it('sin carga reciente: el sotavento habitual igual, avisando que no hubo carga', () => {
+    const live = { meters: 1500, freezingMin: 1800, lat: -41.2, lon: -71.4, at: now - H, windFrom: [] };
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [zone], now)).toEqual({ source: 'prevailing', from: [225], zone: 'Catedral', quiet: { at: now - H } });
+    // Sin zona descargada: el habitual del lugar, si se pidió; si no, del oeste.
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, { ...live, prevailing: [315] }, [], now)).toEqual({ source: 'prevailing', from: [315], quiet: { at: now - H } });
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, live, [], now)).toEqual({ source: 'default', from: [270], quiet: { at: now - H } });
+    // Con la serie de la zona sin carga (sin nieve).
+    const calm = { ...zone, freezing: { ...series, snow: repeat(n, 0) } };
+    expect(chooseWind({ lat: -41.2, lon: -71.4 }, null, [calm], now)).toEqual({ source: 'prevailing', from: [225], zone: 'Catedral', quiet: { at: start, zone: 'Catedral' } });
+  });
+
+  it('el habitual del lugar se pide una vez, y solo sin zona con el suyo', async () => {
+    const { needsLivePrevailing, carryPrevailing } = await import('./snowline');
+    const live = { meters: 1500, freezingMin: 1800, lat: -41.2, lon: -71.4, at: now - H, windFrom: [] };
+    expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, live, [])).toBe(true);
+    expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, live, [zone])).toBe(false);
+    expect(needsLivePrevailing({ lat: -41.2, lon: -71.4 }, { ...live, prevailing: [] }, [])).toBe(false);
+    // Al renovar en el mismo lugar se conserva; en otro, no.
+    expect(carryPrevailing({ ...live, prevailing: [315] }, live).prevailing).toEqual([315]);
+    expect(carryPrevailing({ ...live, prevailing: [315] }, { ...live, lat: -32.6 }).prevailing).toBeUndefined();
   });
 
   it('pronóstico vencido: el habitual; lejos de todo: del oeste', () => {

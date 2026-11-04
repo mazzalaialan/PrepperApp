@@ -16,7 +16,7 @@ import { FullscreenStage } from '@/ui/FullscreenStage';
 import { CameraButtons } from './CameraButtons';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
-import { chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
+import { carryPrevailing, chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsLivePrevailing, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
 import { compassList, fetchPrevailing, leeAspects } from './wind';
 import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress } from './tiles';
 
@@ -90,7 +90,8 @@ export function MapsPage() {
       void readSnowline().then((saved) => {
         if (!needsRefresh(saved, at)) return;
         fetchSnowline(weatherUrl, at.lat, at.lon).then(
-          async (s) => {
+          async (fresh) => {
+            const s = carryPrevailing(saved, fresh);
             await saveSnowline(s);
             setSnowline(s);
             setSnowlineError(false);
@@ -101,6 +102,26 @@ export function MapsPage() {
     }, 1500);
     return () => clearTimeout(timer);
   }, [layers.slope, online, snowKey, weatherUrl]);
+  // Sin carga reciente (o sin viento) y sin zona descargada cerca: el viento habitual del lugar, una vez (~50 KB).
+  const [prevailingFailed, setPrevailingFailed] = useState(false);
+  const wantPrevailing = layers.slope && online && !!snowline && !(snowline.windFrom?.length) && needsLivePrevailing({ lat: view.lat, lon: view.lon }, snowline, zones);
+  useEffect(() => {
+    if (!wantPrevailing || !snowline) return;
+    let cancelled = false;
+    fetchPrevailing(weatherUrl, snowline.lat, snowline.lon).then(
+      async (p) => {
+        const current = await readSnowline();
+        if (cancelled || !current || current.at !== snowline.at) return;
+        const s = { ...current, prevailing: p.from };
+        await saveSnowline(s);
+        setSnowline(s);
+      },
+      () => !cancelled && setPrevailingFailed(true),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [wantPrevailing, snowline?.at, weatherUrl]);
   // Con conexión, la del lugar; sin conexión, la del pronóstico guardado con la zona más cercana; nunca una de otro lugar.
   const choice = chooseSnowline({ lat: view.lat, lon: view.lon }, snowline, zones);
   // Sin isoterma para esta zona: la altura que eligió el usuario para ese caso.
@@ -108,17 +129,25 @@ export function MapsPage() {
   // Viento que cargó nieve: el reciente, el habitual de la zona o, sin nada, del oeste (ver wind.ts).
   const wind = chooseWind({ lat: view.lat, lon: view.lon }, snowline, zones);
   // Con conexión, mientras llega el viento del lugar no se raya: el habitual o el del oeste solo sin conexión o si la consulta falla.
-  const windPending = online && !snowlineError && wind.source !== 'recent' && needsRefresh(snowline, { lat: view.lat, lon: view.lon });
+  const windPending =
+    online && wind.source !== 'recent' && ((!snowlineError && needsRefresh(snowline, { lat: view.lat, lon: view.lon })) || (wantPrevailing && !prevailingFailed));
   const slopeLee = windPending ? [] : leeAspects(wind.from);
   const windText = () => {
     const lee = compassList(slopeLee, i18n.language);
     const from = compassList(wind.from, i18n.language);
     if (windPending) return t('maps.windLoading');
-    if (wind.source === 'default') return t('maps.windDefault', { lee });
-    if (wind.source === 'prevailing') return t('maps.windPrevailing', { lee, from, zone: wind.zone });
-    const none = wind.from.length === 0;
-    if (wind.zone) return none ? t('maps.windZoneNone', { zone: wind.zone, ago: ago(wind.at) }) : t('maps.windZone', { lee, from, zone: wind.zone, ago: ago(wind.at) });
-    return none ? t('maps.windRecentNone', { ago: ago(wind.at) }) : t('maps.windRecent', { lee, from, ago: ago(wind.at) });
+    if (wind.source === 'recent') return wind.zone ? t('maps.windZone', { lee, from, zone: wind.zone, ago: ago(wind.at) }) : t('maps.windRecent', { lee, from, ago: ago(wind.at) });
+    // Sin carga reciente o sin datos: el sotavento habitual, donde pueden quedar placas viejas.
+    const why = wind.quiet
+      ? wind.quiet.zone
+        ? t('maps.windQuietZone', { zone: wind.quiet.zone, ago: ago(wind.quiet.at) })
+        : t('maps.windQuietLive', { ago: ago(wind.quiet.at) })
+      : t('maps.windNoData');
+    const usual =
+      wind.source === 'default'
+        ? t('maps.windUsualDefault', { lee })
+        : t('maps.windUsual', { lee, from, place: wind.zone ? t('maps.windPlaceZone', { zone: wind.zone }) : t('maps.windPlaceHere') });
+    return `${why} ${usual}`;
   };
   const fmtM = (m: number) => `${new Intl.NumberFormat(i18n.language).format(m)} m`;
   const ago = (at: number) => {
