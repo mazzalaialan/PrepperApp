@@ -28,7 +28,7 @@ La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 | `server/` | Servidor opcional: notificaciones push y transferencia ([guía de instalación](docs/SERVIDOR.md)) |
 | `deploy/` | Docker Compose con HTTPS automático |
 | `portable/` | Lanzadores del paquete para usar la app sin internet en una PC |
-| `tools/library-builder/` | Conversión de libros a paquetes de biblioteca *(fase F4)* |
+| `tools/library-builder/` | Conversión de libros a paquetes de biblioteca *(fase Biblioteca)* |
 
 ## Desarrollo
 
