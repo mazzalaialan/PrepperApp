@@ -20,6 +20,7 @@ import { BrandMark } from '@/ui/Brand';
 import { Dialog } from '@/ui/Dialog';
 import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
 import { RainNotices } from '@/modules/weather/RainNotices';
+import { useZoneForecastRefresh } from '@/modules/maps/zoneForecast';
 import { useRainServerSync } from '@/modules/weather/rainServer';
 import { useRainWatcher } from '@/modules/weather/rainWatch';
 import { PortableUpdateNotice } from './PortableUpdateNotice';
@@ -49,6 +50,7 @@ export function Shell() {
   const inMore = MORE.some((m) => pathname.startsWith(m.to));
   useRainWatcher();
   useRainServerSync();
+  useZoneForecastRefresh();
 
   return (
     <div className="shell">

@@ -55,6 +55,8 @@ export interface Settings {
   weatherMapValue: WeatherMapValue;
   /** Capas de los mapas offline de Orientación. */
   mapLayers: MapLayers;
+  /** Línea de nieve puesta a mano para la capa de avalanchas (m); `null` = la estima la app con la isoterma de 0 °C. */
+  snowlineManual: number | null;
   /** Al seguir un track: el dibujo liviano o el mapa (en 2D o 3D). */
   trackFollowView: 'drawing' | 'map';
   /** Leer en voz alta los pasos de las guías de primeros auxilios. */
@@ -84,6 +86,8 @@ export interface MapLayers {
   mine: boolean;
   /** Tracks importados (GPX). */
   tracks: boolean;
+  /** Riesgo de avalancha por pendiente (con los colores del inclinómetro), calculado con la elevación descargada. */
+  slope: boolean;
   /** Relieve en 3D (el mapa se puede inclinar); apagado es el mapa plano. */
   terrain3d: boolean;
 }
@@ -153,7 +157,8 @@ export const DEFAULT_SETTINGS: Settings = {
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
   weatherMapValue: 'temp',
-  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, terrain3d: false },
+  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, terrain3d: false },
+  snowlineManual: null,
   trackFollowView: 'drawing',
   guideVoice: false,
   firstAidEnv: 'city',

@@ -1296,7 +1296,7 @@ a.module-card:hover {
 }
 
 [data-zone='steep'] {
-  --zone: var(--danger);
+  --zone: var(--steep);
 }
 
 .incl-risk {

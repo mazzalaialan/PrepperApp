@@ -14,6 +14,10 @@ async function mockMaps(page: Page) {
   await ctx.route('https://tiles.openfreemap.org/planet/test/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://tiles.openfreemap.org/fonts/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://s3.amazonaws.com/elevation-tiles-prod/**', (route) => route.fulfill({ body: dem, contentType: 'image/png' }));
+  // Isoterma de 0 °C de los últimos días (para la línea de nieve de la capa de avalanchas).
+  await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) =>
+    route.fulfill({ json: { hourly: { time: ['2026-11-01T00:00', '2026-11-01T01:00', '2026-11-01T02:00', '2026-11-01T03:00'], freezing_level_height: [2250, 1380, null, 1900] } } }),
+  );
 }
 
 const cacheKeys = (page: Page) =>
@@ -67,6 +71,20 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await page.getByRole('button', { name: 'Curvas de nivel' }).click();
   await expect(page.getByRole('button', { name: 'Curvas de nivel' })).toHaveAttribute('aria-pressed', 'false');
 
+  // Riesgo de avalancha: con los colores del inclinómetro, solo por encima de la línea de nieve.
+  const avalanche = page.getByRole('button', { name: 'Riesgo de avalancha' });
+  await expect(avalanche).toHaveAttribute('aria-pressed', 'false');
+  await avalanche.click();
+  const legend = page.getByTestId('slope-legend');
+  await expect(legend).toContainText('30° a 45°');
+  await expect(legend).toContainText('más de 45°');
+  await expect(page.getByTestId('snowline-status')).toHaveText(/^Se pinta desde los 1100 m: la isoterma de 0 °C más baja de los últimos días en esta zona \(1380 m, Open-Meteo/);
+  await page.getByLabel('Poner la línea de nieve a mano').check();
+  await page.getByLabel('Hay nieve desde (m)').fill('2500');
+  await expect(page.getByTestId('snowline-status')).toHaveText('Se pinta desde los 2500 m (línea de nieve puesta a mano).');
+  await page.getByLabel('Poner la línea de nieve a mano').uncheck();
+  await expect(page.getByTestId('snowline-status')).toContainText("1100 m");
+
   // Sin conexión: la zona sigue en el dispositivo y el mapa se dibuja.
   await context.setOffline(true);
   await page.goto('/#/orientation');
@@ -76,6 +94,8 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(page.getByTestId('zone-list')).toContainText('2 km de radio');
   await expect(page.getByRole('button', { name: 'Descargar una zona' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Curvas de nivel' })).toHaveAttribute('aria-pressed', 'false');
+  // La línea de nieve guardada sirve sin conexión.
+  await expect(page.getByTestId('snowline-status')).toContainText("1100 m");
   await context.setOffline(false);
 
   // Borrar: se libera el espacio.

@@ -6,7 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { angleDiff } from '@/core/sensors/heading';
 import { useEffectiveTheme } from '@/core/settings/theme';
 import { setupProtocols } from './protocols';
-import { buildStyle, MAX_PITCH_3D, PITCH_3D, TERRAIN, themeColors, type MapColors, type MapLayersOn } from './style';
+import { buildStyle, MAX_PITCH_3D, PITCH_3D, slopeTiles, TERRAIN, themeColors, type MapColors, type MapLayersOn } from './style';
 
 export interface MapPoint {
   id: string;
@@ -268,10 +268,17 @@ export function MapView(props: Props) {
     // `isStyleLoaded()` da falso mientras bajan teselas: se usa la carga del estilo en sí.
     if (!m || !styleReady.current) return;
     for (const id of ['hillshade']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.hillshade ? 'visible' : 'none');
+    if (m.getLayer('slope')) m.setLayoutProperty('slope', 'visibility', props.layers.slope ? 'visible' : 'none');
     for (const id of ['contour-lines', 'contour-labels']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.layers.contours ? 'visible' : 'none');
     for (const id of ['mine-routes', 'mine-waypoints', 'mine-waypoint-names']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.showMine ? 'visible' : 'none');
     for (const id of ['track-lines', 'track-points', 'track-point-names']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', props.showTracks ? 'visible' : 'none');
-  }, [props.layers.hillshade, props.layers.contours, props.showMine, props.showTracks]);
+  }, [props.layers.hillshade, props.layers.contours, props.layers.slope, props.showMine, props.showTracks]);
+
+  // Nueva línea de nieve: se vuelven a pintar las teselas de pendiente.
+  useEffect(() => {
+    const src = map.current?.getSource('slope') as { setTiles?: (tiles: string[]) => void } | undefined;
+    if (styleReady.current) src?.setTiles?.(slopeTiles(props.layers.slopeMin));
+  }, [props.layers.slopeMin]);
 
   useEffect(() => {
     const m = map.current;

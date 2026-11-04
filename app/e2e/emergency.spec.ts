@@ -78,6 +78,12 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await page.getByLabel('Hasta').selectOption({ label: '30 km' });
   await expect(page.getByTestId('nearby-status')).toContainText('Sin conexión: se muestran los datos oficiales');
   await expect(list.locator('li').first()).toBeVisible();
+  // Zonas agrestes: rangos más grandes y "lo más cercano", esté a la distancia que esté (3 de cada tipo).
+  await expect(page.getByLabel('Hasta').locator('option')).toHaveText(['5 km', '15 km', '30 km', '50 km', '100 km', '200 km', 'Lo más cercano (sin límite)']);
+  await page.getByLabel('Hasta').selectOption({ label: 'Lo más cercano (sin límite)' });
+  await page.getByRole('button', { name: 'Bomberos', exact: true }).click();
+  await expect(list.locator('li')).toHaveCount(3);
+  await page.getByRole('button', { name: 'Todo', exact: true }).click();
   await context.setOffline(false);
 
   // La comisaría guardada va en "Servicios de emergencia cercanos", antes de Mis contactos; uno cargado a mano, en Mis contactos.

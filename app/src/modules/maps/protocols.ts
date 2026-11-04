@@ -2,6 +2,8 @@ import * as maplibregl from 'maplibre-gl';
 import mlcontour from 'maplibre-contour';
 // MapLibre 6 dibuja con un worker aparte: con Vite hay que indicarle dónde queda el archivo.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import { slopeTile } from './slope';
+import { themeColors } from './style';
 import { cachedOrNetwork, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, vectorTemplate } from './tiles';
 
 /**
@@ -36,6 +38,19 @@ export function setupProtocols(): { contoursUrl: string } {
     const data = await cachedOrNetwork(url, async () => url);
     if (!data) throw new Error('sin elevación');
     return { data };
+  });
+
+  // Riesgo de avalancha: la pendiente se calcula con la misma tesela de altura (anda sin conexión si la zona está bajada).
+  maplibregl.addProtocol('vkslope', async (params) => {
+    // "vkslope://z/x/y?min=1850": la línea de nieve va en la dirección, así cambiarla vuelve a pintar.
+    const [path, query] = params.url.split('?');
+    const { z, x, y } = parseZxy(path!);
+    const minElevation = Number(new URLSearchParams(query ?? '').get('min') ?? 0) || 0;
+    const url = fill(DEM_URL, z, x, y);
+    const dem = await cachedOrNetwork(url, async () => url);
+    if (!dem) throw new Error('sin elevación');
+    const c = themeColors();
+    return { data: await slopeTile(dem, z, y, { caution: c.warn, avalanche: c.danger, steep: c.steep }, minElevation) };
   });
 
   maplibregl.addProtocol('vkglyph', async (params) => {

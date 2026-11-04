@@ -105,6 +105,23 @@ export function mergeNearby(official: NearbyPlace[], osm: NearbyPlace[]): Nearby
   return merged.sort((a, b) => a.distance - b.distance);
 }
 
+/** Grupo de cada tipo para "lo más cercano": hospitales y ambulancias van juntos (salud). */
+export const nearbyGroup = (k: ContactKind) => (k === 'hospital' || k === 'medical' ? 'health' : k);
+
+/** Los `count` más cercanos de cada grupo (policía, bomberos, salud, defensa civil), del más cercano al más lejano. */
+export function nearestPerKind(places: NearbyPlace[], count: number): NearbyPlace[] {
+  const taken = new Map<string, number>();
+  const out: NearbyPlace[] = [];
+  for (const p of [...places].sort((a, b) => a.distance - b.distance)) {
+    const g = nearbyGroup(p.kind);
+    const n = taken.get(g) ?? 0;
+    if (n >= count) continue;
+    taken.set(g, n + 1);
+    out.push(p);
+  }
+  return out;
+}
+
 export function nearestRadio(data: EmergencyData, lat: number, lon: number, count = 3): (RadioStation & { distance: number })[] {
   return data.radio
     .map((r) => ({ ...r, distance: distanceMeters({ lat, lon }, r) }))

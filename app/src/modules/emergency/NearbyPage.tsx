@@ -7,14 +7,19 @@ import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { emptyContact } from './ContactEditPage';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
-import { mergeNearby, officialNearby, type EmergencyData, type NearbyPlace } from './data';
+import { mergeNearby, nearestPerKind, officialNearby, type EmergencyData, type NearbyPlace } from './data';
 
 const EMPTY_DATA: EmergencyData = { sources: { fire: '', police: '', health: '', radio: '' }, fire: [], police: [], health: [], radio: [] };
 import { fetchOsmNearby } from './osm';
 import { formatDistance, KindIcon, MapLink, PhoneActions } from './parts';
 import { useContacts } from './store';
 
-const RADII = [5, 15, 30];
+/** 0 = lo más cercano de cada tipo, sin límite (zonas agrestes, donde no hay nada cerca). */
+const RADII = [5, 15, 30, 50, 100, 200, 0];
+/** Hasta dónde se le pregunta a OpenStreetMap (con más, la consulta se vuelve muy pesada). */
+const OSM_MAX_KM = 200;
+/** Sin límite: cuántos de cada tipo. */
+const NEAREST_PER_KIND = 3;
 type Filter = 'all' | 'police' | 'fire' | 'health' | 'civilDefense';
 const FILTERS: Filter[] = ['all', 'police', 'fire', 'health', 'civilDefense'];
 const matches = (f: Filter, k: ContactKind) => f === 'all' || f === k || (f === 'health' && (k === 'hospital' || k === 'medical'));
@@ -58,7 +63,7 @@ export function NearbyPage() {
     }
     let cancelled = false;
     setOsmState('loading');
-    fetchOsmNearby(place.lat, place.lon, radiusKm * 1000).then(
+    fetchOsmNearby(place.lat, place.lon, Math.min(radiusKm || OSM_MAX_KM, OSM_MAX_KM) * 1000).then(
       (items) => {
         if (cancelled) return;
         setOsm({ key: searchKey, items });
@@ -72,12 +77,15 @@ export function NearbyPage() {
     // `searchKey` resume el lugar redondeado y el radio: el GPS se mueve en metros.
   }, [searchKey, attempt]);
 
-  const results = useMemo(() => {
+  // Todo lo conocido, sin límite de distancia (los datos oficiales vienen en la app).
+  const everything = useMemo(() => {
     if (!data || !place) return [];
-    const official = officialNearby(data, place.lat, place.lon, radiusKm * 1000);
-    return mergeNearby(official, osm?.key === searchKey ? osm.items : []);
-  }, [data, place?.lat, place?.lon, radiusKm, osm, searchKey]);
+    return mergeNearby(officialNearby(data, place.lat, place.lon, Infinity), osm?.key === searchKey ? osm.items : []);
+  }, [data, place?.lat, place?.lon, osm, searchKey]);
+  const results = radiusKm === 0 ? nearestPerKind(everything, NEAREST_PER_KIND) : everything.filter((p) => p.distance <= radiusKm * 1000);
   const shown = results.filter((r) => matches(filter, r.kind));
+  // Nada en el rango: igual se muestra lo más cercano de cada tipo, aunque esté lejos.
+  const fallback = radiusKm !== 0 && shown.length === 0 ? nearestPerKind(everything.filter((r) => matches(filter, r.kind)), 1) : [];
 
   const savedKeys = useMemo(() => new Set([...contacts.values()].map((c) => `${c.name}|${c.lat?.toFixed(4)}|${c.lon?.toFixed(4)}`)), [contacts]);
   const isSaved = (p: NearbyPlace) => savedKeys.has(`${p.name}|${p.lat.toFixed(4)}|${p.lon.toFixed(4)}`);
@@ -110,7 +118,7 @@ export function NearbyPage() {
         <select id="radius" className="select" value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))}>
           {RADII.map((r) => (
             <option key={r} value={r}>
-              {t('maps.km', { count: r })}
+              {r === 0 ? t('emergency.nearestAny') : t('maps.km', { count: r })}
             </option>
           ))}
         </select>
@@ -144,11 +152,17 @@ export function NearbyPage() {
 
       {!place ? (
         <p className="empty">{t('emergency.needPlace')}</p>
-      ) : shown.length === 0 ? (
+      ) : shown.length === 0 && fallback.length === 0 ? (
         <p className="empty">{t('emergency.nothingNear')}</p>
       ) : (
+        <>
+        {fallback.length > 0 && (
+          <p className="hint" role="status" data-testid="nearby-fallback" style={{ margin: 0 }}>
+            {t('emergency.nothingWithin', { km: radiusKm })}
+          </p>
+        )}
         <ul className="list contact-list" data-testid="nearby-list">
-          {shown.slice(0, MAX_SHOWN).map((p) => (
+          {(fallback.length ? fallback : shown).slice(0, MAX_SHOWN).map((p) => (
             <li key={p.key} className="contact-row">
               <KindIcon kind={p.kind} />
               <span className="list-main">
@@ -174,6 +188,7 @@ export function NearbyPage() {
             </li>
           ))}
         </ul>
+        </>
       )}
       <p className="hint">{t('emergency.nearbySources')}</p>
     </div>

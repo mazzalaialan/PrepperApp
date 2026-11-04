@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import data from './emergency-data.json';
-import { mergeNearby, nearestRadio, officialNearby, type EmergencyData, type NearbyPlace } from './data';
+import { mergeNearby, nearestPerKind, nearestRadio, officialNearby, type EmergencyData, type NearbyPlace } from './data';
 import { dialable, mapsUrl } from './national';
 import { describeAddress, osmKind, parseNearby, parseSurroundings } from './osm';
 
@@ -19,6 +19,18 @@ describe('datos oficiales incluidos', () => {
     expect(near.some((p) => p.kind === 'fire')).toBe(true);
     expect(near.every((p) => p.distance <= 15_000)).toBe(true);
     expect(nearestRadio(D, -41.1335, -71.3103)[0]!.call).toBe('LRA 30');
+  });
+
+  it('en zona agreste, lo más cercano de cada tipo aunque esté lejos', () => {
+    // Meseta de Somuncurá: no hay nada a menos de 30 km.
+    const all = officialNearby(D, -41.3, -67.2, Infinity);
+    expect(all.filter((p) => p.distance <= 30_000)).toHaveLength(0);
+    const nearest = nearestPerKind(all, 1);
+    const fire = nearest.find((p) => p.kind === 'fire')!;
+    expect(fire.distance).toBeGreaterThan(30_000);
+    expect(nearest.filter((p) => p.kind === 'fire')).toHaveLength(1);
+    // Ordenados del más cercano al más lejano.
+    expect(nearest.map((p) => p.distance)).toEqual([...nearest.map((p) => p.distance)].sort((a, b) => a - b));
   });
 });
 
@@ -94,5 +106,16 @@ describe('OpenStreetMap', () => {
     expect(s.roads).toEqual(['RN 40']);
     expect(s.nearbyStreets).toEqual(['Los Coihues']);
     expect(s.milestone?.km).toBe('1990');
+  });
+});
+
+describe('lo más cercano de cada tipo', () => {
+  const p = (kind: NearbyPlace['kind'], distance: number): NearbyPlace => ({
+    key: `${kind}${distance}`, kind, name: '', phone: '', address: '', lat: 0, lon: 0, distance, source: 'official', detail: '',
+  });
+
+  it('hospitales y ambulancias cuentan juntos como salud', () => {
+    const out = nearestPerKind([p('fire', 90), p('hospital', 50), p('medical', 40), p('fire', 10), p('police', 300)], 1);
+    expect(out.map((x) => x.key)).toEqual(['fire10', 'medical40', 'police300']);
   });
 });

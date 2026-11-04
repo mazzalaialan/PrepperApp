@@ -16,10 +16,12 @@ import { FullscreenStage } from '@/ui/FullscreenStage';
 import { CameraButtons } from './CameraButtons';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
+import { chooseSnowline, fetchFreezingSeries, fetchSnowline, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
 import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress } from './tiles';
 
 const RADII = [2, 5, 10, 20, 50];
-const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'mine', 'tracks'];
+const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'slope', 'mine', 'tracks'];
+const SLOPE_ZONES = ['caution', 'avalanche', 'steep'] as const;
 /** Vista que muestra un track entero (centro y zoom según lo que ocupa). */
 function trackView(tr: { segments: [number, number, number | null][][] }): ViewState | null {
   const pts = tr.segments.flat();
@@ -67,6 +69,44 @@ export function MapsPage() {
   const [abort, setAbort] = useState<AbortController | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [usage, setUsage] = useState<number | null>(null);
+  const snowlineManual = useSettings((s) => s.settings.snowlineManual);
+  const weatherUrl = useSettings((s) => s.settings.weatherUrl);
+  const [snowline, setSnowline] = useState<Snowline | null>(null);
+  const [snowlineError, setSnowlineError] = useState(false);
+
+  // Línea de nieve (capa de avalanchas): la última guardada y, con conexión, la del lugar que se mira.
+  useEffect(() => {
+    void readSnowline().then(setSnowline);
+  }, []);
+  const snowKey = `${view.lat.toFixed(1)},${view.lon.toFixed(1)}`;
+  useEffect(() => {
+    if (!layers.slope || snowlineManual !== null || !online) return;
+    const at = { lat: view.lat, lon: view.lon };
+    // Se espera a que el mapa quede quieto.
+    const timer = setTimeout(() => {
+      void readSnowline().then((saved) => {
+        if (!needsRefresh(saved, at)) return;
+        fetchSnowline(weatherUrl, at.lat, at.lon).then(
+          async (s) => {
+            await saveSnowline(s);
+            setSnowline(s);
+            setSnowlineError(false);
+          },
+          () => setSnowlineError(true),
+        );
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [layers.slope, snowlineManual, online, snowKey, weatherUrl]);
+  // Con conexión, la del lugar; sin conexión, la del pronóstico guardado con la zona más cercana; nunca una de otro lugar.
+  const choice = chooseSnowline({ lat: view.lat, lon: view.lon }, snowline, zones);
+  const slopeMin = snowlineManual ?? (choice.source === 'none' ? 0 : choice.meters);
+  const fmtM = (m: number) => `${new Intl.NumberFormat(i18n.language).format(m)} m`;
+  const ago = (at: number) => {
+    const min = Math.round((Date.now() - at) / 60_000);
+    const rtf = new Intl.RelativeTimeFormat(i18n.language, { numeric: 'auto' });
+    return min < 60 ? rtf.format(-min, 'minute') : min < 2880 ? rtf.format(-Math.round(min / 60), 'hour') : rtf.format(-Math.round(min / 1440), 'day');
+  };
 
   useEffect(() => {
     const onLine = () => setOnline(navigator.onLine);
@@ -144,6 +184,8 @@ export function MapsPage() {
     void navigator.storage?.persist?.();
     try {
       const result = await downloadZone(plan, setProgress, controller.signal);
+      // La isoterma de 0 °C de los próximos días, para la capa de avalanchas sin conexión (si falla, la zona igual sirve).
+      const freezing = await fetchFreezingSeries(weatherUrl, view.lat, view.lon).catch(() => undefined);
       const zone: MapZone = {
         id: crypto.randomUUID(),
         name: panel.name.trim() || t('maps.defaultName', { n: zones.length + 1 }),
@@ -154,6 +196,7 @@ export function MapsPage() {
         bytes: result.bytes,
         failed: result.failed,
         createdAt: new Date().toISOString(),
+        ...(freezing ? { freezing } : {}),
       };
       await add(zone);
       setPanel(null);
@@ -186,7 +229,7 @@ export function MapsPage() {
       <FullscreenStage className="maps-stage">
         <MapView
           initial={initial}
-          layers={layers}
+          layers={{ ...layers, slopeMin }}
           showMine={layers.mine}
           waypoints={waypoints}
           routes={routes}
@@ -243,6 +286,57 @@ export function MapsPage() {
             </button>
           ))}
         </div>
+        {layers.slope && (
+          <div className="stack" style={{ gap: 4 }} data-testid="slope-legend">
+            <ul className="incl-legend">
+              {SLOPE_ZONES.map((z) => (
+                <li key={z} data-zone={z}>
+                  <span className="incl-swatch" aria-hidden />
+                  {t(`inclinometer.legend.${z}`)}
+                </li>
+              ))}
+            </ul>
+            <p className="hint" style={{ margin: 0 }} data-testid="snowline-status">
+              {snowlineManual !== null
+                ? t('maps.snowlineManualStatus', { m: fmtM(snowlineManual) })
+                : choice.source === 'live'
+                  ? t('maps.snowlineAuto', { m: fmtM(choice.meters), freezing: fmtM(choice.freezingMin), ago: ago(choice.at) })
+                  : choice.source === 'zone'
+                    ? t('maps.snowlineZone', { m: fmtM(choice.meters), freezing: fmtM(choice.freezingMin), zone: choice.zone, ago: ago(choice.at) })
+                    : snowlineError || !online
+                      ? t('maps.snowlineNone')
+                      : t('maps.snowlineLoading')}
+            </p>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={snowlineManual !== null}
+                onChange={(e) => void update({ snowlineManual: e.target.checked ? (choice.source === 'none' ? 2000 : choice.meters) : null })}
+              />
+              {t('maps.snowlineManual')}
+            </label>
+            {snowlineManual !== null && (
+              <div className="field">
+                <label htmlFor="snowline-m">{t('maps.snowlineFrom')}</label>
+                <input
+                  id="snowline-m"
+                  className="input"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={7000}
+                  step={50}
+                  value={snowlineManual}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (Number.isFinite(v) && v >= 0) void update({ snowlineManual: Math.min(7000, Math.round(v)) });
+                  }}
+                />
+              </div>
+            )}
+            <p className="hint" style={{ margin: 0 }}>{t('maps.slopeHint')}</p>
+          </div>
+        )}
       </section>
 
       <section className="card stack" aria-labelledby="maps-zones">

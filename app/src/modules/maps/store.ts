@@ -1,4 +1,5 @@
 import { strFromU8, strToU8 } from 'fflate';
+import type { FreezingSeries } from './snowline';
 import { create } from 'zustand';
 import { blobStore } from '@/core/db/repository';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
@@ -18,6 +19,8 @@ export interface MapZone {
   bytes: number;
   failed: number;
   createdAt: string;
+  /** Isoterma de 0 °C hora por hora, para la línea de nieve sin conexión (ver snowline.ts). */
+  freezing?: FreezingSeries;
 }
 
 const BLOB_ID = 'map-zones';

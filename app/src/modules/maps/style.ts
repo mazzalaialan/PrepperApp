@@ -19,6 +19,8 @@ export interface MapColors {
   info: string;
   ok: string;
   warn: string;
+  danger: string;
+  steep: string;
 }
 
 export function themeColors(): MapColors {
@@ -35,14 +37,22 @@ export function themeColors(): MapColors {
     info: v('--info'),
     ok: v('--ok'),
     warn: v('--warn'),
+    danger: v('--danger'),
+    steep: v('--steep'),
   };
 }
 
 export interface MapLayersOn {
   hillshade: boolean;
   contours: boolean;
+  slope: boolean;
+  /** Línea de nieve: la pendiente se pinta desde esta altura (m). */
+  slopeMin?: number;
   terrain3d: boolean;
 }
+
+/** Teselas de la capa de pendiente para una línea de nieve. */
+export const slopeTiles = (min = 0) => [`vkslope://{z}/{x}/{y}?min=${Math.round(min)}`];
 
 /** Relieve en 3D: un poco exagerado para que se lean las pendientes. */
 export const TERRAIN = { source: 'terrain', exaggeration: 1.3 } as const;
@@ -77,6 +87,8 @@ export function buildStyle(c: MapColors, contoursUrl: string, layers: MapLayersO
       // Las mismas teselas de altura, en otra fuente: MapLibre pide no compartirla entre el sombreado y el 3D.
       terrain: { type: 'raster-dem', tiles: ['vkdem://{z}/{x}/{y}'], tileSize: 256, encoding: 'terrarium', maxzoom: DEM_MAX_ZOOM },
       contours: { type: 'vector', tiles: [contoursUrl], maxzoom: 15 },
+      // Pendiente pintada con los colores del inclinómetro (ver slope.ts y protocols.ts).
+      slope: { type: 'raster', tiles: slopeTiles(layers.slopeMin), tileSize: 256, maxzoom: DEM_MAX_ZOOM },
     },
     ...(layers.terrain3d ? { terrain: TERRAIN } : {}),
     layers: [
@@ -104,6 +116,14 @@ export function buildStyle(c: MapColors, contoursUrl: string, layers: MapLayersO
         source: 'dem',
         layout: { visibility: visible(layers.hillshade) },
         paint: { 'hillshade-shadow-color': c.bg, 'hillshade-highlight-color': c.text, 'hillshade-accent-color': c.bg, 'hillshade-exaggeration': 0.35 },
+      },
+      {
+        id: 'slope',
+        type: 'raster',
+        source: 'slope',
+        // Sin suavizar al acercar: se ve dónde termina cada zona.
+        layout: { visibility: visible(layers.slope) },
+        paint: { 'raster-opacity': 0.6, 'raster-resampling': 'nearest' },
       },
       { id: 'water', type: 'fill', source: 'osm', 'source-layer': 'water', paint: { 'fill-color': c.info, 'fill-opacity': 0.45 } },
       {
