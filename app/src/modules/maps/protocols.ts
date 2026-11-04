@@ -50,7 +50,7 @@ export function setupProtocols(): { contoursUrl: string } {
     const dem = await cachedOrNetwork(url, async () => url);
     if (!dem) throw new Error('sin elevación');
     const c = themeColors();
-    return { data: await slopeTile(dem, z, y, { caution: c.warn, avalanche: c.danger, steep: c.steep }, minElevation) };
+    return { data: await slopeTile(dem, z, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep }, minElevation) };
   });
 
   maplibregl.addProtocol('vkglyph', async (params) => {

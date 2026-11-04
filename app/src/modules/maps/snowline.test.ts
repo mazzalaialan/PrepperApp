@@ -18,10 +18,13 @@ describe('línea de nieve para la capa de avalanchas', () => {
   });
 
   it('debajo de la línea de nieve no se pinta aunque sea empinado', () => {
-    const colors = { caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
-    const px = paintSlope(new Float32Array([38, 38]), colors, 190, new Float32Array([900, 1500]), 1100);
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
+    const px = paintSlope(new Float32Array([38, 38, 10, 10]), colors, 190, new Float32Array([900, 1500, 900, 1500]), 1100);
     expect(px[3]).toBe(0);
     expect(px[7]).toBe(190);
+    // Lo plano: verde arriba de la línea de nieve, sin color abajo.
+    expect(px[11]).toBe(0);
+    expect(px[15]).toBe(190);
   });
 });
 

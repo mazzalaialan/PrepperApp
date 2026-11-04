@@ -27,6 +27,8 @@ const cacheKeys = (page: Page) =>
   });
 
 test('mapas offline: descargar una zona, verla sin conexión y borrarla', async ({ page, context }, testInfo) => {
+  // Descarga, capas y uso sin conexión: en esta máquina (sin GPU) puede pasar del minuto.
+  test.setTimeout(120_000);
   await mockMaps(page);
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
@@ -74,8 +76,19 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   // Riesgo de avalancha: con los colores del inclinómetro, solo por encima de la línea de nieve.
   const avalanche = page.getByRole('button', { name: 'Riesgo de avalancha' });
   await expect(avalanche).toHaveAttribute('aria-pressed', 'false');
+  // Sin datos de isoterma (la consulta falla): se usa la altura que elija el usuario.
+  const failing = (route: import('@playwright/test').Route) => route.fulfill({ status: 503, body: '' });
+  await page.route('https://api.open-meteo.com/v1/forecast**', failing);
+  await avalanche.click();
+  await expect(page.getByTestId('snowline-status')).toHaveText(/^Sin datos de isoterma para esta zona.*se pinta desde los 1500 m que elegiste/);
+  await page.getByLabel('Sin datos de isoterma, hay nieve desde (m)').fill('1800');
+  await expect(page.getByTestId('snowline-status')).toContainText('se pinta desde los 1800 m que elegiste');
+  // Con datos otra vez, manda la isoterma.
+  await page.unroute('https://api.open-meteo.com/v1/forecast**', failing);
+  await avalanche.click();
   await avalanche.click();
   const legend = page.getByTestId('slope-legend');
+  await expect(legend).toContainText('menos de 25°');
   await expect(legend).toContainText('30° a 45°');
   await expect(legend).toContainText('más de 45°');
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Se pinta desde los 1100 m: la isoterma de 0 °C más baja de los últimos días en esta zona \(1380 m, Open-Meteo/);

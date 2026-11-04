@@ -21,7 +21,7 @@ import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress }
 
 const RADII = [2, 5, 10, 20, 50];
 const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'slope', 'mine', 'tracks'];
-const SLOPE_ZONES = ['caution', 'avalanche', 'steep'] as const;
+const SLOPE_ZONES = ['low', 'caution', 'avalanche', 'steep'] as const;
 /** Vista que muestra un track entero (centro y zoom según lo que ocupa). */
 function trackView(tr: { segments: [number, number, number | null][][] }): ViewState | null {
   const pts = tr.segments.flat();
@@ -70,6 +70,7 @@ export function MapsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [usage, setUsage] = useState<number | null>(null);
   const snowlineManual = useSettings((s) => s.settings.snowlineManual);
+  const snowlineFallback = useSettings((s) => s.settings.snowlineFallback);
   const weatherUrl = useSettings((s) => s.settings.weatherUrl);
   const [snowline, setSnowline] = useState<Snowline | null>(null);
   const [snowlineError, setSnowlineError] = useState(false);
@@ -100,7 +101,8 @@ export function MapsPage() {
   }, [layers.slope, snowlineManual, online, snowKey, weatherUrl]);
   // Con conexión, la del lugar; sin conexión, la del pronóstico guardado con la zona más cercana; nunca una de otro lugar.
   const choice = chooseSnowline({ lat: view.lat, lon: view.lon }, snowline, zones);
-  const slopeMin = snowlineManual ?? (choice.source === 'none' ? 0 : choice.meters);
+  // Sin isoterma para esta zona: la altura que eligió el usuario para ese caso.
+  const slopeMin = snowlineManual ?? (choice.source === 'none' ? snowlineFallback : choice.meters);
   const fmtM = (m: number) => `${new Intl.NumberFormat(i18n.language).format(m)} m`;
   const ago = (at: number) => {
     const min = Math.round((Date.now() - at) / 60_000);
@@ -304,17 +306,36 @@ export function MapsPage() {
                   : choice.source === 'zone'
                     ? t('maps.snowlineZone', { m: fmtM(choice.meters), freezing: fmtM(choice.freezingMin), zone: choice.zone, ago: ago(choice.at) })
                     : snowlineError || !online
-                      ? t('maps.snowlineNone')
+                      ? t('maps.snowlineNone', { m: fmtM(snowlineFallback) })
                       : t('maps.snowlineLoading')}
             </p>
             <label className="check">
               <input
                 type="checkbox"
                 checked={snowlineManual !== null}
-                onChange={(e) => void update({ snowlineManual: e.target.checked ? (choice.source === 'none' ? 2000 : choice.meters) : null })}
+                onChange={(e) => void update({ snowlineManual: e.target.checked ? (choice.source === 'none' ? snowlineFallback : choice.meters) : null })}
               />
               {t('maps.snowlineManual')}
             </label>
+            {snowlineManual === null && choice.source === 'none' && (
+              <div className="field">
+                <label htmlFor="snowline-fallback">{t('maps.snowlineFallback')}</label>
+                <input
+                  id="snowline-fallback"
+                  className="input"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={7000}
+                  step={50}
+                  value={snowlineFallback}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (Number.isFinite(v) && v >= 0) void update({ snowlineFallback: Math.min(7000, Math.round(v)) });
+                  }}
+                />
+              </div>
+            )}
             {snowlineManual !== null && (
               <div className="field">
                 <label htmlFor="snowline-m">{t('maps.snowlineFrom')}</label>

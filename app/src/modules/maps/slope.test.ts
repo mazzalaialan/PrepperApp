@@ -34,10 +34,10 @@ describe('pendiente para la capa de avalanchas', () => {
     }
   });
 
-  it('pinta con los colores del inclinómetro y deja sin color lo de menos de 25°', () => {
-    const colors = { caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
+  it('pinta con los colores del inclinómetro, también el verde de riesgo bajo', () => {
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
     const px = paintSlope(new Float32Array([10, 27, 38, 50]), colors, 190);
-    expect([...px.slice(0, 4)]).toEqual([0, 0, 0, 0]);
+    expect([...px.slice(0, 4)]).toEqual([0x6f, 0x9e, 0x4c, 190]);
     expect([...px.slice(4, 8)]).toEqual([0xd0, 0xa0, 0x3c, 190]);
     expect([...px.slice(8, 12)]).toEqual([0xb8, 0x4a, 0x30, 190]);
     expect([...px.slice(12, 16)]).toEqual([0xe8, 0x23, 0x1b, 190]);

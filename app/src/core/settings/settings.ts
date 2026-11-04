@@ -57,6 +57,8 @@ export interface Settings {
   mapLayers: MapLayers;
   /** Línea de nieve puesta a mano para la capa de avalanchas (m); `null` = la estima la app con la isoterma de 0 °C. */
   snowlineManual: number | null;
+  /** Altura de la nieve a usar cuando no hay isoterma para la zona (sin conexión y sin pronóstico guardado cerca). */
+  snowlineFallback: number;
   /** Al seguir un track: el dibujo liviano o el mapa (en 2D o 3D). */
   trackFollowView: 'drawing' | 'map';
   /** Leer en voz alta los pasos de las guías de primeros auxilios. */
@@ -159,6 +161,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weatherMapValue: 'temp',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, terrain3d: false },
   snowlineManual: null,
+  snowlineFallback: 1500,
   trackFollowView: 'drawing',
   guideVoice: false,
   firstAidEnv: 'city',

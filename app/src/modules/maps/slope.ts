@@ -5,7 +5,7 @@ import { slopeZone, type SlopeZone } from '@/core/sensors/tilt';
  * celular con las teselas de elevación (Terrarium) que ya se bajan con cada
  * zona: funciona sin conexión. Solo por encima de la línea de nieve
  * (snowline.ts), donde puede haber nieve acumulada. Mismas zonas que el inclinómetro
- * (core/sensors/tilt.ts): menos de 25°, sin color; de 25 a 30°, amarillo; de
+ * (core/sensors/tilt.ts): menos de 25°, verde; de 25 a 30°, amarillo; de
  * 30 a 45°, rojo óxido (rango típico de avalanchas); más de 45°, rojo.
  */
 
@@ -41,6 +41,7 @@ export function slopeDegrees(elev: Float32Array, z: number, y: number, size = SL
 }
 
 export interface SlopeColors {
+  low: string;
   caution: string;
   avalanche: string;
   steep: string;
@@ -54,12 +55,13 @@ const rgb = (hex: string): [number, number, number] => {
 };
 
 /**
- * Pinta la pendiente: transparente por debajo de 25° y por debajo de la línea
- * de nieve (`minElevation`, con `elev`), y el color de cada zona del inclinómetro.
+ * Pinta la pendiente con el color de cada zona del inclinómetro (también el
+ * verde de riesgo bajo), solo por encima de la línea de nieve (`minElevation`,
+ * con `elev`): abajo no hay nieve y queda sin color.
  */
 export function paintSlope(slope: Float32Array, colors: SlopeColors, alpha = 190, elev?: Float32Array, minElevation = 0): Uint8ClampedArray {
   const table: Record<SlopeZone, [number, number, number] | null> = {
-    low: null,
+    low: rgb(colors.low),
     caution: rgb(colors.caution),
     avalanche: rgb(colors.avalanche),
     steep: rgb(colors.steep),
