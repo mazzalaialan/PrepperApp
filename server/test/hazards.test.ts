@@ -4,6 +4,7 @@ import { openDb } from '../src/db.ts';
 import type { PushPayload, PushSender, PushSubscriptionJson } from '../src/push.ts';
 import { parseGdacs, parseUsgs, quakeRadiusKm, type HazardEvent } from '../src/hazards/sources.ts';
 import { runHazardWatch } from '../src/hazards/watch.ts';
+import { urgencyOf } from '../src/push.ts';
 
 class FakePush implements PushSender {
   publicKey = 'k';
@@ -97,5 +98,12 @@ describe('peligros naturales', () => {
     assert.equal((await runHazardWatch(db, push, [fire], now)).sent, 0);
     assert.equal((await runHazardWatch(db, push, [{ ...fire, level: 'Orange' }], now)).sent, 1);
     assert.equal(push.sent[1]!.hazard!.level, 'Orange');
+  });
+
+  it('lo urgente sale con prioridad alta', () => {
+    assert.equal(urgencyOf({ type: 'hazard' }), 'high');
+    assert.equal(urgencyOf({ type: 'lightning' }), 'high');
+    assert.equal(urgencyOf({ type: 'alerts' }), 'normal');
+    assert.equal(urgencyOf({ type: 'update' }), 'normal');
   });
 });

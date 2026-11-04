@@ -38,6 +38,11 @@ export interface PushSender {
   send(subscription: PushSubscriptionJson, payload: PushPayload): Promise<boolean>;
 }
 
+/** Prioridad del push (RFC 8030): alta para lo que no puede esperar. */
+export function urgencyOf(payload: PushPayload): 'high' | 'normal' {
+  return payload.type === 'hazard' || payload.type === 'lightning' || payload.type === 'rain' ? 'high' : 'normal';
+}
+
 /** Claves VAPID: se generan en el primer arranque y se guardan en la base. */
 export function createPushSender(db: Db, subject: string): PushSender {
   let publicKey = getSetting(db, 'vapid_public');
@@ -54,7 +59,8 @@ export function createPushSender(db: Db, subject: string): PushSender {
     async send(subscription, payload) {
       try {
         // El contenido viaja cifrado de punta a punta (RFC 8291): el servicio push no lo puede leer.
-        await webpush.sendNotification(subscription, JSON.stringify(payload), { vapidDetails: details, TTL: 24 * 3600 });
+        // Lo urgente con prioridad alta: si no, Android puede demorarlo mientras el celular está en reposo.
+        await webpush.sendNotification(subscription, JSON.stringify(payload), { vapidDetails: details, TTL: 24 * 3600, urgency: urgencyOf(payload) });
         return true;
       } catch (err) {
         const status = (err as { statusCode?: number }).statusCode;
