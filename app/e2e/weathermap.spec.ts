@@ -58,6 +58,16 @@ async function mockSources(page: Page) {
       },
     }),
   );
+  // Lluvia estimada (servidor propio): imagen transparente con un cuadrado azul.
+  const rainPng = await sharp({ create: { width: 64, height: 64, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: { create: { width: 8, height: 8, channels: 4, background: { r: 40, g: 140, b: 240, alpha: 1 } } }, left: 50, top: 10 }])
+    .png()
+    .toBuffer();
+  const rainAt = new Date(Math.floor(Date.now() / 600_000) * 600_000).toISOString();
+  await ctx.route('**/api/rain/map', (route) =>
+    route.fulfill({ json: { at: rainAt, bounds: { west: -76, east: -52, south: -58, north: -21 }, image: '/api/rain/map.png?t=1' }, headers: { 'Access-Control-Allow-Origin': '*' } }),
+  );
+  await ctx.route('**/api/rain/map.png**', (route) => route.fulfill({ body: rainPng, contentType: 'image/png', headers: { 'Access-Control-Allow-Origin': '*' } }));
   // El servidor propio (el que viene cargado): rayos de la última pasada.
   lightningBatch = [
     [ROSARIO.lat, ROSARIO.lon, 30],
@@ -100,8 +110,10 @@ test('mapa de tiempo: capas, animación, tocar un sismo o una alerta, y sin cone
   await expect(page.getByRole('heading', { name: 'Mapa de tiempo' })).toBeVisible();
   await expect(page.getByTestId('weather-map')).toBeVisible();
 
-  // Satélite prendido por defecto: 2 horas de imágenes para animar.
-  await expect(page.getByTestId('map-times').first()).toHaveText(/^Satélite \d\d:\d\d$/);
+  // Satélite y lluvia estimada prendidos por defecto: 2 horas de imágenes para animar.
+  await expect(page.getByTestId('map-times').first()).toHaveText(/^Satélite \d\d:\d\d · Lluvia estimada \d\d:\d\d$/);
+  await expect(page.getByRole('button', { name: 'Lluvia estimada (satélite)' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText(/Lluvia estimada con el infrarrojo del GOES-19/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reproducir las últimas 2 horas' })).toBeVisible();
   await expect(page.getByRole('slider', { name: 'Momento' })).toHaveValue('12');
   await page.getByRole('button', { name: 'Reproducir las últimas 2 horas' }).click();
@@ -115,7 +127,7 @@ test('mapa de tiempo: capas, animación, tocar un sismo o una alerta, y sin cone
     if (m) radarTiles.set(m[1]!, (radarTiles.get(m[1]!) ?? new Set()).add(m[2]!));
   });
   await page.getByRole('button', { name: 'Radar de lluvia' }).click();
-  await expect(page.getByTestId('map-times').first()).toHaveText(/^Satélite \d\d:\d\d · Radar \d\d:\d\d$/);
+  await expect(page.getByTestId('map-times').first()).toHaveText(/^Satélite \d\d:\d\d · Lluvia estimada \d\d:\d\d · Radar \d\d:\d\d$/);
   await expect.poll(() => radarTiles.size, { timeout: 15_000 }).toBe(13);
   await expect(page.getByTestId('frames-progress')).toHaveCount(0, { timeout: 15_000 });
   for (const tiles of radarTiles.values()) expect(tiles.size).toBeLessThanOrEqual(16);

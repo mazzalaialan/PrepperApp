@@ -193,6 +193,23 @@ export async function fetchLightning(serverUrl: string): Promise<LightningBatch>
   return { updatedAt: data.updatedAt ?? null, flashes };
 }
 
+// ---------- Lluvia estimada (infrarrojo GOES-19, desde el servidor propio) ----------
+
+export interface RainMap {
+  /** Hora del barrido del satélite. */
+  at: string | null;
+  bounds: { west: number; east: number; south: number; north: number };
+  /** Dirección completa de la imagen (o `null` si todavía no hay). */
+  image: string | null;
+}
+
+export async function fetchRainMap(serverUrl: string): Promise<RainMap> {
+  const base = serverUrl.replace(/\/+$/, '');
+  const data = await getJson<{ at?: string | null; bounds?: RainMap['bounds']; image?: string | null }>(`${base}/api/rain/map`, 'satRain');
+  if (!data.bounds) throw new MapSourceError('satRain');
+  return { at: data.at ?? null, bounds: data.bounds, image: data.image ? `${base}${data.image}` : null };
+}
+
 // ---------- Alertas de desastres (GDACS) ----------
 
 /** Ciclones tropicales, inundaciones, sequías, incendios forestales y erupciones (los sismos ya vienen de USGS). */

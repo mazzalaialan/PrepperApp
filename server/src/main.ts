@@ -8,6 +8,7 @@ import { createLightningStore, mapActive } from './lightning/store.ts';
 import { hasPlaces, LIGHTNING_DEFAULTS, runLightningWatch } from './lightning/watch.ts';
 import { checkObservedRain, createObservedRainStatus } from './rain/noaaWatch.ts';
 import { runRainWatch } from './rain/watch.ts';
+import { createRainMapStore, RAIN_MAP_ACTIVE_MS, updateRainMap } from './rain/map.ts';
 import { irObserver, withObservedRain } from './rain/observer.ts';
 import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
@@ -18,7 +19,16 @@ const push = createPushSender(db, config.vapidSubject);
 const lightningStore = createLightningStore();
 // `lightningTick` se define más abajo; la ruta solo lo despierta.
 const observedRain = createObservedRainStatus();
-const app = await buildApp(config, db, push, true, { store: lightningStore, wake: () => void lightningTick() }, observedRain);
+const rainMapStore = createRainMapStore();
+const app = await buildApp(
+  config,
+  db,
+  push,
+  true,
+  { store: lightningStore, wake: () => void lightningTick() },
+  observedRain,
+  { store: rainMapStore, wake: () => void rainMapTick() },
+);
 
 async function tick() {
   try {
@@ -86,7 +96,28 @@ async function observedRainTick() {
   }
 }
 
+let rainMapBusy = false;
+let rainMapBytes = 0;
+
+/** Mapa de lluvia estimada: solo mientras alguien lo mira (~5,4 MB por archivo nuevo, cada 10 min). */
+async function rainMapTick() {
+  if (!config.rainObserved || rainMapBusy || Date.now() - rainMapStore.requestedAt > RAIN_MAP_ACTIVE_MS) return;
+  rainMapBusy = true;
+  try {
+    const done = await updateRainMap(rainMapStore);
+    if (done) {
+      rainMapBytes += done.bytes;
+      app.log.info({ bytes: done.bytes, total: rainMapBytes }, 'mapa de lluvia estimada actualizado');
+    }
+  } catch (err) {
+    app.log.error(err, 'falló el mapa de lluvia estimada');
+  } finally {
+    rainMapBusy = false;
+  }
+}
+
 const timer = setInterval(() => void tick(), config.schedulerIntervalMs);
+const rainMapTimer = setInterval(() => void rainMapTick(), 2 * 60_000);
 const observedRainTimer = setInterval(() => void observedRainTick(), 24 * 3_600_000);
 void observedRainTick();
 const lightningTimer = config.lightningEnabled ? setInterval(() => void lightningTick(), config.lightningIntervalMs) : undefined;
@@ -98,6 +129,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, async () => {
     clearInterval(timer);
     clearInterval(rainTimer);
+    clearInterval(rainMapTimer);
     clearInterval(observedRainTimer);
     clearInterval(lightningTimer);
     await app.close();

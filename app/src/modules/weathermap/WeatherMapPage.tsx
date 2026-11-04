@@ -11,10 +11,11 @@ import { FullscreenStage } from '@/ui/FullscreenStage';
 import { loadGeoData, type GeoData } from './geo';
 import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
-import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, viewBBox, zoomAt, type Size, type View } from './projection';
+import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
 import {
   fetchHazards,
   fetchLightning,
+  fetchRainMap,
   fetchQuakes,
   fetchRadarFrames,
   fetchZoneWeather,
@@ -32,6 +33,7 @@ import {
   writeMapCache,
   type Hazard,
   type LightningBatch,
+  type RainMap,
   type Quake,
   type RadarFrames,
   type ZoneWeather,
@@ -45,11 +47,13 @@ const SETTLE_MS = 500;
 /** Teselas de radar por cuadro (si hacen falta más, se usa un zoom menor). */
 const RADAR_TILES_MAX = 16;
 const PRELOAD_PARALLEL = 4;
-const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'waypoints'];
+const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'waypoints'];
 /** Cada cuánto se piden los rayos (el satélite saca un archivo cada 20 s). */
 const LIGHTNING_MS = 20_000;
+/** La lluvia estimada sale cada 10 minutos. */
+const RAIN_MAP_MS = 5 * 60_000;
 const VALUES: WeatherMapValue[] = ['temp', 'rain', 'wind'];
-type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards' | 'lightning';
+type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards' | 'lightning' | 'satRain';
 
 export function WeatherMapPage() {
   const { t, i18n } = useTranslation();
@@ -85,6 +89,8 @@ export function WeatherMapPage() {
   const [here, setHere] = useState<{ lon: number; lat: number } | null>(null);
   const [lightning, setLightning] = useState<LightningBatch | null>(null);
   const showLightning = layers.lightning && !!serverUrl;
+  const [rainMap, setRainMap] = useState<RainMap | null>(null);
+  const showSatRain = layers.satRain && !!serverUrl;
 
   useEffect(() => {
     void loadGeoData().then(setGeo);
@@ -233,6 +239,37 @@ export function WeatherMapPage() {
     };
   }, [showLightning, online, serverUrl]);
 
+  // Lluvia estimada: la imagen de la región la arma el servidor cada 10 minutos (solo mientras alguien la mira).
+  useEffect(() => {
+    if (!showSatRain || !online) return;
+    let cancelled = false;
+    const load = () =>
+      document.visibilityState === 'visible' &&
+      fetchRainMap(serverUrl).then(
+        async (map) => {
+          if (cancelled) return;
+          if (map.image) await preload(map.image);
+          if (cancelled) return;
+          setRainMap(map);
+          setVersion((v) => v + 1);
+          fail('satRain', false);
+        },
+        () => !cancelled && fail('satRain', true),
+      );
+    void load();
+    // Recién despertado, el servidor tarda un poco en tener la primera imagen.
+    const first = setTimeout(() => void load(), 45_000);
+    const timer = setInterval(() => void load(), RAIN_MAP_MS);
+    const onVisible = () => document.visibilityState === 'visible' && void load();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      clearTimeout(first);
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [showSatRain, online, serverUrl]);
+
   // Mi ubicación, una sola lectura (el GPS gasta batería): para mis puntos y para los anillos de los rayos.
   const wantHere = layers.waypoints || showLightning;
   useEffect(() => {
@@ -317,6 +354,13 @@ export function WeatherMapPage() {
   }, [playing, frameCount]);
 
   const overlays: Overlay[] = frameOverlays(frame);
+  if (showSatRain && rainMap?.image) {
+    // Debajo del radar (que donde hay es más preciso) y encima del satélite.
+    const sw = toMercator(rainMap.bounds.west, rainMap.bounds.south);
+    const ne = toMercator(rainMap.bounds.east, rainMap.bounds.north);
+    const at = layers.satellite && satTimes?.length ? 1 : 0;
+    overlays.splice(at, 0, { url: rainMap.image, bbox: { minX: sw.x, minY: sw.y, maxX: ne.x, maxY: ne.y }, opacity: 0.85 });
+  }
   if (request && layers.fires) {
     const bbox = viewBBox(request.view, request.size);
     for (const day of fireDays()) overlays.push({ url: gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio), bbox, opacity: 1, fire: true });
@@ -333,6 +377,7 @@ export function WeatherMapPage() {
   const animated = !saver && frameCount > 1 && (layers.satellite || layers.radar);
   const satTime = satTimes?.[idx(satTimes.length)];
   const radarTime = radar?.frames[idx(radar.frames.length)]?.time;
+  const satRainTime = showSatRain && rainMap?.at ? new Date(rainMap.at) : undefined;
 
   return (
     <div className="stack">
@@ -353,7 +398,10 @@ export function WeatherMapPage() {
         </p>
       )}
 
-      <FullscreenStage className="wmap" overlay={<MapTimes sat={layers.satellite ? satTime : undefined} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />}>
+      <FullscreenStage
+        className="wmap"
+        overlay={<MapTimes sat={layers.satellite ? satTime : undefined} rain={satRainTime} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />}
+      >
         {geo ? (
           <MapCanvas
             geo={geo}
@@ -426,7 +474,7 @@ export function WeatherMapPage() {
         )}
       </FullscreenStage>
 
-      <MapTimes sat={layers.satellite ? satTime : undefined} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />
+      <MapTimes sat={layers.satellite ? satTime : undefined} rain={satRainTime} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />
 
       {selected && <FeatureCard feature={selected} u={u} now={now} onClose={() => setSelected(null)} />}
 
@@ -435,7 +483,7 @@ export function WeatherMapPage() {
         <div className="chips" role="group" aria-label={t('weatherMap.layers')}>
           {LAYER_KEYS.map((key) => {
             // Los rayos los junta el servidor propio: sin servidor, no hay.
-            const noServer = key === 'lightning' && !serverUrl;
+            const noServer = (key === 'lightning' || key === 'satRain') && !serverUrl;
             return (
               <button
                 key={key}
@@ -460,7 +508,7 @@ export function WeatherMapPage() {
             ))}
           </div>
         )}
-        <Legend layers={{ ...layers, lightning: showLightning }} zoneValue={zoneValue} windUnit={u.windUnit} />
+        <Legend layers={{ ...layers, lightning: showLightning, satRain: showSatRain }} zoneValue={zoneValue} windUnit={u.windUnit} />
         {showLightning && (
           <p className="hint" style={{ margin: 0 }} data-testid="lightning-status">
             {lightning?.updatedAt
@@ -475,12 +523,18 @@ export function WeatherMapPage() {
   );
 }
 
-function MapTimes({ sat, radar, fmt }: { sat: Date | undefined; radar: Date | undefined; fmt: Intl.DateTimeFormat }) {
+function MapTimes({ sat, rain, radar, fmt }: { sat: Date | undefined; rain?: Date; radar: Date | undefined; fmt: Intl.DateTimeFormat }) {
   const { t } = useTranslation();
-  if (!sat && !radar) return null;
+  if (!sat && !radar && !rain) return null;
   return (
     <p className="hint wmap-times" data-testid="map-times">
-      {[sat && t('weatherMap.satelliteAt', { time: fmt.format(sat) }), radar && t('weatherMap.radarAt', { time: fmt.format(radar) })].filter(Boolean).join(' · ')}
+      {[
+        sat && t('weatherMap.satelliteAt', { time: fmt.format(sat) }),
+        rain && t('weatherMap.satRainAt', { time: fmt.format(rain) }),
+        radar && t('weatherMap.radarAt', { time: fmt.format(radar) }),
+      ]
+        .filter(Boolean)
+        .join(' · ')}
     </p>
   );
 }
@@ -490,6 +544,7 @@ function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zon
   const items: [boolean, string, string][] = [
     [layers.regionWeather && zoneValue === 'wind', 'wind', t('weatherMap.legend.wind', { unit: windUnit })],
     [layers.satellite, 'satellite', t('weatherMap.legend.satellite')],
+    [layers.satRain, 'satRain', t('weatherMap.legend.satRain')],
     [layers.radar, 'radar', t('weatherMap.legend.radar')],
     [layers.earthquakes, 'quake', t('weatherMap.legend.earthquakes')],
     [layers.hazards, 'hazard', t('weatherMap.legend.hazards')],

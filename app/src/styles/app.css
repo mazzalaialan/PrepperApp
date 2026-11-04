@@ -2016,6 +2016,7 @@ a.module-card:hover {
 }
 
 .wmap-swatch-satellite { background: linear-gradient(90deg, #8fd0ee, #2a6fd6, #3bd23b, #f2e94e); }
+.wmap-swatch-satRain { background: linear-gradient(90deg, #78c8ff, #288cf0, #1ebe50, #fadc28, #fa8c14, #e61e1e); }
 .wmap-swatch-radar { background: linear-gradient(90deg, #88ddee, #0099cc, #0077aa, #ffee00, #ff4400); }
 .wmap-swatch-quake { border-radius: 50%; background: linear-gradient(90deg, var(--scale-6), var(--scale-5), var(--scale-4)); }
 .wmap-swatch-volcano { width: 0; height: 0; border-radius: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 11px solid var(--scale-5); background: none; }

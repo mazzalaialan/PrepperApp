@@ -8,7 +8,11 @@ import { describe, it } from 'node:test';
 import h5wasm from 'h5wasm/node';
 import { glmReady } from '../src/lightning/glm.ts';
 import { irIndex, kmPerPixel, mergeWindows, observeAt, rainRate, readIrFile, windowFor } from '../src/rain/goesIr.ts';
+import { colorFor, createRainMapStore, mapLut, renderRainMap, updateRainMap } from '../src/rain/map.ts';
 import { latestIrFile, startOfIrKey, withObservedRain, type IrObserver } from '../src/rain/observer.ts';
+import { buildApp } from '../src/app.ts';
+import { loadConfig } from '../src/config.ts';
+import { openDb } from '../src/db.ts';
 import type { RainSource } from '../src/rain/source.ts';
 import { readIrPartial } from '../src/satellite/partial.ts';
 
@@ -106,5 +110,42 @@ describe('lluvia estimada con el infrarrojo del GOES-19', () => {
       server.close();
       await rm(path, { force: true });
     }
+  });
+
+  it('arma la imagen del mapa de lluvia y la sirve, y pedirla despierta la tarea', async () => {
+    const { width, height, window } = mapLut();
+    assert.equal(width, 720);
+    assert.ok(height > 1000);
+    // Todo a 285 K salvo una tormenta (205 K) sobre Buenos Aires.
+    const [r0, r1, c0, c1] = window;
+    const cols = c1 - c0;
+    const scale = 0.06145332;
+    const offset = 89.62;
+    const raw = new Int16Array((r1 - r0) * cols).fill(Math.round((285 - offset) / scale));
+    const ba = irIndex(-34.6, -58.4)!;
+    for (let r = ba.row - 3; r <= ba.row + 3; r++) for (let c = ba.col - 3; c <= ba.col + 3; c++) raw[(r - r0) * cols + (c - c0)] = Math.round((205 - offset) / scale);
+    const store = createRainMapStore();
+    const done = await updateRainMap(
+      store,
+      new Date(),
+      async () => ({ key: 'k1', size: 10, at: Date.parse('2026-11-04T03:30:00Z') }),
+      async () => ({ value: { windows: [raw], scale, offset, fill: null }, bytes: 123, requests: 1 }),
+    );
+    assert.deepEqual(done, { bytes: 123 });
+    assert.deepEqual([...store.png!.subarray(1, 4)].map((c) => String.fromCharCode(c)).join(''), 'PNG');
+    const { rainyPixels } = renderRainMap({ windows: [raw], scale, offset, fill: null });
+    assert.ok(rainyPixels > 10 && rainyPixels < 400, `${rainyPixels}`);
+    assert.deepEqual(colorFor(0.5), null);
+    assert.notDeepEqual(colorFor(50), colorFor(1.5));
+
+    let woke = 0;
+    const map = await buildApp(loadConfig({}), openDb(':memory:'), { publicKey: 'k', send: async () => true }, false, undefined, undefined, { store, wake: () => woke++ });
+    const meta = (await map.inject('/api/rain/map')).json() as { at: string; image: string; bounds: { west: number } };
+    assert.equal(meta.at, '2026-11-04T03:30:00.000Z');
+    assert.equal(meta.bounds.west, -76);
+    assert.equal(woke, 1);
+    const img = await map.inject(meta.image);
+    assert.equal(img.statusCode, 200);
+    assert.equal(img.headers['content-type'], 'image/png');
   });
 });

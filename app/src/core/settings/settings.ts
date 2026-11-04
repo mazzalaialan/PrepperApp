@@ -99,6 +99,8 @@ export interface WeatherMapLayers {
   fires: boolean;
   volcanoes: boolean;
   waypoints: boolean;
+  /** Lluvia estimada por el servidor propio con el infrarrojo del GOES-19 (toda la región, cada 10 min). */
+  satRain: boolean;
   /** Rayos de los últimos minutos (GOES-19, desde el servidor propio) y anillos de 10, 20 y 30 km alrededor mío. */
   lightning: boolean;
 }
@@ -149,7 +151,7 @@ export const DEFAULT_SETTINGS: Settings = {
   duskPlace: null,
   starmapRed: true,
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
-  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, lightning: true },
+  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
   weatherMapValue: 'temp',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, terrain3d: false },
   trackFollowView: 'drawing',
