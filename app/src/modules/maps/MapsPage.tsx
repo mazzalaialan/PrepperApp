@@ -107,10 +107,13 @@ export function MapsPage() {
   const slopeMin = snowlineManual ?? (choice.source === 'none' ? snowlineFallback : choice.meters);
   // Viento que cargó nieve: el reciente, el habitual de la zona o, sin nada, del oeste (ver wind.ts).
   const wind = chooseWind({ lat: view.lat, lon: view.lon }, snowline, zones);
-  const slopeLee = leeAspects(wind.from);
+  // Con conexión, mientras llega el viento del lugar no se raya: el habitual o el del oeste solo sin conexión o si la consulta falla.
+  const windPending = online && !snowlineError && wind.source !== 'recent' && needsRefresh(snowline, { lat: view.lat, lon: view.lon });
+  const slopeLee = windPending ? [] : leeAspects(wind.from);
   const windText = () => {
     const lee = compassList(slopeLee, i18n.language);
     const from = compassList(wind.from, i18n.language);
+    if (windPending) return t('maps.windLoading');
     if (wind.source === 'default') return t('maps.windDefault', { lee });
     if (wind.source === 'prevailing') return t('maps.windPrevailing', { lee, from, zone: wind.zone });
     const none = wind.from.length === 0;

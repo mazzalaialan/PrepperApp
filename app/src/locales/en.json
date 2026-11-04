@@ -602,6 +602,7 @@
     "snowlineFrom": "Snow from (m)",
     "slopeHint": "Terrain slope with the inclinometer colors, only above the snow line, computed from the area elevation (works offline if you downloaded it). Below the snow line, no color. Hatched: lee slopes of 25° or more, where wind piles snow into slabs and cornices. It is a guide only: the model wind does not see how valleys deflect it, and neither slope nor wind tells whether the snow is unstable: check the local avalanche bulletin. With ~30 m elevation data, short very steep slopes may not show.",
     "windLegend": "Wind-loaded (lee side)",
+    "windLoading": "Looking up the wind of the last few days in this area…",
     "windRecent": "Hatched: slopes facing {{lee}}, loaded by {{from}} wind in the last 3 days (Open-Meteo, {{ago}}).",
     "windRecentNone": "No wind loading in the last 3 days (Open-Meteo, {{ago}}): no hatching.",
     "windZone": "Offline: hatched slopes facing {{lee}}, from the {{from}} wind of the last 3 days in the forecast saved with “{{zone}}” ({{ago}}).",

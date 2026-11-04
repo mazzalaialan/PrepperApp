@@ -602,6 +602,7 @@
     "snowlineFrom": "Hay nieve desde (m)",
     "slopeHint": "Pendiente del terreno con los colores del inclinómetro, solo por encima de la línea de nieve, calculada con la elevación de la zona (sirve sin conexión si la bajaste). Debajo de la línea de nieve, sin color. Rayadas, las laderas de 25° o más a sotavento, donde el viento acumula nieve en placas y cornisas. Es orientativo: el viento del modelo no ve cómo lo desvían los valles, y ni la pendiente ni el viento dicen si la nieve está inestable: consultá el parte de avalanchas de la zona. Con elevación de ~30 m, las laderas cortas muy empinadas pueden no aparecer.",
     "windLegend": "Cargada por viento (sotavento)",
+    "windLoading": "Buscando el viento de los últimos días en esta zona…",
     "windRecent": "Rayadas las laderas que miran al {{lee}}: el viento del {{from}} cargó nieve en los últimos 3 días (Open-Meteo, {{ago}}).",
     "windRecentNone": "Sin carga de nieve por viento en los últimos 3 días (Open-Meteo, {{ago}}): no hay rayado.",
     "windZone": "Sin conexión: rayadas las laderas que miran al {{lee}}, por el viento del {{from}} de los últimos 3 días según el pronóstico guardado con “{{zone}}” ({{ago}}).",
