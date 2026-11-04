@@ -1174,6 +1174,8 @@
     "enable": "Turn on notifications",
     "disable": "Turn off",
     "test": "Test",
+    "testSentServer": "Sent by the server. It should arrive within seconds; if it doesn't, check that Chrome (or the installed app) is allowed to show notifications in your phone settings and that Do Not Disturb is off.",
+    "testSentLocal": "Shown by the app, without going through the server.",
     "hour": "Daily alert time",
     "hourHint": "With a server, the alert arrives from this time on. Without one, Chrome picks the moment.",
     "pushOn": "Connected to server {{server}}.",

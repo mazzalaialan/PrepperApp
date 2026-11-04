@@ -170,18 +170,20 @@ export function scheduleAlertSync(): void {
   syncTimer = setTimeout(() => void syncPushAlerts(), 3000);
 }
 
-export async function sendTestNotification(): Promise<void> {
+/** Por dónde salió la prueba: desde el servidor (push) o mostrada por la propia app. */
+export async function sendTestNotification(): Promise<'server' | 'local'> {
   const { push } = await readNotificationState();
   if (push) {
     const res = await fetch(`${push.serverUrl}/api/devices/${push.deviceId}/test`, {
       method: 'POST',
       headers: { authorization: `Bearer ${push.token}` },
     }).catch(() => null);
-    if (res?.ok) return;
+    if (res?.ok) return 'server';
   }
   const { title, body } = testNotification(useSettings.getState().settings.language);
   const reg = await navigator.serviceWorker.ready;
   await reg.showNotification(title, { body, icon: 'brand/icon-192.png' });
+  return 'local';
 }
 
 if (typeof window !== 'undefined') window.addEventListener('online', () => void syncPushAlerts());

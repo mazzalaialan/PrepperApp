@@ -1174,6 +1174,8 @@
     "enable": "Activar notificaciones",
     "disable": "Desactivar",
     "test": "Probar",
+    "testSentServer": "Enviada por el servidor. Tiene que llegar en unos segundos; si no aparece, revisá que Chrome (o la app instalada) tenga permiso de notificaciones en los ajustes del celular y que no esté en \"No molestar\".",
+    "testSentLocal": "Mostrada por la app, sin pasar por el servidor.",
     "hour": "Hora del aviso diario",
     "hourHint": "Con servidor, el aviso llega a partir de esta hora. Sin servidor, Chrome decide el momento.",
     "pushOn": "Conectado al servidor {{server}}.",

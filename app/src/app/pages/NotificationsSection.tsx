@@ -22,6 +22,7 @@ export function NotificationsSection() {
   const [result, setResult] = useState<EnableResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [testSent, setTestSent] = useState<'server' | 'local' | null>(null);
   const supported = 'Notification' in window && 'serviceWorker' in navigator;
   const denied = supported && Notification.permission === 'denied';
 
@@ -32,6 +33,7 @@ export function NotificationsSection() {
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError(null);
+    setTestSent(null);
     try {
       await action();
     } catch (err) {
@@ -83,7 +85,7 @@ export function NotificationsSection() {
             <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void run(async () => { await disableNotifications(); setResult(null); })}>
               <BellOff size={18} /> {t('notifications.disable')}
             </button>
-            <button className="btn" type="button" disabled={busy} onClick={() => void run(sendTestNotification)}>
+            <button className="btn" type="button" disabled={busy} onClick={() => void run(async () => setTestSent(await sendTestNotification()))}>
               <Send size={18} /> {t('notifications.test')}
             </button>
           </div>
@@ -92,6 +94,11 @@ export function NotificationsSection() {
         <button className="btn btn-primary" type="button" disabled={busy || denied} onClick={() => void run(async () => setResult(await enableNotifications()))}>
           <Bell size={18} /> {t('notifications.enable')}
         </button>
+      )}
+      {testSent && notificationsEnabled && (
+        <p className="hint" role="status" data-testid="test-sent">
+          {t(testSent === 'server' ? 'notifications.testSentServer' : 'notifications.testSentLocal')}
+        </p>
       )}
       {denied && <p className="error">{t('notifications.error.permission-denied')}</p>}
       {error && !denied && <p className="error" role="alert">{error}</p>}
