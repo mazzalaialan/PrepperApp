@@ -74,6 +74,10 @@ export interface PaintOptions {
   size?: number;
 }
 
+/** Rayas en colores de nieve, iguales en todos los temas: blanca la carga reciente, azul la habitual. */
+export const HATCH_RECENT = '#ffffff';
+export const HATCH_USUAL = '#2f7de1';
+
 /** Cada cuántos píxeles una raya, y su ancho. */
 export const HATCH_EVERY = 6;
 const HATCH_WIDTH = 2;

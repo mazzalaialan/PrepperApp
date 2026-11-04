@@ -1390,12 +1390,13 @@ a.module-card:hover {
 
 /* Laderas cargadas por viento: las mismas rayas que en el mapa. */
 .incl-swatch.hatched {
-  background: repeating-linear-gradient(-45deg, var(--text) 0 2px, var(--danger) 2px 6px);
+  /* Mismos colores que en el mapa (maps/slope.ts). */
+  background: repeating-linear-gradient(-45deg, #ffffff 0 2px, var(--danger) 2px 6px);
 }
 
 /* Sotavento habitual: en la otra diagonal y en otro color. */
 .incl-swatch.hatched-usual {
-  background: repeating-linear-gradient(45deg, var(--info) 0 2px, var(--danger) 2px 6px);
+  background: repeating-linear-gradient(45deg, #2f7de1 0 2px, var(--danger) 2px 6px);
 }
 
 /* ---------- Sol y luna ---------- */

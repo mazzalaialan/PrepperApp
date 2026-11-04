@@ -2,7 +2,7 @@ import * as maplibregl from 'maplibre-gl';
 import mlcontour from 'maplibre-contour';
 // MapLibre 6 dibuja con un worker aparte: con Vite hay que indicarle dónde queda el archivo.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { slopeTile } from './slope';
+import { HATCH_RECENT, HATCH_USUAL, slopeTile } from './slope';
 import { themeColors } from './style';
 import { cachedOrNetwork, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, vectorTemplate } from './tiles';
 
@@ -52,7 +52,7 @@ export function setupProtocols(): { contoursUrl: string } {
     const dem = await cachedOrNetwork(url, async () => url);
     if (!dem) throw new Error('sin elevación');
     const c = themeColors();
-    return { data: await slopeTile(dem, z, x, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: c.text, hatchUsual: c.info }, minElevation, list('lee'), list('usual')) };
+    return { data: await slopeTile(dem, z, x, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: HATCH_RECENT, hatchUsual: HATCH_USUAL }, minElevation, list('lee'), list('usual')) };
   });
 
   maplibregl.addProtocol('vkglyph', async (params) => {
