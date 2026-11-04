@@ -1,4 +1,5 @@
 import { db } from '@/core/db/db';
+import { DEFAULT_FROM, windLoadFrom, type PrevailingWind } from './wind';
 
 /**
  * Línea de nieve para la capa de riesgo de avalancha: solo se pinta la
@@ -25,6 +26,21 @@ export interface Snowline {
   lon: number;
   /** Cuándo se consultó. */
   at: number;
+  /** De dónde sopló el viento que cargó nieve en los últimos 3 días ([] sin carga; ver wind.ts). */
+  windFrom?: number[] | null;
+}
+
+/** Variables por hora que se piden a Open-Meteo (viento a 700 hPa ≈ 3000 m, en los filos). */
+const HOURLY = 'freezing_level_height,wind_direction_700hPa,wind_speed_700hPa,snowfall';
+
+interface HourlyResponse {
+  hourly?: {
+    time?: string[];
+    freezing_level_height?: (number | null)[];
+    wind_direction_700hPa?: (number | null)[];
+    wind_speed_700hPa?: (number | null)[];
+    snowfall?: (number | null)[];
+  };
 }
 
 /** De las alturas de congelamiento por hora a la línea de nieve (redondeada a 50 m). */
@@ -39,17 +55,23 @@ export async function fetchSnowline(base: string, lat: number, lon: number): Pro
   const params = new URLSearchParams({
     latitude: lat.toFixed(3),
     longitude: lon.toFixed(3),
-    hourly: 'freezing_level_height',
+    hourly: HOURLY,
     past_days: '3',
     forecast_days: '2',
+    wind_speed_unit: 'ms',
     timezone: 'GMT',
   });
   const res = await fetch(`${base.replace(/\/+$/, '')}/v1/forecast?${params}`, { signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error('snowline');
-  const data = (await res.json()) as { hourly?: { freezing_level_height?: (number | null)[] } };
+  const data = (await res.json()) as HourlyResponse;
   const s = snowlineFrom(data.hourly?.freezing_level_height ?? []);
   if (!s) throw new Error('snowline');
-  return { ...s, lat, lon, at: Date.now() };
+  const now = Date.now();
+  // El viento solo hasta ahora: lo que ya cargó.
+  const past = (data.hourly?.time ?? []).filter((t) => Date.parse(`${t}:00Z`) <= now).length;
+  const h = data.hourly;
+  const windFrom = h ? windLoadFrom((h.wind_direction_700hPa ?? []).slice(0, past), (h.wind_speed_700hPa ?? []).slice(0, past), (h.snowfall ?? []).slice(0, past)) : null;
+  return { ...s, lat, lon, at: now, windFrom };
 }
 
 export async function readSnowline(): Promise<Snowline | null> {
@@ -65,7 +87,8 @@ const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
 
 /** ¿Hay que volver a consultar para este lugar? */
 export function needsRefresh(s: Snowline | null, at: { lat: number; lon: number }, now = Date.now()): boolean {
-  return !s || now - s.at > REFRESH_MS || km(s, at) > REFRESH_KM;
+  // Las guardadas antes de que existiera el viento, también.
+  return !s || s.windFrom === undefined || now - s.at > REFRESH_MS || km(s, at) > REFRESH_KM;
 }
 
 // ---------- Sin conexión: el pronóstico guardado con cada zona descargada ----------
@@ -75,6 +98,10 @@ export interface FreezingSeries {
   /** Hora (ms) del primer valor. */
   start: number;
   values: (number | null)[];
+  /** Viento a 700 hPa (de dónde, m/s) y nevada (cm), las mismas horas (ver wind.ts). */
+  windDir?: (number | null)[];
+  windSpeed?: (number | null)[];
+  snow?: (number | null)[];
   /** Cuándo se bajó. */
   at: number;
 }
@@ -89,18 +116,25 @@ export async function fetchFreezingSeries(base: string, lat: number, lon: number
   const params = new URLSearchParams({
     latitude: lat.toFixed(3),
     longitude: lon.toFixed(3),
-    hourly: 'freezing_level_height',
+    hourly: HOURLY,
     past_days: String(PAST_DAYS),
     forecast_days: String(ZONE_FORECAST_DAYS),
+    wind_speed_unit: 'ms',
     timezone: 'GMT',
   });
   const res = await fetch(`${base.replace(/\/+$/, '')}/v1/forecast?${params}`, { signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error('snowline');
-  const data = (await res.json()) as { hourly?: { time?: string[]; freezing_level_height?: (number | null)[] } };
-  const time = data.hourly?.time?.[0];
-  const values = data.hourly?.freezing_level_height ?? [];
+  const data = (await res.json()) as HourlyResponse;
+  const h = data.hourly;
+  const time = h?.time?.[0];
+  const values = h?.freezing_level_height ?? [];
   if (!time || values.length === 0) throw new Error('snowline');
-  return { start: Date.parse(`${time}:00Z`), values: values.map((v) => (typeof v === 'number' ? Math.round(v) : null)), at: Date.now() };
+  const num = (v: number | null | undefined, digits = 0) => (typeof v === 'number' ? Math.round(v * 10 ** digits) / 10 ** digits : null);
+  const wind =
+    h.wind_direction_700hPa?.length === values.length && h.wind_speed_700hPa?.length === values.length && h.snowfall?.length === values.length
+      ? { windDir: h.wind_direction_700hPa.map((v) => num(v)), windSpeed: h.wind_speed_700hPa.map((v) => num(v, 1)), snow: h.snowfall.map((v) => num(v, 1)) }
+      : {};
+  return { start: Date.parse(`${time}:00Z`), values: values.map((v) => num(v)), ...wind, at: Date.now() };
 }
 
 /**
@@ -122,6 +156,7 @@ export interface ZoneWithSeries {
   lon: number;
   radiusKm: number;
   freezing?: FreezingSeries;
+  prevailing?: PrevailingWind;
 }
 
 /** Margen alrededor de la zona: la isoterma cambia poco en unos kilómetros. */
@@ -158,5 +193,45 @@ export function pruneSeries(series: FreezingSeries, now = Date.now()): FreezingS
   const drop = Math.max(0, Math.floor((now - PAST_DAYS * 24 * HOUR - series.start) / HOUR));
   if (drop >= series.values.length) return null;
   if (drop === 0) return series;
-  return { ...series, start: series.start + drop * HOUR, values: series.values.slice(drop) };
+  return {
+    ...series,
+    start: series.start + drop * HOUR,
+    values: series.values.slice(drop),
+    ...(series.windDir && series.windSpeed && series.snow
+      ? { windDir: series.windDir.slice(drop), windSpeed: series.windSpeed.slice(drop), snow: series.snow.slice(drop) }
+      : {}),
+  };
+}
+
+// ---------- Viento que cargó nieve (rayado de sotavento) ----------
+
+/** Carga por viento de los 3 días anteriores a `now` con una serie guardada (ver wind.ts). */
+export function windLoadAt(series: FreezingSeries, now = Date.now()): number[] | null {
+  if (!series.windDir || !series.windSpeed || !series.snow) return null;
+  const from = Math.max(0, Math.floor((now - PAST_DAYS * 24 * HOUR - series.start) / HOUR));
+  const to = Math.min(series.values.length, Math.floor((now - series.start) / HOUR) + 1);
+  if (to - from < 24) return null;
+  return windLoadFrom(series.windDir.slice(from, to), series.windSpeed.slice(from, to), series.snow.slice(from, to));
+}
+
+export type WindChoice =
+  | { source: 'recent'; from: number[]; at: number; zone?: string }
+  | { source: 'prevailing'; from: number[]; zone: string }
+  | { source: 'default'; from: number[] };
+
+/**
+ * De dónde vino el viento que cargó nieve en el lugar que se mira: el de los
+ * últimos días (consultado o guardado con la zona); si no hay, el habitual de
+ * la zona descargada más cercana; si no, del oeste.
+ */
+export function chooseWind(at: { lat: number; lon: number }, live: Snowline | null, zones: ZoneWithSeries[], now = Date.now()): WindChoice {
+  if (live && live.windFrom && km(live, at) <= REFRESH_KM && now - live.at <= 2 * REFRESH_MS) return { source: 'recent', from: live.windFrom, at: live.at };
+  const near = zones.filter((z) => km(z, at) <= z.radiusKm + ZONE_MARGIN_KM).sort((a, b) => km(a, at) - km(b, at));
+  for (const z of near) {
+    const from = z.freezing ? windLoadAt(z.freezing, now) : null;
+    if (from) return { source: 'recent', from, at: z.freezing!.at, zone: z.name };
+  }
+  const withPrevailing = near.find((z) => z.prevailing?.from.length);
+  if (withPrevailing) return { source: 'prevailing', from: withPrevailing.prevailing!.from, zone: withPrevailing.name };
+  return { source: 'default', from: DEFAULT_FROM };
 }

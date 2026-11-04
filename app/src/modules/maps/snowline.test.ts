@@ -10,7 +10,7 @@ describe('línea de nieve para la capa de avalanchas', () => {
   });
 
   it('se vuelve a consultar lejos o vieja', () => {
-    const s = { meters: 1100, freezingMin: 1380, lat: -41.17, lon: -71.44, at: 1_000_000 };
+    const s = { meters: 1100, freezingMin: 1380, lat: -41.17, lon: -71.44, at: 1_000_000, windFrom: [] };
     expect(needsRefresh(null, s)).toBe(true);
     expect(needsRefresh(s, { lat: -41.2, lon: -71.4 }, 1_000_000 + 60_000)).toBe(false);
     expect(needsRefresh(s, { lat: -40.5, lon: -71.4 }, 1_000_000 + 60_000)).toBe(true); // ~75 km
@@ -19,7 +19,7 @@ describe('línea de nieve para la capa de avalanchas', () => {
 
   it('debajo de la línea de nieve no se pinta aunque sea empinado', () => {
     const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
-    const px = paintSlope(new Float32Array([38, 38, 10, 10]), colors, 190, new Float32Array([900, 1500, 900, 1500]), 1100);
+    const px = paintSlope(new Float32Array([38, 38, 10, 10]), colors, { alpha: 190, elev: new Float32Array([900, 1500, 900, 1500]), minElevation: 1100 });
     expect(px[3]).toBe(0);
     expect(px[7]).toBe(190);
     // Lo plano: verde arriba de la línea de nieve, sin color abajo.
@@ -59,9 +59,24 @@ describe('renovar el pronóstico de las zonas', () => {
   it('solo las que no lo tienen o lo tienen con más de un día', async () => {
     const { staleZones } = await import('./zoneForecast');
     const now = Date.UTC(2026, 10, 4);
-    const zone = (id: string, at?: number) =>
-      ({ id, name: id, lat: 0, lon: 0, radiusKm: 5, maxZoom: 14, bytes: 0, failed: 0, createdAt: '', ...(at ? { freezing: { start: 0, values: [], at } } : {}) }) as never;
-    expect(staleZones([zone('sin'), zone('vieja', now - 25 * 3_600_000), zone('nueva', now - 3_600_000)], now).map((z: { id: string }) => z.id)).toEqual(['sin', 'vieja']);
+    const zone = (id: string, at?: number, extra: object = { windDir: [] }, prevailing: object | null = { from: [270], at: 0 }) =>
+      ({
+        id,
+        name: id,
+        lat: 0,
+        lon: 0,
+        radiusKm: 5,
+        maxZoom: 14,
+        bytes: 0,
+        failed: 0,
+        createdAt: '',
+        ...(at ? { freezing: { start: 0, values: [], at, ...extra } } : {}),
+        ...(prevailing ? { prevailing } : {}),
+      }) as never;
+    const ids = (zs: { id: string }[]) => zs.map((z) => z.id);
+    expect(ids(staleZones([zone('sin'), zone('vieja', now - 25 * 3_600_000), zone('nueva', now - 3_600_000)], now))).toEqual(['sin', 'vieja']);
+    // Bajadas antes de que existiera el viento: también.
+    expect(ids(staleZones([zone('sin-viento', now - 3_600_000, {}), zone('sin-habitual', now - 3_600_000, { windDir: [] }, null)], now))).toEqual(['sin-viento', 'sin-habitual']);
   });
 });
 

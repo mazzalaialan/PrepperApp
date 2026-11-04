@@ -16,7 +16,8 @@ import { FullscreenStage } from '@/ui/FullscreenStage';
 import { CameraButtons } from './CameraButtons';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
-import { chooseSnowline, fetchFreezingSeries, fetchSnowline, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
+import { chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
+import { compassList, fetchPrevailing, leeAspects } from './wind';
 import { DETAILS, downloadZone, planZone, type DetailId, type DownloadProgress } from './tiles';
 
 const RADII = [2, 5, 10, 20, 50];
@@ -81,7 +82,8 @@ export function MapsPage() {
   }, []);
   const snowKey = `${view.lat.toFixed(1)},${view.lon.toFixed(1)}`;
   useEffect(() => {
-    if (!layers.slope || snowlineManual !== null || !online) return;
+    // Aunque la línea de nieve esté a mano: la misma consulta trae el viento.
+    if (!layers.slope || !online) return;
     const at = { lat: view.lat, lon: view.lon };
     // Se espera a que el mapa quede quieto.
     const timer = setTimeout(() => {
@@ -98,11 +100,23 @@ export function MapsPage() {
       });
     }, 1500);
     return () => clearTimeout(timer);
-  }, [layers.slope, snowlineManual, online, snowKey, weatherUrl]);
+  }, [layers.slope, online, snowKey, weatherUrl]);
   // Con conexión, la del lugar; sin conexión, la del pronóstico guardado con la zona más cercana; nunca una de otro lugar.
   const choice = chooseSnowline({ lat: view.lat, lon: view.lon }, snowline, zones);
   // Sin isoterma para esta zona: la altura que eligió el usuario para ese caso.
   const slopeMin = snowlineManual ?? (choice.source === 'none' ? snowlineFallback : choice.meters);
+  // Viento que cargó nieve: el reciente, el habitual de la zona o, sin nada, del oeste (ver wind.ts).
+  const wind = chooseWind({ lat: view.lat, lon: view.lon }, snowline, zones);
+  const slopeLee = leeAspects(wind.from);
+  const windText = () => {
+    const lee = compassList(slopeLee, i18n.language);
+    const from = compassList(wind.from, i18n.language);
+    if (wind.source === 'default') return t('maps.windDefault', { lee });
+    if (wind.source === 'prevailing') return t('maps.windPrevailing', { lee, from, zone: wind.zone });
+    const none = wind.from.length === 0;
+    if (wind.zone) return none ? t('maps.windZoneNone', { zone: wind.zone, ago: ago(wind.at) }) : t('maps.windZone', { lee, from, zone: wind.zone, ago: ago(wind.at) });
+    return none ? t('maps.windRecentNone', { ago: ago(wind.at) }) : t('maps.windRecent', { lee, from, ago: ago(wind.at) });
+  };
   const fmtM = (m: number) => `${new Intl.NumberFormat(i18n.language).format(m)} m`;
   const ago = (at: number) => {
     const min = Math.round((Date.now() - at) / 60_000);
@@ -187,7 +201,11 @@ export function MapsPage() {
     try {
       const result = await downloadZone(plan, setProgress, controller.signal);
       // La isoterma de 0 °C de los próximos días, para la capa de avalanchas sin conexión (si falla, la zona igual sirve).
-      const freezing = await fetchFreezingSeries(weatherUrl, view.lat, view.lon).catch(() => undefined);
+      // Y el viento habitual con nieve (histórico), para el rayado de sotavento sin datos recientes.
+      const [freezing, prevailing] = await Promise.all([
+        fetchFreezingSeries(weatherUrl, view.lat, view.lon).catch(() => undefined),
+        fetchPrevailing(weatherUrl, view.lat, view.lon).catch(() => undefined),
+      ]);
       const zone: MapZone = {
         id: crypto.randomUUID(),
         name: panel.name.trim() || t('maps.defaultName', { n: zones.length + 1 }),
@@ -199,6 +217,7 @@ export function MapsPage() {
         failed: result.failed,
         createdAt: new Date().toISOString(),
         ...(freezing ? { freezing } : {}),
+        ...(prevailing ? { prevailing } : {}),
       };
       await add(zone);
       setPanel(null);
@@ -231,7 +250,7 @@ export function MapsPage() {
       <FullscreenStage className="maps-stage">
         <MapView
           initial={initial}
-          layers={{ ...layers, slopeMin }}
+          layers={{ ...layers, slopeMin, slopeLee }}
           showMine={layers.mine}
           waypoints={waypoints}
           routes={routes}
@@ -297,6 +316,10 @@ export function MapsPage() {
                   {t(`inclinometer.legend.${z}`)}
                 </li>
               ))}
+              <li>
+                <span className="incl-swatch hatched" aria-hidden />
+                {t('maps.windLegend')}
+              </li>
             </ul>
             <p className="hint" style={{ margin: 0 }} data-testid="snowline-status">
               {snowlineManual !== null
@@ -308,6 +331,9 @@ export function MapsPage() {
                     : snowlineError || !online
                       ? t('maps.snowlineNone', { m: fmtM(snowlineFallback) })
                       : t('maps.snowlineLoading')}
+            </p>
+            <p className="hint" style={{ margin: 0 }} data-testid="wind-status">
+              {windText()}
             </p>
             <label className="check">
               <input

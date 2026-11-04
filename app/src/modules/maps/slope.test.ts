@@ -36,10 +36,43 @@ describe('pendiente para la capa de avalanchas', () => {
 
   it('pinta con los colores del inclinómetro, también el verde de riesgo bajo', () => {
     const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
-    const px = paintSlope(new Float32Array([10, 27, 38, 50]), colors, 190);
+    const px = paintSlope(new Float32Array([10, 27, 38, 50]), colors, { alpha: 190 });
     expect([...px.slice(0, 4)]).toEqual([0x6f, 0x9e, 0x4c, 190]);
     expect([...px.slice(4, 8)]).toEqual([0xd0, 0xa0, 0x3c, 190]);
     expect([...px.slice(8, 12)]).toEqual([0xb8, 0x4a, 0x30, 190]);
     expect([...px.slice(12, 16)]).toEqual([0xe8, 0x23, 0x1b, 190]);
+  });
+
+  it('mide hacia dónde mira la ladera', () => {
+    // El plano sube hacia el este: mira al oeste.
+    const size = 32;
+    const aspect = new Float32Array(size * size);
+    slopeDegrees(plane(30, z, y, size), z, y, size, aspect);
+    expect(aspect[16 * size + 16]!).toBeCloseTo(270, 0);
+    // Volteado (sube hacia el oeste): mira al este.
+    const east = plane(30, z, y, size);
+    const flipped = east.map((_, i) => east[Math.floor(i / size) * size + (size - 1 - (i % size))]!);
+    const a2 = new Float32Array(size * size);
+    slopeDegrees(flipped, z, y, size, a2);
+    expect(Math.abs(a2[16 * size + 16]! - 90)).toBeLessThan(5);
+  });
+
+  it('raya solo las laderas empinadas de sotavento', () => {
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b', hatch: '#000000' };
+    const size = 12;
+    const slope = new Float32Array(size * size).fill(38);
+    const facingEast = new Float32Array(size * size).fill(90);
+    const painted = paintSlope(slope, colors, { aspect: facingEast, lee: [90], size });
+    const black = (p: number) => painted[p * 4] === 0 && painted[p * 4 + 3] === 255;
+    const stripes = Array.from({ length: size * size }, (_, p) => black(p)).filter(Boolean).length;
+    // Dos de cada seis diagonales.
+    expect(stripes / (size * size)).toBeCloseTo(2 / 6, 1);
+    // A barlovento o sin sotavento: sin rayas.
+    const facingWest = new Float32Array(size * size).fill(270);
+    const windward = paintSlope(slope, colors, { aspect: facingWest, lee: [90], size });
+    expect(windward.some((v, i) => i % 4 === 3 && v === 255)).toBe(false);
+    // Pendiente baja: sin rayas.
+    const flat = paintSlope(new Float32Array(size * size).fill(15), colors, { aspect: facingEast, lee: [90], size });
+    expect(flat.some((v, i) => i % 4 === 3 && v === 255)).toBe(false);
   });
 });

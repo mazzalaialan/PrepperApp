@@ -271,14 +271,25 @@ export function WeatherMapPage() {
   }, [showSatRain, online, serverUrl]);
 
   // Mi ubicación, una sola lectura (el GPS gasta batería): para mis puntos y para los anillos de los rayos.
-  const wantHere = layers.waypoints || showLightning;
+  // Mi ubicación, siempre que el permiso ya esté dado; con waypoints o rayos (los pidió el usuario), se pide si hace falta.
+  const askHere = layers.waypoints || showLightning;
   useEffect(() => {
-    if (!wantHere) return;
-    currentPosition().then(
-      (fix) => setHere({ lon: fix.lon, lat: fix.lat }),
-      () => setHere(null),
-    );
-  }, [wantHere]);
+    let cancelled = false;
+    const locate = () =>
+      currentPosition().then(
+        (fix) => !cancelled && setHere({ lon: fix.lon, lat: fix.lat }),
+        () => undefined,
+      );
+    if (askHere) void locate();
+    else
+      void navigator.permissions
+        ?.query({ name: 'geolocation' })
+        .then((p) => p.state === 'granted' && locate())
+        .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [askHere]);
 
   // El radar es de baja resolución: con pocas teselas por cuadro entra la animación entera en memoria.
   const radarTiles = useMemo(() => {
@@ -414,7 +425,7 @@ export function WeatherMapPage() {
             hazards={layers.hazards ? (hazards?.items ?? null) : null}
             volcanoes={layers.volcanoes ? geo.volcanoes : null}
             waypoints={waypoints}
-            here={wantHere ? here : null}
+            here={here}
             lightning={showLightning ? (lightning?.flashes ?? null) : null}
             rings={showLightning}
             animate={!saver}

@@ -235,6 +235,8 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
 });
 
 test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada', async ({ page, context }, testInfo) => {
+  // Sin GPU (como en el servidor de pruebas), el mapa y el 3D se dibujan por software: pasa del minuto.
+  test.setTimeout(180_000);
   await context.grantPermissions(['geolocation']);
   // En el segundo punto del track.
   await context.setGeolocation({ latitude: -41.164, longitude: -71.428 });
@@ -291,6 +293,9 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   await page.getByRole('link', { name: 'Seguir el track' }).click();
   await expect(page.getByTestId('offline-map').locator('canvas')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Mapa en 3D' })).toHaveAttribute('aria-pressed', 'true');
+  // Lo que sigue, en 2D: sin GPU, el relieve en 3D se dibuja por software y traba la página.
+  await page.getByRole('button', { name: 'Mapa en 3D' }).click();
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-terrain', 'off');
 
   // En pantalla completa, el estado y los datos van sobre el mapa.
   await expect(page.getByTestId('follow-overlay')).toHaveCount(0);

@@ -11,6 +11,8 @@ export default defineConfig({
     locale: 'es-AR',
     timezoneId: 'America/Argentina/Buenos_Aires',
     screenshot: 'only-on-failure',
+    // Para ver qué pasó en los que fallan de a ratos (npx playwright show-trace).
+    trace: 'retain-on-failure',
   },
   projects: [
     { name: 'android', use: { ...devices['Pixel 7'] } },

@@ -42,15 +42,17 @@ export function setupProtocols(): { contoursUrl: string } {
 
   // Riesgo de avalancha: la pendiente se calcula con la misma tesela de altura (anda sin conexión si la zona está bajada).
   maplibregl.addProtocol('vkslope', async (params) => {
-    // "vkslope://z/x/y?min=1850": la línea de nieve va en la dirección, así cambiarla vuelve a pintar.
+    // "vkslope://z/x/y?min=1850&lee=90,135": la línea de nieve y el sotavento van en la dirección, así cambiarlos vuelve a pintar.
     const [path, query] = params.url.split('?');
     const { z, x, y } = parseZxy(path!);
-    const minElevation = Number(new URLSearchParams(query ?? '').get('min') ?? 0) || 0;
+    const q = new URLSearchParams(query ?? '');
+    const minElevation = Number(q.get('min') ?? 0) || 0;
+    const lee = (q.get('lee') ?? '').split(',').filter(Boolean).map(Number).filter(Number.isFinite);
     const url = fill(DEM_URL, z, x, y);
     const dem = await cachedOrNetwork(url, async () => url);
     if (!dem) throw new Error('sin elevación');
     const c = themeColors();
-    return { data: await slopeTile(dem, z, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep }, minElevation) };
+    return { data: await slopeTile(dem, z, x, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: c.text }, minElevation, lee) };
   });
 
   maplibregl.addProtocol('vkglyph', async (params) => {

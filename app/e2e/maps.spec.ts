@@ -14,10 +14,34 @@ async function mockMaps(page: Page) {
   await ctx.route('https://tiles.openfreemap.org/planet/test/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://tiles.openfreemap.org/fonts/**', (route) => route.fulfill({ body: Buffer.alloc(0), contentType: 'application/x-protobuf' }));
   await ctx.route('https://s3.amazonaws.com/elevation-tiles-prod/**', (route) => route.fulfill({ body: dem, contentType: 'image/png' }));
-  // Isoterma de 0 °C de los últimos días (para la línea de nieve de la capa de avalanchas).
+  // Isoterma de 0 °C de los últimos días (para la línea de nieve de la capa de avalanchas), y viento del oeste con nieve.
   await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) =>
-    route.fulfill({ json: { hourly: { time: ['2026-11-01T00:00', '2026-11-01T01:00', '2026-11-01T02:00', '2026-11-01T03:00'], freezing_level_height: [2250, 1380, null, 1900] } } }),
+    route.fulfill({
+      json: {
+        hourly: {
+          time: ['2026-11-01T00:00', '2026-11-01T01:00', '2026-11-01T02:00', '2026-11-01T03:00'],
+          freezing_level_height: [2250, 1380, null, 1900],
+          wind_direction_700hPa: [270, 265, 275, 270],
+          wind_speed_700hPa: [15, 16, 14, 15],
+          snowfall: [1, 0.5, 0, 0],
+        },
+      },
+    }),
   );
+  // Histórico: con nieve, el viento suele venir del sudoeste.
+  await ctx.route('https://archive-api.open-meteo.com/v1/archive**', (route) => {
+    const days = 20;
+    route.fulfill({
+      json: {
+        daily: {
+          time: Array.from({ length: days }, (_, i) => `2025-07-${String(i + 1).padStart(2, '0')}`),
+          wind_direction_10m_dominant: Array.from({ length: days }, () => 225),
+          wind_speed_10m_max: Array.from({ length: days }, () => 9),
+          snowfall_sum: Array.from({ length: days }, () => 2),
+        },
+      },
+    });
+  });
 }
 
 const cacheKeys = (page: Page) =>
@@ -81,6 +105,8 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await page.route('https://api.open-meteo.com/v1/forecast**', failing);
   await avalanche.click();
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Sin datos de isoterma para esta zona.*se pinta desde los 1500 m que elegiste/);
+  // Sin datos de viento (la zona tiene el habitual: del sudoeste, sotavento al noreste).
+  await expect(page.getByTestId('wind-status')).toHaveText(/^Sin datos de viento recientes: rayado el sotavento habitual de “Casa”, las laderas que miran al NE/);
   await page.getByLabel('Sin datos de isoterma, hay nieve desde (m)').fill('1800');
   await expect(page.getByTestId('snowline-status')).toContainText('se pinta desde los 1800 m que elegiste');
   // Con datos otra vez, manda la isoterma.
@@ -91,6 +117,9 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(legend).toContainText('menos de 25°');
   await expect(legend).toContainText('30° a 45°');
   await expect(legend).toContainText('más de 45°');
+  await expect(legend).toContainText('Cargada por viento (sotavento)');
+  // Viento del oeste con nieve en los últimos días: se rayan las laderas que miran al este.
+  await expect(page.getByTestId('wind-status')).toHaveText(/^Rayadas las laderas que miran al E: el viento del O cargó nieve en los últimos 3 días/);
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Se pinta desde los 1100 m: la isoterma de 0 °C más baja de los últimos días en esta zona \(1380 m, Open-Meteo/);
   await page.getByLabel('Poner la línea de nieve a mano').check();
   await page.getByLabel('Hay nieve desde (m)').fill('2500');
@@ -119,6 +148,8 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
 });
 
 test('mapa en 3D o plano, y la vista siguiéndome o libre', async ({ page, context }) => {
+  // Sin GPU (como en el servidor de pruebas), el 3D se dibuja por software: pasa del minuto.
+  test.setTimeout(180_000);
   await mockMaps(page);
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
@@ -144,6 +175,11 @@ test('mapa en 3D o plano, y la vista siguiéndome o libre', async ({ page, conte
   await page.goto('/#/orientation/maps');
   await expect(page.getByRole('button', { name: 'Mapa en 3D' })).toHaveAttribute('aria-pressed', 'true');
 
+  // De vuelta a plano. (Lo que sigue, en 2D: sin GPU, el relieve en 3D se dibuja por software y traba la página.)
+  await page.getByRole('button', { name: 'Mapa en 3D' }).click();
+  await expect(map).toHaveAttribute('data-pitch', '0');
+  await expect(map).toHaveAttribute('data-terrain', 'off');
+
   // Siguiéndome: el mapa va adonde voy.
   const follow = page.getByRole('button', { name: 'Seguir mi posición' });
   await follow.click();
@@ -158,9 +194,4 @@ test('mapa en 3D o plano, y la vista siguiéndome o libre', async ({ page, conte
   await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2 + 40, { steps: 8 });
   await page.mouse.up();
   await expect(follow).toHaveAttribute('aria-pressed', 'false');
-
-  // De vuelta a plano.
-  await page.getByRole('button', { name: 'Mapa en 3D' }).click();
-  await expect(map).toHaveAttribute('data-pitch', '0');
-  await expect(map).toHaveAttribute('data-terrain', 'off');
 });

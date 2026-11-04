@@ -1386,6 +1386,11 @@ a.module-card:hover {
   background: var(--zone);
 }
 
+/* Laderas cargadas por viento: las mismas rayas que en el mapa. */
+.incl-swatch.hatched {
+  background: repeating-linear-gradient(-45deg, var(--text) 0 2px, var(--danger) 2px 6px);
+}
+
 /* ---------- Sol y luna ---------- */
 
 .sr-only {
