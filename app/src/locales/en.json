@@ -457,6 +457,9 @@
     "nearbySources": "Sources: fire stations from IGN and the National Council of Volunteer Firefighters; police stations and health facilities of Buenos Aires Province (open data, CC BY 4.0); and OpenStreetMap when online. Phones may be outdated: confirm them when you can."
   },
   "location": {
+    "readAloud": "Read aloud",
+    "stopReading": "Stop reading",
+    "spoken": {"point": "point", "coords": "Coordinates: {{lat}} degrees {{latDir}}, {{lon}} degrees {{lonDir}}. Accuracy: {{accuracy}} meters.", "south": "south", "north": "north", "west": "west", "east": "east"},
     "intro": "What to tell whoever comes to help: coordinates (always work) and landmarks that make sense without GPS.",
     "waiting": "Waiting for GPS… It's faster outdoors.",
     "gpsError": {
@@ -760,14 +763,13 @@
     "source": "Open-Meteo forecast for {{place}}. Saved on this device to view offline."
   },
   "rainAlerts": {
+    "backgroundOn": "With the app closed the server warns you about rain and lightning within 30 km, at these waypoints and, if enabled in Settings → Notifications, where you are.",
     "title": "Rain alerts",
     "here": "Warn me if it's going to rain where I am",
     "noWaypoints": "To get alerts for a saved place, turn them on in that waypoint's page.",
     "enableNotifications": "To get the alert as a phone notification, enable notifications in Settings.",
-    "whileOpen": "While the app is open it checks every 15 minutes.",
-    "background": "Also warn me with the app closed (from the server)",
-    "backgroundHint": "The server checks every 15 minutes. To do so it receives the waypoints with alerts (name and place) and, for \"where I am\", the last location read with the app open, all rounded to ~1 km. With the app closed the phone doesn't give GPS to the app: a location older than 24 hours is not used. Turning it off makes the server delete that data.",
-    "backgroundNeedsServer": "To get them with the app closed, set up the server and enable notifications in Settings.",
+    "whileOpen": "While the app is open, rain is checked every 15 minutes.",
+    "backgroundNeedsServer": "To get rain and lightning alerts with the app closed, set up the server and enable notifications in Settings.",
     "nextTitle": "Rain in the next 2 hours",
     "dry": "No rain in the next 2 hours",
     "raining": "It's raining: {{amount}} in the next 2 hours",
@@ -1033,7 +1035,7 @@
     "notes": "Notes",
     "copy": "Copy coordinates",
     "alerts": "Alerts",
-    "rainAlerts": "Warn me if it's going to rain at this point",
+    "rainAlerts": "Warn me about rain and lightning at this point",
     "lightningSoon": "Lightning alerts will come with your own server.",
     "confirmDelete": "Delete the point \"{{name}}\"?",
     "navigation": "How to get there",
@@ -1168,6 +1170,8 @@
     "createInstead": "Start from scratch"
   },
   "notifications": {
+    "serverLocationHint": "The server receives the last location read with the app open (only if you already allowed GPS), rounded to ~1 km, and warns you with the app closed about rain or lightning within 30 km. With the app closed the phone doesn't give GPS to the app: a location older than 24 hours is not used. If you are near a waypoint with alerts, only the waypoint alerts. Turning it off makes the server delete it.",
+    "serverLocation": "Use my last known location for rain and lightning alerts",
     "title": "Notifications",
     "intro": "Alerts for expiring items and shortages. Only new alerts are sent; they are not repeated every day.",
     "unsupported": "This browser doesn't support notifications. Alerts show up when you open the app.",

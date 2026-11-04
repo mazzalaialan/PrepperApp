@@ -457,6 +457,9 @@
     "nearbySources": "Fuentes: cuarteles de bomberos del IGN y el Consejo Nacional de Bomberos Voluntarios; comisarías y establecimientos de salud de la Provincia de Buenos Aires (datos abiertos, CC BY 4.0); y OpenStreetMap con conexión. Los teléfonos pueden estar desactualizados: confirmalos cuando puedas."
   },
   "location": {
+    "readAloud": "Leer en voz alta",
+    "stopReading": "Dejar de leer",
+    "spoken": {"point": "coma", "coords": "Coordenadas: {{lat}} grados {{latDir}}, {{lon}} grados {{lonDir}}. Precisión: {{accuracy}} metros.", "south": "sur", "north": "norte", "west": "oeste", "east": "este"},
     "intro": "Lo que hay que decirle a quien viene a ayudarte: coordenadas (sirven siempre) y referencias que se entienden sin GPS.",
     "waiting": "Esperando el GPS… Al aire libre tarda menos.",
     "gpsError": {
@@ -760,14 +763,13 @@
     "source": "Pronóstico de Open-Meteo para {{place}}. Se guarda en el dispositivo para verlo sin conexión."
   },
   "rainAlerts": {
+    "backgroundOn": "Con la app cerrada te avisa el servidor de lluvia y de rayos a menos de 30 km, en estos waypoints y, si está activado en Ajustes → Notificaciones, donde estás.",
     "title": "Avisos de lluvia",
     "here": "Avisarme si va a llover donde estoy",
     "noWaypoints": "Para recibir avisos de un lugar guardado, activalos en la ficha de ese waypoint.",
     "enableNotifications": "Para que el aviso aparezca como notificación del celular, activá las notificaciones en Ajustes.",
-    "whileOpen": "Con la app abierta se revisa cada 15 minutos.",
-    "background": "Avisarme también con la app cerrada (desde el servidor)",
-    "backgroundHint": "El servidor revisa cada 15 minutos. Para eso le llegan los waypoints con aviso (nombre y lugar) y, para \"donde estoy\", la última ubicación que leyó la app abierta, todo redondeado a ~1 km. Con la app cerrada el celular no le da el GPS a la app: si la ubicación tiene más de 24 horas, no se usa. Al apagarlo, el servidor borra esos datos.",
-    "backgroundNeedsServer": "Para recibirlos con la app cerrada, configurá el servidor y activá las notificaciones en Ajustes.",
+    "whileOpen": "Con la app abierta se revisa la lluvia cada 15 minutos.",
+    "backgroundNeedsServer": "Para recibir avisos de lluvia y rayos con la app cerrada, configurá el servidor y activá las notificaciones en Ajustes.",
     "nextTitle": "Lluvia en las próximas 2 horas",
     "dry": "Sin lluvia en las próximas 2 horas",
     "raining": "Está lloviendo: {{amount}} en las próximas 2 horas",
@@ -1033,7 +1035,7 @@
     "notes": "Notas",
     "copy": "Copiar coordenadas",
     "alerts": "Avisos",
-    "rainAlerts": "Avisarme si va a llover en este punto",
+    "rainAlerts": "Avisarme de lluvia y rayos en este punto",
     "lightningSoon": "Los avisos de rayos llegan con el servidor propio.",
     "confirmDelete": "¿Eliminar el punto \"{{name}}\"?",
     "navigation": "Cómo llegar",
@@ -1168,6 +1170,8 @@
     "createInstead": "Empezar de cero"
   },
   "notifications": {
+    "serverLocationHint": "El servidor recibe la última ubicación que leyó la app abierta (solo si ya le diste permiso de GPS), redondeada a ~1 km, y te avisa con la app cerrada si va a llover o caen rayos a menos de 30 km. Con la app cerrada el celular no le da el GPS a la app: una ubicación de más de 24 horas no se usa. Si estás cerca de un waypoint con aviso, avisa solo el waypoint. Al apagarlo, el servidor la borra.",
+    "serverLocation": "Usar mi última ubicación conocida para avisos de lluvia y rayos",
     "title": "Notificaciones",
     "intro": "Avisos de vencimientos y faltantes. Solo se avisa lo nuevo, no se repite todos los días.",
     "unsupported": "Este navegador no admite notificaciones. Las alertas se ven al abrir la app.",

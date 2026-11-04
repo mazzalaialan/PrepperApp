@@ -16,7 +16,7 @@ const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
 export function NotificationsSection() {
   const { t } = useTranslation();
-  const { notificationsEnabled, notifyHour, serverUrl } = useSettings((s) => s.settings);
+  const { notificationsEnabled, notifyHour, serverUrl, serverLocation } = useSettings((s) => s.settings);
   const update = useSettings((s) => s.update);
   const [state, setState] = useState<NotificationState | null>(null);
   const [result, setResult] = useState<EnableResult | null>(null);
@@ -81,6 +81,15 @@ export function NotificationsSection() {
             </select>
             <p className="hint">{t('notifications.hourHint')}</p>
           </div>
+          {state?.push && (
+            <div className="stack" style={{ gap: 4 }}>
+              <label className="check">
+                <input type="checkbox" checked={serverLocation} onChange={(e) => void update({ serverLocation: e.target.checked })} />
+                {t('notifications.serverLocation')}
+              </label>
+              <p className="hint" style={{ margin: 0 }} data-testid="server-location-hint">{t('notifications.serverLocationHint')}</p>
+            </div>
+          )}
           <div className="row-end">
             <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void run(async () => { await disableNotifications(); setResult(null); })}>
               <BellOff size={18} /> {t('notifications.disable')}

@@ -232,7 +232,6 @@ function RainAlertsSettings() {
   const statuses = useRainWatch((s) => s.statuses);
   const watched = [...waypoints.values()].filter((w) => w.rainAlerts);
   const permission = 'Notification' in window ? Notification.permission : 'denied';
-  const background = useSettings((s) => s.settings.rainAlertsBackground);
   const notificationsEnabled = useSettings((s) => s.settings.notificationsEnabled);
   // Con la app cerrada avisa el servidor: hace falta tenerlo registrado (Ajustes → Notificaciones).
   const [hasServer, setHasServer] = useState<boolean | null>(null);
@@ -278,17 +277,8 @@ function RainAlertsSettings() {
       )}
       {(here || watched.length > 0) && permission !== 'granted' && <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.enableNotifications')}</p>}
       <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.whileOpen')}</p>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={background}
-          disabled={!hasServer && !background}
-          onChange={(e) => void update({ rainAlertsBackground: e.target.checked })}
-        />
-        {t('rainAlerts.background')}
-      </label>
       <p className="hint" style={{ margin: 0 }} data-testid="rain-background-hint">
-        {hasServer === false && !background ? t('rainAlerts.backgroundNeedsServer') : t('rainAlerts.backgroundHint')}
+        {hasServer ? t('rainAlerts.backgroundOn') : t('rainAlerts.backgroundNeedsServer')}
       </p>
     </section>
   );

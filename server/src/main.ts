@@ -2,6 +2,8 @@ import { buildApp } from './app.ts';
 import { loadConfig } from './config.ts';
 import { openDb } from './db.ts';
 import { createPushSender } from './push.ts';
+import { glmFeed } from './lightning/glm.ts';
+import { hasPlaces, LIGHTNING_DEFAULTS, runLightningWatch } from './lightning/watch.ts';
 import { runRainWatch } from './rain/watch.ts';
 import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
@@ -31,7 +33,30 @@ async function rainTick() {
   }
 }
 
+const glm = glmFeed(config.lightningFilesPerPoll);
+let lightningBusy = false;
+
+async function lightningTick() {
+  // Una pasada a la vez (bajar y leer puede tardar más que el intervalo con mala conexión).
+  if (lightningBusy || !hasPlaces(db)) return;
+  lightningBusy = true;
+  try {
+    const flashes = await glm.poll(new Date());
+    const { sent, removed } = await runLightningWatch(db, push, flashes, new Date(), {
+      ...LIGHTNING_DEFAULTS,
+      radiusKm: config.lightningRadiusKm,
+      hereMaxAgeMs: config.rainHereMaxAgeMs,
+    });
+    if (sent || removed) app.log.info({ sent, removed }, 'avisos de rayos enviados');
+  } catch (err) {
+    app.log.error(err, 'fallaron los avisos de rayos');
+  } finally {
+    lightningBusy = false;
+  }
+}
+
 const timer = setInterval(() => void tick(), config.schedulerIntervalMs);
+const lightningTimer = config.lightningEnabled ? setInterval(() => void lightningTick(), config.lightningIntervalMs) : undefined;
 const rainTimer = setInterval(() => void rainTick(), config.rainIntervalMs);
 void tick();
 void rainTick();
@@ -40,6 +65,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, async () => {
     clearInterval(timer);
     clearInterval(rainTimer);
+    clearInterval(lightningTimer);
     await app.close();
     db.close();
     process.exit(0);

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { cancelCount, fakeSpeech, spokenLines } from './fakeSpeech';
 
 const PASSWORD = 'prueba-segura-123';
 // Bariloche: hay cuartel en los datos oficiales y Radio Nacional (LRA 30).
@@ -105,6 +106,7 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
 });
 
 test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
+  await fakeSpeech(page);
   await mockOsm(page);
   await setup(page);
   await page.goto('/#/first-aid/location');
@@ -121,6 +123,18 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(msg).toContainText('https://www.google.com/maps/search/?api=1&query=-41.133500,-71.310300');
   await expect(page.getByRole('link', { name: 'Llamar al 911' })).toHaveAttribute('href', 'tel:911');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-19-location.png`, fullPage: true });
+
+  // Leer el mensaje en voz alta: las coordenadas cifra por cifra, sin el link; "Llamar" lo corta.
+  await page.getByRole('button', { name: 'Leer en voz alta' }).click();
+  await expect.poll(() => spokenLines(page)).toContain('Coordenadas: 41 coma 1 3 3 5 0 grados sur, 71 coma 3 1 0 3 0 grados oeste. Precisión: 0 metros.');
+  const read = await spokenLines(page);
+  expect(read[0]).toBe('Necesito ayuda. Mi ubicación:');
+  expect(read.join(' ')).not.toContain('google.com');
+  await expect(page.getByRole('button', { name: 'Dejar de leer' })).toBeVisible();
+  const before = await cancelCount(page);
+  await page.getByRole('link', { name: 'Llamar al 911' }).click();
+  expect(await cancelCount(page)).toBeGreaterThan(before);
+  await expect(page.getByRole('button', { name: 'Leer en voz alta' })).toBeVisible();
 
   // Guardar este lugar como waypoint: llega el formulario con las coordenadas y la dirección.
   await page.getByRole('link', { name: 'Guardar como waypoint' }).click();

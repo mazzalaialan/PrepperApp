@@ -32,10 +32,11 @@ export interface Settings {
   /** Avisar si va a llover donde estoy (GPS con la app abierta; última ubicación conocida en segundo plano). */
   rainAlertsHere: boolean;
   /**
-   * Avisos de lluvia también con la app cerrada, desde el servidor propio:
-   * le manda los lugares con aviso y la última ubicación conocida (~1 km). Apagado por defecto.
+   * Con el servidor propio y las notificaciones activadas: mandarle la última
+   * ubicación conocida (~1 km) para avisar de lluvia y rayos cerca con la app
+   * cerrada. Prendido por defecto; se apaga en Ajustes → Notificaciones.
    */
-  rainAlertsBackground: boolean;
+  serverLocation: boolean;
   /** Rojo nocturno automático: nunca, en un horario fijo o desde el anochecer hasta el amanecer. */
   redSchedule: RedSchedule;
   /** Horario fijo, "HH:MM" (si `redFrom` > `redTo`, cruza la medianoche). */
@@ -139,7 +140,7 @@ export const DEFAULT_SETTINGS: Settings = {
   northReference: 'true',
   placeWaypointId: null,
   rainAlertsHere: false,
-  rainAlertsBackground: false,
+  serverLocation: true,
   redSchedule: 'off',
   redFrom: '21:00',
   redTo: '07:00',

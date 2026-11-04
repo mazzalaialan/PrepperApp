@@ -8,10 +8,12 @@ export interface PushSubscriptionJson {
 
 /** Contenido de la notificación; la app la arma en el idioma del usuario (ver app/src/sw.ts). */
 export interface PushPayload {
-  type: 'alerts' | 'rain' | 'test';
+  type: 'alerts' | 'rain' | 'lightning' | 'test';
   alerts?: { itemName: string; kind: string; dueDate: string | null }[];
   /** Aviso de lluvia en un lugar; `label` null = "donde estoy", y `fixAt` es de cuándo es esa ubicación. */
   rain?: { placeId: string; label: string | null; state: 'raining' | 'soon'; inMinutes: number; mm: number; fixAt: string | null };
+  /** Rayo cercano: distancia (km) y rumbo (grados desde el lugar hacia el rayo). */
+  lightning?: { placeId: string; label: string | null; distanceKm: number; bearing: number; fixAt: string | null };
 }
 
 export interface PushSender {

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MapPinPlus, MessageSquare, Phone, RefreshCw, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPinPlus, MessageSquare, Phone, RefreshCw, Share2, Square, Volume2 } from 'lucide-react';
 import { bearingDeg, cardinalOf, distanceMeters, formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useSettings } from '@/core/settings/settings';
+import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { CALLS } from '@/modules/firstAid/guides/types';
 import type { NewWaypointDraft } from '@/modules/waypoints/WaypointEditPage';
 import { useWaypoints } from '@/modules/waypoints/store';
@@ -23,6 +24,8 @@ export function MyLocationPage() {
   const [info, setInfo] = useState<LocationInfo | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
   const lastLookup = useRef<{ lat: number; lon: number } | null>(null);
+  const voice = useSpeechVoice(i18n.language.startsWith('en') ? 'en' : 'es');
+  const [reading, setReading] = useState(false);
 
   async function lookup(lat: number, lon: number) {
     if (!navigator.onLine) {
@@ -74,6 +77,59 @@ export function MyLocationPage() {
     lines.push(t('location.msg.map', { url: mapUrl }));
     return lines.join('\n');
   }, [fix, info, nearestWp, t, i18n.language]);
+
+  // El mismo mensaje, para leerlo en voz alta: coordenadas cifra por cifra (para anotarlas), sin el link del mapa.
+  const spoken = useMemo(() => {
+    if (!fix) return [];
+    const digits = (x: number) => {
+      const [int, dec] = Math.abs(x).toFixed(5).split('.');
+      return `${int} ${t('location.spoken.point')} ${dec!.split('').join(' ')}`;
+    };
+    const lines = message.split('\n').filter((l) => !l.includes(mapUrl));
+    lines[1] = t('location.spoken.coords', {
+      lat: digits(fix.lat),
+      // No se puede llamar `ns`: i18next lo toma como el espacio de nombres.
+      latDir: t(fix.lat < 0 ? 'location.spoken.south' : 'location.spoken.north'),
+      lon: digits(fix.lon),
+      lonDir: t(fix.lon < 0 ? 'location.spoken.west' : 'location.spoken.east'),
+      accuracy: Math.round(fix.accuracy),
+    });
+    return lines;
+  }, [message, fix, mapUrl, t]);
+
+  function toggleRead() {
+    if (reading || !voice) {
+      stopSpeaking();
+      setReading(false);
+      return;
+    }
+    // Más lento que en las guías: es para que alguien lo anote.
+    speak(spoken, voice, 0.85);
+    setReading(true);
+  }
+
+  // Se corta al salir, al pasar a segundo plano o al tocar "Llamar".
+  useEffect(() => {
+    const hide = () => {
+      if (document.visibilityState === 'hidden') {
+        stopSpeaking();
+        setReading(false);
+      }
+    };
+    document.addEventListener('visibilitychange', hide);
+    return () => {
+      document.removeEventListener('visibilitychange', hide);
+      stopSpeaking();
+    };
+  }, []);
+  useEffect(() => {
+    if (!reading) return;
+    // Apaga el botón cuando termina de leer.
+    const timer = setInterval(() => {
+      if (!window.speechSynthesis?.speaking && !window.speechSynthesis?.pending) setReading(false);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [reading]);
 
   async function share() {
     try {
@@ -172,6 +228,11 @@ export function MyLocationPage() {
             <pre className="location-message" data-testid="location-message">{message}</pre>
             <div className="row-end wrap">
               <CopyButton text={message} label={t('location.copyMessage')} />
+              {voice && (
+                <button className="btn" type="button" onClick={toggleRead} aria-pressed={reading}>
+                  {reading ? <Square size={18} /> : <Volume2 size={18} />} {t(reading ? 'location.stopReading' : 'location.readAloud')}
+                </button>
+              )}
               {'share' in navigator && (
                 <button className="btn" type="button" onClick={() => void share()}>
                   <Share2 size={18} /> {t('location.share')}
@@ -188,7 +249,15 @@ export function MyLocationPage() {
         </>
       )}
 
-      <a className="btn btn-danger call-911" href={`tel:${emergencyNumber}`}>
+      <a
+        className="btn btn-danger call-911"
+        href={`tel:${emergencyNumber}`}
+        onClick={() => {
+          // No puede sonar encima de la llamada.
+          stopSpeaking();
+          setReading(false);
+        }}
+      >
         <Phone size={20} /> {t('location.call911', { number: emergencyNumber })}
       </a>
       <p className="hint">{t('location.sources')}</p>

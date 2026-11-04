@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alertsNotification, rainNotification } from './format';
+import { alertsNotification, lightningNotification, rainNotification } from './format';
 
 describe('texto de notificaciones', () => {
   it('lista lo más urgente primero y resume el resto', () => {
@@ -45,5 +45,15 @@ describe('texto de notificaciones', () => {
     });
     // Ubicación reciente: no se aclara.
     expect(rainNotification({ ...here, fixAt: '2026-11-03T14:50:00Z' }, 'en', now).body).toBe('3.5 mm expected in the next 2 hours.');
+  });
+
+  it('aviso de rayos: distancia, dirección y qué hacer', () => {
+    const now = Date.parse('2026-11-04T18:00:00Z');
+    const l = { placeId: 'w1', label: 'Casa', distanceKm: 12, bearing: 315, fixAt: null };
+    const es = lightningNotification(l, 'es', now);
+    expect(es.title).toBe('Rayos a 12 km al noroeste · Casa');
+    expect(es.body).toMatch(/^Buscá refugio/);
+    expect(lightningNotification({ ...l, label: null, bearing: 359, distanceKm: 0 }, 'en', now).title).toBe('Lightning 1 km north · Where you are');
+    expect(lightningNotification({ ...l, fixAt: '2026-11-04T15:00:00Z' }, 'es', now).body).toMatch(/hace 3 horas/);
   });
 });

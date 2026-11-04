@@ -2,7 +2,15 @@
 import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { db } from '@/core/db/db';
-import { alertsNotification, rainNotification, testNotification, type AlertSummary, type RainPush } from '@/core/notifications/format';
+import {
+  alertsNotification,
+  lightningNotification,
+  rainNotification,
+  testNotification,
+  type AlertSummary,
+  type LightningPush,
+  type RainPush,
+} from '@/core/notifications/format';
 import { selectNotifiable } from '@/core/notifications/notifiable';
 import { readNotificationState, updateNotificationState } from '@/core/notifications/state';
 import type { Settings } from '@/core/settings/settings';
@@ -44,7 +52,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -52,6 +60,18 @@ self.addEventListener('push', (event) => {
         // Misma etiqueta que el aviso de la app abierta: si ya avisó, lo reemplaza sin volver a sonar.
         const { title, body } = rainNotification(payload.rain, lang);
         await self.registration.showNotification(title, { body, icon: ICON, badge: ICON, tag: `rain-${payload.rain.placeId}`, data: { url: '#/weather/forecast' } });
+      } else if (payload.type === 'lightning' && payload.lightning) {
+        const { title, body } = lightningNotification(payload.lightning, lang);
+        await self.registration.showNotification(title, {
+          body,
+          icon: ICON,
+          badge: ICON,
+          tag: `lightning-${payload.lightning.placeId}`,
+          // Que vibre aunque haya otro aviso igual en la barra: es urgente.
+          renotify: true,
+          vibrate: [300, 150, 300, 150, 300],
+          data: { url: '#/weather/forecast' },
+        } as NotificationOptions);
       } else if (payload.type === 'alerts' && payload.alerts?.length) {
         const { title, body } = alertsNotification(payload.alerts, lang, today());
         await show(title, body);

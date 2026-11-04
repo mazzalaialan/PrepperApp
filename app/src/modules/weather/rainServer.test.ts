@@ -21,7 +21,7 @@ const wp = (id: string, rainAlerts: boolean): Waypoint => ({
 
 describe('avisos de lluvia con la app cerrada', () => {
   beforeEach(() => {
-    useSettings.setState({ settings: { ...DEFAULT_SETTINGS, rainAlertsHere: true, rainAlertsBackground: true } });
+    useSettings.setState({ settings: { ...DEFAULT_SETTINGS, serverLocation: true } });
     useWaypoints.setState({ waypoints: new Map([['a', wp('a', true)], ['b', wp('b', false)]]) });
     useRainWatch.setState({ lastHere: null });
   });
@@ -37,9 +37,13 @@ describe('avisos de lluvia con la app cerrada', () => {
     expect(places[0]).toEqual({ id: 'here', label: null, lat: -34.6, lon: -58.38, fixAt: '2026-11-03T12:00:00.000Z' });
   });
 
-  it('apagado manda la lista vacía (el servidor la borra)', () => {
-    useSettings.setState({ settings: { ...DEFAULT_SETTINGS, rainAlertsHere: true, rainAlertsBackground: false } });
+  it('sin "usar mi ubicación" manda solo los waypoints (el servidor borra la ubicación)', () => {
+    useSettings.setState({ settings: { ...DEFAULT_SETTINGS, serverLocation: false } });
     useRainWatch.setState({ lastHere: { lat: 1, lon: 1, at: 0 } });
-    expect(rainBody()).toEqual({ places: [], keepHere: false });
+    expect(rainBody()).toEqual({ places: [{ id: 'a', label: 'Lugar a', lat: -41.17, lon: -71.43, fixAt: null }], keepHere: false });
+  });
+
+  it('la ubicación viene activada por defecto', () => {
+    expect(DEFAULT_SETTINGS.serverLocation).toBe(true);
   });
 });

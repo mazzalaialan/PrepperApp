@@ -2,12 +2,11 @@ import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypt
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Db } from '../db.ts';
 import type { PushSender, PushSubscriptionJson } from '../push.ts';
+import { HERE_ID } from '../places.ts';
 import { isValidTimeZone } from '../time.ts';
 
 const MAX_ALERTS = 5000;
 const MAX_RAIN_PLACES = 100;
-/** Id del lugar "donde estoy" (el mismo que usa la app). */
-const HERE_ID = 'here';
 
 const rainPlaceSchema = {
   type: 'object',

@@ -45,6 +45,8 @@ const MIGRATIONS = [
      notified INTEGER NOT NULL DEFAULT 0,
      PRIMARY KEY (device_id, place_id)
    );`,
+  // Avisos de rayos en los mismos lugares: cuándo se avisó por última vez (como mucho uno cada 10 minutos).
+  `ALTER TABLE rain_places ADD COLUMN lightning_notified_at INTEGER;`,
 ];
 
 export type Db = DatabaseSync;

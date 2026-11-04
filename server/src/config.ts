@@ -19,6 +19,12 @@ export interface Config {
   rainIntervalMs: number;
   /** Hasta qué antigüedad se usa la última ubicación conocida de "donde estoy". */
   rainHereMaxAgeMs: number;
+  /** Avisos de rayos (GOES-19 GLM): se bajan archivos del satélite solo si hay lugares con aviso. */
+  lightningEnabled: boolean;
+  lightningIntervalMs: number;
+  /** Archivos de 20 s que se leen por pasada (1 = ~550 MB por día; 3 = todos, ~1,6 GB). */
+  lightningFilesPerPoll: number;
+  lightningRadiusKm: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -36,5 +42,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     weatherUrl: env.WEATHER_URL?.trim() || 'https://api.open-meteo.com',
     rainIntervalMs: Number(env.RAIN_INTERVAL_MINUTES ?? 15) * 60_000,
     rainHereMaxAgeMs: Number(env.RAIN_HERE_MAX_AGE_HOURS ?? 24) * 3_600_000,
+    lightningEnabled: (env.LIGHTNING_ENABLED ?? 'true') !== 'false',
+    lightningIntervalMs: Number(env.LIGHTNING_INTERVAL_SECONDS ?? 60) * 1000,
+    lightningFilesPerPoll: Number(env.LIGHTNING_FILES_PER_POLL ?? 1),
+    lightningRadiusKm: Number(env.LIGHTNING_RADIUS_KM ?? 30),
   };
 }

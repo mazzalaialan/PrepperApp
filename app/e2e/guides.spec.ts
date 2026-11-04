@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { cancelCount, fakeSpeech, spokenLines } from './fakeSpeech';
 
 const PASSWORD = 'prueba-segura-123';
 
@@ -169,34 +170,7 @@ test('paquete de Chile: se baja al elegir el país, queda guardado y da radio, c
 });
 
 test('guía en voz alta: lee cada paso, se corta al llamar y se repite', async ({ page }) => {
-  // Voz simulada: Chromium sin ventana no trae voces. Anota lo leído y las cancelaciones.
-  await page.addInitScript(() => {
-    const w = window as unknown as { __spoken: string[]; __cancels: number };
-    w.__spoken = [];
-    w.__cancels = 0;
-    const voice = { lang: 'es-AR', localService: true, name: 'Prueba', default: true, voiceURI: 'prueba' };
-    class FakeUtterance {
-      text: string;
-      voice: unknown = null;
-      lang = '';
-      rate = 1;
-      constructor(text: string) {
-        this.text = text;
-      }
-    }
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', { value: FakeUtterance });
-    Object.defineProperty(window, 'speechSynthesis', {
-      value: {
-        getVoices: () => [voice],
-        speak: (u: FakeUtterance) => w.__spoken.push(u.text),
-        cancel: () => w.__cancels++,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-      },
-    });
-    // Los botones de llamar no abren el marcador en la prueba.
-    document.addEventListener('click', (e) => (e.target as Element).closest?.('a[href^="tel:"]') && e.preventDefault());
-  });
+  await fakeSpeech(page);
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Repetir contraseña').fill(PASSWORD);
@@ -205,8 +179,8 @@ test('guía en voz alta: lee cada paso, se corta al llamar y se repite', async (
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
-  const spoken = () => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken);
-  const cancels = () => page.evaluate(() => (window as unknown as { __cancels: number }).__cancels);
+  const spoken = () => spokenLines(page);
+  const cancels = () => cancelCount(page);
 
   await page.goto('/#/first-aid/guides/assess');
   const toggle = page.getByRole('button', { name: 'Leer los pasos en voz alta' });

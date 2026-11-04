@@ -1,4 +1,5 @@
 import type { Db } from '../db.ts';
+import { withoutDuplicateHere } from '../places.ts';
 import type { PushSender, PushSubscriptionJson } from '../push.ts';
 import type { RainSource } from './source.ts';
 
@@ -23,17 +24,18 @@ export interface RainWatchResult {
  * Una pasada de los avisos de lluvia con la app cerrada: consulta cada lugar
  * (los repetidos, una sola vez) y avisa una vez por episodio, igual que la app
  * abierta (app/src/modules/weather/rainWatch.ts). "Donde estoy" usa la última
- * ubicación que mandó la app; si es más vieja que `hereMaxAgeMs`, no se usa.
+ * ubicación que mandó la app; si es más vieja que `hereMaxAgeMs`, no se usa, y
+ * si está cerca de un waypoint con aviso, avisa solo el waypoint.
  */
 export async function runRainWatch(db: Db, push: PushSender, source: RainSource, now = new Date(), hereMaxAgeMs = 24 * 3_600_000): Promise<RainWatchResult> {
   const result: RainWatchResult = { checked: 0, sent: 0, removed: 0 };
-  const rows = (
+  const rows = withoutDuplicateHere(
     db
       .prepare(
         `SELECT p.device_id, p.place_id, p.label, p.lat, p.lon, p.fix_at, p.notified, d.subscription
          FROM rain_places p JOIN devices d ON d.id = p.device_id`,
       )
-      .all() as unknown as PlaceRow[]
+      .all() as unknown as PlaceRow[],
   ).filter((r) => r.fix_at === null || now.getTime() - Date.parse(r.fix_at) <= hereMaxAgeMs);
   if (rows.length === 0) return result;
 
