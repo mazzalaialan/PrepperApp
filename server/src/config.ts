@@ -27,6 +27,8 @@ export interface Config {
   /** Bajar solo las coordenadas de los rayos de cada archivo (~36 KB) en vez del archivo completo (~380 KB). */
   lightningPartial: boolean;
   lightningRadiusKm: number;
+  /** Lluvia estimada con el infrarrojo del GOES-19 para los avisos (además del pronóstico). */
+  rainObserved: boolean;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -49,5 +51,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     lightningFilesPerPoll: Number(env.LIGHTNING_FILES_PER_POLL ?? 3),
     lightningPartial: (env.LIGHTNING_PARTIAL ?? 'true') !== 'false',
     lightningRadiusKm: Number(env.LIGHTNING_RADIUS_KM ?? 30),
+    rainObserved: (env.RAIN_OBSERVED ?? 'true') !== 'false',
   };
 }

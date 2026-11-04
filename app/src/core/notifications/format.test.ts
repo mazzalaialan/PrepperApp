@@ -56,4 +56,9 @@ describe('texto de notificaciones', () => {
     expect(lightningNotification({ ...l, label: null, bearing: 359, distanceKm: 0 }, 'en', now).title).toBe('Lightning 1 km north · Where you are');
     expect(lightningNotification({ ...l, fixAt: '2026-11-04T15:00:00Z' }, 'es', now).body).toMatch(/hace 3 horas/);
   });
+
+  it('aviso de lluvia vista por el satélite', () => {
+    const rain = { placeId: 'w1', label: 'Casa', state: 'raining' as const, inMinutes: 0, mm: 6, fixAt: null, observedMmH: 6.2 };
+    expect(rainNotification(rain, 'es').body).toBe('El satélite ve lluvia de unos 6,2 mm/h ahora (estimación por infrarrojo, orientativa).');
+  });
 });

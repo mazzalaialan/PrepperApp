@@ -27,6 +27,7 @@ const TEXT = {
     rainSoon: (min: number, place: string) => `Lluvia en unos ${min} min · ${place}`,
     raining: (place: string) => `Está lloviendo · ${place}`,
     rainBody: (mm: string) => `Se esperan ${mm} mm en las próximas 2 horas.`,
+    rainObserved: (rate: string) => `El satélite ve lluvia de unos ${rate} mm/h ahora (estimación por infrarrojo, orientativa).`,
     lastFix: (ago: string) => `Según tu última ubicación conocida (${ago}).`,
     lightning: (km: number, dir: string, place: string) => `Rayos a ${km} km al ${dir} · ${place}`,
     lightningBody: 'Buscá refugio: un edificio o un auto cerrado. Alejate de árboles, alambrados y lugares altos. Detectado por satélite (±8 km).',
@@ -47,6 +48,7 @@ const TEXT = {
     rainSoon: (min: number, place: string) => `Rain in about ${min} min · ${place}`,
     raining: (place: string) => `It's raining · ${place}`,
     rainBody: (mm: string) => `${mm} mm expected in the next 2 hours.`,
+    rainObserved: (rate: string) => `The satellite sees about ${rate} mm/h of rain now (infrared estimate, approximate).`,
     lastFix: (ago: string) => `Based on your last known location (${ago}).`,
     lightning: (km: number, dir: string, place: string) => `Lightning ${km} km ${dir} · ${place}`,
     lightningBody: 'Take shelter: a building or a closed car. Stay away from trees, wire fences and high ground. Detected by satellite (±8 km).',
@@ -92,6 +94,8 @@ export interface RainPush {
   mm: number;
   /** De cuándo es la ubicación de "donde estoy". */
   fixAt: string | null;
+  /** Lluvia vista por el satélite en el lugar (mm/h), si la hubo. */
+  observedMmH?: number;
 }
 
 /** Aviso de rayos cercanos que manda el servidor (ver server/src/lightning/watch.ts). */
@@ -122,6 +126,8 @@ export function rainNotification(rain: RainPush, lang: Lang, now = Date.now()): 
   const tx = TEXT[lang];
   const place = rain.label ?? tx.here;
   const title = rain.state === 'raining' ? tx.raining(place) : tx.rainSoon(rain.inMinutes, place);
-  const body = tx.rainBody(new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(rain.mm)) + lastFixNote(rain.fixAt, lang, now);
+  const fmt = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  const main = rain.observedMmH !== undefined ? tx.rainObserved(fmt.format(rain.observedMmH)) : tx.rainBody(fmt.format(rain.mm));
+  const body = main + lastFixNote(rain.fixAt, lang, now);
   return { title, body };
 }

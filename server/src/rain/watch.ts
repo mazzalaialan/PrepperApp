@@ -67,6 +67,7 @@ export async function runRainWatch(db: Db, push: PushSender, source: RainSource,
         inMinutes: outlook.state === 'soon' ? outlook.inMinutes : 0,
         mm: Math.round(outlook.mm * 10) / 10,
         fixAt: row.fix_at,
+        ...(outlook.state === 'raining' && outlook.observedMmH !== undefined ? { observedMmH: outlook.observedMmH } : {}),
       },
     });
     if (!delivered) {

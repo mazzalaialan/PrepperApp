@@ -70,6 +70,7 @@ La app queda servida en `https://TU_DOMINIO/` y se puede instalar desde ahí.
 | `WEATHER_URL` | `https://api.open-meteo.com` | Pronóstico para los avisos de lluvia (API compatible con Open-Meteo; puede ser una instancia propia) |
 | `RAIN_INTERVAL_MINUTES` | `15` | Cada cuánto revisa la lluvia en los lugares con aviso |
 | `RAIN_HERE_MAX_AGE_HOURS` | `24` | Hasta qué antigüedad usa la última ubicación conocida para "donde estoy" (lluvia y rayos) |
+| `RAIN_OBSERVED` | `true` | Lluvia estimada con el infrarrojo del GOES-19 en los avisos (además del pronóstico) |
 | `LIGHTNING_ENABLED` | `true` | Avisos de rayos (GOES-19 GLM); `false` los apaga |
 | `LIGHTNING_INTERVAL_SECONDS` | `20` | Cada cuánto busca rayos nuevos (el satélite saca un archivo cada 20 s) |
 | `LIGHTNING_FILES_PER_POLL` | `3` | Archivos que lee como mucho por pasada (si se atrasa, se pone al día) |
@@ -112,6 +113,7 @@ docker compose logs -f vikarg
 - Avisa **una vez por episodio**: "Lluvia en unos 45 min · Refugio" o "Está lloviendo". Vuelve a avisar recién cuando el pronóstico se seca y vuelve a llover. Si la ubicación de "donde estoy" tiene más de media hora, la notificación lo aclara, y si tiene más de 24 h no se usa.
 - **Rayos:** cada 20 segundos, solo si hay algún lugar con aviso o alguien tiene abierto el mapa de rayos, lee los archivos nuevos del GOES-19 GLM (NOAA, dominio público, `noaa-goes19`, uno cada 20 s con todo el disco) y se queda solo con los rayos de la región (15° S a 60° S, 45° O a 82° O). NOAA no permite pedir una zona, pero de cada archivo (~380 KB) baja solo los ~36 KB con las coordenadas de los rayos, con pedidos parciales (HTTP Range): ~155 MB por día. Si una lectura parcial falla, ese archivo se baja completo. Una vez por hora el log muestra cuánto se bajó. La app los pide en `GET /api/lightning` (sin token: son datos públicos) cada 20 s mientras el mapa del tiempo con la capa de rayos está a la vista; cada tanda reemplaza a la anterior. Avisa si cae uno a menos de 30 km, con la distancia y la dirección ("Rayos a 12 km al noroeste · Casa"), y como mucho una vez cada 10 minutos por lugar mientras sigan cayendo. El satélite tiene unos 8 km de error y ~1 minuto de demora.
 - **Lluvia observada:** NOAA retiró la lluvia estimada del GOES (`ABI-L2-RRQPEF`) el 2 de noviembre de 2026, y su reemplazo por ahora no está en el bucket abierto. Una vez por día el servidor revisa si aparece: si es así, lo anota en el log y en `/api/health` (`observedRain.available`).
+- **Lluvia estimada propia:** mientras tanto, el servidor estima la lluvia con el infrarrojo del GOES-19 (banda 13), leyendo solo las franjas que cubren los lugares con aviso (~400 KB cada 10 minutos por franja). Si en el lugar el satélite ve lluvia, el aviso es "está lloviendo" con la intensidad estimada. Es orientativa: nubes altas muy frías que no llueven pueden dar falsas alarmas. `RAIN_OBSERVED=false` la apaga.
 - Es pronóstico, no radar: en Argentina el horario es orientativo, con margen de una hora. La fuente es intercambiable (`server/src/rain/source.ts`), para sumar lluvia observada (GOES-19 o el radar del SMN) más adelante.
 
 ## Seguridad

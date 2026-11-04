@@ -18,7 +18,8 @@ export interface Nowcast {
 }
 
 export type RainOutlook =
-  | { state: 'raining'; mm: number }
+  /** `observedMmH`: lluvia estimada por satélite en el lugar (solo en el servidor, ver observer.ts). */
+  | { state: 'raining'; mm: number; observedMmH?: number }
   | { state: 'soon'; inMinutes: number; startsAt: string; mm: number }
   | { state: 'dry' };
 

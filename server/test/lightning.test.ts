@@ -8,7 +8,7 @@ import { openDb, type Db } from '../src/db.ts';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { glmFeed, parseGlm, startOfKey, type Flash } from '../src/lightning/glm.ts';
-import { readGlmPartial } from '../src/lightning/partial.ts';
+import { readGlmPartial } from '../src/satellite/partial.ts';
 import { createLightningStore, mapActive } from '../src/lightning/store.ts';
 import { hasPlaces, runLightningWatch } from '../src/lightning/watch.ts';
 import { distanceKm, withoutDuplicateHere } from '../src/places.ts';

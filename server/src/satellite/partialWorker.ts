@@ -3,10 +3,11 @@ import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parentPort, Worker, workerData } from 'node:worker_threads';
-import { glmReady, readGlmFile } from './glm.ts';
+import { glmReady, readGlmFile } from '../lightning/glm.ts';
+import { readIrFile, type IrWindow } from '../rain/goesIr.ts';
 
 /**
- * Worker de la lectura parcial (ver partial.ts). h5wasm (Emscripten en Node)
+ * Worker de la lectura parcial (ver partial.ts): rayos (GLM) o ventanas del infrarrojo (ABI banda 13). h5wasm (Emscripten en Node)
  * lee con `fs.readSync`, que es sincrónico: para el archivo de esta lectura se
  * intercepta, y si falta un pedazo este hilo espera (Atomics.wait) a que un
  * segundo hilo lo baje con HTTP Range. HDF5 nunca ve un error.
@@ -16,9 +17,11 @@ import { glmReady, readGlmFile } from './glm.ts';
 const BLOCK = 1024;
 /** Bloques de más que se piden de una vez (lo que sigue suele hacer falta enseguida). */
 const READ_AHEAD = 0;
-const MAX_RANGE = 256 * 1024;
+/** Lo más grande que se pide de una vez: un bloque comprimido del infrarrojo ronda los 100–200 KB. */
+const MAX_RANGE = 2 * 1024 * 1024;
 
-const { url, size, at } = workerData as { url: string; size: number; at: number };
+export type PartialTask = { kind: 'glm'; at: number } | { kind: 'ir'; windows: IrWindow[] };
+const { url, size, task } = workerData as { url: string; size: number; task: PartialTask };
 
 // ---------- Descarga sincrónica desde este hilo ----------
 
@@ -47,6 +50,12 @@ let requests = 0;
 const blocks = new Map<number, Buffer>();
 
 function fetchBlocks(from: number, to: number) {
+  // Tramos muy largos se piden en partes (el buffer compartido tiene un tope).
+  const per = Math.floor(MAX_RANGE / BLOCK);
+  if (to - from + 1 > per) {
+    for (let f = from; f <= to; f += per) fetchBlocks(f, Math.min(to, f + per - 1));
+    return;
+  }
   const start = from * BLOCK;
   const end = Math.min(size, (to + 1) * BLOCK) - 1;
   Atomics.store(control, 0, 0);
@@ -103,8 +112,8 @@ const readSync = fs.readSync;
 try {
   await glmReady();
   fetchBlocks(0, Math.ceil(12288 / BLOCK) - 1); // el principio siempre hace falta (superbloque y encabezados)
-  const flashes = readGlmFile(path, at);
-  parentPort!.postMessage({ ok: true, result: { flashes, bytes, requests } });
+  const value = task.kind === 'glm' ? readGlmFile(path, task.at) : readIrFile(path, task.windows);
+  parentPort!.postMessage({ ok: true, result: { value, bytes, requests } });
 } catch (err) {
   parentPort!.postMessage({ ok: false, error: String(err) });
 } finally {

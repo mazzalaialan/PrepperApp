@@ -3,11 +3,12 @@ import { loadConfig } from './config.ts';
 import { openDb } from './db.ts';
 import { createPushSender } from './push.ts';
 import { glmFeed } from './lightning/glm.ts';
-import { readGlmPartial } from './lightning/partial.ts';
+import { readGlmPartial } from './satellite/partial.ts';
 import { createLightningStore, mapActive } from './lightning/store.ts';
 import { hasPlaces, LIGHTNING_DEFAULTS, runLightningWatch } from './lightning/watch.ts';
 import { checkObservedRain, createObservedRainStatus } from './rain/noaaWatch.ts';
 import { runRainWatch } from './rain/watch.ts';
+import { irObserver, withObservedRain } from './rain/observer.ts';
 import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
 
@@ -28,7 +29,9 @@ async function tick() {
   }
 }
 
-const rainSource = openMeteoSource(config.weatherUrl);
+const forecastSource = openMeteoSource(config.weatherUrl);
+const observer = irObserver();
+const rainSource = config.rainObserved ? withObservedRain(forecastSource, observer) : forecastSource;
 
 async function rainTick() {
   try {
