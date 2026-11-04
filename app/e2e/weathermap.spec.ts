@@ -4,6 +4,9 @@ import { expect, test, type Page } from '@playwright/test';
 const PASSWORD = 'prueba-segura-123';
 const QUAKE = { lon: -61, lat: -38 };
 const FIRE = { lon: -60.5, lat: -26.5 };
+const ROSARIO = { lon: -60.65, lat: -32.95 };
+/** Lo que devuelve el servidor simulado en /api/lightning: [lat, lon, segundos]. */
+let lightningBatch: number[][] = [];
 
 test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'] });
 
@@ -55,6 +58,12 @@ async function mockSources(page: Page) {
       },
     }),
   );
+  // El servidor propio (el que viene cargado): rayos de la última pasada.
+  lightningBatch = [
+    [ROSARIO.lat, ROSARIO.lon, 30],
+    [ROSARIO.lat + 0.02, ROSARIO.lon + 0.02, 50],
+  ];
+  await ctx.route('**/api/lightning', (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), flashes: lightningBatch }, headers: { 'Access-Control-Allow-Origin': '*' } }));
   await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) => {
     const n = new URL(route.request().url()).searchParams.get('latitude')!.split(',').length;
     route.fulfill({
@@ -137,8 +146,46 @@ test('mapa de tiempo: capas, animación, tocar un sismo o una alerta, y sin cone
   await page.goto('/#/weather/map');
   await expect(page.getByRole('button', { name: 'Sismos' })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByRole('button', { name: 'Viento' })).toHaveAttribute('aria-pressed', 'true');
-  // Rayos: necesita el servidor propio.
-  await expect(page.getByRole('button', { name: 'Rayos' })).toBeDisabled();
+  // Rayos: del servidor propio, círculos amarillos; cada tanda reemplaza a la anterior.
+  await expect(page.getByRole('button', { name: 'Rayos' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('lightning-status')).toHaveText(/^2 rayos en la región · actualizado \d\d:\d\d$/);
+  await expect(page.getByText(/Anillos de 10, 20 y 30 km alrededor tuyo/)).toBeVisible();
+  // Sin imágenes de fondo, para leer el color.
+  await page.getByRole('button', { name: 'Satélite (nubes)' }).click();
+  await page.getByRole('button', { name: 'Radar de lluvia' }).click();
+  const map = page.getByTestId('weather-map');
+  await map.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  const yellowAt = async (lon: number, lat: number) => {
+    const box = (await map.boundingBox())!;
+    const pt = screenPoint(lon, lat, box.width, box.height);
+    return map.evaluate((el, { x, y }) => {
+      const c = el as HTMLCanvasElement;
+      const dpr = c.width / c.getBoundingClientRect().width;
+      const [r, g, b] = c.getContext('2d')!.getImageData(Math.round(x * dpr), Math.round(y * dpr), 1, 1).data;
+      return r! > 200 && g! > 180 && b! < 90;
+    }, pt);
+  };
+  await expect.poll(() => yellowAt(ROSARIO.lon, ROSARIO.lat)).toBe(true);
+  // Cerca de mi ubicación: anillos de 10, 20 y 30 km.
+  lightningBatch = [...lightningBatch, [-34.45, -58.2, 10], [-34.47, -58.22, 40], [-34.75, -58.62, 15]];
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/map');
+  await expect(page.getByTestId('lightning-status')).toHaveText(/^5 rayos/);
+  await page.getByRole('button', { name: 'Ir a mi ubicación' }).click();
+  await page.getByRole('button', { name: 'Acercar' }).click();
+  await page.getByRole('button', { name: 'Acercar' }).click();
+  await page.waitForTimeout(600);
+  await page.getByTestId('weather-map').screenshot({ path: `e2e-results/screens/${testInfo.project.name}-17b-lightning.png` });
+  await page.getByRole('button', { name: 'Ver todo' }).click();
+  lightningBatch = [[-31.4, -64.18, 20]]; // la tanda siguiente: solo Córdoba
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/map');
+  await expect(page.getByTestId('lightning-status')).toHaveText(/^1 rayos en la región/);
+  await map.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await expect.poll(() => yellowAt(-64.18, -31.4)).toBe(true);
+  expect(await yellowAt(ROSARIO.lon, ROSARIO.lat)).toBe(false);
+  await page.getByRole('button', { name: 'Satélite (nubes)' }).click();
+  await page.getByRole('button', { name: 'Radar de lluvia' }).click();
   // La página no se ensancha en el celular.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 

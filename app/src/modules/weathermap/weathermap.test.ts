@@ -84,3 +84,23 @@ describe('fuentes', () => {
     expect(parseZoneWeather(cur(18), points.slice(0, 1))[0]).toMatchObject({ name: 'A', temp: 18, precip: 0.2 });
   });
 });
+
+describe('rayos en el mapa', () => {
+  it('los ⚡ titilan a destiempo y se ven un rato', async () => {
+    const { lightningVisible } = await import('./MapCanvas');
+    const on = (key: number) => Array.from({ length: 120 }, (_, t) => lightningVisible(key, t)).filter(Boolean).length;
+    for (const key of [1, 42, 100_123]) {
+      expect(on(key)).toBeGreaterThan(20);
+      expect(on(key)).toBeLessThan(70);
+    }
+    const pattern = (key: number) => Array.from({ length: 24 }, (_, t) => (lightningVisible(key, t) ? 1 : 0)).join('');
+    expect(new Set([1, 2, 3, 4, 5].map(pattern)).size).toBeGreaterThan(1);
+  });
+
+  it('los anillos miden lo mismo en km a cualquier latitud', async () => {
+    const { kmToPx } = await import('./MapCanvas');
+    // En Mercator, 30 km en Ushuaia ocupan más píxeles que en Salta.
+    expect(kmToPx(30, -54.8, 1)).toBeGreaterThan(kmToPx(30, -24.8, 1));
+    expect(kmToPx(30, 0, 0.001)).toBeCloseTo(30, 5);
+  });
+});

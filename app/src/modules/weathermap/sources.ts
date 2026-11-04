@@ -170,6 +170,29 @@ export async function fetchQuakes(): Promise<Quake[]> {
   return parseQuakes(await getJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson', 'earthquakes'));
 }
 
+// ---------- Rayos (GOES-19 GLM, desde el servidor propio) ----------
+
+export interface Flash {
+  lat: number;
+  lon: number;
+  /** Segundos desde que cayó. */
+  ageS: number;
+}
+
+export interface LightningBatch {
+  updatedAt: string | null;
+  flashes: Flash[];
+}
+
+/** Lo que tenga el servidor de la última pasada (cada minuto): reemplaza a lo anterior. */
+export async function fetchLightning(serverUrl: string): Promise<LightningBatch> {
+  const data = await getJson<{ updatedAt?: string | null; flashes?: unknown[] }>(`${serverUrl.replace(/\/+$/, '')}/api/lightning`, 'lightning');
+  const flashes = (data.flashes ?? [])
+    .filter((f): f is [number, number, number] => Array.isArray(f) && f.length >= 3 && f.every((n) => typeof n === 'number'))
+    .map(([lat, lon, ageS]) => ({ lat, lon, ageS }));
+  return { updatedAt: data.updatedAt ?? null, flashes };
+}
+
 // ---------- Alertas de desastres (GDACS) ----------
 
 /** Ciclones tropicales, inundaciones, sequías, incendios forestales y erupciones (los sismos ya vienen de USGS). */

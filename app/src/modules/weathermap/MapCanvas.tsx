@@ -4,7 +4,7 @@ import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels'
 import type { GeoData, Volcano } from './geo';
 import { fitBounds, pan, project, REGION_BOUNDS, zoomAt, type Size, type View } from './projection';
 import { readyImage } from './images';
-import type { Hazard, HazardLevel, Quake, ZoneWeather } from './sources';
+import type { Flash, Hazard, HazardLevel, Quake, ZoneWeather } from './sources';
 
 /** Imagen georreferenciada (satélite, tesela de radar, focos de calor), en metros Mercator. */
 export interface Overlay {
@@ -41,6 +41,12 @@ interface Props {
   volcanoes: Volcano[] | null;
   waypoints: MapWaypoint[] | null;
   here: { lon: number; lat: number } | null;
+  /** Rayos de los últimos minutos: círculos amarillos y un ⚡ que titila por grupo. */
+  lightning: Flash[] | null;
+  /** Anillos de 10, 20 y 30 km alrededor de mi ubicación. */
+  rings: boolean;
+  /** Animar los ⚡ (no con ahorro de batería). */
+  animate: boolean;
   selected: MapFeature | null;
   onSelect: (feature: MapFeature | null) => void;
   /** Cambia cuando termina de bajar una imagen: hay que redibujar. */
@@ -126,6 +132,26 @@ function fireClusters(img: HTMLImageElement, bbox: Overlay['bbox']): { x: number
   return points;
 }
 
+/** Color de los rayos (fijo: tiene que verse igual en todos los temas). */
+const LIGHTNING_COLOR = '#ffd400';
+/** Celda (px de pantalla) en la que se agrupan los rayos cercanos para poner un solo ⚡. */
+const LIGHTNING_CELL_PX = 36;
+/** Cada cuánto cambia el titileo de los ⚡. */
+export const LIGHTNING_TICK_MS = 160;
+export const RING_KM = [10, 20, 30];
+
+/** Los ⚡ aparecen y desaparecen a destiempo, cada grupo con su ritmo, para que parezcan tormentas vivas. */
+export function lightningVisible(cellKey: number, tick: number): boolean {
+  const phase = (cellKey * 2654435761) >>> 0;
+  const period = 6 + (phase % 7);
+  return (tick + (phase % period)) % period < 3;
+}
+
+/** Radio en px de un círculo de `km` alrededor de una latitud (Mercator estira hacia los polos). */
+export function kmToPx(km: number, lat: number, scale: number): number {
+  return ((km * 1000) / Math.cos((lat * Math.PI) / 180)) * scale;
+}
+
 export function quakeRadius(mag: number): number {
   return 3 + Math.max(0, mag - 2.5) * 3;
 }
@@ -160,8 +186,17 @@ export function MapCanvas(props: Props) {
     // Solo cuando cambia el tamaño.
   }, [size]);
 
+  // Titileo de los ⚡: se redibuja seguido solo si hay rayos y está permitido animar.
+  const [tick, setTick] = useState(0);
+  const flashing = props.animate && !!props.lightning?.length;
   useEffect(() => {
-    if (size && view && canvas.current) draw(canvas.current, size, view, props);
+    if (!flashing) return;
+    const timer = setInterval(() => setTick((n) => n + 1), LIGHTNING_TICK_MS);
+    return () => clearInterval(timer);
+  }, [flashing]);
+
+  useEffect(() => {
+    if (size && view && canvas.current) draw(canvas.current, size, view, props, flashing ? tick : null);
   });
 
   // ---------- Gestos: arrastrar, pellizcar, rueda y tocar ----------
@@ -245,7 +280,7 @@ function hitTest(x: number, y: number, size: Size, view: View, p: Props): MapFea
   return (best as { f: MapFeature } | null)?.f ?? null;
 }
 
-function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props) {
+function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: number | null) {
   const dpr = window.devicePixelRatio || 1;
   if (el.width !== Math.round(size.width * dpr) || el.height !== Math.round(size.height * dpr)) {
     el.width = Math.round(size.width * dpr);
@@ -439,6 +474,38 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props) {
     }
   }
 
+  // Rayos, encima de las etiquetas del clima: un círculo amarillo por rayo (más tenue cuanto más viejo) y un ⚡ por grupo.
+  if (p.lightning?.length) {
+    const cells = new Map<number, { x: number; y: number; n: number }>();
+    for (const f of p.lightning) {
+      const s = proj(f.lon, f.lat);
+      if (s.x < -10 || s.y < -10 || s.x > size.width + 10 || s.y > size.height + 10) continue;
+      ctx.globalAlpha = f.ageS < 120 ? 0.95 : 0.6;
+      ctx.fillStyle = LIGHTNING_COLOR;
+      ctx.strokeStyle = '#7a5c00';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      const key = Math.floor(s.y / LIGHTNING_CELL_PX) * 100_000 + Math.floor(s.x / LIGHTNING_CELL_PX);
+      const cell = cells.get(key) ?? { x: 0, y: 0, n: 0 };
+      cell.x += s.x;
+      cell.y += s.y;
+      cell.n++;
+      cells.set(key, cell);
+    }
+    ctx.globalAlpha = 1;
+    ctx.font = `18px ${EMOJI_FONT}`;
+    ctx.textAlign = 'center';
+    for (const [key, cell] of cells) {
+      // Sin animación (ahorro de batería) el ⚡ queda fijo.
+      if (tick !== null && !lightningVisible(key, tick)) continue;
+      ctx.fillText('⚡', cell.x / cell.n, cell.y / cell.n - 6);
+    }
+    ctx.textAlign = 'start';
+  }
+
   // Mis waypoints y mi ubicación.
   for (const w of p.waypoints ?? []) {
     const s = proj(w.lon, w.lat);
@@ -454,6 +521,26 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props) {
     ctx.fill();
     ctx.stroke();
     text(w.name, s.x + 9, s.y, c.text!, false, 'left');
+  }
+  if (p.here && p.rings) {
+    // Anillos de distancia: a 30 km llega el aviso de rayos.
+    const s = proj(p.here.lon, p.here.lat);
+    for (const km of RING_KM) {
+      const r = kmToPx(km, p.here.lat, view.scale);
+      if (r < 8) continue;
+      // Dentro del ciclo: la etiqueta cambia el color del pincel (contorno del texto).
+      ctx.strokeStyle = c.info!;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+      ctx.globalAlpha = km === 30 ? 0.9 : 0.6;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.setLineDash([]);
+      if (r > 22) text(`${km} km`, s.x, s.y - r, c.info!, true);
+    }
+    ctx.setLineDash([]);
   }
   if (p.here) {
     const s = proj(p.here.lon, p.here.lat);

@@ -22,7 +22,7 @@ export interface Config {
   /** Avisos de rayos (GOES-19 GLM): se bajan archivos del satélite solo si hay lugares con aviso. */
   lightningEnabled: boolean;
   lightningIntervalMs: number;
-  /** Archivos de 20 s que se leen por pasada (3 = todos, con intervalo de 60 s). */
+  /** Archivos de 20 s que se leen como mucho por pasada (si una pasada se atrasa, se pone al día). */
   lightningFilesPerPoll: number;
   /** Bajar solo las coordenadas de los rayos de cada archivo (~36 KB) en vez del archivo completo (~380 KB). */
   lightningPartial: boolean;
@@ -45,7 +45,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     rainIntervalMs: Number(env.RAIN_INTERVAL_MINUTES ?? 15) * 60_000,
     rainHereMaxAgeMs: Number(env.RAIN_HERE_MAX_AGE_HOURS ?? 24) * 3_600_000,
     lightningEnabled: (env.LIGHTNING_ENABLED ?? 'true') !== 'false',
-    lightningIntervalMs: Number(env.LIGHTNING_INTERVAL_SECONDS ?? 60) * 1000,
+    lightningIntervalMs: Number(env.LIGHTNING_INTERVAL_SECONDS ?? 20) * 1000,
     lightningFilesPerPoll: Number(env.LIGHTNING_FILES_PER_POLL ?? 3),
     lightningPartial: (env.LIGHTNING_PARTIAL ?? 'true') !== 'false',
     lightningRadiusKm: Number(env.LIGHTNING_RADIUS_KM ?? 30),

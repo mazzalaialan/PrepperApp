@@ -627,7 +627,7 @@
     "loading": "Cargando el mapa…",
     "offline": "Sin conexión: se ven el mapa, los volcanes, tus waypoints y lo último descargado de sismos y clima.",
     "failed": "No se pudo actualizar: {{sources}}. Se muestra lo último que haya.",
-    "source": { "satellite": "satélite", "radar": "radar", "zoneWeather": "clima por zona", "earthquakes": "sismos", "hazards": "alertas de desastres" },
+    "source": { "satellite": "satélite", "radar": "radar", "zoneWeather": "clima por zona", "earthquakes": "sismos", "hazards": "alertas de desastres", "lightning": "rayos" },
     "layers": "Capas",
     "layer": {
       "satellite": "Satélite (nubes)",
@@ -640,7 +640,9 @@
       "waypoints": "Mis waypoints",
       "lightning": "Rayos"
     },
-    "needsServer": "Necesita el servidor propio (próximamente)",
+    "needsServer": "Necesita el servidor propio (Ajustes → Conexiones)",
+    "lightningStatus": "{{count}} rayos en la región · actualizado {{time}}",
+    "lightningWaiting": "Esperando los rayos del servidor (llegan en un minuto).",
     "zoneValue": "Dato por zona",
     "value": { "temp": "Temperatura", "rain": "Lluvia", "wind": "Viento" },
     "zoomIn": "Acercar",
@@ -654,6 +656,7 @@
     "satelliteAt": "Satélite {{time}}",
     "radarAt": "Radar {{time}}",
     "legend": {
+      "lightning": "⚡ Rayos de los últimos minutos (satélite GOES-19, desde el servidor propio): círculos amarillos, con un rayo por grupo. Anillos de 10, 20 y 30 km alrededor tuyo: a menos de 30 km llega el aviso.",
       "satellite": "Satélite infrarrojo GOES‑19: los colores marcan nubes muy altas y frías, las de tormenta (NASA, cada 10 min, ~45 min de demora)",
       "radar": "Radar: lluvia observada (RainViewer). En Argentina solo cubre el noreste",
       "earthquakes": "Sismos de magnitud 2,5 o más de la última semana (USGS): rojo, último día; naranja, 3 días; amarillo, la semana",

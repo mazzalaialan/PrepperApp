@@ -627,7 +627,7 @@
     "loading": "Loading the map…",
     "offline": "Offline: the map, volcanoes, your waypoints and the last downloaded earthquakes and weather are shown.",
     "failed": "Couldn't update: {{sources}}. Showing the latest available.",
-    "source": { "satellite": "satellite", "radar": "radar", "zoneWeather": "weather by area", "earthquakes": "earthquakes", "hazards": "disaster alerts" },
+    "source": { "satellite": "satellite", "radar": "radar", "zoneWeather": "weather by area", "earthquakes": "earthquakes", "hazards": "disaster alerts", "lightning": "lightning" },
     "layers": "Layers",
     "layer": {
       "satellite": "Satellite (clouds)",
@@ -640,7 +640,9 @@
       "waypoints": "My waypoints",
       "lightning": "Lightning"
     },
-    "needsServer": "Needs your own server (coming soon)",
+    "needsServer": "Needs your own server (Settings → Connections)",
+    "lightningStatus": "{{count}} flashes in the region · updated {{time}}",
+    "lightningWaiting": "Waiting for lightning from the server (arrives within a minute).",
     "zoneValue": "Value by area",
     "value": { "temp": "Temperature", "rain": "Rain", "wind": "Wind" },
     "zoomIn": "Zoom in",
@@ -654,6 +656,7 @@
     "satelliteAt": "Satellite {{time}}",
     "radarAt": "Radar {{time}}",
     "legend": {
+      "lightning": "⚡ Lightning from the last few minutes (GOES-19 satellite, from your server): yellow circles, with one bolt per group. Rings at 10, 20 and 30 km around you: the alert fires within 30 km.",
       "satellite": "GOES‑19 infrared satellite: colors mark very high, cold clouds — storm clouds (NASA, every 10 min, ~45 min delay)",
       "radar": "Radar: observed rain (RainViewer). In Argentina it only covers the northeast",
       "earthquakes": "Magnitude 2.5+ earthquakes in the last week (USGS): red, last day; orange, 3 days; yellow, the week",

@@ -99,6 +99,8 @@ export interface WeatherMapLayers {
   fires: boolean;
   volcanoes: boolean;
   waypoints: boolean;
+  /** Rayos de los últimos minutos (GOES-19, desde el servidor propio) y anillos de 10, 20 y 30 km alrededor mío. */
+  lightning: boolean;
 }
 
 export type WeatherMapValue = 'temp' | 'rain' | 'wind';
@@ -147,7 +149,7 @@ export const DEFAULT_SETTINGS: Settings = {
   duskPlace: null,
   starmapRed: true,
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
-  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true },
+  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, lightning: true },
   weatherMapValue: 'temp',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, terrain3d: false },
   trackFollowView: 'drawing',

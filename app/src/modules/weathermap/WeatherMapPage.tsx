@@ -14,6 +14,7 @@ import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
 import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, viewBBox, zoomAt, type Size, type View } from './projection';
 import {
   fetchHazards,
+  fetchLightning,
   fetchQuakes,
   fetchRadarFrames,
   fetchZoneWeather,
@@ -30,6 +31,7 @@ import {
   SATELLITE_LAYER,
   writeMapCache,
   type Hazard,
+  type LightningBatch,
   type Quake,
   type RadarFrames,
   type ZoneWeather,
@@ -43,15 +45,18 @@ const SETTLE_MS = 500;
 /** Teselas de radar por cuadro (si hacen falta más, se usa un zoom menor). */
 const RADAR_TILES_MAX = 16;
 const PRELOAD_PARALLEL = 4;
-const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'waypoints'];
+const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'waypoints'];
+/** Cada cuánto se piden los rayos (el satélite saca un archivo cada 20 s). */
+const LIGHTNING_MS = 20_000;
 const VALUES: WeatherMapValue[] = ['temp', 'rain', 'wind'];
-type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards';
+type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards' | 'lightning';
 
 export function WeatherMapPage() {
   const { t, i18n } = useTranslation();
   const layers = useSettings((s) => s.settings.weatherMapLayers);
   const zoneValue = useSettings((s) => s.settings.weatherMapValue);
   const base = useSettings((s) => s.settings.weatherUrl);
+  const serverUrl = useSettings((s) => s.settings.serverUrl);
   const system = useSettings((s) => s.settings.units);
   const update = useSettings((s) => s.update);
   const saver = useBatterySaver();
@@ -78,6 +83,8 @@ export function WeatherMapPage() {
   const [frame, setFrame] = useState(FRAME_COUNT - 1);
   const [playing, setPlaying] = useState(false);
   const [here, setHere] = useState<{ lon: number; lat: number } | null>(null);
+  const [lightning, setLightning] = useState<LightningBatch | null>(null);
+  const showLightning = layers.lightning && !!serverUrl;
 
   useEffect(() => {
     void loadGeoData().then(setGeo);
@@ -199,14 +206,42 @@ export function WeatherMapPage() {
     return () => clearInterval(timer);
   }, [refresh, online]);
 
-  // Mi ubicación, una sola lectura (el GPS gasta batería).
+  // Rayos: cada minuto la tanda nueva reemplaza a la anterior (los viejos se borran).
   useEffect(() => {
-    if (!layers.waypoints) return;
+    if (!showLightning || !online) return;
+    let cancelled = false;
+    const load = () =>
+      // Solo con el mapa a la vista: en segundo plano no se pide nada.
+      document.visibilityState === 'visible' &&
+      fetchLightning(serverUrl).then(
+        (batch) => {
+          if (cancelled) return;
+          setLightning(batch);
+          fail('lightning', false);
+        },
+        () => !cancelled && fail('lightning', true),
+      );
+    void load();
+    const timer = setInterval(() => void load(), LIGHTNING_MS);
+    // Al volver a la app, se piden enseguida.
+    const onVisible = () => document.visibilityState === 'visible' && void load();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [showLightning, online, serverUrl]);
+
+  // Mi ubicación, una sola lectura (el GPS gasta batería): para mis puntos y para los anillos de los rayos.
+  const wantHere = layers.waypoints || showLightning;
+  useEffect(() => {
+    if (!wantHere) return;
     currentPosition().then(
       (fix) => setHere({ lon: fix.lon, lat: fix.lat }),
       () => setHere(null),
     );
-  }, [layers.waypoints]);
+  }, [wantHere]);
 
   // El radar es de baja resolución: con pocas teselas por cuadro entra la animación entera en memoria.
   const radarTiles = useMemo(() => {
@@ -331,7 +366,10 @@ export function WeatherMapPage() {
             hazards={layers.hazards ? (hazards?.items ?? null) : null}
             volcanoes={layers.volcanoes ? geo.volcanoes : null}
             waypoints={waypoints}
-            here={layers.waypoints ? here : null}
+            here={wantHere ? here : null}
+            lightning={showLightning ? (lightning?.flashes ?? null) : null}
+            rings={showLightning}
+            animate={!saver}
             selected={selected}
             onSelect={setSelected}
             version={version}
@@ -395,14 +433,23 @@ export function WeatherMapPage() {
       <section className="card stack" aria-labelledby="wmap-layers">
         <h2 id="wmap-layers" className="section-title" style={{ margin: 0 }}>{t('weatherMap.layers')}</h2>
         <div className="chips" role="group" aria-label={t('weatherMap.layers')}>
-          {LAYER_KEYS.map((key) => (
-            <button key={key} type="button" className="chip" aria-pressed={layers[key]} onClick={() => setLayer(key, !layers[key])}>
-              {t(`weatherMap.layer.${key}`)}
-            </button>
-          ))}
-          <button type="button" className="chip" disabled title={t('weatherMap.needsServer')}>
-            {t('weatherMap.layer.lightning')}
-          </button>
+          {LAYER_KEYS.map((key) => {
+            // Los rayos los junta el servidor propio: sin servidor, no hay.
+            const noServer = key === 'lightning' && !serverUrl;
+            return (
+              <button
+                key={key}
+                type="button"
+                className="chip"
+                aria-pressed={layers[key] && !noServer}
+                disabled={noServer}
+                title={noServer ? t('weatherMap.needsServer') : undefined}
+                onClick={() => setLayer(key, !layers[key])}
+              >
+                {t(`weatherMap.layer.${key}`)}
+              </button>
+            );
+          })}
         </div>
         {layers.regionWeather && (
           <div className="chips" role="group" aria-label={t('weatherMap.zoneValue')}>
@@ -413,7 +460,14 @@ export function WeatherMapPage() {
             ))}
           </div>
         )}
-        <Legend layers={layers} zoneValue={zoneValue} windUnit={u.windUnit} />
+        <Legend layers={{ ...layers, lightning: showLightning }} zoneValue={zoneValue} windUnit={u.windUnit} />
+        {showLightning && (
+          <p className="hint" style={{ margin: 0 }} data-testid="lightning-status">
+            {lightning?.updatedAt
+              ? t('weatherMap.lightningStatus', { count: lightning.flashes.length, time: timeFmt.format(new Date(lightning.updatedAt)) })
+              : t('weatherMap.lightningWaiting')}
+          </p>
+        )}
       </section>
 
       <p className="hint">{t('weatherMap.disclaimer')}</p>
@@ -441,6 +495,7 @@ function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zon
     [layers.hazards, 'hazard', t('weatherMap.legend.hazards')],
     [layers.volcanoes, 'volcano', t('weatherMap.legend.volcanoes')],
     [layers.fires, 'fire', t('weatherMap.legend.fires')],
+    [layers.lightning, 'lightning', t('weatherMap.legend.lightning')],
   ];
   const shown = items.filter(([on]) => on);
   if (shown.length === 0) return null;

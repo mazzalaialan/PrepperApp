@@ -9,6 +9,7 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { glmFeed, parseGlm, startOfKey, type Flash } from '../src/lightning/glm.ts';
 import { readGlmPartial } from '../src/lightning/partial.ts';
+import { createLightningStore, mapActive } from '../src/lightning/store.ts';
 import { hasPlaces, runLightningWatch } from '../src/lightning/watch.ts';
 import { distanceKm, withoutDuplicateHere } from '../src/places.ts';
 import type { PushPayload, PushSender, PushSubscriptionJson } from '../src/push.ts';
@@ -160,5 +161,22 @@ describe('avisos de rayos', () => {
     } finally {
       server.close();
     }
+  });
+
+  it('el mapa pide los rayos recientes, y eso despierta la búsqueda', async () => {
+    const store = createLightningStore();
+    let woke = 0;
+    const map = await buildApp(loadConfig({}), openDb(':memory:'), push, false, { store, wake: () => woke++ });
+    store.flashes = [{ lat: -34.12345, lon: -58.98765, at: Date.now() - 30_000 }];
+    store.updatedAt = Date.now();
+    const res = await map.inject('/api/lightning');
+    assert.equal(res.statusCode, 200);
+    const body = res.json() as { updatedAt: string; flashes: [number, number, number][] };
+    assert.deepEqual(body.flashes.map(([lat, lon]) => [lat, lon]), [[-34.123, -58.988]]);
+    assert.ok(body.flashes[0]![2] >= 29 && body.flashes[0]![2] <= 32);
+    assert.equal(woke, 1);
+    assert.ok(mapActive(store));
+    await map.inject('/api/lightning'); // seguido: ya está despierto
+    assert.equal(woke, 1);
   });
 });

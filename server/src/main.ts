@@ -4,6 +4,7 @@ import { openDb } from './db.ts';
 import { createPushSender } from './push.ts';
 import { glmFeed } from './lightning/glm.ts';
 import { readGlmPartial } from './lightning/partial.ts';
+import { createLightningStore, mapActive } from './lightning/store.ts';
 import { hasPlaces, LIGHTNING_DEFAULTS, runLightningWatch } from './lightning/watch.ts';
 import { runRainWatch } from './rain/watch.ts';
 import { openMeteoSource } from './rain/source.ts';
@@ -12,7 +13,9 @@ import { runScheduler } from './scheduler.ts';
 const config = loadConfig();
 const db = openDb(config.dataDir);
 const push = createPushSender(db, config.vapidSubject);
-const app = await buildApp(config, db, push);
+const lightningStore = createLightningStore();
+// `lightningTick` se define más abajo; la ruta solo lo despierta.
+const app = await buildApp(config, db, push, true, { store: lightningStore, wake: () => void lightningTick() });
 
 async function tick() {
   try {
@@ -40,10 +43,16 @@ let lightningBusy = false;
 
 async function lightningTick() {
   // Una pasada a la vez (bajar y leer puede tardar más que el intervalo con mala conexión).
-  if (lightningBusy || !hasPlaces(db)) return;
+  if (!config.lightningEnabled || lightningBusy || (!hasPlaces(db) && !mapActive(lightningStore))) return;
   lightningBusy = true;
   try {
+    const filesBefore = glm.stats().files;
     const flashes = await glm.poll(new Date());
+    // Para el mapa: la tanda nueva reemplaza a la anterior, aunque venga vacía; si no hubo archivos nuevos, queda la última.
+    if (glm.stats().files > filesBefore) {
+      lightningStore.flashes = flashes;
+      lightningStore.updatedAt = Date.now();
+    }
     const { sent, removed } = await runLightningWatch(db, push, flashes, new Date(), {
       ...LIGHTNING_DEFAULTS,
       radiusKm: config.lightningRadiusKm,
