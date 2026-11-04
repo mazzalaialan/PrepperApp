@@ -10,8 +10,8 @@ import { fetchNowcast, rainOutlook, type RainOutlook } from './nowcast';
 /**
  * Avisos de lluvia mientras la app está abierta: cada 15 minutos (60 con ahorro de batería) revisa "mi
  * ubicación" (si está activado) y los waypoints con aviso. Con la app cerrada
- * una PWA no puede leer el GPS ni consultar a tiempo: eso lo hará el servidor
- * propio con la última ubicación conocida (ARQUITECTURA §9).
+ * una PWA no puede leer el GPS ni consultar a tiempo: lo hace el servidor
+ * propio con la última ubicación conocida, si se activa (ver rainServer.ts).
  */
 
 export const HERE_ID = 'here';
@@ -27,7 +27,7 @@ interface RainWatchState {
   statuses: Map<string, RainStatus>;
   /** Avisos de esta sesión que el usuario todavía no cerró. */
   notices: RainStatus[];
-  /** Última posición GPS leída con la app abierta (para el servidor, cuando esté). */
+  /** Última posición GPS leída con la app abierta (también se manda al servidor, ver rainServer.ts). */
   lastHere: { lat: number; lon: number; at: number } | null;
   dismiss: (placeId: string) => void;
 }

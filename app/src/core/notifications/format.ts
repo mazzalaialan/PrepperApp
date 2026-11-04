@@ -23,6 +23,11 @@ const TEXT = {
     more: (n: number) => `y ${n} más`,
     testTitle: 'VikArg Prepping Tools',
     testBody: 'Las notificaciones funcionan correctamente.',
+    here: 'Donde estás',
+    rainSoon: (min: number, place: string) => `Lluvia en unos ${min} min · ${place}`,
+    raining: (place: string) => `Está lloviendo · ${place}`,
+    rainBody: (mm: string) => `Se esperan ${mm} mm en las próximas 2 horas.`,
+    lastFix: (ago: string) => `Según tu última ubicación conocida (${ago}).`,
   },
   en: {
     title: (n: number) => (n === 1 ? '1 pending alert' : `${n} pending alerts`),
@@ -35,6 +40,11 @@ const TEXT = {
     more: (n: number) => `and ${n} more`,
     testTitle: 'VikArg Prepping Tools',
     testBody: 'Notifications are working.',
+    here: 'Where you are',
+    rainSoon: (min: number, place: string) => `Rain in about ${min} min · ${place}`,
+    raining: (place: string) => `It's raining · ${place}`,
+    rainBody: (mm: string) => `${mm} mm expected in the next 2 hours.`,
+    lastFix: (ago: string) => `Based on your last known location (${ago}).`,
   },
 } as const;
 
@@ -64,4 +74,30 @@ export function alertsNotification(alerts: AlertSummary[], lang: Lang, today: st
 
 export function testNotification(lang: Lang): { title: string; body: string } {
   return { title: TEXT[lang].testTitle, body: TEXT[lang].testBody };
+}
+
+/** Aviso de lluvia que manda el servidor (ver server/src/rain/watch.ts). */
+export interface RainPush {
+  placeId: string;
+  /** null = "donde estoy". */
+  label: string | null;
+  state: 'raining' | 'soon';
+  inMinutes: number;
+  mm: number;
+  /** De cuándo es la ubicación de "donde estoy". */
+  fixAt: string | null;
+}
+
+export function rainNotification(rain: RainPush, lang: Lang, now = Date.now()): { title: string; body: string } {
+  const tx = TEXT[lang];
+  const place = rain.label ?? tx.here;
+  const title = rain.state === 'raining' ? tx.raining(place) : tx.rainSoon(rain.inMinutes, place);
+  let body = tx.rainBody(new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(rain.mm));
+  // Con la app cerrada no hay GPS: si la ubicación tiene más de media hora, se aclara.
+  const minutes = rain.fixAt ? Math.round((now - Date.parse(rain.fixAt)) / 60_000) : 0;
+  if (minutes >= 30) {
+    const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
+    body += `\n${tx.lastFix(minutes < 90 ? rtf.format(-minutes, 'minute') : rtf.format(-Math.round(minutes / 60), 'hour'))}`;
+  }
+  return { title, body };
 }

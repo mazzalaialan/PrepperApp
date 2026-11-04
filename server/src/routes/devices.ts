@@ -5,6 +5,34 @@ import type { PushSender, PushSubscriptionJson } from '../push.ts';
 import { isValidTimeZone } from '../time.ts';
 
 const MAX_ALERTS = 5000;
+const MAX_RAIN_PLACES = 100;
+/** Id del lugar "donde estoy" (el mismo que usa la app). */
+const HERE_ID = 'here';
+
+const rainPlaceSchema = {
+  type: 'object',
+  required: ['id', 'lat', 'lon'],
+  properties: {
+    id: { type: 'string', minLength: 1, maxLength: 64 },
+    /** Sin nombre = "donde estoy" (la app lo traduce). */
+    label: { type: ['string', 'null'], maxLength: 200 },
+    lat: { type: 'number', minimum: -90, maximum: 90 },
+    lon: { type: 'number', minimum: -180, maximum: 180 },
+    /** De cuándo es la ubicación (solo "donde estoy"). */
+    fixAt: { type: ['string', 'null'], format: 'date-time' },
+  },
+} as const;
+
+interface RainPlaceInput {
+  id: string;
+  label?: string | null;
+  lat: number;
+  lon: number;
+  fixAt?: string | null;
+}
+
+/** ~1 km: alcanza para el pronóstico y el servidor no guarda la ubicación exacta. */
+const coarse = (x: number) => Math.round(x * 100) / 100;
 
 const subscriptionSchema = {
   type: 'object',
@@ -127,6 +155,61 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
           'INSERT INTO alerts (device_id, lot_id, item_name, kind, due_date, notify_from) VALUES (?, ?, ?, ?, ?, ?)',
         );
         for (const a of alerts) insert.run(id, a.lotId, a.itemName, a.kind, a.dueDate ?? null, a.notifyFrom);
+        db.exec('COMMIT');
+      } catch (err) {
+        db.exec('ROLLBACK');
+        throw err;
+      }
+      return reply.code(204).send();
+    },
+  );
+
+  /**
+   * Lugares con aviso de lluvia con la app cerrada. Se reemplaza la lista
+   * completa; vacía = apagado. Se conserva si ya se avisó cada lugar, para no
+   * repetir el aviso del mismo episodio.
+   */
+  app.put<{ Params: { id: string }; Body: { places: RainPlaceInput[]; keepHere?: boolean } }>(
+    '/api/devices/:id/rain',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['places'],
+          properties: {
+            places: { type: 'array', maxItems: MAX_RAIN_PLACES, items: rainPlaceSchema },
+            /** La app todavía no leyó el GPS: conservar el "donde estoy" que ya está. */
+            keepHere: { type: 'boolean' },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
+      const { id } = req.params;
+      const places = [...new Map(req.body.places.map((p) => [p.id, p])).values()];
+      db.exec('BEGIN');
+      try {
+        const previous = db.prepare('SELECT place_id, lat, lon, notified FROM rain_places WHERE device_id = ?').all(id) as unknown as {
+          place_id: string;
+          lat: number;
+          lon: number;
+          notified: number;
+        }[];
+        const old = new Map(previous.map((r) => [r.place_id, r]));
+        db.prepare(`DELETE FROM rain_places WHERE device_id = ?${req.body.keepHere ? ` AND place_id <> '${HERE_ID}'` : ''}`).run(id);
+        const insert = db.prepare(
+          'INSERT INTO rain_places (device_id, place_id, label, lat, lon, fix_at, notified) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        );
+        for (const p of req.body.keepHere ? places.filter((p) => p.id !== HERE_ID) : places) {
+          const lat = coarse(p.lat);
+          const lon = coarse(p.lon);
+          const before = old.get(p.id);
+          // Si se movió menos de ~10 km sigue el mismo episodio de lluvia; si no, se vuelve a avisar.
+          const near = before && Math.abs(before.lat - lat) < 0.1 && Math.abs(before.lon - lon) < 0.1;
+          const notified = near ? before.notified : 0;
+          insert.run(id, p.id, p.label ?? null, lat, lon, p.fixAt ?? null, notified);
+        }
         db.exec('COMMIT');
       } catch (err) {
         db.exec('ROLLBACK');

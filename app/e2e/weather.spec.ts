@@ -233,4 +233,8 @@ test('aviso de lluvia por waypoint, activado desde su ficha', async ({ page, con
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.goto('/#/weather/forecast');
   await expect(page.getByText('Para recibir avisos de un lugar guardado')).toBeVisible();
+
+  // Con la app cerrada avisa el servidor: sin notificaciones registradas no se puede activar.
+  await expect(page.getByLabel('Avisarme también con la app cerrada (desde el servidor)')).toBeDisabled();
+  await expect(page.getByTestId('rain-background-hint')).toHaveText(/configurá el servidor y activá las notificaciones/);
 });

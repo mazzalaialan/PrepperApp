@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alertsNotification } from './format';
+import { alertsNotification, rainNotification } from './format';
 
 describe('texto de notificaciones', () => {
   it('lista lo más urgente primero y resume el resto', () => {
@@ -32,5 +32,18 @@ describe('texto de notificaciones', () => {
     const { title, body } = alertsNotification([{ itemName: 'Water', kind: 'expiry', dueDate: '2026-12-15' }], 'en', '2026-11-02');
     expect(title).toBe('1 pending alert');
     expect(body).toBe('Water: expires Dec 15');
+  });
+
+  it('aviso de lluvia: lugar, "donde estás" y antigüedad de la ubicación', () => {
+    const now = Date.parse('2026-11-03T15:00:00Z');
+    const rain = { placeId: 'w1', label: 'Refugio', state: 'soon' as const, inMinutes: 45, mm: 3.5, fixAt: null };
+    expect(rainNotification(rain, 'es', now)).toEqual({ title: 'Lluvia en unos 45 min · Refugio', body: 'Se esperan 3,5 mm en las próximas 2 horas.' });
+    const here = { ...rain, placeId: 'here', label: null, state: 'raining' as const, fixAt: '2026-11-03T12:00:00Z' };
+    expect(rainNotification(here, 'es', now)).toEqual({
+      title: 'Está lloviendo · Donde estás',
+      body: 'Se esperan 3,5 mm en las próximas 2 horas.\nSegún tu última ubicación conocida (hace 3 horas).',
+    });
+    // Ubicación reciente: no se aclara.
+    expect(rainNotification({ ...here, fixAt: '2026-11-03T14:50:00Z' }, 'en', now).body).toBe('3.5 mm expected in the next 2 hours.');
   });
 });

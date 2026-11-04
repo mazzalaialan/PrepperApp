@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Droplets, Gauge, Minus, RefreshCw, TriangleAlert, Wind } from 'lucide-react';
 import { cardinalOf } from '@/core/geo/geo';
+import { readNotificationState } from '@/core/notifications/state';
 import { useSettings } from '@/core/settings/settings';
 import type { UnitSystem } from '@/core/units/units';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
@@ -231,6 +232,17 @@ function RainAlertsSettings() {
   const statuses = useRainWatch((s) => s.statuses);
   const watched = [...waypoints.values()].filter((w) => w.rainAlerts);
   const permission = 'Notification' in window ? Notification.permission : 'denied';
+  const background = useSettings((s) => s.settings.rainAlertsBackground);
+  const notificationsEnabled = useSettings((s) => s.settings.notificationsEnabled);
+  // Con la app cerrada avisa el servidor: hace falta tenerlo registrado (Ajustes → Notificaciones).
+  const [hasServer, setHasServer] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void readNotificationState().then((s) => alive && setHasServer(!!s.push));
+    return () => {
+      alive = false;
+    };
+  }, [notificationsEnabled]);
 
   const statusText = (id: string) => {
     const s = statuses.get(id);
@@ -266,6 +278,18 @@ function RainAlertsSettings() {
       )}
       {(here || watched.length > 0) && permission !== 'granted' && <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.enableNotifications')}</p>}
       <p className="hint" style={{ margin: 0 }}>{t('rainAlerts.whileOpen')}</p>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={background}
+          disabled={!hasServer && !background}
+          onChange={(e) => void update({ rainAlertsBackground: e.target.checked })}
+        />
+        {t('rainAlerts.background')}
+      </label>
+      <p className="hint" style={{ margin: 0 }} data-testid="rain-background-hint">
+        {hasServer === false && !background ? t('rainAlerts.backgroundNeedsServer') : t('rainAlerts.backgroundHint')}
+      </p>
     </section>
   );
 }

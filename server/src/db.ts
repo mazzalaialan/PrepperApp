@@ -34,6 +34,17 @@ const MIGRATIONS = [
      created_at INTEGER NOT NULL,
      expires_at INTEGER NOT NULL
    );`,
+  // Avisos de lluvia con la app cerrada (opcional): los lugares que el usuario eligió, redondeados a ~1 km.
+  `CREATE TABLE rain_places (
+     device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+     place_id TEXT NOT NULL,
+     label TEXT,
+     lat REAL NOT NULL,
+     lon REAL NOT NULL,
+     fix_at TEXT,
+     notified INTEGER NOT NULL DEFAULT 0,
+     PRIMARY KEY (device_id, place_id)
+   );`,
 ];
 
 export type Db = DatabaseSync;

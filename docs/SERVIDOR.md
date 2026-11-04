@@ -3,11 +3,13 @@
 El servidor es **opcional**. La app funciona completa sin él; el servidor agrega:
 
 - **Notificaciones push confiables:** avisos de vencimiento aunque la app esté cerrada.
+- **Avisos de lluvia con la app cerrada** (opcional): en tus waypoints con aviso y donde estás.
 - **Transferencia con código o QR:** pasar el backup a otro dispositivo sin cables.
 - **Servir la propia app:** una instalación que no depende de GitHub.
 
 El servidor nunca ve tu inventario. Solo recibe:
 - nombre del artículo y fechas de las alertas, para poder notificar;
+- solo si activás los avisos de lluvia con la app cerrada: nombre y lugar de los waypoints con aviso y tu última ubicación conocida, redondeados a ~1 km. Se borran al apagarlo;
 - backups que llegan **ya cifrados** y se borran al descargarlos o a las 24 h.
 
 ---
@@ -65,6 +67,9 @@ La app queda servida en `https://TU_DOMINIO/` y se puede instalar desde ahí.
 | `TRANSFER_TTL_HOURS` | `24` | Validez de un código de transferencia |
 | `SCHEDULER_INTERVAL_MINUTES` | `10` | Cada cuánto revisa si hay avisos para enviar |
 | `APP_DIR` | `/srv/public` | Carpeta de la PWA a servir; vacío = no servirla |
+| `WEATHER_URL` | `https://api.open-meteo.com` | Pronóstico para los avisos de lluvia (API compatible con Open-Meteo; puede ser una instancia propia) |
+| `RAIN_INTERVAL_MINUTES` | `15` | Cada cuánto revisa la lluvia en los lugares con aviso |
+| `RAIN_HERE_MAX_AGE_HOURS` | `24` | Hasta qué antigüedad usa la última ubicación conocida para "donde estoy" |
 
 ## Mantenimiento
 
@@ -93,6 +98,14 @@ docker compose logs -f vikarg
 - Cada 10 minutos el servidor revisa qué dispositivos llegaron a su hora de aviso (en la zona horaria de cada uno) y les envía **solo lo nuevo** desde el último aviso, o lo que **vence ese día**. No repite la lista todos los días.
 - En Android, Chrome entrega los push a través de Google (FCM): no hay forma de evitarlo en una PWA. El contenido viaja **cifrado de punta a punta**, así que Google no puede leerlo.
 - Si un dispositivo desinstala la app o revoca el permiso, el servidor lo detecta en el siguiente envío y lo borra.
+
+## Cómo funcionan los avisos de lluvia
+
+- Se activan en la app, en **Meteorología → Avisos de lluvia → Avisarme también con la app cerrada**. Hacen falta el servidor y las notificaciones activadas.
+- La app manda los waypoints con aviso y, si está activado "donde estoy", la última ubicación que leyó con la app abierta. Con la app cerrada el celular no le da el GPS a una PWA. Todo va redondeado a ~1 km.
+- Cada 15 minutos el servidor pide el pronóstico de las próximas 2 horas (Open-Meteo `minutely_15`), una sola vez por lugar aunque lo tengan varios dispositivos, y de a 50 lugares por consulta.
+- Avisa **una vez por episodio**: "Lluvia en unos 45 min · Refugio" o "Está lloviendo". Vuelve a avisar recién cuando el pronóstico se seca y vuelve a llover. Si la ubicación de "donde estoy" tiene más de media hora, la notificación lo aclara, y si tiene más de 24 h no se usa.
+- Es pronóstico, no radar: en Argentina el horario es orientativo, con margen de una hora. La fuente es intercambiable (`server/src/rain/source.ts`), para sumar lluvia observada (GOES-19 o el radar del SMN) más adelante.
 
 ## Seguridad
 

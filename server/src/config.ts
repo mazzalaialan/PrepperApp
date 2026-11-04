@@ -13,6 +13,12 @@ export interface Config {
   appDir: string | null;
   /** Cada cuánto revisar si hay notificaciones para enviar. */
   schedulerIntervalMs: number;
+  /** Pronóstico para los avisos de lluvia (API compatible con Open-Meteo). */
+  weatherUrl: string;
+  /** Cada cuánto revisar la lluvia en los lugares con aviso. */
+  rainIntervalMs: number;
+  /** Hasta qué antigüedad se usa la última ubicación conocida de "donde estoy". */
+  rainHereMaxAgeMs: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -27,5 +33,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     transferTtlMs: Number(env.TRANSFER_TTL_HOURS ?? 24) * 3_600_000,
     appDir: env.APP_DIR?.trim() || null,
     schedulerIntervalMs: Number(env.SCHEDULER_INTERVAL_MINUTES ?? 10) * 60_000,
+    weatherUrl: env.WEATHER_URL?.trim() || 'https://api.open-meteo.com',
+    rainIntervalMs: Number(env.RAIN_INTERVAL_MINUTES ?? 15) * 60_000,
+    rainHereMaxAgeMs: Number(env.RAIN_HERE_MAX_AGE_HOURS ?? 24) * 3_600_000,
   };
 }
