@@ -71,6 +71,8 @@ export interface Settings {
   snowlineFallback: number;
   /** Al seguir un track: el dibujo liviano o el mapa (en 2D o 3D). */
   trackFollowView: 'drawing' | 'map';
+  /** El dibujo del track gira con la brújula (lo que tenés adelante, arriba); si no, el norte va arriba. */
+  trackDrawingRotate: boolean;
   /** Leer en voz alta los pasos de las guías de primeros auxilios. */
   guideVoice: boolean;
   /** Entorno de la guía de primeros auxilios: con ayuda cerca o lejos. */
@@ -178,6 +180,7 @@ export const DEFAULT_SETTINGS: Settings = {
   snowlineManual: null,
   snowlineFallback: 1500,
   trackFollowView: 'drawing',
+  trackDrawingRotate: false,
   guideVoice: false,
   firstAidEnv: 'city',
   country: detectCountry(),

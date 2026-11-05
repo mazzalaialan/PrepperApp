@@ -235,6 +235,11 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
 });
 
 test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada', async ({ page, context }, testInfo) => {
+  // Brújula simulada desde el arranque (la app la detecta al abrir): mirando al este.
+  await page.addInitScript(() => {
+    const id = setInterval(() => window.dispatchEvent(new DeviceOrientationEvent('deviceorientationabsolute', { alpha: 270, beta: 0, gamma: 0, absolute: true })), 30);
+    (window as unknown as { stopCompass: () => void }).stopCompass = () => clearInterval(id);
+  });
   // Sin GPU (como en el servidor de pruebas), el mapa y el 3D se dibujan por software: pasa del minuto.
   test.setTimeout(180_000);
   await context.grantPermissions(['geolocation']);
@@ -279,6 +284,22 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   await context.setGeolocation({ latitude: -41.16, longitude: -71.42 });
   await expect(status).toHaveText('Llegaste al final del track');
 
+  // El dibujo gira con la brújula: mirando al este (rumbo 90°), lo de adelante queda arriba y la N, a la izquierda.
+  await expect(page.getByTestId('drawing-rotate')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByTestId('follow-north')).toHaveCount(0);
+  await page.getByTestId('drawing-rotate').click();
+  await expect(page.getByTestId('drawing-rotate')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('follow-north')).toBeVisible();
+  // Rumbo verdadero: 90° más la declinación magnética de Bariloche.
+  await expect
+    .poll(async () => {
+      const m = /rotate\((-?[\d.]+) 150 150\)/.exec((await page.getByTestId('follow-drawing').getAttribute('transform')) ?? '');
+      return m ? Math.abs(Number(m[1]) + 90) : null;
+    })
+    .toBeLessThan(12);
+
+  // Sin GPU, el mapa por software no da abasto con la brújula a 30 eventos por segundo: se apaga.
+  await page.evaluate(() => (window as unknown as { stopCompass: () => void }).stopCompass());
   // En el mapa (sin teselas: alcanza con que se dibuje y tenga los botones), siguiéndome de entrada.
   await context.route(/tiles\.openfreemap\.org|elevation-tiles-prod/, (route) => route.abort());
   await expect(page.getByTestId('follow-map')).toBeVisible();

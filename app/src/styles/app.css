@@ -3037,3 +3037,17 @@ a.module-card:hover {
   stroke-width: 2;
 }
 
+.follow-heading {
+  fill: var(--warn);
+}
+
+.follow-north path {
+  fill: var(--danger);
+}
+
+.follow-north text {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
