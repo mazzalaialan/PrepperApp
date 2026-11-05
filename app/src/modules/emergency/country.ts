@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useSettings, type Country } from '@/core/settings/settings';
 import { loadEmergencyData, type EmergencyData } from './data';
+import { DATA_CACHE as CACHE, loadDataFile } from './dataFile';
+export { CountryDataError } from './dataFile';
+import { loadOfficialRepeaters } from './officialRepeaters';
 import { loadPlaceFinder, placeFinder, type PlaceFinder, type PlacesData } from './places';
 
 /**
@@ -20,40 +23,11 @@ interface CountryPackage extends EmergencyData, PlacesData {
   generatedAt: string;
 }
 
-const CACHE = 'vikarg-country';
 
 const packageUrl = (country: Country) => `${import.meta.env.BASE_URL}data/${country}.json`;
 
-export class CountryDataError extends Error {
-  constructor() {
-    super('country-data-unavailable');
-    this.name = 'CountryDataError';
-  }
-}
 
-/** Guardado si ya se bajó; si no, se baja y se guarda. Con conexión se renueva en segundo plano. */
-async function loadPackage(country: Country): Promise<CountryPackage> {
-  const url = packageUrl(country);
-  const cache = 'caches' in globalThis ? await caches.open(CACHE) : null;
-  const stored = await cache?.match(url);
-  if (stored) {
-    if (navigator.onLine) {
-      void fetch(url)
-        .then((res) => (res.ok ? cache?.put(url, res) : undefined))
-        .catch(() => undefined);
-    }
-    return (await stored.json()) as CountryPackage;
-  }
-  let res: Response;
-  try {
-    res = await fetch(url);
-  } catch {
-    throw new CountryDataError();
-  }
-  if (!res.ok) throw new CountryDataError();
-  await cache?.put(url, res.clone());
-  return (await res.json()) as CountryPackage;
-}
+const loadPackage = (country: Country) => loadDataFile<CountryPackage>(`${country}.json`);
 
 const loaded = new Map<Country, Promise<CountryData>>();
 
@@ -79,8 +53,11 @@ export function loadCountryData(country: Country): Promise<CountryData> {
 export function useCountryPrefetch(): void {
   const country = useSettings((s) => s.settings.country);
   useEffect(() => {
-    if (country === 'AR') return;
-    const fetchIt = () => void loadCountryData(country).catch(() => undefined);
+    const fetchIt = () => {
+      if (country !== 'AR') void loadCountryData(country).catch(() => undefined);
+      // Repetidoras oficiales de Chile: también con Argentina (en la cordillera se está cerca).
+      void loadOfficialRepeaters(country).catch(() => undefined);
+    };
     if (navigator.onLine) fetchIt();
     window.addEventListener('online', fetchIt);
     return () => window.removeEventListener('online', fetchIt);

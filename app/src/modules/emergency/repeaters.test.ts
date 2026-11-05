@@ -44,3 +44,46 @@ describe('importar repetidoras', () => {
     expect(repeaterSummary({ call: 'X', location: '', output: 146.97, offset: -0.6, tone: 100, mode: '', status: '', lat: null, lon: null }, 'es')).toBe('146,970 MHz · −0,6 · T 100,0');
   });
 });
+
+describe('listado oficial de repetidoras (SUBTEL, Chile)', async () => {
+  const { officialFor, withoutDuplicates } = await import('./officialRepeaters');
+  const { readFileSync } = await import('node:fs');
+  const list = JSON.parse(readFileSync(new URL('../../../public/data/repeaters-CL.json', import.meta.url), 'utf8'));
+
+  it('el archivo trae las repetidoras con frecuencias, tono y ubicación en Chile', () => {
+    expect(list.country).toBe('CL');
+    expect(list.items.length).toBeGreaterThan(150);
+    for (const r of list.items) {
+      expect(r.output).toBeGreaterThan(140);
+      expect([-0.6, 0.6, 5, -5]).toContain(r.offset);
+      if (r.lat !== null) {
+        expect(r.lat).toBeGreaterThan(-56);
+        expect(r.lat).toBeLessThan(-17);
+        expect(r.lon).toBeGreaterThan(-76);
+        expect(r.lon).toBeLessThan(-66);
+      }
+      expect(r.expires).toMatch(/^\d{4}-\d\d-\d\d$/);
+    }
+  });
+
+  it('con Chile se muestran todas; con Argentina solo las cercanas (cordillera)', () => {
+    expect(officialFor([list], 'CL', null)).toHaveLength(list.items.length);
+    expect(officialFor([list], 'AR', null)).toHaveLength(0);
+    const puenteDelInca = { lat: -32.82, lon: -69.92 };
+    const near = officialFor([list], 'AR', puenteDelInca);
+    expect(near.length).toBeGreaterThan(0);
+    expect(near.length).toBeLessThan(list.items.length);
+    expect(officialFor([list], 'AR', { lat: -34.6, lon: -58.4 })).toHaveLength(0);
+    expect(near[0]!.official?.country).toBe('CL');
+  });
+
+  it('una importada que repite una oficial no aparece dos veces', () => {
+    const official = officialFor([list], 'CL', null);
+    const first = official[0]!;
+    const dup = { ...first, call: first.call.split(' ')[0]!, official: undefined };
+    const other = { ...first, call: 'XQ1ZZZ', output: 145.11, official: undefined };
+    const all = withoutDuplicates([dup, other], official);
+    expect(all).toHaveLength(official.length + 1);
+    expect(all.at(-1)!.call).toBe('XQ1ZZZ');
+  });
+});

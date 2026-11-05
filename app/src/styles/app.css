@@ -3440,3 +3440,12 @@ a.module-card:hover {
   justify-content: space-between;
   gap: 8px;
 }
+
+/* Avisar que una repetidora no funciona: discreto, debajo de los datos. */
+.rpt-report {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  align-self: flex-start;
+}

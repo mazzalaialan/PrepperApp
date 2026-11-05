@@ -1,13 +1,14 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
+import { Flag, Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
 import { nearestRadio, type EmergencyData } from './data';
 import { CopyButton, formatDistance, MapLink } from './parts';
+import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRepeaterList } from './officialRepeaters';
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
 
@@ -182,6 +183,7 @@ export function RadioPage() {
       <section className="card stack" aria-labelledby="ham-title">
         <h2 id="ham-title" className="section-title" style={{ margin: 0 }}>{t('radio.hamTitle')}</h2>
         <p className="hint" style={{ margin: 0 }}>{t('radio.hamText')}</p>
+        <p className="hint" style={{ margin: 0 }} data-testid="ham-license">{t(`radio.hamLicense.${country}`)}</p>
       </section>
 
       <p className="hint">{t('radio.securityNote')}</p>
@@ -200,8 +202,15 @@ const REPEATERS_SHOWN = 25;
 function RepeatersSection({ place }: { place: { lat: number; lon: number } | null }) {
   const { t, i18n } = useTranslation();
   const [list, setList] = useState<RepeaterList | null>(null);
+  const [official, setOfficial] = useState<OfficialRepeaterList[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
+  const country = useSettings((s) => s.settings.country);
+
+  // Listados oficiales (Chile): guardados en el dispositivo; sin conexión y sin bajar, no hay.
+  useEffect(() => {
+    loadOfficialRepeaters(country).then(setOfficial, () => setOfficial([]));
+  }, [country]);
 
   useEffect(() => {
     void (async () => {
@@ -249,12 +258,23 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
   }
 
   // Las que tienen ubicación, por cercanía; las que no, al final por frecuencia.
+  const officialShown = useMemo(() => officialFor(official, country, place), [official, country, place?.lat, place?.lon]);
   const sorted = useMemo(() => {
-    const items = list?.items ?? [];
+    const items = withoutDuplicates(list?.items ?? [], officialShown);
     return items
       .map((r) => ({ r, d: place && r.lat !== null && r.lon !== null ? distanceMeters(place, { lat: r.lat, lon: r.lon }) : null }))
       .sort((a, b) => (a.d ?? Infinity) - (b.d ?? Infinity) || a.r.output - b.r.output);
-  }, [list, place?.lat, place?.lon]);
+  }, [list, officialShown, place?.lat, place?.lon]);
+  const imported = list?.items.length ?? 0;
+  const mhzText = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 3, maximumFractionDigits: 4 });
+  const reportText = (r: Repeater) =>
+    t('radio.repeaters.reportText', {
+      repeater: [r.call, `${mhzText.format(r.output)} MHz`, r.tone ? `${r.tone} Hz` : '', r.location].filter(Boolean).join(' · '),
+      source: r.official
+        ? t(`radio.repeaters.reportSource${r.official.country}`, { date: dateText(r.official.listedAt) })
+        : t('radio.repeaters.reportSourceFile', { file: list?.source ?? '' }),
+    });
+  const dateText = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(i18n.language);
 
   return (
     <section className="card stack" aria-labelledby="rpt-title">
@@ -264,10 +284,18 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
       ) : (
         <>
           <p className="hint" style={{ margin: 0 }}>{t('radio.repeaters.count', { count: sorted.length, shown: Math.min(sorted.length, REPEATERS_SHOWN) })}</p>
+          {official
+            .filter((l) => officialShown.some((r) => r.official?.country === l.country))
+            .map((l) => (
+              <p key={l.country} className="hint" style={{ margin: 0 }} data-testid="repeaters-official">
+                {t(`radio.repeaters.official${l.country}`, { count: officialShown.filter((r) => r.official?.country === l.country).length, date: dateText(l.listedAt) })}
+              </p>
+            ))}
           <ul className="list" data-testid="repeaters">
             {sorted.slice(0, REPEATERS_SHOWN).map(({ r, d }) => {
               const summary = repeaterSummary(r, i18n.language);
-              const off = /off|fuera/i.test(r.status);
+              const expired = !!r.official && r.official.expires < new Date().toISOString().slice(0, 10);
+              const off = /off|fuera/i.test(r.status) || expired;
               return (
                 <li key={`${r.call}-${r.output}`} className="contact-row" data-off={off}>
                   <RadioTower size={22} aria-hidden className="contact-icon" />
@@ -278,6 +306,9 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
                     </span>
                     <RepeaterDetails r={r} off={off} />
                     {r.lat !== null && <MapLink address="" lat={r.lat} lon={r.lon} />}
+                    <Link className="btn-link rpt-report" to={`/about?${new URLSearchParams({ tipo: 'bug', texto: reportText(r) }).toString()}`}>
+                      <Flag size={14} aria-hidden /> {t('radio.repeaters.report')}
+                    </Link>
                   </span>
                   <span className="contact-actions">
                     <span className="radio-freqs">
@@ -310,7 +341,7 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
         </p>
       )}
       <div className="row-end wrap">
-        {sorted.length > 0 && (
+        {imported > 0 && (
           <button className="btn btn-danger-outline" type="button" onClick={() => void clearAll()}>
             <Trash2 size={18} /> {t('radio.repeaters.clear')}
           </button>
@@ -362,9 +393,23 @@ function RepeaterDetails({ r, off }: { r: Repeater; off: boolean }) {
             : t('radio.repeaters.toneNone')}
       </span>
       {(r.mode || off) && (
-        <span className="list-sub">{[r.mode && t('radio.repeaters.mode', { mode: r.mode }), off && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}</span>
+        <span className="list-sub">
+          {[r.mode && t('radio.repeaters.mode', { mode: r.mode }), off && !r.official && t('radio.repeaters.offAir')].filter(Boolean).join(' · ')}
+        </span>
       )}
       {r.approx && <span className="list-sub">{t('radio.repeaters.approx', { place: r.approx })}</span>}
+      {r.official && (
+        <span className="list-sub" data-testid="rpt-official">
+          {[
+            r.official.club,
+            t(off ? 'radio.repeaters.licenseExpired' : 'radio.repeaters.license', {
+              date: new Date(`${r.official.expires}T12:00:00`).toLocaleDateString(i18n.language),
+            }),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+      )}
     </span>
   );
 }

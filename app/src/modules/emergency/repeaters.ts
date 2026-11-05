@@ -34,6 +34,8 @@ export interface Repeater {
    * "Avellaneda, Buenos Aires". `null` = se buscó y no se encontró.
    */
   approx?: string | null;
+  /** Del listado oficial del país (no importada): radioclub titular y vencimiento de la licencia. */
+  official?: { club: string; expires: string; listedAt: string; country: Country };
 }
 
 export interface RepeaterList {

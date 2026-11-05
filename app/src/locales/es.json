@@ -535,7 +535,11 @@
     "repeaters": {
       "title": "Repetidoras",
       "empty": "Importá las repetidoras de tu zona desde un archivo: se guardan en el dispositivo, funcionan sin conexión y se ordenan por cercanía.",
-      "count": "{{count}} guardadas · las {{shown}} más cercanas",
+      "count": "{{count}} repetidoras · las {{shown}} más cercanas",
+      "officialCL_one": "Incluye {{count}} del listado oficial de repetidoras de SUBTEL (Chile), al {{date}}: información pública, ya guardada en el dispositivo.",
+      "officialCL_other": "Incluye {{count}} del listado oficial de repetidoras de SUBTEL (Chile), al {{date}}: información pública, ya guardada en el dispositivo.",
+      "license": "licencia hasta el {{date}}",
+      "licenseExpired": "licencia vencida el {{date}}: puede no estar en el aire",
       "offAir": "fuera de servicio",
       "noPlace": "sin ubicación",
       "choosePlace": "elegí un lugar arriba",
@@ -556,7 +560,11 @@
       },
       "copy": "Copiar los datos de {{call}}",
       "import": "Importar archivo",
-      "clear": "Borrar todas",
+      "clear": "Borrar las importadas",
+      "report": "Avisar que no funciona o tiene datos mal",
+      "reportText": "Repetidora en desuso o con datos mal:\n{{repeater}}\nFuente: {{source}}\n\nQué pasa (no responde, cambió la frecuencia o el tono, ya no existe…): ",
+      "reportSourceCL": "listado oficial de SUBTEL (Chile) al {{date}}",
+      "reportSourceFile": "archivo importado ({{file}})",
       "confirmClear": "¿Borrar todas las repetidoras importadas?",
       "imported_one": "Se importó {{count}} repetidora.",
       "imported_other": "Se importaron {{count}} repetidoras.",
@@ -565,7 +573,7 @@
       "importedApprox_other": "{{count}} venían sin coordenadas y se ubicaron en el centro de su localidad (distancia aproximada, con ≈).",
       "approx": "Ubicación aproximada: centro de {{place}}",
       "importNone": "No se encontraron repetidoras en el archivo. Usá un CSV, GPX o KML exportado de RepeaterBook o un CSV de CHIRP.",
-      "howTo": "Cómo conseguirlas: registrate gratis en repeaterbook.com, buscá Argentina (o tu provincia), tocá \"Export\" y bajá el archivo (CSV, GPX o KML). Si no trae coordenadas, cada una se ubica en el centro de su localidad (Argentina). También sirve un CSV de CHIRP que te pase tu radioclub. Podés importar varios: se suman.",
+      "howTo": "Cómo conseguirlas: registrate gratis en repeaterbook.com, buscá tu país (o tu provincia o región), tocá \"Export\" y bajá el archivo (CSV, GPX o KML). Si no trae coordenadas, cada una se ubica en el centro de su localidad. También sirve un CSV de CHIRP que te pase tu radioclub. Podés importar varios: se suman.",
       "attribution": "Datos de RepeaterBook: \"Data courtesy of RepeaterBook.com\", para uso personal. Confirmá frecuencia y tono con el radioclub antes de transmitir; para transmitir hace falta licencia."
     },
     "nacionalTitle": "Radio Nacional más cercana",
@@ -589,7 +597,12 @@
     "mountainSources": "Fuentes: Federación Andinistas Argentinos (FEM, 2021), Club Andino Mercedario (2024) y Wikiexplora. Confirmá las de tu zona en el refugio o la guardería y guardalas en \"Mis frecuencias\".",
     "distressNote": "Para transmitir hace falta un equipo de esa banda. Usalas solo ante un peligro real para la vida: un llamado falso es delito.",
     "hamTitle": "Radioaficionados",
-    "hamText": "Los radioaficionados arman redes de emergencia cuando fallan las comunicaciones (por ejemplo, en las inundaciones de La Plata de 2013). Para transmitir hace falta licencia de ENACOM; el Radio Club Argentino y los radioclubes locales dan los cursos. Las repetidoras cercanas se agregarán cuando esté el servidor propio.",
+    "hamText": "Los radioaficionados arman redes de emergencia cuando fallan las comunicaciones: en inundaciones, terremotos o incendios suelen ser los que pasan información y piden ayuda. Escuchar no requiere licencia; transmitir sí. Ante un peligro de vida, las normas internacionales permiten pedir auxilio por cualquier medio.",
+    "hamLicense": {
+      "AR": "En Argentina la licencia la da ENACOM; el Radio Club Argentino y los radioclubes locales dan los cursos (en las inundaciones de La Plata de 2013 sostuvieron las comunicaciones).",
+      "CL": "En Chile la licencia la da SUBTEL después de un examen; los radioclubes preparan para rendirlo y muchos tienen redes de emergencia.",
+      "UY": "En Uruguay el permiso lo da URSEC; el Radio Club Uruguayo (CX1AA) y los radioclubes del interior dan los cursos."
+    },
     "securityNote": "No se incluyen frecuencias de Gendarmería, policía, guardaparques u otras fuerzas: no son públicas, muchas están cifradas y captarlas sin autorización puede ser delito."
   },
   "maps": {

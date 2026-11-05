@@ -535,7 +535,11 @@
     "repeaters": {
       "title": "Repeaters",
       "empty": "Import your area's repeaters from a file: they're saved on the device, work offline and are sorted by distance.",
-      "count": "{{count}} saved · the {{shown}} nearest",
+      "count": "{{count}} repeaters · the {{shown}} closest",
+      "officialCL_one": "Includes {{count}} from the official repeater list of SUBTEL (Chile), as of {{date}}: public information, already saved on the device.",
+      "officialCL_other": "Includes {{count}} from the official repeater list of SUBTEL (Chile), as of {{date}}: public information, already saved on the device.",
+      "license": "license until {{date}}",
+      "licenseExpired": "license expired on {{date}}: it may be off the air",
       "offAir": "off air",
       "noPlace": "no location",
       "choosePlace": "choose a place above",
@@ -556,7 +560,11 @@
       },
       "copy": "Copy the details of {{call}}",
       "import": "Import file",
-      "clear": "Delete all",
+      "clear": "Delete imported",
+      "report": "Report it's not working or has wrong data",
+      "reportText": "Repeater out of use or with wrong data:\n{{repeater}}\nSource: {{source}}\n\nWhat's wrong (no answer, frequency or tone changed, gone…): ",
+      "reportSourceCL": "official SUBTEL list (Chile) as of {{date}}",
+      "reportSourceFile": "imported file ({{file}})",
       "confirmClear": "Delete all imported repeaters?",
       "imported_one": "{{count}} repeater imported.",
       "imported_other": "{{count}} repeaters imported.",
@@ -565,7 +573,7 @@
       "importedApprox_other": "{{count}} came without coordinates and were placed at the center of their town (approximate distance, with ≈).",
       "approx": "Approximate location: center of {{place}}",
       "importNone": "No repeaters found in the file. Use a CSV, GPX or KML exported from RepeaterBook, or a CHIRP CSV.",
-      "howTo": "How to get them: sign up for free at repeaterbook.com, find Argentina (or your province), tap \"Export\" and download the file (CSV, GPX or KML). If it has no coordinates, each one is placed at the center of its town (Argentina). A CHIRP CSV from your radio club works too. You can import several: they're added together.",
+      "howTo": "How to get them: sign up for free at repeaterbook.com, find your country (or your province or region), tap \"Export\" and download the file (CSV, GPX or KML). If it has no coordinates, each one is placed at the center of its town. A CHIRP CSV from your radio club works too. You can import several: they're added together.",
       "attribution": "RepeaterBook data: \"Data courtesy of RepeaterBook.com\", for personal use. Confirm frequency and tone with the club before transmitting; transmitting requires a license."
     },
     "nacionalTitle": "Nearest Radio Nacional station",
@@ -589,7 +597,12 @@
     "mountainSources": "Sources: Federación Andinistas Argentinos (FEM, 2021), Club Andino Mercedario (2024) and Wikiexplora. Confirm the ones for your area at the hut or ranger station and save them in \"My frequencies\".",
     "distressNote": "Transmitting needs a radio for that band. Use them only when a life is truly at risk: a false call is a crime.",
     "hamTitle": "Amateur radio",
-    "hamText": "Radio amateurs set up emergency networks when communications fail (for example, in the 2013 La Plata floods). Transmitting requires an ENACOM license; Radio Club Argentino and local clubs run the courses. Nearby repeaters will be added once your own server is set up.",
+    "hamText": "Radio amateurs set up emergency networks when communications fail: in floods, earthquakes or fires they are often the ones passing information and calling for help. Listening needs no license; transmitting does. When life is in danger, international rules allow calling for help by any means.",
+    "hamLicense": {
+      "AR": "In Argentina the license is issued by ENACOM; Radio Club Argentino and local clubs run the courses (in the 2013 La Plata floods they kept communications going).",
+      "CL": "In Chile the license is issued by SUBTEL after an exam; radio clubs prepare you for it and many run emergency networks.",
+      "UY": "In Uruguay the permit is issued by URSEC; Radio Club Uruguayo (CX1AA) and local clubs run the courses."
+    },
     "securityNote": "Frequencies of the Gendarmerie, police, park rangers or other forces aren't included: they aren't public, many are encrypted, and intercepting them without authorization may be a crime."
   },
   "maps": {

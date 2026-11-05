@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare } from 'lucide-react';
 import { CAFECITO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
@@ -14,8 +15,18 @@ const KINDS: { kind: FeedbackKind; icon: typeof Bug }[] = [
 /** Acerca de: versión, reportar problemas, sugerir mejoras, contacto y cafecito. */
 export function AboutPage() {
   const { t, i18n } = useTranslation();
-  const [kind, setKind] = useState<FeedbackKind>('bug');
-  const [message, setMessage] = useState('');
+  // Desde otra pantalla se puede abrir con el reporte ya escrito (p. ej. una repetidora que no funciona).
+  const [params] = useSearchParams();
+  const preKind = params.get('tipo');
+  const [kind, setKind] = useState<FeedbackKind>(preKind === 'idea' || preKind === 'message' ? preKind : 'bug');
+  const [message, setMessage] = useState(params.get('texto') ?? '');
+  useEffect(() => {
+    if (!params.get('texto')) return;
+    const box = document.getElementById('feedback-message') as HTMLTextAreaElement | null;
+    box?.scrollIntoView({ block: 'center' });
+    box?.focus();
+    box?.setSelectionRange(box.value.length, box.value.length);
+  }, [params]);
   const [includeInfo, setIncludeInfo] = useState(true);
   const [copied, setCopied] = useState(false);
 

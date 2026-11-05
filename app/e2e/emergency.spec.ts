@@ -213,15 +213,22 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(details).toContainText('Escuchás en 147,120 MHz');
   await expect(details).toContainText('Transmitís en 147,720 MHz (+0,6 MHz)');
   await expect(details).toContainText('Subtono para abrirla: 123,0 Hz (CTCSS)');
-  await expect(rpt.nth(1).getByTestId('rpt-details')).toContainText('Modo digital');
+  // Chile: el listado oficial de SUBTEL; desde Bariloche entran las del otro lado de la cordillera (menos de 150 km).
+  await expect(page.getByTestId('repeaters-official')).toContainText('Incluye 7 del listado oficial de repetidoras de SUBTEL (Chile)');
+  await expect(rpt.nth(1)).toContainText('CE7RCM RPT-B · Volcan Osorno, Puerto Varas');
+  await expect(rpt.nth(1).getByTestId('rpt-official')).toContainText(/Radio Club Melipulli · licencia hasta el/);
+  await expect(rpt.nth(1).getByTestId('rpt-distance')).toHaveText(/^10\d km$/);
+  const esquel = rpt.filter({ hasText: 'LU5VAS' });
+  const rosario = rpt.filter({ hasText: 'LU2FCF' });
+  await expect(esquel.getByTestId('rpt-details')).toContainText('Modo digital');
   await page.getByText('¿Qué significa cada dato?').click();
   await expect(page.getByText(/Un tono grave que tu equipo manda/)).toBeVisible();
   // La distancia, siempre en km.
   await expect(rpt.nth(0).getByTestId('rpt-distance')).toHaveText(/^\d,\d km$/);
-  await expect(rpt.nth(2).getByTestId('rpt-distance')).toHaveText(/^\d{3,4} km$/);
-  await expect(rpt.nth(1)).toContainText('LU5VAS · Esquel');
-  await expect(rpt.nth(1)).toContainText('fuera de servicio');
-  await expect(rpt.nth(2)).toContainText('LU2FCF · Rosario');
+  await expect(rosario.getByTestId('rpt-distance')).toHaveText(/^\d{4} km$/);
+  await expect(esquel).toContainText('LU5VAS · Esquel');
+  await expect(esquel).toContainText('fuera de servicio');
+  await expect(rpt.nth(9)).toContainText('LU2FCF · Rosario');
 
   // La exportación CSV de RepeaterBook no trae coordenadas: se ubica por la localidad (aproximada);
   // la que no se encuentra va al final, sin distancia.
@@ -233,18 +240,28 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await page.getByTestId('repeaters-file').setInputFiles({ name: 'RB_2610311757.csv.xls', mimeType: 'application/vnd.ms-excel', buffer: Buffer.from(noCoords) });
   await expect(page.getByTestId('repeaters-message')).toContainText('de 1 no se encontró la localidad');
   await expect(page.getByTestId('repeaters-message')).toContainText('1 venía sin coordenadas');
-  await expect(rpt).toHaveCount(5);
+  await expect(rpt).toHaveCount(12);
   const mdp = rpt.filter({ hasText: 'LU7DOT' });
   await expect(mdp.getByTestId('rpt-distance')).toHaveText(/^≈ 1\.?\d{3} km$/);
   await expect(mdp).toContainText('Ubicación aproximada: centro de Mar del Plata, Buenos Aires');
-  await expect(rpt.nth(4)).toContainText('LU9XYZ');
-  await expect(rpt.nth(4).getByTestId('rpt-distance')).toHaveText('sin ubicación');
+  await expect(rpt.last()).toContainText('LU9XYZ');
+  await expect(rpt.last().getByTestId('rpt-distance')).toHaveText('sin ubicación');
 
   // Siguen ahí al volver (guardadas en el dispositivo) y se pueden borrar.
   await page.goto('/#/first-aid');
   await page.goto('/#/first-aid/radio');
-  await expect(rpt).toHaveCount(5);
+  await expect(rpt).toHaveCount(12);
   page.once('dialog', (d) => void d.accept());
-  await page.getByRole('button', { name: 'Borrar todas' }).click();
-  await expect(page.getByTestId('repeaters')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Borrar las importadas' }).click();
+  // Se borran las importadas; las del listado oficial siguen.
+  await expect(rpt).toHaveCount(7);
+  await expect(page.getByRole('button', { name: 'Borrar las importadas' })).toHaveCount(0);
+
+  // Leyenda de radioaficionados según el país (Argentina: ENACOM).
+  await expect(page.getByTestId('ham-license')).toContainText('En Argentina la licencia la da ENACOM');
+  // Avisar que una repetidora no funciona: abre el formulario con los datos ya escritos.
+  await rpt.nth(0).getByRole('link', { name: 'Avisar que no funciona o tiene datos mal' }).click();
+  const box = page.getByLabel('Mensaje', { exact: true });
+  await expect(box).toHaveValue(/Repetidora en desuso o con datos mal:\nCE7RCM RPT-B · 146,820 MHz/);
+  await expect(box).toHaveValue(/Fuente: listado oficial de SUBTEL \(Chile\) al 26\/10\/2026/);
 });
