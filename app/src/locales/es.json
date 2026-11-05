@@ -73,7 +73,7 @@
     "library": { "title": "Manuales", "desc": "Biblioteca de supervivencia offline" }
   },
   "status": {
-    "soon": "Próximamente · {{phase}}",
+    "soon": "Próximamente",
     "unavailable": "No disponible en este dispositivo: falta {{caps}}",
     "degraded": "Modo manual: sin {{caps}}"
   },

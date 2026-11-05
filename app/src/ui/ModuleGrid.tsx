@@ -14,7 +14,7 @@ export function ModuleGrid({ section }: { section: Section }) {
       case 'available':
         return null;
       case 'soon':
-        return t('status.soon', { phase: status.phase });
+        return t('status.soon');
       case 'unavailable':
         return t('status.unavailable', { caps: capNames(status.missing) });
       case 'degraded':
@@ -30,7 +30,7 @@ export function ModuleGrid({ section }: { section: Section }) {
           ? moduleStatus(m, caps)
           : m.implemented
             ? { kind: 'available' }
-            : { kind: 'soon', phase: m.phase };
+            : { kind: 'soon' };
         const Icon = m.icon;
         const label = badge(status);
         const body: ReactNode = (

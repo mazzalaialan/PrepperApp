@@ -5,7 +5,7 @@ import { moduleStatus, type ModuleDef } from './registry';
 const allCaps = (value: boolean) => Object.fromEntries(CAPABILITIES.map((c) => [c, value])) as CapabilityMap;
 
 const mod = (over: Partial<ModuleDef>): ModuleDef =>
-  ({ id: 'x', section: 'orientation', icon: () => null, phase: 'F3', implemented: true, ...over }) as ModuleDef;
+  ({ id: 'x', section: 'orientation', icon: () => null, implemented: true, ...over }) as ModuleDef;
 
 describe('moduleStatus', () => {
   it('disponible con todas las capacidades', () => {
@@ -20,7 +20,7 @@ describe('moduleStatus', () => {
   });
 
   it('próximamente si no está implementado', () => {
-    expect(moduleStatus(mod({ implemented: false, phase: 'F5' }), allCaps(true))).toEqual({ kind: 'soon', phase: 'F5' });
+    expect(moduleStatus(mod({ implemented: false }), allCaps(true))).toEqual({ kind: 'soon' });
   });
 
   it('degradado sin capacidad opcional', () => {

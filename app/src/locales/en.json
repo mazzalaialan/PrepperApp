@@ -73,7 +73,7 @@
     "library": { "title": "Manuals", "desc": "Offline survival library" }
   },
   "status": {
-    "soon": "Coming soon · {{phase}}",
+    "soon": "Coming soon",
     "unavailable": "Not available on this device: missing {{caps}}",
     "degraded": "Manual mode: no {{caps}}"
   },
