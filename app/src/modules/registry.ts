@@ -14,6 +14,7 @@ import {
   Footprints,
   HeartPulse,
   Lasso,
+  Magnet,
   LocateFixed,
   Map as MapIcon,
   MapPin,
@@ -63,6 +64,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'radio', section: 'firstAid', icon: Radio, implemented: true, path: '/first-aid/radio' },
   { id: 'documents', section: 'documents', icon: FileText, implemented: true, path: '/documents' },
   { id: 'compass', section: 'orientation', icon: Compass, implemented: true, path: '/orientation/compass', requires: ['orientation'] },
+  { id: 'declination', section: 'orientation', icon: Magnet, implemented: true, path: '/orientation/declination' },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, implemented: true, path: '/orientation/inclinometer', requires: ['motion'] },
   { id: 'maps', section: 'orientation', icon: MapIcon, implemented: true, path: '/orientation/maps', degradesWithout: ['geolocation'] },
   // Las rutas van dentro de Waypoints (abajo), no como módulo aparte.

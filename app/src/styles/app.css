@@ -3449,3 +3449,61 @@ a.module-card:hover {
   font-size: 0.85em;
   align-self: flex-start;
 }
+
+/* Declinómetro */
+.decl-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+.decl-dial {
+  width: min(220px, 70vw);
+  align-self: center;
+}
+.decl-ring {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+}
+.decl-true {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.decl-mag {
+  stroke: #d33;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.decl-arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.decl-center {
+  fill: var(--text);
+}
+.decl-label {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.decl-label-mag {
+  fill: #d33;
+}
+.decl-result {
+  font-weight: 600;
+  margin: 0;
+}
+.decl-cheat dt {
+  font-weight: 700;
+  margin-top: 10px;
+}
+.decl-cheat dd {
+  margin: 2px 0 0;
+}
+.decl-cheat ol {
+  margin: 4px 0 0;
+  padding-left: 1.3em;
+}

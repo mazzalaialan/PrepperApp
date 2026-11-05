@@ -361,11 +361,13 @@ La app se organiza en siete secciones:
 |---|---|
 | Emergencias (antes "Botiquín") | Contactos de emergencia, mi ubicación para socorristas, botiquines por tipo, ficha médica familiar, guías de primeros auxilios, radio |
 | Documentos | Documentos personales con N fotos |
-| Orientación | Brújula, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
+| Orientación | Brújula, declinómetro, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
 | Meteorología | Clima, sol y luna, mapa de tiempo y peligros naturales (§12.4) |
 | Inventario | Artículos, ubicaciones, alertas, categorías, recomendaciones |
 | Huerta y cultivo | Calendario de siembra y cosecha, canteros y seguimiento |
 | Biblioteca | Manuales |
+
+**Declinómetro** (`/orientation/declination`, después de la Brújula; `modules/declination`): declinación de cualquier lugar (GPS, waypoint o coordenadas a mano) con el modelo WMM 2025 incluido (`magvar`, válido 2025–2030; fuera de ese período avisa), con dibujo de los dos nortes, cambio anual (diferencia con la fecha de un año después), error en metros por km si no se corrige, conversor de rumbos magnético ↔ verdadero con la cuenta a la vista, cuenta para un mapa de papel viejo (declinación y variación anual del margen, ya que el modelo no sirve para años anteriores) y un machete: fórmulas, regla "de la brújula al mapa: Este se suma, Oeste se resta", pasos con brújula de placa, brújulas con ajuste, norte de cuadrícula y valores de la región. La Brújula enlaza al Declinómetro.
 
 Navegación en el celular: Inicio, Emergencias, Documentos, Orientación, Meteorología y "Más" (Inventario, Huerta, Biblioteca). Inicio muestra las secciones en ese mismo orden, con las alertas arriba de todo. En pantallas anchas el riel lateral muestra todas. Ajustes se abre desde la barra superior; incluye Backup y transferencia (§8). **Acerca de** (`/about`, al pie del Inicio y al final de Ajustes): versión, privacidad, código fuente, formulario para reportar un problema, sugerir una mejora o dejar un mensaje (con versión y datos técnicos del dispositivo opcionales) que se envía como issue de GitHub o se copia; también se puede enviar por mail a contacto.vikarg@gmail.com (`CONTACT_EMAIL` en `core/about.ts`, la casilla de contacto de VikArg), y más adelante por el servidor. Incluye el enlace a cafecito.app/vikarg.
 

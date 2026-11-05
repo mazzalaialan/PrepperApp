@@ -65,6 +65,7 @@
     "medical": { "title": "Medical records", "desc": "Blood type, allergies and medication for each person" },
     "firstAidGuides": { "title": "First aid guides", "desc": "What to do in each emergency, offline" },
     "compass": { "title": "Compass", "desc": "Magnetic and true heading" },
+    "declination": { "title": "Declinometer", "desc": "Declination, bearings and cheat sheet" },
     "inclinometer": { "title": "Inclinometer", "desc": "Slope angle and avalanche risk" },
     "waypoints": { "title": "Waypoints and Routes", "desc": "Saved points, how to get back and routes joining them" },
     "routes": { "title": "Routes", "desc": "Lists of points to follow in order" },
@@ -1064,6 +1065,97 @@
     },
     "disclaimer": "This is the risk from the slope angle: actual danger also depends on the snowpack and weather. Approximate reading; it doesn't replace the avalanche forecast or training for snowy terrain."
   },
+  "declination": {
+    "intro": "Declination is the angle between true north (the one on maps and GPS) and magnetic north (where the needle points). It changes with place and over the years. It's computed offline with the World Magnetic Model (WMM).",
+    "hereTitle": "Declination at the place",
+    "choosePlace": "Choose a place above (your location, a waypoint or coordinates).",
+    "angle": "{{value}}° {{side}} ({{dm}})",
+    "side": {
+      "E": "East",
+      "W": "West"
+    },
+    "dialLabel": "True north up and magnetic north turned by the declination",
+    "trueShort": "TN",
+    "magShort": "MN",
+    "meaningW": "The needle points {{value}}° to the left (west) of true north.",
+    "meaningE": "The needle points {{value}}° to the right (east) of true north.",
+    "annual": "It changes about {{minutes}}′ per year towards the {{side}}.",
+    "error": "If you don't correct it, you drift about {{meters}} m for every km you walk.",
+    "model": "WMM 2025 model, valid until {{until}}.",
+    "modelExpired": "The date is outside the WMM 2025 model (valid until {{until}}): the value is approximate. Update the app.",
+    "convertTitle": "Convert a bearing",
+    "direction": "Direction",
+    "m2t": "Compass → map",
+    "t2m": "Map → compass",
+    "bearingMag": "Magnetic bearing (what the compass shows), in degrees",
+    "bearingTrue": "True bearing (measured on the map), in degrees",
+    "resultM2t": "{{from}}° magnetic {{op}} {{decl}}° = {{to}}° true",
+    "resultT2m": "{{from}}° true {{op}} {{decl}}° = {{to}}° magnetic",
+    "mapTitle": "Old paper map",
+    "mapIntro": "The map margin gives the declination for the year it was made and how much it changes per year. Enter them to get today's value.",
+    "mapYear": "Year of the map's declination",
+    "mapDecl": "Map declination (degrees)",
+    "mapAnnual": "Annual change (minutes ′)",
+    "towards": "Towards",
+    "mapToday": "Today it would be about {{value}}.",
+    "mapCompare": "The model gives {{value}} at {{place}}.",
+    "cheatTitle": "Cheat sheet: magnetic ↔ true",
+    "cheat": {
+      "what": {
+        "term": "The norths",
+        "text": "True (geographic): towards the pole, the one on maps and GPS. Magnetic: where the needle points. East declination = the needle is to the right of true north; West = to the left."
+      },
+      "formula": {
+        "term": "The formulas",
+        "m2t": "True = Magnetic + Declination",
+        "t2m": "Magnetic = True − Declination",
+        "sign": "East declination is +, West is −."
+      },
+      "rule": {
+        "term": "The rule without signs",
+        "m2t": "Compass to map (magnetic → true): add East, subtract West.",
+        "t2m": "Map to compass (true → magnetic): subtract East, add West."
+      },
+      "example": {
+        "term": "Example",
+        "here": "at the chosen place",
+        "generic": "with an example declination",
+        "textW": "With {{decl}}° West ({{where}}): the compass shows {{mag}}° → on the map it's {{true}}°. You measure {{true2}}° on the map → set {{mag2}}° on the compass.",
+        "textE": "With {{decl}}° East ({{where}}): the compass shows {{mag}}° → on the map it's {{true}}°. You measure {{true2}}° on the map → set {{mag2}}° on the compass."
+      },
+      "mapToCompass": {
+        "term": "From map to terrain (baseplate compass)",
+        "s1": "On the map, join where you are and where you're going with the edge of the baseplate (direction arrow towards the destination).",
+        "s2": "Turn the bezel until its lines are parallel to the meridians (map north up) and read the true bearing.",
+        "s3": "Convert it to magnetic with the rule above and turn the bezel to that value.",
+        "s4": "Holding the compass level, turn yourself (not the bezel) until the red needle sits inside the orienting arrow.",
+        "s5": "Walk where the direction arrow points, picking landmarks along that line."
+      },
+      "compassToMap": {
+        "term": "From terrain to map",
+        "s1": "Point the direction arrow at what you see (a hill, a hut).",
+        "s2": "Turn the bezel until the red needle sits in the orienting arrow and read the magnetic bearing.",
+        "s3": "Convert it to true and set that value on the bezel.",
+        "s4": "Lay the baseplate on the map with the bezel lines parallel to the meridians and the edge touching the point: you are somewhere on that line."
+      },
+      "adjust": {
+        "term": "Compass with declination adjustment",
+        "text": "If your compass can be adjusted, set the declination once and it reads true bearings: don't also do the math, or you'll correct it twice. Check the setting every few years or when you change region."
+      },
+      "grid": {
+        "term": "Grid north",
+        "text": "Maps with a grid (UTM or the IGN's Gauss-Krüger) have a third north, that of the grid lines. The difference from true north (convergence) is usually a few degrees and is printed in the margin. If you measure against the grid, use the map's grid–magnetic angle, updated with the annual change."
+      },
+      "region": {
+        "term": "In our region",
+        "text": "It varies a lot: about 7–12° West in northern and central Argentina, Buenos Aires and Montevideo, about 2° West in Mendoza, almost 0° in Santiago, about 5° East in Bariloche and 10–12° East in southern Patagonia. Everywhere it drifts West by about 5 to 13′ per year: a 30-year-old map can be several degrees off."
+      },
+      "app": {
+        "term": "In the app",
+        "text": "The compass already corrects declination if you choose \"North: True\"; with \"Magnetic\" it shows the same as a needle compass."
+      }
+    }
+  },
   "compass": {
     "roseLabel": "Compass rose",
     "waiting": "Waiting for the phone's compass…",
@@ -1074,6 +1166,7 @@
     "magneticNorth": "Magnetic",
     "declination": "Declination at your location: {{value}}° {{dir}} (WMM 2025 model).",
     "noDeclination": "Without your location declination can't be corrected: the compass shows magnetic north.",
+    "moreDeclination": "More in the Declinometer: annual change, other places and how to convert bearings.",
     "calibrate": "If the heading jumps or looks wrong, calibrate by moving the phone in a figure 8, away from metal and magnets."
   },
   "routes": {

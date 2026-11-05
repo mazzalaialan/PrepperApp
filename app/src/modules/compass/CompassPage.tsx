@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useCapability } from '@/core/capabilities/capabilities';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useHeading } from '@/core/sensors/useHeading';
@@ -51,6 +52,9 @@ export function CompassPage() {
                 dir: heading.declination < 0 ? t('geo.cardinal.W') : t('geo.cardinal.E'),
               })
             : t('compass.noDeclination')}
+        </p>
+        <p className="hint">
+          <Link to="/orientation/declination">{t('compass.moreDeclination')}</Link>
         </p>
         <p className="hint">{t('compass.calibrate')}</p>
       </section>

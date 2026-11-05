@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
  * misma lógica: alcanza con escritorio. Los mapas se dibujan sin placa de video
  * y son lo más lento: solo en escritorio.
  */
-const MOBILE_SPECS = /(layout|inventory|compass|inclinometer|starmap|photo|garden|tracks|emergency)\.spec\.ts$/;
+const MOBILE_SPECS = /(layout|inventory|compass|declination|inclinometer|starmap|photo|garden|tracks|emergency)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: 'e2e',

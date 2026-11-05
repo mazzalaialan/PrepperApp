@@ -28,6 +28,7 @@ import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
 import { ItemsPage } from '@/modules/inventory/pages/ItemsPage';
 import { LocationsPage } from '@/modules/inventory/pages/LocationsPage';
 import { CompassPage } from '@/modules/compass/CompassPage';
+import { DeclinationPage } from '@/modules/declination/DeclinationPage';
 import { RecommendationsPage } from '@/modules/recommendations/RecommendationsPage';
 import { StarMapPage } from '@/modules/starmap/StarMapPage';
 import { InclinometerPage } from '@/modules/inclinometer/InclinometerPage';
@@ -104,6 +105,7 @@ const router = createHashRouter([
       { path: '/orientation/waypoints/:id', element: <WaypointEditPage /> },
       { path: '/orientation/waypoints/:id/go', element: <GoToPage /> },
       { path: '/orientation/compass', element: <CompassPage /> },
+      { path: '/orientation/declination', element: <DeclinationPage /> },
       { path: '/orientation/inclinometer', element: <InclinometerPage /> },
       { path: '/orientation/starmap', element: <StarMapPage /> },
       {
