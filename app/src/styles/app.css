@@ -3622,3 +3622,105 @@ a.module-card:hover {
   border-bottom: 1px solid var(--border);
   margin-bottom: 4px;
 }
+
+/* Inclinómetro, modo horizonte: cielo y suelo giran al revés que el celular. */
+.incl-horizon {
+  width: min(240px, 72vw);
+  align-self: center;
+}
+.horizon-sky {
+  fill: var(--info);
+  opacity: 0.35;
+}
+.horizon-ground {
+  fill: var(--accent);
+  opacity: 0.3;
+}
+.horizon-line {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.horizon-frame {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 3;
+}
+.horizon-tick {
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+.horizon-device {
+  stroke: var(--warn);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.horizon-device-dot {
+  fill: var(--warn);
+}
+
+/* Inclinómetro: cómo poner el celular en cada modo. */
+.incl-drawing {
+  width: min(320px, 100%);
+  height: auto;
+  align-self: center;
+}
+.draw-ground {
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+.draw-slope {
+  fill: var(--surface-2);
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+.draw-arc {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+.draw-text {
+  fill: var(--warn);
+  font-size: 12px;
+  font-weight: 700;
+}
+.draw-phone {
+  fill: var(--text);
+  stroke: var(--bg);
+  stroke-width: 1;
+}
+.draw-screen {
+  fill: var(--info);
+}
+.draw-screen-front {
+  fill: var(--surface);
+}
+.draw-sight {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+.draw-eye {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.draw-pupil {
+  fill: var(--text);
+}
+.draw-horizon {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.draw-device-mark {
+  stroke: var(--warn);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.draw-arrow {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+.draw-arrow-head {
+  fill: var(--text-muted);
+}

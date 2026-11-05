@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { avalancheRisk, slopeZone, tiltFromGravity } from './tilt';
+import { avalancheRisk, lateralTilt, slopeZone, tiltFromGravity } from './tilt';
 
 const G = 9.81;
 const rad = (d: number) => (d * Math.PI) / 180;
 
 describe('tiltFromGravity', () => {
   it('acostado: 0° de pendiente', () => {
-    expect(tiltFromGravity(0, 0, G)).toEqual({ surface: 0, sight: 0 });
+    expect(tiltFromGravity(0, 0, G)).toMatchObject({ surface: 0, sight: 0 });
   });
 
   it('apoyado en una pendiente de 35° (inclinado hacia adelante o de costado)', () => {
@@ -19,6 +19,22 @@ describe('tiltFromGravity', () => {
   it('apuntando: elevación del borde superior', () => {
     expect(tiltFromGravity(0, G * Math.sin(rad(40)), G * Math.cos(rad(40)))!.sight).toBeCloseTo(40);
     expect(tiltFromGravity(0, -G * Math.sin(rad(20)), G * Math.cos(rad(20)))!.sight).toBeCloseTo(-20);
+  });
+
+  it('parado: giro lateral (horario positivo) y con la pantalla rotada', () => {
+    // Derecho.
+    expect(tiltFromGravity(0, G, 0)!.roll).toBeCloseTo(0);
+    // Girado 10° en sentido horario: el eje x apunta un poco hacia abajo.
+    const cw = tiltFromGravity(-G * Math.sin(rad(10)), G * Math.cos(rad(10)), 0)!;
+    expect(cw.roll).toBeCloseTo(10);
+    expect(tiltFromGravity(G * Math.sin(rad(5)), G * Math.cos(rad(5)), 0)!.roll).toBeCloseTo(-5);
+    // De costado (90° antihorario) con la pantalla rotada a horizontal: derecho.
+    const side = tiltFromGravity(G, 0, 0)!;
+    expect(side.roll).toBeCloseTo(-90);
+    expect(lateralTilt(side.roll, 90)).toBeCloseTo(0);
+    expect(lateralTilt(-87, 90)).toBeCloseTo(3);
+    expect(lateralTilt(179, 0)).toBeCloseTo(179);
+    expect(lateralTilt(181, 0)).toBeCloseTo(-179);
   });
 
   it('sin gravedad no hay lectura', () => {

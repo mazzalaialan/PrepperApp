@@ -67,4 +67,25 @@ test('inclinómetro: zonas de avalancha, fijar medida y modo apuntando', async (
   await expect(page.getByTestId('incl-angle')).toHaveText('-27°');
   await expect(page.getByTestId('incl-zone')).toHaveText('Cerca del rango de avalanchas');
   await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Moderado');
+  await expect(page.getByTestId('incl-drawing')).toHaveAttribute('data-mode', 'sight');
+  await page.getByTestId('incl-drawing').screenshot({ path: `e2e-results/screens/${testInfo.project.name}-18-incl-sight.png` });
+
+  // Horizonte: acostado pide pararlo; parado y girado 5° a la derecha.
+  await page.getByRole('button', { name: 'Horizonte' }).click();
+  await expect(page.getByTestId('incl-drawing')).toHaveAttribute('data-mode', 'level');
+  await page.evaluate((g) => ((window as unknown as { __gravity: object }).__gravity = g), { x: 0, y: 0, z: G });
+  await expect(page.getByTestId('incl-lying')).toContainText('Pará el celular');
+  await page.evaluate((g) => ((window as unknown as { __gravity: object }).__gravity = g), { x: -G * Math.sin(rad(5)), y: G * Math.cos(rad(5)), z: 0 });
+  await expect(page.getByTestId('incl-angle')).toHaveText('5,0°');
+  await expect(page.getByTestId('incl-side')).toHaveText('Inclinado hacia la derecha');
+  await expect(page.getByTestId('horizon-line')).toHaveAttribute('transform', /^rotate\(-5(\.0+\d*)?\)$|^rotate\(-4\.9\d+\)$/);
+  // Sin zonas de avalancha en este modo.
+  await expect(page.getByText('Riesgo de avalancha por pendiente')).toHaveCount(0);
+  await page.evaluate((g) => ((window as unknown as { __gravity: object }).__gravity = g), { x: G * Math.sin(rad(2)), y: G * Math.cos(rad(2)), z: 0 });
+  await expect(page.getByTestId('incl-side')).toHaveText('Inclinado hacia la izquierda');
+  await page.evaluate((g) => ((window as unknown as { __gravity: object }).__gravity = g), { x: 0, y: G, z: 0 });
+  await expect(page.getByTestId('incl-side')).toHaveText('Derecho');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-19-incl-level.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Apoyado' }).click();
+  await page.getByTestId('incl-drawing').screenshot({ path: `e2e-results/screens/${testInfo.project.name}-18-incl-surface.png` });
 });

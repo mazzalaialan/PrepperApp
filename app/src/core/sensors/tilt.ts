@@ -12,6 +12,12 @@ export interface Tilt {
   surface: number;
   /** Elevación del borde superior sobre el horizonte (−90 a 90): apuntando a lo largo del celular. */
   sight: number;
+  /**
+   * Giro del celular parado sobre el eje que sale de la pantalla (−180 a 180):
+   * 0 = derecho; positivo = girado en el sentido de las agujas del reloj
+   * (borde derecho más abajo).
+   */
+  roll: number;
 }
 
 export function tiltFromGravity(x: number, y: number, z: number): Tilt | null {
@@ -20,7 +26,21 @@ export function tiltFromGravity(x: number, y: number, z: number): Tilt | null {
   return {
     surface: deg(Math.acos(Math.min(1, Math.abs(z) / g))),
     sight: deg(Math.asin(Math.max(-1, Math.min(1, y / g)))),
+    roll: deg(Math.atan2(-x, y)),
   };
+}
+
+/** Por debajo de esta inclinación el celular está casi acostado y el giro lateral no se puede medir bien. */
+export const LEVEL_MIN_SURFACE = 35;
+
+/**
+ * Inclinación lateral respecto de la pantalla (−180 a 180): el giro del
+ * celular más el giro de la pantalla (si el sistema la rotó a horizontal, el
+ * "derecho" pasa a ser ese).
+ */
+export function lateralTilt(roll: number, screenAngle = 0): number {
+  const a = (((roll + screenAngle) % 360) + 540) % 360 - 180;
+  return Object.is(a, -0) ? 0 : a;
 }
 
 export type SlopeZone = 'low' | 'caution' | 'avalanche' | 'steep' | 'extreme';
