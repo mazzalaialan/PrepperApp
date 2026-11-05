@@ -2,7 +2,7 @@
 
 > *Hay que estar listo para que no te agarre un imprevisto.*
 
-App de preparacionismo **offline-first** para Android y PC: inventario con vencimientos, ubicaciones, herramientas de campo (brújula, inclinómetro, waypoints, sol y luna, mapa estelar), mapas offline y una biblioteca de manuales de supervivencia. Todos los datos quedan en el dispositivo, cifrados.
+App de preparacionismo **offline-first** para Android y PC: inventario con vencimientos, ubicaciones, herramientas de campo (brújula, inclinómetro, waypoints, tracks, sol y luna, mapa estelar), mapas offline, clima con avisos, emergencias y primeros auxilios, huerta (calendario por zona, canteros y avisos de helada y riego) y una biblioteca de manuales de supervivencia. Todos los datos quedan en el dispositivo, cifrados.
 
 Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y funciona sin internet.
 
@@ -25,10 +25,10 @@ La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 |---|---|
 | `app/` | La PWA (TypeScript + React + Vite) |
 | `docs/` | Arquitectura y guías |
-| `server/` | Servidor opcional: notificaciones push y transferencia ([guía de instalación](docs/SERVIDOR.md)) |
+| `server/` | Servidor opcional: notificaciones push, avisos de lluvia, rayos, peligros naturales y huerta, mapas offline y transferencia ([guía de instalación](docs/SERVIDOR.md)) |
 | `deploy/` | Docker Compose con HTTPS automático |
 | `portable/` | Lanzadores del paquete para usar la app sin internet en una PC |
-| `tools/library-builder/` | Conversión de libros a paquetes de biblioteca *(fase Biblioteca)* |
+| `tools/library-builder/` | Conversión de libros (PDF, DOC, EPUB…) a HTML liviano por categoría, con informe *(fase Biblioteca, §11.2 de la arquitectura)* |
 
 ## Desarrollo
 

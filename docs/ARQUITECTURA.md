@@ -167,7 +167,7 @@ Categorías del sistema iniciales:
 | `parentId` | null = raíz |
 | `depth` | 1 a 4 (validado). Ej.: Casa › Sótano › Estante 3 › Caja A |
 | `name`, `notes` | |
-| `waypointId` | Opcional: ubicación geográfica (ej.: escondite) |
+| `waypointId` | Opcional: dónde está (uno de "Mis waypoints", o se crea con el GPS). Las de adentro heredan el de la de arriba. Sirve para los avisos de peligros naturales cerca de la reserva (ver "Avisos de peligros naturales") |
 
 **Artículo** (*qué es*)
 | Campo | Notas |
@@ -203,7 +203,9 @@ No se guarda historial de movimientos: solo el estado actual.
 - `RecommendationRule`: `description`, `categoryId` o `itemId`, `quantityPerMemberPerDay`, `unit`, `targetDays`, a qué miembros aplica.
 - Las reglas **las define el usuario**; la app solo calcula y sugiere un stock mínimo, nunca lo impone.
 
-**Ajustes**: idioma, sistema de unidades, tema, ciudad o ubicación manual, URL del servidor, URL de clima, espejos de biblioteca, tiempo de autobloqueo.
+**Huerta** (§10.1): `GardenBed` (cantero o maceta: medidas, sol, en invernadero, `waypointId`) y `Planting` (cultivo de la ficha, cantero y cuadros, almácigo o siembra directa, fechas, estado, notas, cosechas con el lote del inventario si se sumó). Foto de cada siembra como adjunto `planting`.
+
+**Ajustes**: idioma, sistema de unidades, tema, ciudad o ubicación manual, URL del servidor, URL de clima, espejos de biblioteca, tiempo de autobloqueo. Huerta: zona (o automática), fecha de la última helada, avisos de helada y riego, y el último "regué" de cada lugar.
 
 ### 5.3 Índice de alertas (no cifrado)
 
@@ -307,7 +309,7 @@ Un QR con los datos completos se descartó: un QR guarda ~2,9 KB y un inventario
 
 A diferencia del backup (que reemplaza todo y se abre con la contraseña propia), sirve para pasarle datos a **otra persona con su propia bóveda**, y se **suma** a lo que ya tiene (`modules/share`).
 
-- **Contenido elegible:** fichas médicas (con su foto y sus médicos/veterinarios, que viajan siempre con ellas), el resto de los contactos y los documentos (con fotos). Si no van las fichas, los documentos llegan como generales.
+- **Contenido elegible:** huerta (canteros con su waypoint, siembras y cosechas), fichas médicas (con su foto y sus médicos/veterinarios, que viajan siempre con ellas), el resto de los contactos y los documentos (con fotos). Si no van las fichas, los documentos llegan como generales.
 - **Cifrado:** JSON comprimido (gzip) y cifrado con una DEK nueva envuelta con una **contraseña elegida para el envío** (PBKDF2 + AES-GCM, igual que la bóveda). La contraseña se dice por otro medio.
 - **Mezcla (`merge.ts`, función pura con pruebas):** nunca borra.
   - *Fichas:* la misma si tiene el mismo id (ya compartida antes) o mismo nombre y especie y la fecha de nacimiento no se contradice; el resumen permite separarlas ("no es la misma persona").
@@ -345,7 +347,9 @@ Implementación: Node 26 (TypeScript ejecutado sin build), Fastify y SQLite inte
 | Estático (opcional) | Sirve la propia PWA y los paquetes de biblioteca: instalación 100% autónoma |
 | Mapas (opcional) | Sirve archivos PMTiles regionales con *range requests* para la descarga por área (§12) |
 
-El servidor nunca ve datos del inventario, salvo el índice de alertas. Los backups le llegan cifrados.
+El servidor nunca ve datos del inventario, salvo el índice de alertas y, para los peligros naturales, un punto (~1 km) con el nombre de cada ubicación con waypoint donde hay reserva. De la huerta recibe un punto por lugar con los cultivos al aire libre y los datos del riego, y las tareas ya escritas. Los backups le llegan cifrados.
+
+**Biblioteca privada** (fase Biblioteca, §11.2): los paquetes privados se sirven solo con la clave de acceso a la biblioteca privada configurada en el servidor.
 
 ---
 
@@ -460,17 +464,42 @@ Las publicaciones del repositorio del INTA tienen licencia CC BY-NC-SA 4.0: de e
 - El usuario también puede **importar** sus propios HTML, PDF o paquetes; esos contenidos se indexan al importarse.
 - Visor HTML en `iframe` aislado (§7.4); visor PDF con pdf.js.
 
-### 11.2 Herramienta de conversión (`tools/library-builder`)
-Script en Python que recorre la carpeta de origen (una subcarpeta por categoría) y genera un paquete por categoría:
+### 11.2 Herramienta de conversión (`tools/library-builder`) — definida el 05/11/2026
 
-| Formato de origen | Conversión |
+**Origen:** la colección del autor (~1856 archivos, 7,2 GB): 1597 PDF (1280 con texto, 317 escaneados con ~17.600 páginas; las 99 Revistas Comando son escaneadas), 163 DOC/DOCX, 18 EPUB, 5 MOBI, planillas, presentaciones y algunos archivos que no son libros. ~1000 en español y ~230 en inglés. Una carpeta por categoría (las 20 de §11.1) con subcarpetas que pasan a ser **secciones** dentro de la categoría (ej.: Animales e insectos → Mascotas, Granja).
+
+**Dónde corre:** en Docker en el servidor (sin sudo, CPU sin AVX): Python + PyMuPDF, Pandoc, LibreOffice (DOC/PPT viejos), Tesseract (OCR `spa+eng`), conversión de MOBI. Sin OCR con IA. Retoma donde quedó (caché por hash de archivo): el OCR de los escaneados tarda de 12 a 24 h con 2 núcleos.
+
+**Conversión** (objetivo: HTML liviano con la misma estructura del libro):
+| Origen | Cómo |
 |---|---|
-| EPUB, DOCX, ODT, etc. | Pandoc → HTML limpio |
-| PDF con texto | PyMuPDF → HTML con imágenes extraídas |
-| PDF escaneado | OCR (Tesseract, idioma detectado): texto para el índice + páginas como imágenes WebP |
-| Imágenes | Redimensionadas y convertidas a WebP |
+| EPUB, DOCX, ODT, RTF, TXT, HTM | Pandoc → HTML limpio |
+| DOC, PPT, PPTX, PPS | LibreOffice → DOCX o PDF → como arriba |
+| MOBI | → EPUB → Pandoc |
+| PDF con texto | PyMuPDF: texto con títulos detectados por tamaño de letra, sin encabezados/pies repetidos ni números de página, uniendo palabras cortadas; imágenes extraídas |
+| PDF escaneado | OCR: texto + recorte de los dibujos y fotos de la página (regiones sin texto). **Nunca la página entera como imagen** |
+| XLSX, XLS | Tabla HTML |
+| CBZ | Imágenes en WebP |
+| ZIP | Se descomprime (incluye `.zip` + `.z01`) y se procesa lo de adentro |
+| STL, SKP, DXF, PSD, OPUS, BAK | Quedan afuera (anotados en el informe) |
 
-Salida por paquete: `manifest.json` (id, categoría, versión, idiomas, tamaño, hash), `books/<id>/index.html` + imágenes, `search-index.json`. Incluye un reporte de libros que fallaron o con conversión dudosa para revisar a mano.
+- **Estructura:** índice del EPUB, marcadores del PDF o títulos detectados; notas al pie, tablas, listas y enlaces internos. Los libros grandes (más de ~200 páginas o de ~1 MB de HTML) se **separan por capítulo** con índice navegable.
+- **Imágenes:** WebP, ancho máximo ~1200 px; las repetidas (logos, viñetas de cada página) una sola vez; tope de peso por libro.
+- **HTML limpio:** sin scripts, estilos propios ni enlaces externos; el estilo lo pone la app (tema oscuro, rojo nocturno, tamaño de letra). Se lee en el visor aislado (§7.4).
+- **Duplicados:** el mismo libro una sola vez, de la mejor fuente: EPUB > DOCX > PDF con texto > escaneado.
+- **Datos de cada libro:** título, autor, año, idioma, categoría, sección, licencia, origen. Se leen del archivo cuando se puede y se corrigen con un archivo de ajustes por libro (`books.yaml`): título mal escrito, categoría equivocada, modo forzado, excluir.
+- **Búsqueda:** un índice por paquete, en español e inglés sin acentos ni plurales, con tope de tamaño.
+- **Actualización:** hash por libro: actualizar un paquete baja solo lo que cambió.
+
+**Públicos y privados:**
+- **Privado por defecto.** Los privados quedan **solo en el servidor propio**, detrás de una **clave de acceso a la biblioteca privada** configurada en el servidor; la app la pide una vez y al descargar muestra "Uso personal: no compartir estos libros".
+- **Públicos** (dominio público o licencia libre) van a los espejos. El conversor busca por el título y el origen (FM del ejército de EE. UU., FEMA, CDC, OMS, INTA, Cruz Roja, organismos públicos, licencias Creative Commons en el propio libro): lo que es público **con seguridad** se marca público; lo dudoso queda privado. Todo va en el informe para revisar.
+
+**En la app:** se puede bajar una categoría entera o libro por libro (casillas).
+
+**Informe** (`report.html`): cada libro con modo de conversión, páginas, peso antes y después, licencia (y por qué), duplicados, títulos o categorías corregidos, archivos que quedaron afuera y conversiones dudosas para revisar a mano.
+
+**Orden:** primero Cabuyería (nudos), Cultivo (huerta) y Medicina y primeros auxilios, porque sirven para mejorar la guía de nudos, la Huerta y las guías de primeros auxilios de la app. Después el resto.
 
 ---
 
@@ -631,19 +660,19 @@ Detalle de las capas de tiempo:
 | Fase | Contenido |
 |---|---|
 | **Base** | Proyecto, PWA instalable, temas, i18n, base de datos, cifrado y desbloqueo, ajustes, detección de capacidades |
-| **Inventario** | Categorías, ubicaciones, artículos, lotes, stock mínimo, favoritos, fotos, códigos de barras, alertas en la app, backup y restauración |
+| **Inventario** (+ 05/11/2026: ubicaciones con waypoint y avisos de peligros cerca de la reserva) | Categorías, ubicaciones, artículos, lotes, stock mínimo, favoritos, fotos, códigos de barras, alertas en la app, backup y restauración |
 | **Servidor** | Docker, push programado, código de transferencia, aviso diario en segundo plano |
 | **Orientación, meteorología y botiquín** | Orientación: brújula, inclinómetro, GPS y waypoints con "ir al punto" (realidad aumentada con cámara y brújula). Meteorología: clima, sol y luna. Botiquín: botiquines por tipo y ficha médica. Documentos. Recomendaciones |
-| **Biblioteca** | Visor, búsqueda, paquetes, importación y herramienta de conversión |
+| **Biblioteca** | Visor, búsqueda, paquetes (públicos en los espejos; privados solo en el servidor propio con clave), descarga por categoría o libro por libro, importación y herramienta de conversión (§11.2). Siguiente fase; se empieza por Cabuyería, Cultivo y Primeros auxilios |
 | **Mapas** | Orientación: descarga por área, importación de PMTiles, relieve, curvas de nivel, capas propias, guía. **Importar rutas GPX** (hecho, `modules/tracks`): Wikiloc y cualquier app (track `trk`/`trkseg`, o ruta `rte` si no hay track, y sus `wpt`), en una tabla propia cifrada `tracks` (Dexie v5), separada de "Mis waypoints" y "Mis rutas"; sus puntos no se mezclan con los del usuario salvo que él copie uno a mano. Se guarda el recorrido simplificado (Douglas-Peucker, 5 m) con distancia y desnivel calculados antes con todos los puntos (umbral de 5 m contra el ruido del GPS); se muestra perfil de altura (para ir a un punto con la brújula se copia a "Mis waypoints"), link a la ruta original y una capa propia en el mapa offline (`mapLayers.tracks`). Viaja en el backup y en "Compartir con un familiar" (sección de waypoints; el mismo track no se duplica). Seguimiento en vivo (`tracks/follow.ts`): proyecta el GPS sobre el recorrido y muestra lo recorrido, lo que falta, el desnivel que queda, el tiempo estimado (6 km/h en distancia, 300 m/h subiendo y 600 m/h bajando en altura; el mayor más la mitad del menor) y el próximo punto; avisa (y vibra) al salirse a más de 40 m o de la precisión del GPS, con margen para que no titile, y da el rumbo para volver; sentido inverso, dibujo del track sin mapa de fondo y pantalla siempre encendida. La simplificación al importar conserva los cambios de altura además de la forma. El seguimiento se ve como dibujo liviano o sobre el mapa offline; el mapa (también el de Orientación) pasa de plano a 3D (`mapLayers.terrain3d`, relieve con las mismas teselas de altura en una fuente aparte, exageración 1,3, inclinación hasta 75°) y la vista puede seguirte girando con la brújula o quedar libre (arrastrarla o girarla con la mano la libera). **Grabar el recorrido propio** (`tracks/recorder.ts`): se arranca desde Tracks, el mapa offline o mientras se sigue un track; queda como un `Track` más (`recorded`, `recording` mientras dura, `durationS` sin las pausas) en la misma tabla, y se guarda cifrado cada 20 s, al pausar y al ir a segundo plano (si la app se cierra, al volver aparece en pausa). Filtra puntos con más de 50 m de error o a menos de un paso (8 m o media precisión); cada pausa abre un tramo nuevo y al reanudar pide una posición fresca (sin caché). Al terminar se simplifica a 3 m y se calculan los datos. Con la app bloqueada sigue grabando (`tracks/lockedBuffer.ts`): cada grabación tiene su par RSA-OAEP 2048; la clave privada va dentro del track (`recKey`, cifrada con la bóveda, se borra al terminar) y, bloqueada, cada punto se cifra con la pública y se agrega en `localStorage`. Nunca queda nada en claro en el disco y, si el sistema cierra la app bloqueada, al desbloquear se descifra y se suma (la grabación vuelve en pausa). La pantalla de desbloqueo solo dice que se sigue grabando, sin datos. Al terminar se le pone nombre (diálogo; se puede seguir grabando) y después se cambia en el track (lápiz al lado del título; las notas, abajo, igual). "Volver al origen" sigue lo grabado hasta ese momento al revés (`?back=<puntos>`: la vuelta no se mezcla con la ida, y el sentido va en la dirección, `rev`, para volver igual tras bloquear). Lo grabado se dibuja en verde (`--ok`) sobre el mapa y el dibujo. El bloqueo automático no corre en la pantalla de seguimiento (`core/security/lockHold.ts`). Pantalla negra (`core/power/pocket.ts`): encendida para que el navegador no corte el GPS, pero negra y sin pintar lo de abajo; dos toques para volver. Límite de la PWA: con la pantalla apagada el navegador deja de dar posiciones; grabar con la pantalla apagada requiere la app Android (§13.1, pendiente). **Capa "Riesgo de avalancha"** (`maps/slope.ts`, protocolo `vkslope`): pendiente calculada en el celular con las mismas teselas de elevación Terrarium (z12, ~30 m; método de Horn), pintada con las zonas del inclinómetro (menos de 25° verde, 25–30° amarillo, 30–45° rojo óxido, más de 45° rojo puro `--steep`) y **solo por encima de la línea de nieve** (`maps/snowline.ts`): isoterma de 0 °C de Open-Meteo (`freezing_level_height`, un punto, ~700 bytes) más baja de los últimos 3 días y los próximos 2, menos 300 m. Con conexión, la del lugar que se mira (se vuelve a pedir a más de 50 km o 3 h); sin conexión, la del pronóstico guardado con la zona descargada más cercana (isoterma por hora de 3 días atrás a 14 adelante, ~2 KB, se guarda al bajar la zona y se renueva cada vez que la app se abre con conexión si tiene más de 24 h, `maps/zoneForecast.ts`; las horas de más de 3 días atrás se borran y un pronóstico vencido se descarta); si no hay ninguna cerca, se usa la altura que eligió el usuario para ese caso (`snowlineFallback`, 1500 m por defecto) y se avisa. Se puede poner a mano (`snowlineManual`). **Carga por viento** (`maps/wind.ts`): se rayan las laderas de 25° o más sobre la línea de nieve que miran a sotavento (a ±60° de hacia donde sopló el viento; la orientación sale del mismo cálculo de Horn). El viento sale de tres fuentes, en orden. La primera es el reciente: la misma consulta de Open-Meteo trae viento a 700 hPa (~3000 m, el de los filos) y nevada por hora; cuenta el viento de 5 m/s o más después de 0,5 cm de nieve nueva en los últimos 3 días, y los rumbos de 45° con al menos 25% del peso; también va en el pronóstico guardado de cada zona. La segunda es el habitual de la zona: al bajarla, 5 años de datos diarios del histórico (ERA5, `archive-api.open-meteo.com`, ~50 KB, una sola vez) con el viento dominante de los días con nieve y el siguiente. Si no hay ninguna de las dos, se asume viento del oeste. La ventana del viento es de 7 días (las placas pueden seguir inestables más de una semana con frío; la isoterma sigue con 3). Se ven dos rayados juntos, cada uno en su diagonal y su color: la carga de los últimos 7 días (blanco) y el sotavento habitual, donde pueden quedar placas viejas (azul; el de la zona descargada o, con conexión, el del lugar, pedido una vez y guardado con la consulta; sin nada, del oeste). Donde coinciden se cruzan. Es una subopción de la capa (`mapLayers.windLoad`, prendida). Con conexión no se raya hasta tener el dato del lugar. Las rayas siguen de una tesela a la otra y el sotavento va en la dirección de la tesela (`&lee=90,135`). Meteorología: mapa base de AR, CL y UY con capas de tiempo y peligros naturales (§12.4) |
 | **Mapa estelar** | Dos vistas: cielo completo (cúpula, gira con la brújula o a mano) y "apuntar al cielo" (realidad aumentada con la orientación del celular, con puntos cardinales, escala de acimut y círculos de altura; en PC se arrastra). 5.044 estrellas hasta magnitud 6, 88 constelaciones en español, Sol, Luna y planetas. Guía para encontrar el Sur (Cruz del Sur y Punteros) o el Norte (Osa Mayor y Polar) según el hemisferio, búsqueda de astros, fecha y hora, rojo nocturno. Datos de d3-celestial (BSD-3), generados con `tools/sky-data`. Vía Láctea pendiente (~150 KB simplificada) |
-| **Huerta** | Definida en §10.1 (05/11/2026): fichas, calendario por zona del INTA, canteros en grilla de 30 cm, seguimiento con tareas y cosecha (opción de sumarla al inventario), avisos de helada y de riego. Todo en una sola fase |
+| **Huerta** (hecha, 05/11/2026) | Definida en §10.1: fichas, calendario por zona del INTA, canteros en grilla de 30 cm, seguimiento con tareas y cosecha (opción de sumarla al inventario), avisos de helada y de riego. Todo en una sola fase |
 | **Servidor (cuando esté instalado)** | Avisos de lluvia con la app cerrada (última ubicación conocida y waypoints): hecho con el pronóstico de Open-Meteo; falta la lluvia observada (GOES‑19 RRQPE, radar del SMN). Detector de rayos GOES‑19 con aviso por distancia |
 | **Guía de nudos** | Nudos útiles (amarre, unión de cuerdas, lazos, rescate, carga), cada uno con dibujos paso a paso, para qué sirve y errores comunes; sin conexión. Agregada el 05/11/2026, antes de la app nativa |
 | **App nativa** | Port completo de la app a Android, y quizá iOS: GPS con la pantalla apagada y la app cerrada, instalación sin internet (§13.1) |
 
 **Orden de ejecución** (decidido el 31/10/2026; actualizado el 04/11/2026, cuando se dejaron los códigos F0–F8 y las fases pasaron a nombrarse por su contenido):
-Base → Inventario → Servidor → Orientación, meteorología y botiquín (hechas) → **Mapa estelar** → Mapas (incluye el mapa de Meteorología) → Servidor (avisos en segundo plano, rayos, peligros naturales) → Huerta (calendario y canteros) → Biblioteca → Guía de nudos (agregada el 05/11/2026) → **App nativa (port completo a Android, y quizá iOS; §13.1), al final** (agregada el 04/11/2026).
+Base → Inventario → Servidor → Orientación, meteorología y botiquín (hechas) → **Mapa estelar** → Mapas (incluye el mapa de Meteorología) → Servidor (avisos en segundo plano, rayos, peligros naturales) → Huerta (hecha el 05/11/2026) → **Biblioteca** (siguiente) → Guía de nudos (agregada el 05/11/2026) → **App nativa (port completo a Android, y quizá iOS; §13.1), al final** (agregada el 04/11/2026).
 
 ---
 

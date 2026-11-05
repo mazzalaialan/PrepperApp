@@ -4,12 +4,17 @@ El servidor es **opcional**. La app funciona completa sin él; el servidor agreg
 
 - **Notificaciones push confiables:** avisos de vencimiento aunque la app esté cerrada.
 - **Avisos de lluvia y rayos con la app cerrada:** en tus waypoints con aviso y donde estás.
+- **Avisos de peligros naturales** (sismos, incendios, inundaciones, ciclones, erupciones) cerca de esos lugares y de donde guardás reserva.
+- **Avisos de la huerta con la app cerrada:** helada, riego y tareas.
+- **Biblioteca privada** *(fase Biblioteca)*: tus libros, solo en tu servidor y con clave.
 - **Transferencia con código o QR:** pasar el backup a otro dispositivo sin cables.
 - **Servir la propia app:** una instalación que no depende de GitHub.
 
 El servidor nunca ve tu inventario. Solo recibe:
 - nombre del artículo y fechas de las alertas, para poder notificar;
 - para los avisos de lluvia y rayos: nombre y lugar de los waypoints con aviso y, salvo que lo apagues en **Ajustes → Notificaciones**, tu última ubicación conocida. Todo va redondeado a ~1 km y se borra al apagarlo;
+- para los peligros cerca de tu reserva: un punto (~1 km) y el nombre de cada ubicación del inventario con waypoint donde hay algo guardado;
+- para la huerta: un punto por lugar (~1 km; los canteros a menos de 1 km son un solo lugar), los nombres de los cultivos al aire libre y desde qué mínima se queman, los datos del riego y el texto de las tareas;
 - backups que llegan **ya cifrados** y se borran al descargarlos o a las 24 h.
 
 ---
@@ -158,8 +163,16 @@ docker compose logs -f vikarg
 - **Lluvia estimada propia:** mientras tanto, el servidor estima la lluvia con el infrarrojo del GOES-19 (banda 13), leyendo solo las franjas que cubren los lugares con aviso (~400 KB cada 10 minutos por franja). Si en el lugar el satélite ve lluvia, el aviso es "está lloviendo" con la intensidad estimada. Es orientativa: nubes altas muy frías que no llueven pueden dar falsas alarmas. En el mapa del tiempo, la capa "Lluvia estimada (satélite)" muestra la misma estimación para toda la región: mientras alguien la mira, cada 10 minutos el servidor lee la región entera (~5,4 MB) y arma una imagen de ~30 KB. `RAIN_OBSERVED=false` la apaga (avisos y mapa).
 - Es pronóstico, no radar: en Argentina el horario es orientativo, con margen de una hora. La fuente es intercambiable (`server/src/rain/source.ts`), para sumar lluvia observada (GOES-19 o el radar del SMN) más adelante.
 
-- **Peligros naturales:** en los mismos lugares, el servidor avisa de sismos (USGS, `2.5_day.geojson`, ~50 KB cada 5 minutos) y de incendios forestales, inundaciones, ciclones y erupciones (GDACS, de la ONU y la Comisión Europea; cada 30 minutos, las páginas con eventos vigentes, ~270 KB). Solo si hay lugares con aviso. Los sismos se avisan según la magnitud: 3,5 a menos de 40 km, 4 a 100 km, 5 a 300 km, 6 a 600 km y 7 o más a 1500 km, y solo si son de las últimas 3 horas. Los de GDACS: alerta verde a menos de 100 km, naranja a 500 km y roja a 800 km. Cada evento se avisa una vez por lugar, y otra vez si sube de nivel (tabla `hazard_notices`, se limpia a los 30 días). Se apagan por dispositivo en **Ajustes → Notificaciones**, y en todo el servidor con `HAZARDS_ENABLED=false`.
+- **Peligros naturales:** en los mismos lugares y en los de tu reserva (ubicaciones del inventario con waypoint), el servidor avisa de sismos (USGS, `2.5_day.geojson`, ~50 KB cada 5 minutos) y de incendios forestales, inundaciones, ciclones y erupciones (GDACS, de la ONU y la Comisión Europea; cada 30 minutos, las páginas con eventos vigentes, ~270 KB). Solo si hay lugares con aviso. Los sismos se avisan según la magnitud: 3,5 a menos de 40 km, 4 a 100 km, 5 a 300 km, 6 a 600 km y 7 o más a 1500 km, y solo si son de las últimas 3 horas. Los de GDACS: alerta verde a menos de 100 km, naranja a 500 km y roja a 800 km. **Un solo aviso por evento**, aunque toque varios lugares: nombra el más cercano y, si hay reserva cerca, lo dice ("Tenés reserva cerca: Casa. Si podés, ponela a resguardo"). Se vuelve a avisar si el evento sube de nivel (tabla `hazard_notices`, se limpia a los 30 días). Se apagan por dispositivo en **Ajustes → Notificaciones**, y en todo el servidor con `HAZARDS_ENABLED=false`.
 - Son **avisos informativos, no alertas oficiales**. En Argentina, la emisión de alertas meteorológicas y avisos oficiales a la población es competencia exclusiva del SMN: la app lo aclara en Clima, el mapa del clima, Notificaciones y Acerca de, y cada notificación de lluvia o rayos lo dice al final.
+
+## Cómo funcionan los avisos de la huerta
+
+- La app manda (`PUT /api/devices/:id/garden`) un lugar por cada grupo de canteros a menos de ~1 km, sacado del waypoint de cada cantero: sin waypoint no hay avisos (el GPS del celular no dice dónde está la huerta). Los canteros en invernadero no cuentan.
+- Cada 15 minutos el servidor pide a Open-Meteo (`WEATHER_URL`) la evapotranspiración, la lluvia de los últimos 10 días y la mínima de los próximos 3, una vez por celda de ~1 km.
+- **Helada:** a partir de las 17 (hora del lugar), si la mínima de la madrugada siguiente quema algo de lo plantado (sensibles con 2 °C, semirresistentes con −2 °C), un aviso por lugar y por noche.
+- **Riego:** a la hora de aviso, balance de agua del suelo (ET0 × Kc menos la lluvia útil desde el último "regué"); si falta más que lo que las raíces sacan fácil, un aviso por episodio. Al marcar "Regué" en la app se vuelve a contar.
+- **Tareas** (trasplantar, empezar a cosechar, terminar): a la hora de aviso, todas las que ya corresponden juntas en un solo aviso, una vez.
 
 ## Avisos de actualizaciones importantes
 
