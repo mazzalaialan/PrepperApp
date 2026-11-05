@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import sys
 from dataclasses import asdict
 
 import yaml
@@ -32,11 +33,13 @@ def main() -> None:
     c.add_argument("--all", action="store_true")
     c.add_argument("--book", action="append", default=[], help="ruta de un libro (para probar)")
     c.add_argument("--no-ocr", action="store_true", help="saltear los escaneados")
+    c.add_argument("--limit", type=int, help="convertir como mucho esta cantidad (y terminar)")
     sub.add_parser("report", help="arma el informe")
     sub.add_parser("package", help="arma los paquetes para la app (catálogo y un ZIP por libro)")
     sub.add_parser("status", help="qué falta convertir (busca también archivos nuevos)")
     u = sub.add_parser("update", help="analiza y convierte solo lo que falta")
     u.add_argument("--no-ocr", action="store_true", help="dejar los escaneados para después")
+    u.add_argument("--limit", type=int, help="convertir como mucho esta cantidad (y terminar)")
     args = p.parse_args()
 
     if args.cmd == "scan":
@@ -52,7 +55,9 @@ def main() -> None:
 
         with single_run(OUT):
             entries = load_inventory()
-            convert(entries, SRC, OUT, categories=args.category, all_=args.all, books=args.book, ocr=not args.no_ocr)
+            n = convert(entries, SRC, OUT, categories=args.category, all_=args.all, books=args.book, ocr=not args.no_ocr, limit=args.limit)
+            if n == 0:
+                sys.exit(3)  # nada pendiente
     elif args.cmd in ("status", "update"):
         from .report import write_report
         from .status import print_status, single_run, status
@@ -64,9 +69,11 @@ def main() -> None:
             from .convert import convert
 
             with single_run(OUT):
-                convert(entries, SRC, OUT, categories=[], all_=True, books=[], ocr=not args.no_ocr)
+                n = convert(entries, SRC, OUT, categories=[], all_=True, books=[], ocr=not args.no_ocr, limit=args.limit)
         write_report(entries, OUT)
         print_status(status(entries, OUT))
+        if args.cmd == "update" and n == 0:
+            sys.exit(3)  # nada pendiente
     elif args.cmd == "package":
         from .package import package
 

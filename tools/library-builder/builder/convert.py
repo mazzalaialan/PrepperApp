@@ -140,7 +140,14 @@ def convert_one(e: Entry, src_root: str, out_root: str, ocr: bool) -> dict:
     }
 
 
-def convert(entries: list[Entry], src: str, out: str, categories: list[str], all_: bool, books: list[str], ocr: bool) -> None:
+def convert(entries: list[Entry], src: str, out: str, categories: list[str], all_: bool, books: list[str], ocr: bool, limit: int | None = None) -> int:
+    """Convierte lo pendiente y devuelve cuántos libros convirtió.
+
+    Orden: primero los que no necesitan OCR (salen en segundos), después los
+    escaneados de menos a más páginas, así los libros van apareciendo rápido.
+    Con `limit`, se detiene después de esa cantidad (para armar los paquetes
+    seguido).
+    """
     status_path = os.path.join(out, "conversion.json")
     status: dict = json.load(open(status_path)) if os.path.exists(status_path) else {}
     wanted = [
@@ -151,11 +158,22 @@ def convert(entries: list[Entry], src: str, out: str, categories: list[str], all
         and e.kind not in ("archive", "skip")
         and (all_ or e.category in categories or e.path in books)
     ]
-    print(f"{len(wanted)} libros para convertir")
-    for n, e in enumerate(wanted, 1):
+    wanted.sort(key=lambda e: (e.kind == "pdf-ocr", e.pages or 0 if e.kind == "pdf-ocr" else 0))
+
+    def done(e: Entry) -> bool:
+        st = status.get(e.id, {})
+        # Un salteado (OCR para después) o con error no está hecho.
+        return st.get("key") == f"{e.md5}|{e.title}|{e.license}|{e.kind}" and not st.get("error") and not st.get("skipped")
+
+    pending = [e for e in wanted if not done(e) and (ocr or e.kind != "pdf-ocr")]
+    # Los que ya fallaron, al final: no frenan a los demás en cada tanda.
+    pending.sort(key=lambda e: bool(status.get(e.id, {}).get("error")))
+    if limit is not None:
+        pending = pending[:limit]
+    print(f"{len(wanted)} libros en total; {len(pending)} para convertir ahora")
+    converted = 0
+    for n, e in enumerate(pending, 1):
         key = f"{e.md5}|{e.title}|{e.license}|{e.kind}"
-        if status.get(e.id, {}).get("key") == key and not status[e.id].get("error"):
-            continue
         t0 = time.time()
         try:
             res = convert_one(e, src, out, ocr)
@@ -166,4 +184,7 @@ def convert(entries: list[Entry], src: str, out: str, categories: list[str], all
         status[e.id] = res
         json.dump(status, open(status_path, "w"), ensure_ascii=False, indent=1)
         flag = "ERROR " + res["error"] if "error" in res else res.get("skipped") or f"{res['chapters']} cap, {res['images']} img, {res['bytes_out'] // 1024} KB"
-        print(f"[{n}/{len(wanted)}] {e.title[:60]} — {flag} ({res['seconds']} s)", flush=True)
+        print(f"[{n}/{len(pending)}] {e.title[:60]} — {flag} ({res['seconds']} s)", flush=True)
+        if "error" not in res and not res.get("skipped"):
+            converted += 1
+    return converted

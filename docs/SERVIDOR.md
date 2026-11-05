@@ -187,6 +187,8 @@ sh tools/library-builder/run.sh update     # convierte solo lo pendiente
 sh tools/library-builder/run.sh package    # catálogo + un ZIP por libro (los con derechos, cifrados)
 ```
 
+El orden es siempre el mismo: primero los libros con texto (segundos cada uno) y después los escaneados, que necesitan OCR, de menos a más páginas. `update --no-ocr` hace solo los rápidos (los escaneados quedan pendientes, no se dan por hechos) y `update --limit 10` convierte como mucho 10 y termina (sale con código 3 si no quedaba nada): así se pueden armar los paquetes entre tandas y los libros van apareciendo en la app. Los que fallaron van al final de cada tanda.
+
 En `deploy/.env`: `LIBRARY_PATH=/home/usuario/vikarg-library/packages` y `LIBRARY_KEY=` con la misma clave. El servidor relee el catálogo cuando cambia: no hace falta reiniciarlo.
 
 API: `GET /api/library` (catálogo), `POST /api/library/key` (comprobar la clave; 10 intentos por IP cada 10 minutos) y `GET /api/library/books/:id` (los con derechos piden la clave en `x-library-key`).
