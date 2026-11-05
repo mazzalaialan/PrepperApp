@@ -3,7 +3,7 @@ import mlcontour from 'maplibre-contour';
 // MapLibre 6 dibuja con un worker aparte: con Vite hay que indicarle dónde queda el archivo.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import './appSources';
-import { HATCH_RECENT, HATCH_USUAL, slopeTile } from './slope';
+import { decodeTerrarium, HATCH_RECENT, HATCH_USUAL, overzoomElevation, paintSlopeTile, slopeTile, type SlopeStyle } from './slope';
 import { themeColors } from './style';
 import { cachedOr, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, networkTile, networkUrl } from './tiles';
 
@@ -16,6 +16,25 @@ import { cachedOr, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, networkT
 
 let ready = false;
 let contoursUrl = '';
+
+/** Últimas teselas de altura ya decodificadas: con zoom alto, muchas teselas de pendiente salen de la misma. */
+const decoded = new Map<string, Promise<Float32Array | null>>();
+const DECODED_MAX = 24;
+
+function demHeights(z: number, x: number, y: number): Promise<Float32Array | null> {
+  const key = `${z}/${x}/${y}`;
+  let hit = decoded.get(key);
+  if (hit) {
+    decoded.delete(key);
+  } else {
+    hit = cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y)).then((png) => (png ? decodeTerrarium(png) : null));
+    // Una falla no se recuerda: puede volver la conexión.
+    hit.then((h) => h ?? decoded.delete(key)).catch(() => decoded.delete(key));
+  }
+  decoded.set(key, hit);
+  while (decoded.size > DECODED_MAX) decoded.delete(decoded.keys().next().value!);
+  return hit;
+}
 
 const parseZxy = (url: string) => {
   const [z, x, y] = url.replace(/^\w+:\/\//, '').split('/').map(Number);
@@ -49,10 +68,19 @@ export function setupProtocols(): { contoursUrl: string } {
     const q = new URLSearchParams(query ?? '');
     const minElevation = Number(q.get('min') ?? 0) || 0;
     const list = (k: string) => (q.get(k) ?? '').split(',').filter(Boolean).map(Number).filter(Number.isFinite);
+    const c = themeColors();
+    const colors = { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: HATCH_RECENT, hatchUsual: HATCH_USUAL };
+    if (z > DEM_MAX_ZOOM) {
+      // Más cerca que la elevación: la altura se interpola suave y la pendiente se calcula a la escala de la pantalla,
+      // así los bordes entre colores no salen en escalones y las rayas mantienen su ancho.
+      const elev = await overzoomElevation(z, x, y, DEM_MAX_ZOOM, (tx, ty) => demHeights(DEM_MAX_ZOOM, tx, ty), 1);
+      if (!elev) throw new Error('sin elevación');
+      const style: SlopeStyle = { colors, minElevation, lee: list('lee'), leeUsual: list('usual') };
+      return { data: await paintSlopeTile(elev, z, x, y, style, 1) };
+    }
     const dem = await cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y));
     if (!dem) throw new Error('sin elevación');
-    const c = themeColors();
-    return { data: await slopeTile(dem, z, x, y, { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: HATCH_RECENT, hatchUsual: HATCH_USUAL }, minElevation, list('lee'), list('usual')) };
+    return { data: await slopeTile(dem, z, x, y, colors, minElevation, list('lee'), list('usual')) };
   });
 
   maplibregl.addProtocol('vkglyph', async (params) => {

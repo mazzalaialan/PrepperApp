@@ -25,13 +25,15 @@ export function metersPerPixel(z: number, y: number, py: number, size = SLOPE_TI
 }
 
 /**
- * Pendiente en grados de cada píxel (método de Horn, con los bordes
- * repetidos). Si se pasa `aspect`, también hacia dónde mira la ladera (rumbo
- * de 0 a 360°, 0 = norte).
+ * Pendiente en grados de cada píxel (método de Horn). Si se pasa `aspect`,
+ * también hacia dónde mira la ladera (rumbo de 0 a 360°, 0 = norte).
+ * `elev` puede traer `pad` píxeles de más alrededor (de las teselas vecinas);
+ * sin margen, los bordes se repiten.
  */
-export function slopeDegrees(elev: Float32Array, z: number, y: number, size = SLOPE_TILE, aspect?: Float32Array): Float32Array {
+export function slopeDegrees(elev: Float32Array, z: number, y: number, size = SLOPE_TILE, aspect?: Float32Array, pad = 0): Float32Array {
   const out = new Float32Array(size * size);
-  const at = (px: number, py: number) => elev[Math.min(size - 1, Math.max(0, py)) * size + Math.min(size - 1, Math.max(0, px))]!;
+  const n = size + 2 * pad;
+  const at = (px: number, py: number) => elev[Math.min(n - 1, Math.max(0, py + pad)) * n + Math.min(n - 1, Math.max(0, px + pad))]!;
   for (let py = 0; py < size; py++) {
     const m = metersPerPixel(z, y, py, size);
     for (let px = 0; px < size; px++) {
@@ -133,8 +135,8 @@ export function paintSlope(slope: Float32Array, colors: SlopeColors, options: Pa
   return out;
 }
 
-/** De una tesela Terrarium (PNG) a la tesela pintada (PNG). */
-export async function slopeTile(png: ArrayBuffer, z: number, x: number, y: number, colors: SlopeColors, minElevation = 0, lee: number[] = [], leeUsual: number[] = []): Promise<ArrayBuffer> {
+/** Altura de cada píxel de una tesela Terrarium (PNG). */
+export async function decodeTerrarium(png: ArrayBuffer): Promise<Float32Array> {
   const bitmap = await createImageBitmap(new Blob([png]));
   const canvas = new OffscreenCanvas(SLOPE_TILE, SLOPE_TILE);
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
@@ -143,9 +145,133 @@ export async function slopeTile(png: ArrayBuffer, z: number, x: number, y: numbe
   const src = ctx.getImageData(0, 0, SLOPE_TILE, SLOPE_TILE).data;
   const elev = new Float32Array(SLOPE_TILE * SLOPE_TILE);
   for (let p = 0; p < elev.length; p++) elev[p] = terrarium(src[p * 4]!, src[p * 4 + 1]!, src[p * 4 + 2]!);
-  const aspect = lee.length > 0 || leeUsual.length > 0 ? new Float32Array(elev.length) : undefined;
-  const slope = slopeDegrees(elev, z, y, SLOPE_TILE, aspect);
-  const painted = paintSlope(slope, colors, { elev, minElevation, aspect, lee, leeUsual, originX: x * SLOPE_TILE, originY: y * SLOPE_TILE, size: SLOPE_TILE });
-  ctx.putImageData(new ImageData(painted as Uint8ClampedArray<ArrayBuffer>, SLOPE_TILE, SLOPE_TILE), 0, 0);
+  return elev;
+}
+
+/** Pesos de Catmull-Rom para los 4 vecinos de un punto a `t` (0..1) del segundo. */
+function catmullRom(t: number, w: Float32Array, o: number) {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  w[o] = (-t3 + 2 * t2 - t) / 2;
+  w[o + 1] = (3 * t3 - 5 * t2 + 2) / 2;
+  w[o + 2] = (-3 * t3 + 4 * t2 + t) / 2;
+  w[o + 3] = (t3 - t2) / 2;
+}
+
+/**
+ * Altura de una tesela de zoom mayor que el de la elevación, interpolada
+ * (bicúbica) de la tesela de menor zoom: la superficie queda suave, sin
+ * escalones, y la pendiente cambia de a poco en lugar de en cuadrados.
+ * `sample(gx, gy)` da la altura de un píxel de la elevación (en píxeles
+ * globales de su zoom); `originX/Y` es dónde empieza la tesela en esos píxeles
+ * y `scale` cuántos píxeles de la tesela caben en uno de la elevación.
+ * Devuelve (size + 2·pad)² alturas, con `pad` de margen alrededor.
+ */
+export function upsampleElevation(sample: (gx: number, gy: number) => number, originX: number, originY: number, scale: number, size = SLOPE_TILE, pad = 1): Float32Array {
+  const n = size + 2 * pad;
+  const base = new Int32Array(n);
+  const w = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) {
+    const s = (i - pad + 0.5) / scale - 0.5;
+    const f = Math.floor(s);
+    base[i] = f;
+    catmullRom(s - f, w, i * 4);
+  }
+  const out = new Float32Array(n * n);
+  for (let py = 0; py < n; py++) {
+    const gy = originY + base[py]! - 1;
+    for (let px = 0; px < n; px++) {
+      const gx = originX + base[px]! - 1;
+      let v = 0;
+      for (let j = 0; j < 4; j++) {
+        const wy = w[py * 4 + j]!;
+        let row = 0;
+        for (let i = 0; i < 4; i++) row += w[px * 4 + i]! * sample(gx + i, gy + j);
+        v += wy * row;
+      }
+      out[py * n + px] = v;
+    }
+  }
+  return out;
+}
+
+export interface SlopeStyle {
+  colors: SlopeColors;
+  minElevation?: number;
+  lee?: number[];
+  leeUsual?: number[];
+}
+
+/** Pinta una tesela a partir de su altura (con `pad` de margen) y la devuelve como PNG. */
+export async function paintSlopeTile(elev: Float32Array, z: number, x: number, y: number, style: SlopeStyle, pad = 0): Promise<ArrayBuffer> {
+  const { colors, minElevation = 0, lee = [], leeUsual = [] } = style;
+  const size = SLOPE_TILE;
+  const aspect = lee.length > 0 || leeUsual.length > 0 ? new Float32Array(size * size) : undefined;
+  const slope = slopeDegrees(elev, z, y, size, aspect, pad);
+  let inner = elev;
+  if (pad > 0) {
+    const n = size + 2 * pad;
+    inner = new Float32Array(size * size);
+    for (let py = 0; py < size; py++) inner.set(elev.subarray((py + pad) * n + pad, (py + pad) * n + pad + size), py * size);
+  }
+  const painted = paintSlope(slope, colors, { elev: inner, minElevation, aspect, lee, leeUsual, originX: x * size, originY: y * size, size });
+  const canvas = new OffscreenCanvas(size, size);
+  canvas.getContext('2d')!.putImageData(new ImageData(painted as Uint8ClampedArray<ArrayBuffer>, size, size), 0, 0);
   return (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
+}
+
+/** De una tesela Terrarium (PNG) a la tesela pintada (PNG), en el mismo zoom. */
+export async function slopeTile(png: ArrayBuffer, z: number, x: number, y: number, colors: SlopeColors, minElevation = 0, lee: number[] = [], leeUsual: number[] = []): Promise<ArrayBuffer> {
+  return paintSlopeTile(await decodeTerrarium(png), z, x, y, { colors, minElevation, lee, leeUsual });
+}
+
+/**
+ * Altura de una tesela de zoom `z` mayor que el de la elevación (`demZoom`),
+ * interpolada de la tesela que la contiene. Si la tesela toca un borde, usa
+ * también las vecinas (para que no se noten las costuras); si alguna vecina
+ * falta, repite el borde. `null` si falta la tesela que la contiene.
+ */
+export async function overzoomElevation(
+  z: number,
+  x: number,
+  y: number,
+  demZoom: number,
+  load: (x: number, y: number) => Promise<Float32Array | null>,
+  pad = 1,
+  size = SLOPE_TILE,
+): Promise<Float32Array | null> {
+  const k = 2 ** (z - demZoom);
+  const cx = Math.floor(x / k);
+  const cy = Math.floor(y / k);
+  const originX = (x * size) / k;
+  const originY = (y * size) / k;
+  // Píxeles de la elevación que hacen falta: los de la tesela, el margen y los 2 vecinos de la interpolación.
+  const lo = Math.floor((0.5 - pad) / k - 0.5) - 1;
+  const hi = Math.floor((size + pad - 0.5) / k - 0.5) + 2;
+  const n = 2 ** demZoom;
+  const wanted = new Map<string, [number, number]>();
+  for (let ty = Math.floor((originY + lo) / size); ty <= Math.floor((originY + hi) / size); ty++) {
+    for (let tx = Math.floor((originX + lo) / size); tx <= Math.floor((originX + hi) / size); tx++) {
+      if (ty >= 0 && ty < n) wanted.set(`${tx},${ty}`, [tx, ty]);
+    }
+  }
+  const tiles = new Map<string, Float32Array>();
+  await Promise.all(
+    [...wanted].map(async ([key, [tx, ty]]) => {
+      const t = await load(((tx % n) + n) % n, ty).catch(() => null);
+      if (t) tiles.set(key, t);
+    }),
+  );
+  const center = tiles.get(`${cx},${cy}`);
+  if (!center) return null;
+  const sample = (gx: number, gy: number) => {
+    const tx = Math.floor(gx / size);
+    const ty = Math.floor(gy / size);
+    const t = tiles.get(`${tx},${ty}`);
+    if (t) return t[(gy - ty * size) * size + (gx - tx * size)]!;
+    const px = Math.min(size - 1, Math.max(0, gx - cx * size));
+    const py = Math.min(size - 1, Math.max(0, gy - cy * size));
+    return center[py * size + px]!;
+  };
+  return upsampleElevation(sample, originX, originY, k, size, pad);
 }

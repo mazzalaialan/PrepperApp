@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { metersPerPixel, paintSlope, slopeDegrees, terrarium } from './slope';
+import { metersPerPixel, overzoomElevation, paintSlope, slopeDegrees, SLOPE_TILE, terrarium, upsampleElevation } from './slope';
 
 /** Plano que sube hacia el este con una pendiente dada (grados), en una tesela de `size`. */
 function plane(deg: number, z: number, y: number, size: number): Float32Array {
@@ -91,5 +91,53 @@ describe('pendiente para la capa de avalanchas', () => {
     const onlyUsual = paintSlope(slope, colors, { aspect: east, leeUsual: [90], size });
     expect(Array.from({ length: size * size }, (_, p) => onlyUsual[p * 4 + 2] === 255).filter(Boolean).length).toBeGreaterThan(0);
     expect(Array.from({ length: size * size }, (_, p) => onlyUsual[p * 4 + 3] === 255 && onlyUsual[p * 4 + 2] === 0).filter(Boolean).length).toBe(0);
+  });
+});
+
+describe('pendiente con zoom mayor que el de la elevación', () => {
+  // Elevación de zoom 12 sobre Bariloche; la tesela de pendiente se pide en zoom 15.
+  const demZoom = 12;
+  const z = 15;
+  const deg = 35;
+  const ty = 2561;
+  // Plano que sube hacia el este, en píxeles globales de zoom 12 (misma latitud, metros por píxel casi iguales).
+  const m12 = metersPerPixel(demZoom, ty, 128);
+  const rise = m12 * Math.tan((deg * Math.PI) / 180);
+  const planeTile = (tx: number, tyy: number) => {
+    const t = new Float32Array(SLOPE_TILE * SLOPE_TILE);
+    for (let py = 0; py < SLOPE_TILE; py++) for (let px = 0; px < SLOPE_TILE; px++) t[py * SLOPE_TILE + px] = 1000 + (tx * SLOPE_TILE + px) * rise + (tyy - ty) * 0;
+    return t;
+  };
+
+  it('la interpolación respeta un plano: sin escalones', () => {
+    const up = upsampleElevation((gx) => gx * 2, 10, 10, 8, 16, 1);
+    const n = 18;
+    const steps = new Set<string>();
+    for (let px = 1; px < n; px++) steps.add((up[5 * n + px]! - up[5 * n + px - 1]!).toFixed(6));
+    expect([...steps]).toEqual(['0.250000']);
+  });
+
+  it('mide la pendiente a la escala del zoom pedido', async () => {
+    const x = 1234 * 8 + 3;
+    const y = ty * 8 + 4;
+    const elev = await overzoomElevation(z, x, y, demZoom, async (tx, tyy) => planeTile(tx, tyy), 1);
+    expect(elev).not.toBeNull();
+    const s = slopeDegrees(elev!, z, y, SLOPE_TILE, undefined, 1);
+    for (const p of [0, 128 * SLOPE_TILE + 128, SLOPE_TILE * SLOPE_TILE - 1]) expect(s[p]!).toBeCloseTo(deg, 0);
+  });
+
+  it('en el borde de la tesela de elevación usa la vecina: no queda costura', async () => {
+    // La última tesela de zoom 15 dentro de la de zoom 12: su borde derecho es el borde de la tesela de elevación.
+    const x = 1234 * 8 + 7;
+    const y = ty * 8 + 2;
+    const asked: string[] = [];
+    const elev = await overzoomElevation(z, x, y, demZoom, async (tx, tyy) => (asked.push(`${tx},${tyy}`), planeTile(tx, tyy)), 1);
+    expect(asked).toContain('1235,2561');
+    const s = slopeDegrees(elev!, z, y, SLOPE_TILE, undefined, 1);
+    expect(s[100 * SLOPE_TILE + SLOPE_TILE - 1]!).toBeCloseTo(deg, 0);
+  });
+
+  it('sin la tesela que la contiene no hay pendiente', async () => {
+    expect(await overzoomElevation(z, 1234 * 8, ty * 8, demZoom, async () => null)).toBeNull();
   });
 });

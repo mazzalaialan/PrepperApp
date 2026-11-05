@@ -55,6 +55,9 @@ export interface MapLayersOn {
 }
 
 /** Teselas de la capa de pendiente para una línea de nieve y un sotavento. */
+/** La pendiente se pinta hasta el zoom máximo del mapa: más allá de la elevación (12) se interpola (slope.ts). */
+export const SLOPE_MAX_ZOOM = 17;
+
 export const slopeTiles = (min = 0, lee: number[] = [], usual: number[] = []) => [
   `vkslope://{z}/{x}/{y}?min=${Math.round(min)}${lee.length ? `&lee=${lee.join(',')}` : ''}${usual.length ? `&usual=${usual.join(',')}` : ''}`,
 ];
@@ -93,7 +96,7 @@ export function buildStyle(c: MapColors, contoursUrl: string, layers: MapLayersO
       terrain: { type: 'raster-dem', tiles: ['vkdem://{z}/{x}/{y}'], tileSize: 256, encoding: 'terrarium', maxzoom: DEM_MAX_ZOOM },
       contours: { type: 'vector', tiles: [contoursUrl], maxzoom: 15 },
       // Pendiente pintada con los colores del inclinómetro (ver slope.ts y protocols.ts).
-      slope: { type: 'raster', tiles: slopeTiles(layers.slopeMin, layers.slopeLee, layers.slopeLeeUsual), tileSize: 256, maxzoom: DEM_MAX_ZOOM },
+      slope: { type: 'raster', tiles: slopeTiles(layers.slopeMin, layers.slopeLee, layers.slopeLeeUsual), tileSize: 256, maxzoom: SLOPE_MAX_ZOOM },
     },
     ...(layers.terrain3d ? { terrain: TERRAIN } : {}),
     layers: [
