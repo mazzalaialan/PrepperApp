@@ -17,7 +17,7 @@ type Side = 'E' | 'W';
 type Direction = 'm2t' | 't2m';
 
 const num = (s: string) => {
-  const n = Number(s.trim().replace(',', '.'));
+  const n = Number(s.trim().replace(',', '.').replace('−', '-'));
   return s.trim() !== '' && Number.isFinite(n) ? n : null;
 };
 
@@ -61,6 +61,15 @@ export function DeclinationPage() {
   const nf = (digits: number) => new Intl.NumberFormat(i18n.language, { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const sideOf = (v: number): Side => (v < 0 ? 'W' : 'E');
   const sideName = (s: Side) => t(`declination.side.${s}`);
+  /** En los botones, con el signo de la convención (Este +, Oeste −): hay mapas que solo traen el signo. */
+  const sideButton = (s: Side) => `${sideName(s)} (${s === 'E' ? '+' : '−'})`;
+  /** Si se escribe el número con signo, se elige el lado solo. */
+  const signedInput = (value: string, setValue: (v: string) => void, setSide: (s: Side) => void) => {
+    const v = value.trim();
+    if (/^[-−]/.test(v)) setSide('W');
+    else if (v.startsWith('+')) setSide('E');
+    setValue(value);
+  };
   /** "6,5° Oeste (6° 30′)". */
   const angle = (v: number) => {
     const [d, m] = degMin(v);
@@ -180,14 +189,14 @@ export function DeclinationPage() {
         <div className="grid-2">
           <div className="field">
             <label htmlFor="decl-map-decl">{t('declination.mapDecl')}</label>
-            <input id="decl-map-decl" className="input" inputMode="decimal" value={mapDecl} onChange={(e) => setMapDecl(e.target.value)} placeholder="5,5" />
+            <input id="decl-map-decl" className="input" inputMode="decimal" value={mapDecl} onChange={(e) => signedInput(e.target.value, setMapDecl, setMapSide)} placeholder="5,5" />
           </div>
           <Segmented<Side>
             label={t('declination.towards')}
             value={mapSide}
             options={[
-              { value: 'W', label: sideName('W') },
-              { value: 'E', label: sideName('E') },
+              { value: 'W', label: sideButton('W') },
+              { value: 'E', label: sideButton('E') },
             ]}
             onChange={setMapSide}
           />
@@ -195,14 +204,14 @@ export function DeclinationPage() {
         <div className="grid-2">
           <div className="field">
             <label htmlFor="decl-map-annual">{t('declination.mapAnnual')}</label>
-            <input id="decl-map-annual" className="input" inputMode="decimal" value={mapAnnual} onChange={(e) => setMapAnnual(e.target.value)} placeholder="8" />
+            <input id="decl-map-annual" className="input" inputMode="decimal" value={mapAnnual} onChange={(e) => signedInput(e.target.value, setMapAnnual, setMapAnnualSide)} placeholder="8" />
           </div>
           <Segmented<Side>
             label={t('declination.towards')}
             value={mapAnnualSide}
             options={[
-              { value: 'W', label: sideName('W') },
-              { value: 'E', label: sideName('E') },
+              { value: 'W', label: sideButton('W') },
+              { value: 'E', label: sideButton('E') },
             ]}
             onChange={setMapAnnualSide}
           />
@@ -236,6 +245,8 @@ export function DeclinationPage() {
             <br />
             {t('declination.cheat.rule.t2m')}
           </dd>
+          <dt>{t('declination.cheat.gmer.term')}</dt>
+          <dd data-testid="decl-gmer">{t('declination.cheat.gmer.text')}</dd>
           <dt>{t('declination.cheat.example.term')}</dt>
           <dd>
             {t(example < 0 ? 'declination.cheat.example.textW' : 'declination.cheat.example.textE', {

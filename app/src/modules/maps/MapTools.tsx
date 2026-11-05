@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Crosshair, MapPinPlus, Ruler, Trash2, Undo2 } from 'lucide-react';
+import { Segmented } from '@/ui/Segmented';
 import { cardinalOf, type LatLon } from '@/core/geo/geo';
 import { declinationAt } from '@/core/sensors/heading';
 import { useSettings } from '@/core/settings/settings';
@@ -10,6 +11,8 @@ import type { NewWaypointDraft } from '@/modules/waypoints/WaypointEditPage';
 import { summarizePath, targetInfo, type PathSummary, type TargetInfo } from './measure';
 
 export type MapTool = 'measure' | 'target';
+/** Desde dónde se mide la dirección: tu ubicación o un punto que marcás en el mapa. */
+type FromMode = 'here' | 'point';
 
 interface Origin extends LatLon {
   alt?: number | null;
@@ -46,9 +49,18 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
   const [target, setTarget] = useState<LatLon | null>(null);
   const [info, setInfo] = useState<TargetInfo | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fromMode, setFromMode] = useState<FromMode>('here');
 
-  // Desde dónde: el GPS si hay; si no, el primer punto que se toca.
-  const from: Origin | null = fix ?? origin;
+  // Desde dónde: tu ubicación (si hay) o el primer punto que se toca.
+  const usePoint = fromMode === 'point' || !fix;
+  const from: Origin | null = usePoint ? origin : fix;
+
+  function chooseFrom(mode: FromMode) {
+    setFromMode(mode);
+    setOrigin(null);
+    setTarget(null);
+    setInfo(null);
+  }
 
   function setTool(next: MapTool | null) {
     setToolState(next);
@@ -62,7 +74,7 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
   function onMapClick(p: LatLon) {
     if (tool === 'measure') setPoints((list) => [...list, p]);
     else if (tool === 'target') {
-      if (!fix && !origin) setOrigin(p);
+      if (usePoint && !origin) setOrigin(p);
       else setTarget(p);
     }
   }
@@ -111,7 +123,7 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
 
   const measureLine = useMemo(() => points.map((p) => [p.lon, p.lat] as [number, number]), [points]);
   const targetLine = useMemo(
-    () => (from && target ? { from: [from.lon, from.lat] as [number, number], to: [target.lon, target.lat] as [number, number] } : null),
+    () => (from && (target || usePoint) ? { from: [from.lon, from.lat] as [number, number], to: target ? ([target.lon, target.lat] as [number, number]) : null } : null),
     [fromKey, target],
   );
 
@@ -177,8 +189,19 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
     const decl = target ? declinationAt(target.lat, target.lon) : 0;
     panel = (
       <section className="card stack" data-testid="target-panel" aria-live="polite">
-        <p className="hint" style={{ margin: 0 }}>
-          {fix ? t('mapTools.targetHintGps') : origin ? t('mapTools.targetHintTarget') : t('mapTools.targetHintOrigin')}
+        {fix && (
+          <Segmented<FromMode>
+            label={t('mapTools.from')}
+            value={fromMode}
+            options={[
+              { value: 'here', label: t('mapTools.fromHere') },
+              { value: 'point', label: t('mapTools.fromMapPoint') },
+            ]}
+            onChange={chooseFrom}
+          />
+        )}
+        <p className="hint" style={{ margin: 0 }} data-testid="target-hint">
+          {!usePoint ? t('mapTools.targetHintGps') : origin ? t('mapTools.targetHintTarget') : fix ? t('mapTools.targetHintPoint') : t('mapTools.targetHintOrigin')}
         </p>
         {from && target && info && (
           <>
@@ -189,7 +212,7 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
               {t('mapTools.magnetic', { value: bearingText(((info.bearing - decl) % 360 + 360) % 360) })}
             </p>
             <p className="hint" style={{ margin: 0 }}>
-              {fix ? t('mapTools.fromGps') : t('mapTools.fromPoint')}
+              {usePoint ? t('mapTools.fromPoint') : t('mapTools.fromGps')}
             </p>
             {info.targetAlt !== null ? (
               <p style={{ margin: 0 }} data-testid="target-alt">
@@ -214,6 +237,11 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
               >
                 <MapPinPlus size={18} /> {t('mapTools.saveWaypoint')}
               </Link>
+              {usePoint && (
+                <button className="btn" type="button" onClick={() => chooseFrom(fromMode)}>
+                  <Undo2 size={18} /> {t('mapTools.newOrigin')}
+                </button>
+              )}
               <button className="btn" type="button" onClick={() => setTool('target')}>
                 <Trash2 size={18} /> {t('mapTools.clear')}
               </button>

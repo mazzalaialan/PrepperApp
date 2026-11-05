@@ -374,6 +374,22 @@ test('herramientas del mapa: medir distancia y recorrido, y dirección a un punt
   await expect(page.getByTestId('target-bearing')).toHaveText(/^(89|90|91)° E · \d+,\d+ km$/);
   await expect(page.getByTestId('target-magnetic')).toHaveText(/^En la brújula \(magnético\): (99|100|101)° E$/);
   await expect(page.getByTestId('target-alt')).toContainText('Altura del punto ≈ 0 m');
+  const fromGps = await page.getByTestId('target-bearing').textContent();
+
+  // Desde otro punto del mapa aunque haya ubicación: primero el origen, después el punto.
+  await page.getByRole('button', { name: 'Un punto del mapa' }).click();
+  await expect(page.getByTestId('target-hint')).toContainText('Tocá primero desde dónde querés medir');
+  await canvas.click({ position: { x: cx - 200, y: cy } });
+  await expect(page.getByTestId('target-hint')).toContainText('Ahora tocá el punto');
+  await canvas.click({ position: { x: cx + 200, y: cy } });
+  await expect(page.getByTestId('target-bearing')).toHaveText(/^(89|90|91)° E · \d+,\d+ km$/);
+  await expect(page.getByTestId('target-panel')).toContainText('Desde el primer punto que tocaste');
+  // El doble de lejos que desde el GPS (en el centro).
+  const km = (txt: string | null) => Number(txt!.split('·')[1]!.replace(' km', '').replace(',', '.'));
+  expect(km(await page.getByTestId('target-bearing').textContent())).toBeCloseTo(2 * km(fromGps), 0);
+  await page.getByRole('button', { name: 'Mi ubicación', exact: true }).click();
+  await canvas.click({ position: { x: cx + 200, y: cy } });
+  await expect(page.getByTestId('target-panel')).toContainText('Desde tu ubicación (GPS)');
   await page.getByRole('link', { name: 'Guardar como waypoint' }).click();
   await expect(page.getByLabel('Coordenadas', { exact: true })).toHaveValue(/^-34\.\d+, -58\.\d+$/);
 });

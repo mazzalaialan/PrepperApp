@@ -64,7 +64,7 @@ interface Props {
   /** Puntos de la medición, en [lon, lat]. */
   measure?: [number, number][];
   /** Línea desde el origen hasta el punto marcado, en [lon, lat]. */
-  target?: { from: [number, number]; to: [number, number] } | null;
+  target?: { from: [number, number]; to: [number, number] | null } | null;
   onMapClick?: (p: { lat: number; lon: number }) => void;
 }
 
@@ -134,8 +134,12 @@ function data(p: Props) {
       ? {
           type: 'FeatureCollection',
           features: [
-            { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [p.target.from, p.target.to] } },
-            { type: 'Feature', properties: { end: 'to' }, geometry: { type: 'Point', coordinates: p.target.to } },
+            ...(p.target.to
+              ? [
+                  { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [p.target.from, p.target.to] } },
+                  { type: 'Feature', properties: { end: 'to' }, geometry: { type: 'Point', coordinates: p.target.to } },
+                ]
+              : []),
             { type: 'Feature', properties: { end: 'from' }, geometry: { type: 'Point', coordinates: p.target.from } },
           ],
         }
@@ -205,6 +209,13 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
     paint: { 'text-color': c.text, 'text-halo-color': c.surface, 'text-halo-width': 2 },
   });
   map.addLayer({ id: 'target-line', type: 'line', source: 'target-line', filter: ['==', ['geometry-type'], 'LineString'], paint: { 'line-color': c.danger, 'line-width': 2.5, 'line-dasharray': [3, 2] } });
+  map.addLayer({
+    id: 'target-from',
+    type: 'circle',
+    source: 'target-line',
+    filter: ['==', ['get', 'end'], 'from'],
+    paint: { 'circle-radius': 6, 'circle-color': c.bg, 'circle-stroke-color': c.danger, 'circle-stroke-width': 3, 'circle-pitch-alignment': 'viewport' },
+  });
   map.addLayer({
     id: 'target-point',
     type: 'circle',

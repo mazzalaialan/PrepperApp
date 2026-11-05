@@ -634,6 +634,11 @@
     "below": "({{diff}} más bajo que vos).",
     "lookUp": "Para verlo, mirá {{deg}}° hacia arriba.",
     "lookDown": "Para verlo, mirá {{deg}}° hacia abajo.",
+    "from": "Desde",
+    "fromHere": "Mi ubicación",
+    "fromMapPoint": "Un punto del mapa",
+    "targetHintPoint": "Tocá primero desde dónde querés medir (por ejemplo, un refugio) y después el punto.",
+    "newOrigin": "Elegir otro origen",
     "saveWaypoint": "Guardar como waypoint"
   },
   "maps": {
@@ -1124,7 +1129,7 @@
     "resultM2t": "{{from}}° magnético {{op}} {{decl}}° = {{to}}° verdadero",
     "resultT2m": "{{from}}° verdadero {{op}} {{decl}}° = {{to}}° magnético",
     "mapTitle": "Mapa de papel viejo",
-    "mapIntro": "El margen del mapa trae la declinación del año en que se hizo y cuánto cambia por año. Cargalos y te dice cuánto es hoy.",
+    "mapIntro": "El margen del mapa trae la declinación del año en que se hizo y cuánto cambia por año. Cargalos y te dice cuánto es hoy. Si el mapa trae solo el signo: + es Este y − es Oeste (podés escribirlo con el número).",
     "mapYear": "Año de la declinación del mapa",
     "mapDecl": "Declinación del mapa (grados)",
     "mapAnnual": "Variación anual (minutos ′)",
@@ -1148,6 +1153,7 @@
         "m2t": "De la brújula al mapa (magnético → verdadero): Este se suma, Oeste se resta.",
         "t2m": "Del mapa a la brújula (verdadero → magnético): Este se resta, Oeste se suma."
       },
+      "gmer": {"term": "Regla nemotécnica: GMER (\"gamer\")", "text": "De Geográfico a Magnético, el Este Resta (y el Oeste suma). Para el otro lado se invierte: de Magnético a Geográfico, el Este suma y el Oeste resta."},
       "example": {
         "term": "Ejemplo",
         "here": "en el lugar elegido",

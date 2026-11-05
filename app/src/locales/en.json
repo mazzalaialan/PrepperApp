@@ -634,6 +634,11 @@
     "below": "({{diff}} lower than you).",
     "lookUp": "To see it, look {{deg}}° up.",
     "lookDown": "To see it, look {{deg}}° down.",
+    "from": "From",
+    "fromHere": "My location",
+    "fromMapPoint": "A point on the map",
+    "targetHintPoint": "First tap where you want to measure from (for example, a hut), then the point.",
+    "newOrigin": "Choose another origin",
     "saveWaypoint": "Save as waypoint"
   },
   "maps": {
@@ -1124,7 +1129,7 @@
     "resultM2t": "{{from}}° magnetic {{op}} {{decl}}° = {{to}}° true",
     "resultT2m": "{{from}}° true {{op}} {{decl}}° = {{to}}° magnetic",
     "mapTitle": "Old paper map",
-    "mapIntro": "The map margin gives the declination for the year it was made and how much it changes per year. Enter them to get today's value.",
+    "mapIntro": "The map margin gives the declination for the year it was made and how much it changes per year. Enter them to get today's value. If the map only shows a sign: + is East and − is West (you can type it with the number).",
     "mapYear": "Year of the map's declination",
     "mapDecl": "Map declination (degrees)",
     "mapAnnual": "Annual change (minutes ′)",
@@ -1148,6 +1153,7 @@
         "m2t": "Compass to map (magnetic → true): add East, subtract West.",
         "t2m": "Map to compass (true → magnetic): subtract East, add West."
       },
+      "gmer": {"term": "Mnemonic: GMER (\"gamer\", from Spanish)", "text": "From Geographic (true) to Magnetic, East is subtracted (Este Resta), and West is added. The other way round it flips: from magnetic to true, add East and subtract West."},
       "example": {
         "term": "Example",
         "here": "at the chosen place",
