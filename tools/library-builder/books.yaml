@@ -6,3 +6,12 @@
 # "Supervivencia General/464109247-1-Manual-de-Supervivencia-pdf.pdf":
 #   title: Manual de supervivencia
 #   category: Supervivencia General
+
+# The Ashley Book of Knots: hay dos copias; se usa la que ya trae el texto reconocido.
+"Cabuyeria/the ashley book of knots.pdf":
+  exclude: true
+"Cabuyeria/The_Ashley_Book_of_Knots-ABOK-Clifford_Ashley.pdf":
+  title: The Ashley Book of Knots
+  author: Clifford W. Ashley
+  year: 1944
+  lang: en
