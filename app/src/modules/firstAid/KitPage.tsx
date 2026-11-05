@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { Item, Location, Lot } from '@/core/model/types';
 import { AlertBadge } from '@/modules/inventory/components/AlertBadge';
@@ -64,9 +64,6 @@ function KitDetail({ kit }: { kit: Location }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid/kits" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <div style={{ flex: 1 }}>
           <h1 className="page-title" style={{ marginBottom: 0 }}>{kit.name}</h1>
           <p className="hint" style={{ margin: 0 }}>

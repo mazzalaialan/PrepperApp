@@ -76,9 +76,6 @@ function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to={backTo} aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.title : t('documents.new')}</h1>
       </div>
 

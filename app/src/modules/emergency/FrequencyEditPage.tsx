@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Crosshair, Trash2 } from 'lucide-react';
+import { Crosshair, Trash2 } from 'lucide-react';
 import { formatDms } from '@/core/geo/geo';
 import { currentPosition } from '@/core/geo/useGeolocation';
 import type { EmergencyContact } from '@/core/model/types';
@@ -62,9 +62,6 @@ function FrequencyForm({ stored }: { stored: EmergencyContact | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid/radio" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('radio.newFrequency')}</h1>
       </div>
       <form className="card stack" onSubmit={handleSubmit}>

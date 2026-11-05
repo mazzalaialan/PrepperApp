@@ -1,22 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import {
-  BookOpen,
-  CloudSun,
-  Compass,
-  Ellipsis,
-  FileText,
-  House,
-  Lock,
-  Package,
-  Settings,
-  Siren,
-  Sprout,
-} from 'lucide-react';
+import { BookOpen, Cable, CloudSun, Compass, Ellipsis, FileText, House, Lock, Package, Settings, Siren, Sprout } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
 import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
+import { BackButton } from '@/ui/BackButton';
 import { Dialog } from '@/ui/Dialog';
 import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
 import { RainNotices } from '@/modules/weather/RainNotices';
@@ -39,6 +28,7 @@ const NAV = [
 
 const MORE = [
   { to: '/inventory', key: 'inventory', icon: Package },
+  { to: '/knots', key: 'knots', icon: Cable },
   { to: '/garden', key: 'garden', icon: Sprout },
   { to: '/library', key: 'library', icon: BookOpen },
 ] as const;
@@ -99,6 +89,7 @@ export function Shell() {
       )}
       <div className="shell-main">
         <header className="topbar">
+          <BackButton />
           <BrandMark />
           <h1>{t('app.name')}</h1>
           <Link className="icon-btn" to="/settings" aria-label={t('nav.settings')} title={t('nav.settings')}>

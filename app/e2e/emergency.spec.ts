@@ -87,7 +87,7 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await context.setOffline(false);
 
   // La comisaría guardada va en "Servicios de emergencia cercanos", antes de Mis contactos; uno cargado a mano, en Mis contactos.
-  await page.getByRole('link', { name: 'Volver' }).click();
+  await page.getByTestId('back').click();
   const services = page.getByTestId('my-services');
   await expect(services).toContainText('Comisaría 28');
   const order = await page.locator('h2').allTextContents();

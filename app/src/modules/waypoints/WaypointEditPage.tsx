@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Copy, Crosshair, Navigation, Trash2 } from 'lucide-react';
+import { Copy, Crosshair, Navigation, Trash2 } from 'lucide-react';
 import { useCapability } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, formatDecimal, formatDms, parseCoordinates } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
@@ -114,9 +114,6 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/orientation/waypoints" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('waypoints.new')}</h1>
       </div>
 

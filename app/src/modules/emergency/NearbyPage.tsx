@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, Save } from 'lucide-react';
+import { Check, Save } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { emptyContact } from './ContactEditPage';
@@ -106,9 +105,6 @@ export function NearbyPage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid/contacts" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('emergency.nearbyTitle')}</h1>
       </div>
       {picker}

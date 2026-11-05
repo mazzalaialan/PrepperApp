@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { ContactKind, EmergencyContact } from '@/core/model/types';
 import { InsurancePhonesEditor } from '@/modules/firstAid/InsurancePhonesEditor';
@@ -60,9 +60,6 @@ function ContactForm({ stored }: { stored: EmergencyContact | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid/contacts" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('emergency.newContact')}</h1>
       </div>
       <form className="card stack" onSubmit={handleSubmit}>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MapPinPlus, MessageSquare, Phone, RefreshCw, Share2, Square, Volume2 } from 'lucide-react';
+import { MapPinPlus, MessageSquare, Phone, RefreshCw, Share2, Square, Volume2 } from 'lucide-react';
 import { bearingDeg, cardinalOf, distanceMeters, formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useSettings } from '@/core/settings/settings';
@@ -142,9 +142,6 @@ export function MyLocationPage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('modules.myLocation.title')}</h1>
       </div>
       <p className="hint" style={{ margin: 0 }}>{t('location.intro')}</p>

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Circle, Footprints, Route, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Circle, Footprints, Route, Trash2, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpxError } from './gpx';
@@ -41,9 +41,6 @@ export function TracksPage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/orientation" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('modules.tracks.title')}</h1>
         <button className="btn btn-primary" type="button" onClick={() => file.current?.click()}>
           <Upload size={18} /> {t('tracks.import')}

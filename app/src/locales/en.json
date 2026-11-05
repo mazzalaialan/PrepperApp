@@ -23,7 +23,7 @@
     "documents": "Documents",
     "orientation": "Navigate",
     "weather": "Weather",
-    "garden": "Garden",
+    "knots": "Knots", "garden": "Garden",
     "library": "Library",
     "more": "More",
     "settings": "Settings"
@@ -34,7 +34,7 @@
     "documents": "Documents",
     "orientation": "Orientation",
     "weather": "Weather",
-    "garden": "Garden & crops",
+    "knots": "Knots and ropes", "garden": "Garden & crops",
     "library": "Library"
   },
   "home": {
@@ -45,6 +45,9 @@
     "seeAll": "See all"
   },
   "modules": {
+    "knotGuide": {"title": "Knot guide", "desc": "By name, by use (rappel, rescue, camp…) or by what you need to do"},
+    "ropes": {"title": "Ropes", "desc": "Types, strength and care"},
+    "knotGlossary": {"title": "Glossary", "desc": "Working end, standing part, bight, loop…"},
     "inventory": { "title": "Items", "desc": "Stock, batches and expiry dates" },
     "locations": { "title": "Locations", "desc": "Where everything is stored" },
     "alerts": { "title": "Alerts", "desc": "Expiring items and worn-out filters" },
@@ -1919,5 +1922,87 @@
     "markHere": "I'm here: mark it with GPS",
     "locating": "Getting location…",
     "gpsError": "Couldn't read the GPS. Choose a waypoint from the list."
+  },
+  "knots": {
+    "wizard": "What do I need to do?",
+    "search": "Search a knot",
+    "searchHint": "Name, other name or what it is for",
+    "byUse": "By use",
+    "byType": "By type",
+    "byProp": "That…",
+    "moreFilters": "More filters",
+    "noResults": "No knots match those filters.",
+    "progress": "You learned {{learned}} of {{total}} knots.",
+    "uses": {
+      "rappel": "Rappelling and climbing",
+      "rescue": "Rescue",
+      "camp": "Camp and shelter",
+      "cargo": "Loads and transport",
+      "nautical": "Boating",
+      "fishing": "Fishing",
+      "firstAid": "First aid",
+      "survival": "Survival",
+      "everyday": "Everyday"
+    },
+    "types": {
+      "loop": "Loops",
+      "bend": "Bends (joins)",
+      "hitch": "Hitches",
+      "friction": "Friction hitches",
+      "belay": "Belay and lock-off",
+      "stopper": "Stoppers",
+      "shortening": "Shortenings",
+      "lashing": "Lashings"
+    },
+    "props": {
+      "holdsLoad": "hold a load",
+      "easyUntie": "untie easily",
+      "wet": "work wet",
+      "oneHand": "one-handed"
+    },
+    "safety": "Rappelling, climbing and rescue: practice first with an instructor in a safe place. This guide does not replace training.",
+    "alsoCalled": "Also: {{list}}",
+    "practice": "Practice",
+    "practiceTitle": "Practice {{name}}",
+    "markLearned": "Mark as learned",
+    "learned": "Learned",
+    "steps": "Step by step",
+    "step": "Step {{n}}",
+    "stepOf": "Step {{n}} of {{total}}",
+    "stepAlt": "Step {{n}}",
+    "imageAlt": "{{name}}: sequence",
+    "prev": "Back",
+    "next": "Next",
+    "done": "Done",
+    "voiceOn": "Read aloud",
+    "voiceOff": "Stop reading aloud",
+    "facts": "Key facts",
+    "check": "How to check it",
+    "mistakes": "Common mistakes",
+    "related": "Related knots",
+    "images": "Images",
+    "strength": "Keeps about {{pct}}% of the rope's strength.",
+    "fact": {
+      "holdsLoad": {
+        "yes": "Holds under load",
+        "no": "Not for loads"
+      },
+      "easyUntie": {
+        "yes": "Unties easily after loading",
+        "no": "Hard to untie after loading"
+      },
+      "needsBackup": {
+        "yes": "Back it up with a safety knot",
+        "no": "Needs no backup knot"
+      },
+      "wet": {
+        "yes": "Works with wet or slippery rope",
+        "no": "Can slip with wet or slippery rope"
+      },
+      "oneHand": {
+        "yes": "Can be tied one-handed",
+        "no": "Needs both hands"
+      }
+    }
   }
 }

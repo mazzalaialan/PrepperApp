@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, ScanBarcode, Star, Trash2 } from 'lucide-react';
+import { Plus, ScanBarcode, Star, Trash2 } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { newEntity } from '@/core/model/entity';
 import type { ControlType, Item, Lot } from '@/core/model/types';
@@ -113,9 +113,6 @@ function ItemForm({ stored, presetBarcode }: { stored: Item | undefined; presetB
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/inventory/items" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('items.new')}</h1>
         <button
           className="icon-btn"

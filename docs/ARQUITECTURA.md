@@ -452,6 +452,26 @@ Las publicaciones del repositorio del INTA tienen licencia CC BY-NC-SA 4.0: de e
 
 **Compartir** (§8.3): sección propia "Huerta" (canteros y siembras); se reconoce lo mismo por id y no se pisa lo del otro.
 
+### 10.2 Cabuyería (definida el 05/11/2026)
+
+Sección propia en Inicio, **antes de Huerta**. Todo dentro de la app, sin conexión.
+
+**Guía de nudos** (~40 para empezar). Cada ficha: nombres (principal, alternativos y en inglés, y el número de *The Ashley Book of Knots* cuando corresponde), para qué sirve, **paso a paso con imagen**, datos clave (si aguanta bajo carga, si se desata fácil después de cargarlo, si necesita nudo de seguridad, cuánta resistencia le saca a la cuerda, si sirve con cuerda mojada o resbalosa), errores comunes y cómo revisarlo, nudos relacionados y "para leer más" en la biblioteca. Los textos son propios.
+
+**Búsqueda:** por nombre o alias (sin acentos), por **uso** (rappel y escalada, rescate, campamento y refugio, carga y transporte, náutica, pesca, primeros auxilios, supervivencia), por **tipo** (lazos, uniones, amarres, autobloqueantes, de tope, acortamientos, ataduras de palos), por propiedades ("se suelta fácil", "aguanta bajo carga", "con una mano") y un asistente "¿Qué necesito hacer?" con preguntas cortas.
+
+**Modo práctica:** pantalla completa, imagen grande, anterior y siguiente, voz para leer cada paso (como las guías de primeros auxilios). Marcar "aprendido" para ver el progreso (en los ajustes del dispositivo).
+
+**Cuerdas y glosario:** términos (chicote, firme, seno, vuelta, cote, gaza), tipos de cuerda (dinámica, estática, paracord, fibras naturales) y su cuidado. **Aviso de seguridad** en rappel, escalada y rescate: practicar con un instructor; la guía no reemplaza la formación.
+
+**Imágenes** (la app es pública: no lleva imágenes de libros con derechos):
+1. Dominio público: figuras del FM 3-05.70 (Apéndice G) y del FM 3-97.61 *Military Mountaineering* (Ejército de EE. UU.), separadas paso por paso.
+2. Licencia libre: diagramas de Wikimedia Commons (CC BY-SA o dominio público), con crédito.
+3. Dibujos propios en SVG para lo que no esté en ninguna de las dos.
+4. **Biblioteca privada del usuario:** cada ficha guarda dónde aparece el nudo en los libros (ej.: "Enciclopedia ilustrada de los nudos, pág. 87"); si el paquete privado está en el dispositivo, la ficha muestra esas imágenes y el enlace al libro. La app no las lleva: las toma de la copia del usuario.
+
+**Hecho (05/11/2026):** `modules/knots`, 36 nudos con 65 imágenes (~0,9 MB, en `public/knots/`, disponibles sin conexión): figuras de los FM separadas por paso con `tools/knot-images/extract.py`, y de Wikimedia Commons con autor y licencia en cada ficha. Búsqueda por nombre y alias sin acentos, uso, tipo y propiedades; asistente con 10 necesidades; modo práctica con voz; "aprendido" en Ajustes (`knotsLearned`). Las referencias a la biblioteca privada se suman cuando esté el visor de la Biblioteca.
+
 ---
 
 ## 11. Biblioteca
@@ -620,6 +640,8 @@ Detalle de las capas de tiempo:
 
 ## 14. Diseño e interfaz
 
+**Volver (05/11/2026):** la flecha de volver está en la barra de arriba en todas las pantallas menos Inicio (`ui/BackButton.tsx`): si se llegó navegando, vuelve a la anterior; si la pantalla se abrió directo (notificación, enlace, recarga), va a la de arriba. Las pantallas a pantalla completa (mapas, seguir un track, ir al punto, mapa estelar) tienen la suya.
+
 - **Identidad:** VikArg Prepping Tools. Paleta derivada del logo (Vegvísir sobre azul noche):
   | Token | Uso | Referencia |
   |---|---|---|
@@ -668,7 +690,7 @@ Detalle de las capas de tiempo:
 | **Mapa estelar** | Dos vistas: cielo completo (cúpula, gira con la brújula o a mano) y "apuntar al cielo" (realidad aumentada con la orientación del celular, con puntos cardinales, escala de acimut y círculos de altura; en PC se arrastra). 5.044 estrellas hasta magnitud 6, 88 constelaciones en español, Sol, Luna y planetas. Guía para encontrar el Sur (Cruz del Sur y Punteros) o el Norte (Osa Mayor y Polar) según el hemisferio, búsqueda de astros, fecha y hora, rojo nocturno. Datos de d3-celestial (BSD-3), generados con `tools/sky-data`. Vía Láctea pendiente (~150 KB simplificada) |
 | **Huerta** (hecha, 05/11/2026) | Definida en §10.1: fichas, calendario por zona del INTA, canteros en grilla de 30 cm, seguimiento con tareas y cosecha (opción de sumarla al inventario), avisos de helada y de riego. Todo en una sola fase |
 | **Servidor (cuando esté instalado)** | Avisos de lluvia con la app cerrada (última ubicación conocida y waypoints): hecho con el pronóstico de Open-Meteo; falta la lluvia observada (GOES‑19 RRQPE, radar del SMN). Detector de rayos GOES‑19 con aviso por distancia |
-| **Guía de nudos** | Nudos útiles (amarre, unión de cuerdas, lazos, rescate, carga), cada uno con dibujos paso a paso, para qué sirve y errores comunes; sin conexión. Agregada el 05/11/2026, antes de la app nativa |
+| **Cabuyería** | Definida en §10.2 (05/11/2026): sección en Inicio antes de Huerta; guía de nudos con búsqueda por nombre, uso, tipo y propiedades, paso a paso con imágenes libres, modo práctica, cuerdas y glosario. Se hace ahora, en paralelo con la conversión de la biblioteca |
 | **App nativa** | Port completo de la app a Android, y quizá iOS: GPS con la pantalla apagada y la app cerrada, instalación sin internet (§13.1) |
 
 **Orden de ejecución** (decidido el 31/10/2026; actualizado el 04/11/2026, cuando se dejaron los códigos F0–F8 y las fases pasaron a nombrarse por su contenido):

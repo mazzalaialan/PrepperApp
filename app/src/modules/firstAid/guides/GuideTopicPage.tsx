@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useRef, type MouseEvent } from 'react';
-import { ArrowLeft, Ban, LocateFixed, Repeat, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { Ban, LocateFixed, Repeat, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { useSettings } from '@/core/settings/settings';
 import { PhoneActions } from '@/modules/emergency/parts';
@@ -82,9 +82,6 @@ export function GuideTopicPage() {
   return (
     <div className="stack guide" onClickCapture={stopOnCall}>
       <div className="page-head">
-        <button className="icon-btn" type="button" onClick={() => navigate(-1)} aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </button>
         <h1 className="page-title" style={{ flex: 1 }}>{topic.title[lang]}</h1>
         {voice && voiceOn && (
           <button className="icon-btn" type="button" onClick={() => speak(spoken.current, voice)} aria-label={t('guides.voiceRepeat')} title={t('guides.voiceRepeat')}>

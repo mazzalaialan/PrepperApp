@@ -1,7 +1,6 @@
 import { Fragment, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, FileUp, Share2 } from 'lucide-react';
+import { Check, FileUp, Share2 } from 'lucide-react';
 import { MIN_PASSWORD_LENGTH } from '@/core/security/vault';
 import { deliverFile } from '@/ui/files';
 import { mergeShare, type Conflict, type LocalData, type MergeDecisions } from './merge';
@@ -13,9 +12,6 @@ export function SharePage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/settings/backup" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('share.title')}</h1>
       </div>
       <p className="hint">{t('share.intro')}</p>

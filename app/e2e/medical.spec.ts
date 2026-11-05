@@ -259,7 +259,7 @@ test('las personas de las fichas aparecen en contactos de emergencia, con parent
   await page.getByLabel('Título').fill('Carnet de vacunas');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/documents\/[0-9a-f-]{36}\?profile=/);
-  await page.getByRole('link', { name: 'Volver' }).click();
+  await page.getByTestId('back').click();
   await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Tomi');
   await expect(page.getByTestId('profile-documents')).toContainText('Carnet de vacunas');
 

@@ -1,5 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/**
+ * El perfil celular corre solo lo que cambia en una pantalla chica o depende
+ * de sensores y del tacto (navegación por "Más", brújula, inclinómetro, mapa
+ * estelar, cámara, grilla de la huerta, grabar y seguir tracks). El resto es la
+ * misma lógica: alcanza con escritorio. Los mapas se dibujan sin placa de video
+ * y son lo más lento: solo en escritorio.
+ */
+const MOBILE_SPECS = /(layout|inventory|compass|inclinometer|starmap|photo|garden|tracks|emergency)\.spec\.ts$/;
+
 export default defineConfig({
   testDir: 'e2e',
   outputDir: 'e2e-results',
@@ -15,13 +24,14 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'android', use: { ...devices['Pixel 7'] } },
+    { name: 'android', use: { ...devices['Pixel 7'] }, testMatch: MOBILE_SPECS },
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
   ],
   webServer: [
     {
       // Build de producción: incluye el service worker real (offline, push, aviso diario).
-      command: 'npx vite build && npx vite preview --port 5179 --strictPort',
+      // E2E_REUSE_BUILD=1 usa el build que ya está en dist/ (ahorra ~1 minuto si no cambió nada).
+      command: `${process.env.E2E_REUSE_BUILD ? '' : 'npx vite build && '}npx vite preview --port 5179 --strictPort`,
       url: 'http://localhost:5179',
       reuseExistingServer: false,
       timeout: 120_000,

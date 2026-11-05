@@ -23,7 +23,7 @@
     "documents": "Documentos",
     "orientation": "Orientación",
     "weather": "Meteo",
-    "garden": "Huerta",
+    "knots": "Cabuyería", "garden": "Huerta",
     "library": "Biblioteca",
     "more": "Más",
     "settings": "Ajustes"
@@ -34,7 +34,7 @@
     "documents": "Documentos",
     "orientation": "Orientación",
     "weather": "Meteorología",
-    "garden": "Huerta y cultivo",
+    "knots": "Cabuyería", "garden": "Huerta y cultivo",
     "library": "Biblioteca"
   },
   "home": {
@@ -45,6 +45,9 @@
     "seeAll": "Ver todas"
   },
   "modules": {
+    "knotGuide": {"title": "Guía de nudos", "desc": "Por nombre, por uso (rappel, rescate, campamento…) o por lo que necesitás hacer"},
+    "ropes": {"title": "Cuerdas", "desc": "Tipos, resistencia y cuidado"},
+    "knotGlossary": {"title": "Glosario", "desc": "Chicote, firme, seno, gaza, cote…"},
     "inventory": { "title": "Artículos", "desc": "Stock, lotes y vencimientos" },
     "locations": { "title": "Ubicaciones", "desc": "Dónde está guardado cada cosa" },
     "alerts": { "title": "Alertas", "desc": "Vencimientos y filtros por agotarse" },
@@ -1919,5 +1922,87 @@
     "markHere": "Estoy acá: marcarlo con el GPS",
     "locating": "Buscando la ubicación…",
     "gpsError": "No se pudo leer el GPS. Elegí un waypoint de la lista."
+  },
+  "knots": {
+    "wizard": "¿Qué necesito hacer?",
+    "search": "Buscar un nudo",
+    "searchHint": "Nombre, otro nombre o para qué sirve",
+    "byUse": "Por uso",
+    "byType": "Por tipo",
+    "byProp": "Que…",
+    "moreFilters": "Más filtros",
+    "noResults": "No hay nudos con esos filtros.",
+    "progress": "Aprendiste {{learned}} de {{total}} nudos.",
+    "uses": {
+      "rappel": "Rappel y escalada",
+      "rescue": "Rescate",
+      "camp": "Campamento y refugio",
+      "cargo": "Carga y transporte",
+      "nautical": "Náutica",
+      "fishing": "Pesca",
+      "firstAid": "Primeros auxilios",
+      "survival": "Supervivencia",
+      "everyday": "Todos los días"
+    },
+    "types": {
+      "loop": "Lazos (gazas)",
+      "bend": "Uniones",
+      "hitch": "Amarres",
+      "friction": "Autobloqueantes",
+      "belay": "Frenado y bloqueo",
+      "stopper": "De tope",
+      "shortening": "Acortamientos",
+      "lashing": "Ataduras de palos"
+    },
+    "props": {
+      "holdsLoad": "aguante carga",
+      "easyUntie": "se suelte fácil",
+      "wet": "sirva mojado",
+      "oneHand": "con una mano"
+    },
+    "safety": "Rappel, escalada y rescate: practicá primero con un instructor y en un lugar seguro. Esta guía no reemplaza la formación.",
+    "alsoCalled": "También: {{list}}",
+    "practice": "Practicar",
+    "practiceTitle": "Practicar {{name}}",
+    "markLearned": "Marcar como aprendido",
+    "learned": "Aprendido",
+    "steps": "Paso a paso",
+    "step": "Paso {{n}}",
+    "stepOf": "Paso {{n}} de {{total}}",
+    "stepAlt": "Paso {{n}}",
+    "imageAlt": "{{name}}: secuencia",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "done": "Listo",
+    "voiceOn": "Leer en voz alta",
+    "voiceOff": "No leer en voz alta",
+    "facts": "Datos clave",
+    "check": "Cómo revisarlo",
+    "mistakes": "Errores comunes",
+    "related": "Nudos relacionados",
+    "images": "Imágenes",
+    "strength": "Le deja a la cuerda cerca del {{pct}} % de su resistencia.",
+    "fact": {
+      "holdsLoad": {
+        "yes": "Aguanta bajo carga",
+        "no": "No es para cargas"
+      },
+      "easyUntie": {
+        "yes": "Se desata fácil después de cargarlo",
+        "no": "Cuesta desatarlo después de cargarlo"
+      },
+      "needsBackup": {
+        "yes": "Conviene asegurarlo con un nudo de seguridad",
+        "no": "No necesita nudo de seguridad"
+      },
+      "wet": {
+        "yes": "Sirve con cuerda mojada o resbalosa",
+        "no": "Con cuerda mojada o resbalosa se puede correr"
+      },
+      "oneHand": {
+        "yes": "Se puede hacer con una mano",
+        "no": "Necesita las dos manos"
+      }
+    }
   }
 }

@@ -75,7 +75,7 @@ test('exportar en un dispositivo y restaurar en otro, con todo lo cargado', asyn
   await expect(page.getByText('Último backup: hoy.')).toBeVisible();
 
   // El backup vive en Ajustes: la sección muestra el último y la dirección vieja redirige.
-  await page.getByRole('link', { name: 'Volver' }).click();
+  await page.getByTestId('back').click();
   await expect(page.getByTestId('settings-last-backup')).toHaveText('Último backup: hoy.');
   await page.goto('/#/inventory/backup');
   await expect(page).toHaveURL(/#\/settings\/backup$/);

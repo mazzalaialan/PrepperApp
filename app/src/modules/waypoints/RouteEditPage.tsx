@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowDown, ArrowLeft, ArrowUp, Navigation, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Navigation, Plus, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Id, Route } from '@/core/model/types';
@@ -69,9 +69,6 @@ function RouteForm({ stored }: { stored: Route | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/orientation/waypoints" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('routes.new')}</h1>
       </div>
 

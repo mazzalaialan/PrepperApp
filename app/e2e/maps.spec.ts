@@ -4,7 +4,8 @@ import { expect, test, type Page } from '@playwright/test';
 const PASSWORD = 'prueba-segura-123';
 const SERVER = 'https://valhallarust2.ddns.net';
 
-test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'] });
+// Ventana más chica: el mapa se dibuja sin placa de video y menos píxeles es bastante más rápido.
+test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'], viewport: { width: 960, height: 640 } });
 
 async function mockMaps(page: Page) {
   // Elevación plana (Terrarium: 0 m = R128 G0 B0).

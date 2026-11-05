@@ -42,6 +42,9 @@ import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
 import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
 import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
 import { BedPage } from '@/modules/garden/BedPage';
+import { GlossaryPage, RopesPage } from '@/modules/knots/InfoPages';
+import { KnotGuidePage } from '@/modules/knots/KnotGuidePage';
+import { KnotPage } from '@/modules/knots/KnotPage';
 import { CropPage } from '@/modules/garden/CropPage';
 import { GardenCalendarPage } from '@/modules/garden/GardenCalendarPage';
 import { GardenPage } from '@/modules/garden/GardenPage';
@@ -118,6 +121,11 @@ const router = createHashRouter([
       { path: '/weather/sky', element: <AstronomyPage /> },
       { path: '/weather/forecast', element: <WeatherPage /> },
       { path: '/weather/map', element: <WeatherMapPage /> },
+      { path: '/knots', element: <SectionPage section="knots" /> },
+      { path: '/knots/guide', element: <KnotGuidePage /> },
+      { path: '/knots/guide/:id', element: <KnotPage /> },
+      { path: '/knots/ropes', element: <RopesPage /> },
+      { path: '/knots/glossary', element: <GlossaryPage /> },
       { path: '/garden', element: <SectionPage section="garden" /> },
       { path: '/garden/calendar', element: <GardenCalendarPage /> },
       { path: '/garden/crops/:id', element: <CropPage /> },

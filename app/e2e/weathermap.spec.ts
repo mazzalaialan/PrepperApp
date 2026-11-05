@@ -8,7 +8,8 @@ const ROSARIO = { lon: -60.65, lat: -32.95 };
 /** Lo que devuelve el servidor simulado en /api/lightning: [lat, lon, segundos]. */
 let lightningBatch: number[][] = [];
 
-test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'] });
+// Ventana más chica: el mapa se dibuja sin placa de video y menos píxeles es bastante más rápido.
+test.use({ geolocation: { latitude: -34.6037, longitude: -58.3816 }, permissions: ['geolocation'], viewport: { width: 960, height: 640 } });
 
 /** Mismo encuadre que la app (projection.ts): los tres países con 8 px de margen. */
 function screenPoint(lon: number, lat: number, width: number, height: number) {

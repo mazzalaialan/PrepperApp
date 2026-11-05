@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare } from 'lucide-react';
+import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare } from 'lucide-react';
 import { CAFECITO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
 import { PortableUpdateCheck } from './SettingsPage';
 
@@ -40,9 +39,6 @@ export function AboutPage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/settings" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('about.title')}</h1>
       </div>
 

@@ -1,7 +1,7 @@
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Trash2, X } from 'lucide-react';
+import { Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -88,9 +88,6 @@ function TrackDetail({ track }: { track: Track }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/orientation/tracks" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         {editing?.field === 'name' ? (
           <>
             <input

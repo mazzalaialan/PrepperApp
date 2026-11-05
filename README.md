@@ -39,6 +39,8 @@ cd app
 npm install
 npm run dev        # servidor de desarrollo
 npm test           # tests
+npm run e2e        # pruebas de punta a punta (Playwright): celular solo donde importa, ~15–20 min
+npm run e2e:rapido # sin mapas ni seguir tracks, solo escritorio: para el día a día
 npm run build      # build de producción en app/dist
 npm run preview    # sirve el build (para probar la PWA y el modo offline)
 ```

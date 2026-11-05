@@ -1,0 +1,209 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, Navigate, useParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, CircleCheck, Circle, Dumbbell, Volume2, VolumeX, X } from 'lucide-react';
+import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
+import { useSettings } from '@/core/settings/settings';
+import { creditFor, KNOT_BY_ID, knotImages, RISKY_USES, type Knot } from './knots';
+import { tl } from './KnotGuidePage';
+
+const src = (file: string) => `${import.meta.env.BASE_URL}knots/${file}`;
+
+/** Modo práctica: un paso por pantalla, imagen grande y voz. */
+function Practice({ knot, onClose }: { knot: Knot; onClose: () => void }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language.startsWith('en') ? 'en' : 'es';
+  const voice = useSpeechVoice(lang);
+  const [voiceOn, setVoiceOn] = useState(true);
+  const [i, setI] = useState(0);
+  const step = knot.steps[i]!;
+  // Paso sin imagen propia: la secuencia completa del nudo.
+  const picture = step.img ?? knot.images[0] ?? knotImages(knot)[0];
+  const last = i === knot.steps.length - 1;
+
+  useEffect(() => {
+    if (voice && voiceOn) speak([`${t('knots.step', { n: i + 1 })}. ${tl(step.text, lang)}`], voice);
+    return () => stopSpeaking();
+  }, [i, voice, voiceOn]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') setI((n) => Math.min(knot.steps.length - 1, n + 1));
+      if (e.key === 'ArrowLeft') setI((n) => Math.max(0, n - 1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [knot, onClose]);
+
+  return (
+    <div className="knot-practice" role="dialog" aria-modal="true" aria-label={t('knots.practiceTitle', { name: tl(knot.name, lang) })} data-testid="knot-practice">
+      <header className="knot-practice-head">
+        <strong style={{ flex: 1 }}>{tl(knot.name, lang)}</strong>
+        {voice && (
+          <button className="icon-btn" type="button" onClick={() => setVoiceOn(!voiceOn)} aria-label={voiceOn ? t('knots.voiceOff') : t('knots.voiceOn')} aria-pressed={voiceOn}>
+            {voiceOn ? <Volume2 size={22} /> : <VolumeX size={22} />}
+          </button>
+        )}
+        <button className="icon-btn" type="button" onClick={onClose} aria-label={t('common.close')}>
+          <X size={24} />
+        </button>
+      </header>
+      {picture && <img className="knot-practice-img" src={src(picture)} alt="" />}
+      <p className="knot-practice-count">{t('knots.stepOf', { n: i + 1, total: knot.steps.length })}</p>
+      <p className="knot-practice-text" data-testid="practice-step">
+        {tl(step.text, lang)}
+      </p>
+      <div className="knot-practice-nav">
+        <button className="btn btn-lg" type="button" onClick={() => setI(i - 1)} disabled={i === 0}>
+          <ChevronLeft size={22} /> {t('knots.prev')}
+        </button>
+        {last ? (
+          <button className="btn btn-lg btn-primary" type="button" onClick={onClose}>
+            {t('knots.done')}
+          </button>
+        ) : (
+          <button className="btn btn-lg btn-primary" type="button" onClick={() => setI(i + 1)} data-testid="practice-next">
+            {t('knots.next')} <ChevronRight size={22} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Ficha de un nudo (ARQUITECTURA §10.2). */
+export function KnotPage() {
+  const { id = '' } = useParams();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
+  const learned = useSettings((s) => s.settings.knotsLearned);
+  const update = useSettings((s) => s.update);
+  const [practice, setPractice] = useState(false);
+  const knot = KNOT_BY_ID.get(id);
+  if (!knot) return <Navigate to="/knots/guide" replace />;
+  const isLearned = learned.includes(knot.id);
+  const credits = [...new Map(knotImages(knot).map((f) => creditFor(f)).filter((c) => !!c).map((c) => [c.source, c])).values()];
+  const facts: [string, boolean | undefined][] = [
+    ['holdsLoad', knot.holdsLoad],
+    ['easyUntie', knot.easyUntie],
+    ['needsBackup', knot.needsBackup],
+    ['wet', knot.wet],
+    ['oneHand', knot.oneHand],
+  ];
+
+  return (
+    <div className="stack">
+      <h1 className="page-title" style={{ margin: 0 }}>{tl(knot.name, lang)}</h1>
+      {knot.aliases.length > 0 && (
+        <p className="hint" style={{ margin: 0 }}>
+          {t('knots.alsoCalled', { list: knot.aliases.join(', ') })}
+          {knot.abok ? ` · ABOK #${knot.abok}` : ''}
+        </p>
+      )}
+      <div className="chips">
+        {knot.uses.map((u) => (
+          <Link key={u} className="chip" to={`/knots/guide?uso=${u}`}>
+            {t(`knots.uses.${u}`)}
+          </Link>
+        ))}
+      </div>
+      {knot.uses.some((u) => RISKY_USES.has(u)) && (
+        <p className="warning-box" style={{ margin: 0 }} data-testid="knot-safety">
+          {t('knots.safety')}
+        </p>
+      )}
+      <p style={{ margin: 0 }}>{tl(knot.purpose, lang)}</p>
+
+      <div className="row-between" style={{ flexWrap: 'wrap' }}>
+        <button className="btn btn-primary" type="button" onClick={() => setPractice(true)} data-testid="knot-practice-start">
+          <Dumbbell size={18} /> {t('knots.practice')}
+        </button>
+        <button
+          className="btn"
+          type="button"
+          aria-pressed={isLearned}
+          onClick={() => void update({ knotsLearned: isLearned ? learned.filter((x) => x !== knot.id) : [...learned, knot.id] })}
+          data-testid="knot-learned"
+        >
+          {isLearned ? <CircleCheck size={18} style={{ color: 'var(--ok)' }} /> : <Circle size={18} />} {isLearned ? t('knots.learned') : t('knots.markLearned')}
+        </button>
+      </div>
+
+      {knot.images.length > 0 && (
+        <div className="knot-gallery">
+          {knot.images.map((f) => (
+            <img key={f} src={src(f)} alt={t('knots.imageAlt', { name: tl(knot.name, lang) })} loading="lazy" />
+          ))}
+        </div>
+      )}
+
+      <section className="card stack" aria-labelledby="knot-steps">
+        <h2 id="knot-steps" className="section-title" style={{ margin: 0 }}>{t('knots.steps')}</h2>
+        <ol className="knot-steps">
+          {knot.steps.map((s, n) => (
+            <li key={n}>
+              <p style={{ margin: 0 }}>{tl(s.text, lang)}</p>
+              {s.img && <img src={src(s.img)} alt={t('knots.stepAlt', { n: n + 1 })} loading="lazy" />}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="card stack">
+        <h2 className="section-title" style={{ margin: 0 }}>{t('knots.facts')}</h2>
+        <ul className="knot-facts">
+          {facts
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => (
+              // Necesitar un nudo de seguridad es lo que hay que tener en cuenta; no necesitarlo, lo bueno.
+              <li key={k} className={(k === 'needsBackup' ? !v : v) ? 'yes' : 'no'}>
+                {t(`knots.fact.${k}.${v ? 'yes' : 'no'}`)}
+              </li>
+            ))}
+          {knot.strength && <li>{t('knots.strength', { pct: knot.strength })}</li>}
+        </ul>
+        <h3 className="garden-plan-title">{t('knots.check')}</h3>
+        <p style={{ margin: 0 }}>{tl(knot.check, lang)}</p>
+        {knot.mistakes.length > 0 && (
+          <>
+            <h3 className="garden-plan-title">{t('knots.mistakes')}</h3>
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              {knot.mistakes.map((m) => (
+                <li key={m.es}>{tl(m, lang)}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+
+      {knot.related.length > 0 && (
+        <section className="card stack">
+          <h2 className="section-title" style={{ margin: 0 }}>{t('knots.related')}</h2>
+          <div className="chips">
+            {knot.related.map((rid) => {
+              const r = KNOT_BY_ID.get(rid);
+              return r ? (
+                <Link key={rid} className="chip" to={`/knots/guide/${rid}`}>
+                  {tl(r.name, lang)}
+                </Link>
+              ) : null;
+            })}
+          </div>
+        </section>
+      )}
+
+      {credits.length > 0 && (
+        <p className="hint" style={{ margin: 0 }} data-testid="knot-credits">
+          {t('knots.images')}:{' '}
+          {credits.map((c, n) => (
+            <span key={c.source}>
+              {n > 0 && ' · '}
+              {c.source} ({c.license})
+            </span>
+          ))}
+        </p>
+      )}
+      {practice && <Practice knot={knot} onClose={() => setPractice(false)} />}
+    </div>
+  );
+}

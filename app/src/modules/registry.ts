@@ -1,6 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   BellRing,
+  BookA,
+  Cable,
+  Spool,
   BookHeart,
   BookOpen,
   BriefcaseMedical,
@@ -27,7 +30,7 @@ import {
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
-export const SECTIONS = ['firstAid', 'documents', 'orientation', 'weather', 'inventory', 'garden', 'library'] as const;
+export const SECTIONS = ['firstAid', 'documents', 'orientation', 'weather', 'inventory', 'knots', 'garden', 'library'] as const;
 export type Section = (typeof SECTIONS)[number];
 
 export interface ModuleDef {
@@ -67,6 +70,9 @@ export const MODULES: ModuleDef[] = [
   { id: 'weather', section: 'weather', icon: CloudSun, implemented: true, path: '/weather/forecast' },
   { id: 'weatherMap', section: 'weather', icon: MapIcon, implemented: true, path: '/weather/map' },
   { id: 'astronomy', section: 'weather', icon: Moon, implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },
+  { id: 'knotGuide', section: 'knots', icon: Cable, implemented: true, path: '/knots/guide' },
+  { id: 'ropes', section: 'knots', icon: Spool, implemented: true, path: '/knots/ropes' },
+  { id: 'knotGlossary', section: 'knots', icon: BookA, implemented: true, path: '/knots/glossary' },
   { id: 'gardenCalendar', section: 'garden', icon: CalendarDays, implemented: true, path: '/garden/calendar' },
   { id: 'gardenBeds', section: 'garden', icon: Sprout, implemented: true, path: '/garden/beds' },
   { id: 'library', section: 'library', icon: BookOpen, implemented: false },

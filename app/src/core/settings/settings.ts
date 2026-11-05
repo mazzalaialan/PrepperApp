@@ -92,6 +92,8 @@ export interface Settings {
    * waypoints de los canteros: desde ahí se vuelve a contar el balance de agua.
    */
   gardenWateredAt: Record<string, string>;
+  /** Nudos marcados como aprendidos (ids de la guía de nudos). */
+  knotsLearned: string[];
 }
 
 export type GardenZone = 'pampeana' | 'nea' | 'noa' | 'cuyo' | 'patagoniaNorte' | 'patagoniaSur';
@@ -204,6 +206,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenFrostAlerts: true,
   gardenWaterAlerts: true,
   gardenWateredAt: {},
+  knotsLearned: [],
 };
 
 const SETTINGS_KEY = 'app';

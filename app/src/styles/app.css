@@ -3210,3 +3210,129 @@ a.module-card:hover {
   outline-offset: -3px;
   background: var(--surface);
 }
+
+/* ---------- Cabuyería ---------- */
+
+.knot-thumb {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.knot-gallery {
+  display: grid;
+  gap: 8px;
+}
+
+.knot-gallery img,
+.knot-steps img {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+  object-position: left;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.knot-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.knot-steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.knot-facts {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.knot-facts li::before {
+  content: '• ';
+}
+
+.knot-facts li.yes::before {
+  content: '✓ ';
+  color: var(--ok);
+}
+
+.knot-facts li.no::before {
+  content: '✗ ';
+  color: var(--warn);
+}
+
+.knot-glossary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.knot-glossary dt {
+  font-weight: 700;
+}
+
+.knot-glossary dd {
+  margin: 2px 0 0;
+}
+
+.knot-practice {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.knot-practice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.knot-practice-img {
+  width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.knot-practice-count {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.knot-practice-text {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.knot-practice-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}

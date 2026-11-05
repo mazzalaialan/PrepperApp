@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Play, Search } from 'lucide-react';
+import { ChevronRight, Play, Search } from 'lucide-react';
 import { normalize } from '@/modules/inventory/selectors';
 import { TOPICS } from './content';
 import { useSettings } from '@/core/settings/settings';
@@ -24,9 +24,6 @@ export function GuidesPage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('guides.title')}</h1>
       </div>
 

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
+import { Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { useSettings } from '@/core/settings/settings';
@@ -69,9 +69,6 @@ export function RadioPage() {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{t('modules.radio.title')}</h1>
       </div>
       {/* Un solo lugar para todo: tus frecuencias, las repetidoras y las emisoras se ordenan por cercanía a él. */}

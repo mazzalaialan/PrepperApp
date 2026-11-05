@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useDocuments } from '@/modules/documents/store';
 import { emptyContact } from '@/modules/emergency/ContactEditPage';
 import { PhoneActions } from '@/modules/emergency/parts';
@@ -375,9 +375,6 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   return (
     <div className="stack">
       <div className="page-head">
-        <Link className="icon-btn" to="/first-aid/medical" aria-label={t('common.back')}>
-          <ArrowLeft size={22} />
-        </Link>
         <h1 className="page-title" style={{ flex: 1 }}>{stored ? stored.name : t('medical.new')}</h1>
       </div>
 
