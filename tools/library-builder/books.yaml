@@ -1,0 +1,8 @@
+# Ajustes por libro (ARQUITECTURA §11.2). La clave es la ruta dentro de la
+# colección. Campos: title, author, year, lang, category, section, license
+# (public | private), license_note, mode (text | ocr), exclude (true).
+#
+# Ejemplo:
+# "Supervivencia General/464109247-1-Manual-de-Supervivencia-pdf.pdf":
+#   title: Manual de supervivencia
+#   category: Supervivencia General
