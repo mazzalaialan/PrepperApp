@@ -1321,11 +1321,15 @@ a.module-card:hover {
 }
 
 [data-zone='avalanche'] {
-  --zone: var(--danger);
+  --zone: var(--slope-avalanche);
 }
 
 [data-zone='steep'] {
-  --zone: var(--steep);
+  --zone: var(--slope-steep);
+}
+
+[data-zone='extreme'] {
+  --zone: var(--slope-extreme);
 }
 
 .incl-risk {
@@ -3506,4 +3510,30 @@ a.module-card:hover {
 .decl-cheat ol {
   margin: 4px 0 0;
   padding-left: 1.3em;
+}
+
+/* Herramientas del mapa */
+.map-tools .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.measure-big {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+.measure-profile {
+  width: 100%;
+  height: 70px;
+}
+.measure-profile-fill {
+  fill: var(--accent);
+  opacity: 0.18;
+}
+.measure-profile-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }

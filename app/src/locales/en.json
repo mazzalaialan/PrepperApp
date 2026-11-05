@@ -606,6 +606,36 @@
     },
     "securityNote": "Frequencies of the Gendarmerie, police, park rangers or other forces aren't included: they aren't public, many are encrypted, and intercepting them without authorization may be a crime."
   },
+  "mapTools": {
+    "title": "Tools",
+    "measure": "Measure",
+    "target": "Direction to a point",
+    "measureHint": "Tap the map to mark the first point.",
+    "measureNext": "Tap another point: with two, the straight-line distance.",
+    "measureMore": "Keep tapping to measure a route.",
+    "straight": "straight line",
+    "legs_one": "{{count}} leg",
+    "legs_other": "{{count}} legs",
+    "climb": "Elevation: +{{up}} up, −{{down}} down",
+    "range": "Starts at {{start}} and ends at {{end}} · lowest {{min}}, highest {{max}}",
+    "profile": "Elevation profile of the route",
+    "demNote": "Approximate heights from the elevation model (about 30 m detail): peaks and very narrow gorges may read lower.",
+    "noDem": "No elevation data here: download the map zone or go online.",
+    "undo": "Undo",
+    "clear": "Clear",
+    "targetHintGps": "Tap the point on the map (for example, a summit) to see its direction and distance from you.",
+    "targetHintOrigin": "No GPS: first tap where you are looking from.",
+    "targetHintTarget": "Now tap the point you want to locate.",
+    "magnetic": "On the compass (magnetic): {{value}}",
+    "fromGps": "From your location (GPS), true bearing.",
+    "fromPoint": "From the first point you tapped, true bearing.",
+    "targetAlt": "Point height ≈ {{alt}}",
+    "above": "({{diff}} higher than you).",
+    "below": "({{diff}} lower than you).",
+    "lookUp": "To see it, look {{deg}}° up.",
+    "lookDown": "To see it, look {{deg}}° down.",
+    "saveWaypoint": "Save as waypoint"
+  },
   "maps": {
     "offline":"Offline: downloaded areas are shown; elsewhere only the country outline.",
     "goHere": "Go to my location",
@@ -1054,14 +1084,16 @@
       "low": "Low angle",
       "caution": "Close to avalanche terrain",
       "avalanche": "Typical avalanche terrain",
-      "steep": "Very steep: frequent sluffs"
+      "steep": "Very steep: fewer slabs, frequent sluffs",
+      "extreme": "Wall or rock: snow hardly builds up"
     },
     "zonesTitle": "Avalanche risk by slope",
     "legend": {
       "low": "Low · under 25°: rarely releases, but an avalanche can run down from above.",
       "caution": "Moderate · 25° to 30°: caution, close to the dangerous range.",
-      "avalanche": "High · 30° to 45°: where the vast majority of avalanches release.",
-      "steep": "High · over 45°: snow sluffs off often; it's still avalanche terrain."
+      "avalanche": "High · 30° to 45°: where the vast majority of slab avalanches release.",
+      "steep": "High · 45° to 55°: slabs are less common and snow tends to sluff; still avalanche terrain.",
+      "extreme": "High · over 55°: walls and rock, snow hardly builds up; snow or an avalanche can still come from above."
     },
     "disclaimer": "This is the risk from the slope angle: actual danger also depends on the snowpack and weather. Approximate reading; it doesn't replace the avalanche forecast or training for snowy terrain."
   },

@@ -411,7 +411,7 @@ La guía de primeros auxilios escribe los números con marcas (`{medical}`, `{sa
 | Documentos | Documentos personales con N fotos y vencimiento opcional: avisa 60 días antes (turnos y trámites), en Inicio, Alertas y notificaciones (`doc:<id>` en el índice, tipo `expiry`) | — |
 | Recomendaciones | Calculadora según grupo familiar y reglas del usuario | — |
 | Brújula | Rumbo magnético y verdadero (WMM); integrada con mapas y estrellas | Deshabilitada |
-| Inclinómetro | Pendiente en grados; resalta 30–45° como zona de riesgo de avalancha, con aviso de que es orientativo | Deshabilitado |
+| Inclinómetro | Pendiente en grados con la escala de avalanchas (como CalTopo y swisstopo): menos de 25° verde, 25–30° ámbar, 30–45° rojo (la gran mayoría de las placas), 45–55° naranja (menos placas, coladas frecuentes) y más de 55° gris (pared o roca); el riesgo nunca baja con más pendiente; aviso de que es orientativo | Deshabilitado |
 | Mapas offline | §12. En Orientación va tercero, después de Brújula e Inclinómetro | — |
 | Waypoints y Rutas | Guardar puntos; rumbo y distancia a un waypoint. Las rutas (puntos unidos en orden) van abajo, en la misma pantalla (`/orientation/routes` redirige ahí) | Coordenadas manuales |
 | Tracks | Importados (GPX) y grabados con la app (§16, Mapas) | — |
@@ -565,6 +565,9 @@ Los servidores públicos de teselas de OpenStreetMap **no** se usan para descarg
 - Se guarda en OPFS; la app pide almacenamiento persistente (`navigator.storage.persist()`).
 - Sin conexión, el mapa muestra las zonas descargadas sobre un **contorno mundial liviano** incluido en la app (~1 MB), que también sirve para elegir un punto en el mapa (ej.: para astronomía).
 - Capas propias: waypoints, zonas offline, posición GPS y rumbo de la brújula.
+- **Herramientas** (`modules/maps/MapTools.tsx`, `measure.ts`), debajo del mapa; con una activa, el toque marca puntos y no abre waypoints:
+  - *Medir:* dos puntos dan la distancia en línea recta; más puntos, un recorrido por tramos con desnivel positivo y negativo, altura de inicio, fin, mínima y máxima y un perfil. Las alturas salen de las teselas de elevación (zoom 12, ~30 m, interpolación bilineal; muestras cada ~30 m, hasta 1500) de las zonas descargadas o, con conexión, de las fuentes públicas; el desnivel usa un umbral de 5 m para que el ruido del modelo no sume. Sin elevación, solo la distancia.
+  - *Dirección a un punto:* desde el GPS (o, sin GPS, desde un primer punto tocado) muestra rumbo verdadero, rumbo magnético para la brújula (con la declinación del modelo WMM), distancia, altura aproximada del punto, cuánto más alto o bajo está y el ángulo para mirarlo (ej.: marcar la cima del Tronador). Se puede guardar como waypoint para ir con "Ir a".
 
 ### 12.4 Mapa de Meteorología (tiempo y peligros naturales)
 Es un **módulo de la sección Meteorología**, separado de los mapas de Orientación, aunque reutiliza sus funciones (proyección, dibujo, capas).

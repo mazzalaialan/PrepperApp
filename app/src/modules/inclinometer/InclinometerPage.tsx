@@ -56,7 +56,7 @@ export function InclinometerPage() {
       <section className="card stack">
         <h2 className="section-title" style={{ margin: 0 }}>{t('inclinometer.zonesTitle')}</h2>
         <ul className="incl-legend">
-          {(['low', 'caution', 'avalanche', 'steep'] as const).map((z) => (
+          {(['low', 'caution', 'avalanche', 'steep', 'extreme'] as const).map((z) => (
             <li key={z} data-zone={z}>
               <span className="incl-swatch" aria-hidden />
               {t(`inclinometer.legend.${z}`)}
@@ -87,7 +87,8 @@ function SlopeGauge({ angle }: { angle: number }) {
       <path d={arc(0, 25)} className="incl-arc" data-zone="low" />
       <path d={arc(25, 30)} className="incl-arc" data-zone="caution" />
       <path d={arc(30, 45)} className="incl-arc" data-zone="avalanche" />
-      <path d={arc(45, 90)} className="incl-arc" data-zone="steep" />
+      <path d={arc(45, 55)} className="incl-arc" data-zone="steep" />
+      <path d={arc(55, 90)} className="incl-arc" data-zone="extreme" />
       <line x1="0" y1="0" x2={needle.x} y2={needle.y} className="incl-needle" />
       <line x1="0" y1="0" x2="100" y2="0" className="incl-ground" />
       <circle r="4" className="incl-needle-hub" />

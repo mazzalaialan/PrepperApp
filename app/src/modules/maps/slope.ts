@@ -55,6 +55,7 @@ export interface SlopeColors {
   caution: string;
   avalanche: string;
   steep: string;
+  extreme: string;
   /** Rayas de las laderas cargadas por viento en los últimos días. */
   hatch?: string;
   /** Rayas (en la otra diagonal) del sotavento habitual. */
@@ -108,6 +109,7 @@ export function paintSlope(slope: Float32Array, colors: SlopeColors, options: Pa
     caution: rgb(colors.caution),
     avalanche: rgb(colors.avalanche),
     steep: rgb(colors.steep),
+    extreme: rgb(colors.extreme),
   };
   const out = new Uint8ClampedArray(slope.length * 4);
   for (let p = 0; p < slope.length; p++) {

@@ -20,7 +20,9 @@ export interface MapColors {
   ok: string;
   warn: string;
   danger: string;
+  slopeAvalanche: string;
   steep: string;
+  extreme: string;
 }
 
 export function themeColors(): MapColors {
@@ -38,7 +40,9 @@ export function themeColors(): MapColors {
     ok: v('--ok'),
     warn: v('--warn'),
     danger: v('--danger'),
-    steep: v('--steep'),
+    slopeAvalanche: v('--slope-avalanche'),
+    steep: v('--slope-steep'),
+    extreme: v('--slope-extreme'),
   };
 }
 

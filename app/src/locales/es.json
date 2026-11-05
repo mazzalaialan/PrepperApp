@@ -606,6 +606,36 @@
     },
     "securityNote": "No se incluyen frecuencias de Gendarmería, policía, guardaparques u otras fuerzas: no son públicas, muchas están cifradas y captarlas sin autorización puede ser delito."
   },
+  "mapTools": {
+    "title": "Herramientas",
+    "measure": "Medir",
+    "target": "Dirección a un punto",
+    "measureHint": "Tocá el mapa para marcar el primer punto.",
+    "measureNext": "Tocá otro punto: con dos, la distancia en línea recta.",
+    "measureMore": "Seguí tocando para medir un recorrido.",
+    "straight": "en línea recta",
+    "legs_one": "{{count}} tramo",
+    "legs_other": "{{count}} tramos",
+    "climb": "Desnivel: +{{up}} subiendo, −{{down}} bajando",
+    "range": "Empieza a {{start}} y termina a {{end}} · mínima {{min}}, máxima {{max}}",
+    "profile": "Perfil de altura del recorrido",
+    "demNote": "Alturas aproximadas del modelo de elevación (unos 30 m de detalle): cimas y quebradas muy angostas pueden dar menos.",
+    "noDem": "Sin datos de altura acá: descargá la zona del mapa o conectate.",
+    "undo": "Deshacer",
+    "clear": "Borrar",
+    "targetHintGps": "Tocá el punto del mapa (por ejemplo, una cima) para ver hacia dónde está y a qué distancia desde vos.",
+    "targetHintOrigin": "Sin GPS: tocá primero desde dónde mirás.",
+    "targetHintTarget": "Ahora tocá el punto que querés ubicar.",
+    "magnetic": "En la brújula (magnético): {{value}}",
+    "fromGps": "Desde tu ubicación (GPS), rumbo verdadero.",
+    "fromPoint": "Desde el primer punto que tocaste, rumbo verdadero.",
+    "targetAlt": "Altura del punto ≈ {{alt}}",
+    "above": "({{diff}} más alto que vos).",
+    "below": "({{diff}} más bajo que vos).",
+    "lookUp": "Para verlo, mirá {{deg}}° hacia arriba.",
+    "lookDown": "Para verlo, mirá {{deg}}° hacia abajo.",
+    "saveWaypoint": "Guardar como waypoint"
+  },
   "maps": {
     "offline":"Sin conexión: se ven las zonas descargadas y, fuera de ellas, solo el contorno del país.",
     "goHere": "Ir a mi ubicación",
@@ -1054,14 +1084,16 @@
       "low": "Pendiente baja",
       "caution": "Cerca del rango de avalanchas",
       "avalanche": "Rango típico de avalanchas",
-      "steep": "Muy empinada: coladas frecuentes"
+      "steep": "Muy empinada: menos placas, coladas frecuentes",
+      "extreme": "Pared o roca: la nieve casi no se acumula"
     },
     "zonesTitle": "Riesgo de avalancha por pendiente",
     "legend": {
       "low": "Bajo · menos de 25°: rara vez se desprende, pero puede llegar una avalancha de más arriba.",
       "caution": "Moderado · 25° a 30°: precaución, cerca del rango peligroso.",
-      "avalanche": "Alto · 30° a 45°: donde se desprende la gran mayoría de las avalanchas.",
-      "steep": "Alto · más de 45°: la nieve suele descargarse seguido en coladas; sigue siendo terreno de avalanchas."
+      "avalanche": "Alto · 30° a 45°: donde se desprende la gran mayoría de las avalanchas de placa.",
+      "steep": "Alto · 45° a 55°: las placas son menos frecuentes y la nieve suele descargarse en coladas; sigue siendo terreno de avalanchas.",
+      "extreme": "Alto · más de 55°: paredes y roca, la nieve casi no se acumula; puede caerte nieve o una avalancha de más arriba."
     },
     "disclaimer": "Es el riesgo por la pendiente del terreno: el peligro real depende también del estado de la nieve y del clima. Medida orientativa; no reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
   },

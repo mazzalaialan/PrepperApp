@@ -18,6 +18,7 @@ import { CameraButtons } from './CameraButtons';
 import { ImportedMaps } from './ImportedMaps';
 import type { ImportedMap } from './imported';
 import { MapView, type MapTrack, type ViewState } from './MapView';
+import { useMapTools } from './MapTools';
 import { useMapZones, type MapZone } from './store';
 import { carryPrevailing, chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsLivePrevailing, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
 import { compassList, fetchPrevailing, leeAspects } from './wind';
@@ -27,7 +28,7 @@ import { DETAILS, downloadZone, planZone, zoneSource, type DetailId, type Downlo
 // 100 y 200 km solo entran en el límite del servidor propio.
 const RADII = [2, 5, 10, 20, 50, 100, 200];
 const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'slope', 'mine', 'tracks'];
-const SLOPE_ZONES = ['low', 'caution', 'avalanche', 'steep'] as const;
+const SLOPE_ZONES = ['low', 'caution', 'avalanche', 'steep', 'extreme'] as const;
 /** Vista que muestra un track entero (centro y zoom según lo que ocupa). */
 function trackView(tr: { segments: [number, number, number | null][][] }): ViewState | null {
   const pts = tr.segments.flat();
@@ -232,6 +233,7 @@ export function MapsPage() {
   );
   const recorded = useRecordedLines();
   const here = useMemo(() => (fix ? { lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy } : null), [fix]);
+  const tools = useMapTools(fix ? { lat: fix.lat, lon: fix.lon, alt: fix.alt } : null);
   const zoneCircles = useMemo(() => zones.map((z) => ({ id: z.id, name: z.name, lat: z.lat, lon: z.lon, radiusKm: z.radiusKm })), [zones]);
   const maxZoom = panel ? DETAILS.find((d) => d.id === panel.detail)!.maxZoom : 0;
   const plan = useMemo(() => (panel ? planZone(view.lat, view.lon, panel.radiusKm, maxZoom) : null), [panel, view.lat, view.lon, maxZoom]);
@@ -330,6 +332,10 @@ export function MapsPage() {
             setView(v);
           }}
           onWaypoint={setSelected}
+          tool={tools.tool}
+          measure={tools.measure}
+          target={tools.target}
+          onMapClick={tools.onMapClick}
         />
         <CameraButtons threeD={layers.terrain3d} onThreeD={(on) => setLayer('terrain3d', on)} follow={follow && !!fix} onFollow={setFollow} canFollow={!!fix}>
           <RecordButton />
@@ -340,6 +346,8 @@ export function MapsPage() {
           </button>
         )}
       </FullscreenStage>
+      {tools.toolbar}
+      {tools.panel}
       <p className="hint maps-center" data-testid="map-center">
         {t('maps.center', { coords: formatDms(view, t('geo.westLetter')), zoom: Math.round(view.zoom) })}
       </p>

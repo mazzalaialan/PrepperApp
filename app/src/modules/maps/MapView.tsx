@@ -59,6 +59,13 @@ interface Props {
   recorded?: [number, number][][] | null;
   onMove: (view: ViewState) => void;
   onWaypoint: (id: string) => void;
+  /** Herramienta activa: el toque en el mapa marca un punto (y no abre waypoints). */
+  tool?: 'measure' | 'target' | null;
+  /** Puntos de la medición, en [lon, lat]. */
+  measure?: [number, number][];
+  /** Línea desde el origen hasta el punto marcado, en [lon, lat]. */
+  target?: { from: [number, number]; to: [number, number] } | null;
+  onMapClick?: (p: { lat: number; lon: number }) => void;
 }
 
 export interface MapTrack {
@@ -116,6 +123,23 @@ function data(p: Props) {
     zones: circlesGeo(p.zones),
     preview: circlesGeo(p.preview ? [p.preview] : []),
     outline: p.outline ?? EMPTY,
+    'measure-line': (p.measure && p.measure.length > 1
+      ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: p.measure } }] }
+      : EMPTY) as FeatureCollection,
+    'measure-points': {
+      type: 'FeatureCollection',
+      features: (p.measure ?? []).map((c, i) => ({ type: 'Feature', properties: { n: String(i + 1) }, geometry: { type: 'Point', coordinates: c } })),
+    } as FeatureCollection,
+    'target-line': (p.target
+      ? {
+          type: 'FeatureCollection',
+          features: [
+            { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [p.target.from, p.target.to] } },
+            { type: 'Feature', properties: { end: 'to' }, geometry: { type: 'Point', coordinates: p.target.to } },
+            { type: 'Feature', properties: { end: 'from' }, geometry: { type: 'Point', coordinates: p.target.from } },
+          ],
+        }
+      : EMPTY) as FeatureCollection,
   };
 }
 
@@ -164,6 +188,29 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
     source: 'mine-waypoints',
     layout: { visibility: mine, 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top' },
     paint: { 'text-color': c.text, 'text-halo-color': c.surface, 'text-halo-width': 2 },
+  });
+  // Herramientas: medición (línea punteada con puntos numerados) y dirección a un punto.
+  map.addLayer({ id: 'measure-line', type: 'line', source: 'measure-line', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.warn, 'line-width': 3, 'line-dasharray': [2, 1.5] } });
+  map.addLayer({
+    id: 'measure-points',
+    type: 'circle',
+    source: 'measure-points',
+    paint: { 'circle-radius': 6, 'circle-color': c.warn, 'circle-stroke-color': c.bg, 'circle-stroke-width': 2, 'circle-pitch-alignment': 'viewport' },
+  });
+  map.addLayer({
+    id: 'measure-numbers',
+    type: 'symbol',
+    source: 'measure-points',
+    layout: { 'text-field': ['get', 'n'], 'text-font': ['Noto Sans Bold'], 'text-size': 11, 'text-offset': [0, -1.3], 'text-allow-overlap': true },
+    paint: { 'text-color': c.text, 'text-halo-color': c.surface, 'text-halo-width': 2 },
+  });
+  map.addLayer({ id: 'target-line', type: 'line', source: 'target-line', filter: ['==', ['geometry-type'], 'LineString'], paint: { 'line-color': c.danger, 'line-width': 2.5, 'line-dasharray': [3, 2] } });
+  map.addLayer({
+    id: 'target-point',
+    type: 'circle',
+    source: 'target-line',
+    filter: ['==', ['get', 'end'], 'to'],
+    paint: { 'circle-radius': 7, 'circle-color': c.danger, 'circle-stroke-color': c.bg, 'circle-stroke-width': 2, 'circle-pitch-alignment': 'viewport' },
   });
   // Mirando a la pantalla: en 3D no se aplasta con la inclinación.
   map.addLayer({
@@ -235,7 +282,12 @@ export function MapView(props: Props) {
       const c = m.getCenter();
       latest.current.onMove({ lat: c.lat, lon: c.lng, zoom: m.getZoom() });
     });
+    // Con una herramienta activa, el toque marca un punto.
+    m.on('click', (e) => {
+      if (latest.current.tool) latest.current.onMapClick?.({ lat: e.lngLat.lat, lon: e.lngLat.lng });
+    });
     m.on('click', 'mine-waypoints', (e) => {
+      if (latest.current.tool) return;
       const id = e.features?.[0]?.properties?.id as string | undefined;
       if (id) latest.current.onWaypoint(id);
     });
@@ -288,7 +340,8 @@ export function MapView(props: Props) {
     for (const [id, fc] of Object.entries(data(props))) (m.getSource(id) as GeoJSONSource | undefined)?.setData(fc);
     // Puntos grabados a la vista (para las pruebas).
     container.current?.setAttribute('data-recorded', String(props.recorded?.flat().length ?? 0));
-  }, [props.waypoints, props.routes, props.tracks, props.done, props.recorded, props.here, props.zones, props.preview, props.outline]);
+    container.current?.setAttribute('data-measure', String(props.measure?.length ?? 0));
+  }, [props.waypoints, props.routes, props.tracks, props.done, props.recorded, props.here, props.zones, props.preview, props.outline, props.measure, props.target]);
 
   useEffect(() => {
     const m = map.current;
@@ -298,6 +351,12 @@ export function MapView(props: Props) {
       if (src?.tiles && src.setTiles) src.setTiles([...src.tiles]);
     }
   }, [props.tilesVersion]);
+
+  // Con una herramienta activa, cursor de mira.
+  useEffect(() => {
+    const canvas = map.current?.getCanvas();
+    if (canvas) canvas.style.cursor = props.tool ? 'crosshair' : '';
+  }, [props.tool]);
 
   useEffect(() => {
     if (props.flyTo) map.current?.flyTo({ center: [props.flyTo.lon, props.flyTo.lat], zoom: props.flyTo.zoom, essential: true });

@@ -28,7 +28,7 @@ describe('tiltFromGravity', () => {
 
 describe('slopeZone', () => {
   it('zonas de avalancha', () => {
-    expect([10, 27, 30, 38, 45, 50, -35].map(slopeZone)).toEqual(['low', 'caution', 'avalanche', 'avalanche', 'avalanche', 'steep', 'avalanche']);
+    expect([10, 27, 30, 38, 45, 50, 55, 56, 70, -35].map(slopeZone)).toEqual(['low', 'caution', 'avalanche', 'avalanche', 'avalanche', 'steep', 'steep', 'extreme', 'extreme', 'avalanche']);
   });
 
   it('el riesgo nunca baja al aumentar la pendiente', () => {

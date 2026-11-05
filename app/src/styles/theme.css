@@ -19,8 +19,10 @@
   --info: #5f85ad; /* azul acero */
   --warn: #d0a03c;
   --danger: #b84a30; /* rojo óxido */
-  /* Pendientes de más de 45° (inclinómetro y capa de avalanchas): rojo puro. */
-  --steep: #e8231b;
+  /* Pendiente (inclinómetro y capa de avalanchas): 30–45° rojo puro, 45–55° naranja, más de 55° gris. */
+  --slope-avalanche: #e8231b;
+  --slope-steep: #f07c1a;
+  --slope-extreme: #8c939b;
   --focus: #e0a46f;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   /* Escala de valores (clima): hielo, frío, normal, atención, alto, extremo. */
@@ -47,8 +49,10 @@
   --info: #335d86;
   --warn: #8a6200;
   --danger: #a3361c;
-  /* Pendientes de más de 45° (inclinómetro y capa de avalanchas): rojo puro. */
-  --steep: #c8100c;
+  /* Pendiente (inclinómetro y capa de avalanchas): 30–45° rojo puro, 45–55° naranja, más de 55° gris. */
+  --slope-avalanche: #c8100c;
+  --slope-steep: #c25f00;
+  --slope-extreme: #7b828b;
   --focus: #9b5629;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.12);
   --scale-1: #1b7aa3;
@@ -79,8 +83,10 @@
   --info: #557aa0;
   --warn: #c0932f;
   --danger: #b04a32;
-  /* Pendientes de más de 45° (inclinómetro y capa de avalanchas): rojo puro. */
-  --steep: #d9261d;
+  /* Pendiente (inclinómetro y capa de avalanchas): 30–45° rojo puro, 45–55° naranja, más de 55° gris. */
+  --slope-avalanche: #d9261d;
+  --slope-steep: #ff8c1a;
+  --slope-extreme: #9e9e9e;
   --focus: #cf8b52;
   --shadow: none;
   --scale-1: #7cb9d6;
@@ -107,8 +113,10 @@
   --info: #b02a1c;
   --warn: #e04a2c;
   --danger: #ff2a12;
-  /* Pendientes de más de 45° (inclinómetro y capa de avalanchas): rojo puro. */
-  --steep: #ff0000;
+  /* Pendiente (inclinómetro y capa de avalanchas): 30–45° rojo puro, 45–55° naranja, más de 55° gris. */
+  --slope-avalanche: #ff0000;
+  --slope-steep: #ff7a45;
+  --slope-extreme: #6b2a22;
   --focus: #ff5a45;
   --shadow: none;
   /* En rojo nocturno la escala va por brillo: más intenso = más extremo. */

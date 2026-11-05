@@ -51,6 +51,16 @@ test('inclinómetro: zonas de avalancha, fijar medida y modo apuntando', async (
   await expect(page.getByTestId('incl-zone')).toHaveText('Pendiente baja');
   await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Bajo');
 
+  // 45° a 55°: naranja (coladas); más de 55°: gris (pared). El riesgo sigue alto.
+  await tiltForward(page, 50);
+  await expect(page.getByTestId('incl-zone')).toHaveText('Muy empinada: menos placas, coladas frecuentes');
+  await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Alto');
+  await expect(page.locator('.incl-card')).toHaveAttribute('data-zone', 'steep');
+  await tiltForward(page, 62);
+  await expect(page.getByTestId('incl-zone')).toHaveText('Pared o roca: la nieve casi no se acumula');
+  await expect(page.getByTestId('incl-risk')).toHaveText('Riesgo de avalancha: Alto');
+  await expect(page.locator('.incl-card')).toHaveAttribute('data-zone', 'extreme');
+
   // Apuntando hacia abajo de la pendiente: elevación negativa.
   await page.getByRole('button', { name: 'Apuntando' }).click();
   await tiltForward(page, -27);

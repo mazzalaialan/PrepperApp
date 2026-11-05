@@ -69,7 +69,7 @@ export function setupProtocols(): { contoursUrl: string } {
     const minElevation = Number(q.get('min') ?? 0) || 0;
     const list = (k: string) => (q.get(k) ?? '').split(',').filter(Boolean).map(Number).filter(Number.isFinite);
     const c = themeColors();
-    const colors = { low: c.ok, caution: c.warn, avalanche: c.danger, steep: c.steep, hatch: HATCH_RECENT, hatchUsual: HATCH_USUAL };
+    const colors = { low: c.ok, caution: c.warn, avalanche: c.slopeAvalanche, steep: c.steep, extreme: c.extreme, hatch: HATCH_RECENT, hatchUsual: HATCH_USUAL };
     if (z > DEM_MAX_ZOOM) {
       // Más cerca que la elevación: la altura se interpola suave y la pendiente se calcula a la escala de la pantalla,
       // así los bordes entre colores no salen en escalones y las rayas mantienen su ancho.

@@ -35,12 +35,14 @@ describe('pendiente para la capa de avalanchas', () => {
   });
 
   it('pinta con los colores del inclinómetro, también el verde de riesgo bajo', () => {
-    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b' };
-    const px = paintSlope(new Float32Array([10, 27, 38, 50]), colors, { alpha: 190 });
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#f07c1a', extreme: '#8c939b' };
+    const px = paintSlope(new Float32Array([10, 27, 38, 50, 60]), colors, { alpha: 190 });
     expect([...px.slice(0, 4)]).toEqual([0x6f, 0x9e, 0x4c, 190]);
     expect([...px.slice(4, 8)]).toEqual([0xd0, 0xa0, 0x3c, 190]);
     expect([...px.slice(8, 12)]).toEqual([0xb8, 0x4a, 0x30, 190]);
-    expect([...px.slice(12, 16)]).toEqual([0xe8, 0x23, 0x1b, 190]);
+    // 45° a 55°: naranja; más de 55°: gris.
+    expect([...px.slice(12, 16)]).toEqual([0xf0, 0x7c, 0x1a, 190]);
+    expect([...px.slice(16, 20)]).toEqual([0x8c, 0x93, 0x9b, 190]);
   });
 
   it('mide hacia dónde mira la ladera', () => {
@@ -58,7 +60,7 @@ describe('pendiente para la capa de avalanchas', () => {
   });
 
   it('raya solo las laderas empinadas de sotavento', () => {
-    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b', hatch: '#000000' };
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#f07c1a', extreme: '#8c939b', hatch: '#000000' };
     const size = 12;
     const slope = new Float32Array(size * size).fill(38);
     const facingEast = new Float32Array(size * size).fill(90);
@@ -77,7 +79,7 @@ describe('pendiente para la capa de avalanchas', () => {
   });
 
   it('el habitual va en la otra diagonal y en otro color', () => {
-    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#e8231b', hatch: '#000000', hatchUsual: '#0000ff' };
+    const colors = { low: '#6f9e4c', caution: '#d0a03c', avalanche: '#b84a30', steep: '#f07c1a', extreme: '#8c939b', hatch: '#000000', hatchUsual: '#0000ff' };
     const size = 12;
     const slope = new Float32Array(size * size).fill(38);
     const east = new Float32Array(size * size).fill(90);

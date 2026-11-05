@@ -129,7 +129,8 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   const legend = page.getByTestId('slope-legend');
   await expect(legend).toContainText('menos de 25°');
   await expect(legend).toContainText('30° a 45°');
-  await expect(legend).toContainText('más de 45°');
+  await expect(legend).toContainText('45° a 55°');
+  await expect(legend).toContainText('más de 55°');
   await expect(legend).toContainText('Cargada por viento en los últimos 7 días');
   await expect(legend).toContainText('Sotavento habitual');
   // Viento del oeste con nieve en los últimos días (laderas al este) y, aparte, el habitual de la zona (al noreste).
@@ -333,4 +334,46 @@ test('mapas importados a mano: un .pmtiles se copia al dispositivo y se usa sin 
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Borrar buenos-aires.pmtiles' }).click();
   await expect(page.getByTestId('imported-list')).toHaveCount(0);
+});
+
+test('herramientas del mapa: medir distancia y recorrido, y dirección a un punto', async ({ page }) => {
+  await mockMaps(page);
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/orientation/maps');
+  const canvas = page.getByTestId('offline-map').locator('canvas');
+  await expect(canvas).toBeVisible();
+  await expect(page.getByTestId('map-center')).toHaveText(/zoom 12$/, { timeout: 15_000 });
+  const box = (await canvas.boundingBox())!;
+  const cx = box.width / 2;
+  const cy = box.height / 2;
+
+  // Medir: dos puntos = línea recta; tres = recorrido; deshacer vuelve a dos.
+  await page.getByRole('button', { name: 'Medir' }).click();
+  await expect(page.getByTestId('measure-panel')).toContainText('Tocá el mapa para marcar el primer punto.');
+  await canvas.click({ position: { x: cx, y: cy } });
+  await canvas.click({ position: { x: cx + 200, y: cy } });
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-measure', '2');
+  await expect(page.getByTestId('measure-distance')).toHaveText(/^\d+,\d+ km · en línea recta$/);
+  // Terreno de prueba plano a 0 m.
+  await expect(page.getByTestId('measure-climb')).toHaveText('Desnivel: +0 m subiendo, −0 m bajando');
+  await canvas.click({ position: { x: cx + 200, y: cy + 150 } });
+  await expect(page.getByTestId('measure-distance')).toContainText('2 tramos');
+  await page.getByRole('button', { name: 'Deshacer' }).click();
+  await expect(page.getByTestId('measure-distance')).toContainText('en línea recta');
+
+  // Dirección a un punto: desde el GPS hacia el este.
+  await page.getByRole('button', { name: 'Dirección a un punto' }).click();
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-measure', '0');
+  await canvas.click({ position: { x: cx + 200, y: cy } });
+  await expect(page.getByTestId('target-bearing')).toHaveText(/^(89|90|91)° E · \d+,\d+ km$/);
+  await expect(page.getByTestId('target-magnetic')).toHaveText(/^En la brújula \(magnético\): (99|100|101)° E$/);
+  await expect(page.getByTestId('target-alt')).toContainText('Altura del punto ≈ 0 m');
+  await page.getByRole('link', { name: 'Guardar como waypoint' }).click();
+  await expect(page.getByLabel('Coordenadas', { exact: true })).toHaveValue(/^-34\.\d+, -58\.\d+$/);
 });
