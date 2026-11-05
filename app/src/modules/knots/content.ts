@@ -49,7 +49,7 @@ export const NEEDS: Need[] = [
       { label: l('Dos cuerdas de rappel (que no se trabe al recuperarla)', 'Two rappel ropes (so it does not snag when pulled down)'), knots: ['union-rappel'] },
       { label: l('Cerrar un cordino en anillo', 'Close a cord into a loop'), knots: ['pescador-doble'] },
       { label: l('Cinta plana', 'Flat webbing'), knots: ['nudo-cinta'] },
-      { label: l('Las puntas de una misma cuerda (vendaje, paquete)', 'Two ends of the same cord (bandage, bundle)'), knots: ['rizo'], note: l('No para cargas.', 'Not for loads.') },
+      { label: l('Las puntas de una misma cuerda (vendaje, paquete)', 'Two ends of the same cord (bandage, bundle)'), knots: ['rizo', 'cirujano'], note: l('No para cargas.', 'Not for loads.') },
     ],
   },
   {
@@ -66,6 +66,11 @@ export const NEEDS: Need[] = [
         note: l('Nunca alrededor de una persona.', 'Never around a person.'),
       },
       { label: l('Que se suelte de un tirón', 'Released with one pull'), knots: ['escape'], note: l('No para cargas importantes.', 'Not for important loads.') },
+      { label: l('Rematar o atar simple a un poste o anilla', 'Simple tie-off to a post or ring'), knots: ['medios-cotes'] },
+      { label: l('Vientos de carpa o lona que se ajusten', 'Adjustable tent or tarp guylines'), knots: ['tensor', 'camionero'] },
+      { label: l('A una anilla o un ancla, con tirones (náutico)', 'To a ring or anchor, with jerks (nautical)'), knots: ['ancla'] },
+      { label: l('Amarrar un bote a una cornamusa', 'Moor a boat to a cleat'), knots: ['cornamusa'] },
+      { label: l('Cerrar una bolsa o atar un manojo', 'Close a bag or bind a bundle'), knots: ['constrictor'] },
       { label: l('Una cinta al árbol o al arnés', 'A sling to a tree or harness'), knots: ['alondra'] },
     ],
   },
@@ -102,12 +107,16 @@ export const NEEDS: Need[] = [
     options: [
       { label: l('Tope en la punta', 'Stopper at the end'), knots: ['tope', 'simple'] },
       { label: l('Tope que se suelta de un tirón', 'Stopper released with one pull'), knots: ['escape'] },
+      { label: l('Tope fácil de desatar (poleas, anillas)', 'Easy-to-untie stopper (pulleys, rings)'), knots: ['ocho-simple'] },
     ],
   },
   {
     id: 'shorten',
     label: l('Acortar una cuerda sin cortarla', 'Shorten a rope without cutting it'),
-    options: [{ label: l('Provisorio, con la cuerda tensa', 'Temporary, with the rope taut'), knots: ['margarita'] }],
+    options: [
+      { label: l('Provisorio, con la cuerda tensa', 'Temporary, with the rope taut'), knots: ['margarita'] },
+      { label: l('Guardarla sin que se enrede', 'Store it tangle-free'), knots: ['cadena'] },
+    ],
   },
   {
     id: 'build',
@@ -116,12 +125,13 @@ export const NEEDS: Need[] = [
       { label: l('Dos palos cruzados', 'Two crossed poles'), knots: ['atadura-cuadrada'] },
       { label: l('Una "A" o bípode', 'An A-frame or bipod'), knots: ['atadura-tijera'] },
       { label: l('Un trípode', 'A tripod'), knots: ['atadura-tripode'] },
+      { label: l('Refuerzos en cruz (palos que tienden a separarse)', 'Cross braces (poles that spring apart)'), knots: ['atadura-diagonal'] },
     ],
   },
   {
     id: 'fish',
     label: l('Pescar', 'Fish'),
-    options: [{ label: l('Atar el anzuelo o el señuelo', 'Tie on the hook or lure'), knots: ['palomar', 'clinch'] }],
+    options: [{ label: l('Atar el anzuelo o el señuelo', 'Tie on the hook or lure'), knots: ['palomar', 'clinch', 'uni'] }],
   },
 ];
 

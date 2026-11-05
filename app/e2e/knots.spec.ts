@@ -17,7 +17,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   expect(titles.indexOf('Cabuyería y anclajes')).toBeLessThan(titles.indexOf('Huerta y cultivo'));
 
   await page.getByRole('link', { name: /Guía de nudos/ }).click();
-  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 39 nudos.');
+  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 49 nudos.');
   await page.getByRole('button', { name: 'Rappel y escalada' }).click();
   await expect(page.getByText(/practicá primero con un instructor/)).toBeVisible();
   const list = page.getByTestId('knot-list');
@@ -47,7 +47,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await page.getByTestId('knot-learned').click();
   await expect(page.getByTestId('knot-learned')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('back').click();
-  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 1 de 39 nudos.');
+  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 1 de 49 nudos.');
 
   // Asistente: unir dos cuerdas de distinto grosor → vuelta de escota.
   await page.getByText('¿Qué necesito hacer?').click();
@@ -81,6 +81,19 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await expect(page.getByTestId('knot-anchors')).toContainText('Árbol');
   await page.goto('/#/knots/anchors/angulos');
   await expect(page.getByRole('cell', { name: '574 %' })).toBeVisible();
+
+  // Anclajes nuevos: polipasto (figura del manual) y línea de techo (dibujo propio), con sus imágenes.
+  await page.goto('/#/knots/anchors/polipasto');
+  await expect(page.getByRole('heading', { name: 'Polipasto 3:1 ("Z")' })).toBeVisible();
+  await expect(page.locator('img[src$="polipasto.webp"]')).toBeVisible();
+  await page.goto('/#/knots/anchors/techo-lona');
+  await expect(page.locator('img[src$="techo-lona.webp"]')).toBeVisible();
+  await expect(page.evaluate(() => (document.querySelector('img[src$="techo-lona.webp"]') as HTMLImageElement).naturalWidth)).resolves.toBeGreaterThan(0);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-54-ridgeline.png`, fullPage: true });
+  // Nudos nuevos en la búsqueda.
+  await page.goto('/#/knots/guide');
+  await page.getByLabel('Buscar un nudo').fill('carpa');
+  await expect(page.getByTestId('knot-list')).toContainText('Tensor ajustable');
 
   await page.goto('/#/knots/glossary');
   await expect(page.getByTestId('knot-glossary')).toContainText('Chicote');

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 280" width="560" height="280"><rect width="560" height="280" fill="#fff"/><style>
+ text{font-family:DejaVu Sans,Arial,sans-serif;font-size:13px;fill:#222}
+ .t{font-size:12px}
+ .rope{fill:none;stroke:#b5651d;stroke-width:3;stroke-linecap:round}
+ .trunk{fill:#8b5a2b}
+ .leaf{fill:#6a9a4a}
+ .ground{stroke:#555;stroke-width:2}
+ .dim{stroke:#1f5fa8;stroke-width:1.5;fill:none}
+ .dimt{fill:#1f5fa8;font-size:12px}
+ .tarp{fill:#5f85ad;fill-opacity:.85;stroke:#33506e;stroke-width:1.5}
+ .bad{stroke:#c0392b;stroke-width:2;stroke-dasharray:6 4;fill:#c0392b;fill-opacity:.08}
+ .knot{fill:#b5651d}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f5fa8"/></marker></defs>
+<line x1="0" y1="240" x2="560" y2="240" class="ground"/>
+<polygon points="120,240 230,100 340,240" class="tarp"/>
+<line x1="230" y1="100" x2="440" y2="240" class="rope"/>
+<line x1="440" y1="240" x2="468" y2="212" stroke="#444" stroke-width="5" stroke-linecap="round"/>
+<line x1="440" y1="240" x2="420" y2="262" stroke="#444" stroke-width="5" stroke-linecap="round" stroke-opacity=".5"/>
+<circle cx="395" cy="210" r="6" class="knot"/>
+<path d="M500 240 A60 60 0 0 0 482 197" class="dim"/><text x="490" y="190" class="dimt">≈ 45°</text>
+<path d="M390 240 A50 50 0 0 1 400 213" class="dim"/><text x="345" y="228" class="dimt">≈ 45°</text>
+<text x="380" y="190" class="t">tensor</text>
+<text x="250" y="270" class="t">estaca inclinada, en contra del tirón</text>
+</svg>

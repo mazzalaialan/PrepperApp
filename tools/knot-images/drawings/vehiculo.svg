@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 260" width="560" height="260"><rect width="560" height="260" fill="#fff"/><style>
+ text{font-family:DejaVu Sans,Arial,sans-serif;font-size:13px;fill:#222}
+ .t{font-size:12px}
+ .rope{fill:none;stroke:#b5651d;stroke-width:3;stroke-linecap:round}
+ .trunk{fill:#8b5a2b}
+ .leaf{fill:#6a9a4a}
+ .ground{stroke:#555;stroke-width:2}
+ .dim{stroke:#1f5fa8;stroke-width:1.5;fill:none}
+ .dimt{fill:#1f5fa8;font-size:12px}
+ .tarp{fill:#5f85ad;fill-opacity:.85;stroke:#33506e;stroke-width:1.5}
+ .bad{stroke:#c0392b;stroke-width:2;stroke-dasharray:6 4;fill:#c0392b;fill-opacity:.08}
+ .knot{fill:#b5651d}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f5fa8"/></marker></defs>
+<line x1="0" y1="210" x2="560" y2="210" class="ground"/>
+<path d="M40 180 L40 140 L80 140 L105 105 L190 105 L215 140 L250 140 L250 180 Z" fill="#7a8a99" stroke="#3d4a56" stroke-width="2"/>
+<circle cx="85" cy="185" r="22" fill="#333"/><circle cx="205" cy="185" r="22" fill="#333"/>
+<polygon points="226,210 250,210 250,194" fill="#d0a03c" stroke="#8a6a1a"/><polygon points="64,210 40,210 40,194" fill="#d0a03c" stroke="#8a6a1a"/>
+<rect x="250" y="168" width="14" height="8" fill="#222"/>
+<rect x="262" y="150" width="298" height="44" class="bad"/>
+<line x1="264" y1="172" x2="560" y2="172" class="rope"/>
+<circle cx="272" cy="172" r="6" class="knot"/>
+<text x="300" y="142" class="t" style="fill:#c0392b">nadie en línea con la cuerda tensa</text>
+<text x="255" y="236" class="t">gancho de remolque o chasis (no el paragolpes)</text>
+<text x="20" y="250" class="t">calzas</text>
+<text x="95" y="96" class="t">freno de mano, cambio puesto</text>
+</svg>

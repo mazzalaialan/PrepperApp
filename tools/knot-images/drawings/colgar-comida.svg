@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" width="560" height="320"><rect width="560" height="320" fill="#fff"/><style>
+ text{font-family:DejaVu Sans,Arial,sans-serif;font-size:13px;fill:#222}
+ .t{font-size:12px}
+ .rope{fill:none;stroke:#b5651d;stroke-width:3;stroke-linecap:round}
+ .trunk{fill:#8b5a2b}
+ .leaf{fill:#6a9a4a}
+ .ground{stroke:#555;stroke-width:2}
+ .dim{stroke:#1f5fa8;stroke-width:1.5;fill:none}
+ .dimt{fill:#1f5fa8;font-size:12px}
+ .tarp{fill:#5f85ad;fill-opacity:.85;stroke:#33506e;stroke-width:1.5}
+ .bad{stroke:#c0392b;stroke-width:2;stroke-dasharray:6 4;fill:#c0392b;fill-opacity:.08}
+ .knot{fill:#b5651d}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f5fa8"/></marker></defs>
+<line x1="0" y1="295" x2="560" y2="295" class="ground"/>
+<rect x="50" y="20" width="26" height="275" class="trunk"/><circle cx="63" cy="22" r="34" class="leaf"/>
+<path d="M76 70 L330 62" stroke="#8b5a2b" stroke-width="9" stroke-linecap="round"/>
+<path d="M250 64 L250 165" class="rope"/>
+<path d="M250 64 Q262 58 270 70 L480 282" class="rope"/>
+<rect x="232" y="165" width="36" height="46" rx="8" fill="#7d6b4f"/>
+<text x="236" y="193" class="t" style="fill:#fff">bolsa</text>
+<rect x="476" y="190" width="18" height="105" class="trunk"/><circle cx="485" cy="190" r="26" class="leaf"/>
+<circle cx="481" cy="282" r="6" class="knot"/>
+<line x1="210" y1="211" x2="210" y2="295" class="dim" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="120" y="258" class="dimt">3 m o más</text>
+<line x1="76" y1="228" x2="232" y2="228" class="dim" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="100" y="222" class="dimt">1,5 m o más</text>
+<text x="368" y="276" class="t">2 medios cotes</text>
+<text x="200" y="40" class="t">rama viva y firme</text>
+</svg>
