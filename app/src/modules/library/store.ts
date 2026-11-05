@@ -128,27 +128,44 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     const ids = [...get().selected].filter((id) => books.has(id));
     const failures = new Map<string, LibraryError['code']>();
     void navigator.storage?.persist?.();
-    for (const [n, id] of ids.entries()) {
-      const { book, categoryId } = books.get(id)!;
-      set({ progress: { title: book.title, n: n + 1, total: ids.length, bytes: 0, bookBytes: book.bytes } });
-      try {
-        const inst = await installBook(serverUrl, book, categoryId, {
-          key: get().key ?? undefined,
-          passphrase: get().passphrase ?? undefined,
-          onProgress: (bytes) => set({ progress: { title: book.title, n: n + 1, total: ids.length, bytes, bookBytes: book.bytes } }),
-        });
-        const installed = new Map(get().installed).set(id, inst);
-        set({ installed });
-        await saveIndex(installed);
-        const selected = new Set(get().selected);
-        selected.delete(id);
-        set({ selected });
-      } catch (e) {
-        failures.set(id, e instanceof LibraryError ? e.code : 'download');
-        // Sin conexión no tiene sentido seguir con los demás.
-        if (e instanceof LibraryError && e.code === 'offline') break;
+    // Dos a la vez: un bloque grande baja más rápido sin saturar el celular.
+    let next = 0;
+    let done = 0;
+    let stop = false;
+    const totalBytes = ids.reduce((s, id) => s + books.get(id)!.book.bytes, 0);
+    const got = new Map<string, number>();
+    const report = (title: string) =>
+      set({ progress: { title, n: Math.min(done + 1, ids.length), total: ids.length, bytes: [...got.values()].reduce((a, b) => a + b, 0), bookBytes: totalBytes } });
+    async function worker() {
+      while (!stop && next < ids.length) {
+        const id = ids[next++]!;
+        const { book, categoryId } = books.get(id)!;
+        report(book.title);
+        try {
+          const inst = await installBook(serverUrl, book, categoryId, {
+            key: get().key ?? undefined,
+            passphrase: get().passphrase ?? undefined,
+            onProgress: (bytes) => {
+              got.set(id, bytes);
+              report(book.title);
+            },
+          });
+          const installed = new Map(get().installed).set(id, inst);
+          set({ installed });
+          await saveIndex(installed);
+          const selected = new Set(get().selected);
+          selected.delete(id);
+          set({ selected });
+        } catch (e) {
+          failures.set(id, e instanceof LibraryError ? e.code : 'download');
+          // Sin conexión o clave mal: no tiene sentido seguir con los demás.
+          if (e instanceof LibraryError && (e.code === 'offline' || e.code === 'too-many-tries')) stop = true;
+        }
+        done++;
+        got.set(id, book.bytes);
       }
     }
+    await Promise.all([worker(), worker()]);
     set({ progress: null, failures });
   },
 

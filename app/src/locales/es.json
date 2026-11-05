@@ -2043,6 +2043,8 @@
     },
     "catCount_one": "{{count}} libro · {{have}} en el dispositivo",
     "catCount_other": "{{count}} libros · {{have}} en el dispositivo",
+    "selectVisible": "Elegir los {{count}} que se ven ({{mb}} MB)",
+    "clearSelection": "Quitar la selección",
     "selectAll": "Elegir todos los de esta categoría",
     "selectCategory": "Elegir todos los libros de {{name}}",
     "selectBook": "Elegir «{{title}}»",

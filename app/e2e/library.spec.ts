@@ -25,7 +25,11 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await expect(page.getByTestId('book-enciclopedia')).toContainText('Con derechos');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-60-library.png`, fullPage: true });
 
-  // Toda la categoría: el libre y el con derechos.
+  // En bloque: con el filtro "Libres", "elegir los que se ven" toma solo el libre; después, toda la categoría.
+  await page.getByRole('button', { name: 'Libres', exact: true }).click();
+  await page.getByTestId('library-select-visible').click();
+  await expect(page.getByTestId('library-bar')).toContainText('1 libro elegido');
+  await page.getByRole('button', { name: 'Todos', exact: true }).click();
   await page.getByLabel('Elegir todos los libros de Cabuyería').check();
   await expect(page.getByTestId('library-bar')).toContainText('2 libros elegidos');
   await page.getByTestId('library-download').click();

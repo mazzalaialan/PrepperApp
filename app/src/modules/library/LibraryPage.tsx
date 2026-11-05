@@ -125,6 +125,9 @@ export function LibraryPage() {
   const canPrivate = !!catalog?.privateAvailable;
   const upToDate = (b: LibraryBook) => installed.get(b.id)?.sha256 === b.sha256;
   const selectable = (b: LibraryBook) => !upToDate(b) && (b.license === 'public' || canPrivate);
+  const visibleIds = visible.flatMap((c) => c.books.filter((b) => selectable(b)).map((b) => b.id));
+  const visibleSet = new Set(visibleIds);
+  const visibleBytes = visible.flatMap((c) => c.books).filter((b) => visibleSet.has(b.id)).reduce((s, b) => s + b.bytes, 0);
 
   function start() {
     if (needsKey) setAskKey(true);
@@ -179,6 +182,18 @@ export function LibraryPage() {
               </button>
             ))}
           </div>
+          {visibleIds.length > 0 && (
+            <div className="row-between" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+              <button className="btn" type="button" onClick={() => setSelected(visibleIds, true)} data-testid="library-select-visible">
+                {t('library.selectVisible', { count: visibleIds.length, mb: mb(visibleBytes, lang) })}
+              </button>
+              {selected.size > 0 && (
+                <button className="btn-link" type="button" onClick={() => setSelected([...selected], false)}>
+                  {t('library.clearSelection')}
+                </button>
+              )}
+            </div>
+          )}
 
           {visible.map((cat) => {
             const ids = cat.books.filter(selectable).map((b) => b.id);
@@ -257,7 +272,9 @@ export function LibraryPage() {
         <div className="library-bar" data-testid="library-bar">
           {progress ? (
             <div style={{ flex: 1 }} role="status" aria-live="polite">
-              <span className="hint">{t('library.downloading', { n: progress.n, total: progress.total, title: progress.title })}</span>
+              <span className="hint">
+                {t('library.downloading', { n: progress.n, total: progress.total, title: progress.title })} · {mb(progress.bytes, lang)} / {mb(progress.bookBytes, lang)} MB
+              </span>
               <span className="progress">
                 <span className="progress-bar" style={{ width: `${(100 * progress.bytes) / Math.max(1, progress.bookBytes)}%` }} />
               </span>
