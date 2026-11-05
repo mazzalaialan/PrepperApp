@@ -5,8 +5,8 @@
 
 export const REPO_URL = 'https://github.com/mazzalaialan/PrepperApp';
 export const CAFECITO_URL = 'https://cafecito.app/vikarg';
-/** Mail para el formulario de contacto. Vacío = todavía no hay: el botón no aparece. */
-export const CONTACT_EMAIL = '';
+/** Mail de contacto de VikArg (formulario de contacto y reporte de errores). Vacío = el botón no aparece. */
+export const CONTACT_EMAIL = 'contacto.vikarg@gmail.com';
 
 export type FeedbackKind = 'bug' | 'idea' | 'message';
 
