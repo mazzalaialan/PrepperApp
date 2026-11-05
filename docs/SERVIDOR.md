@@ -104,8 +104,15 @@ npm run maps:elevation -- --out ../deploy/maps/elevation.pmtiles
 npm run maps:vector -- ../deploy/maps
 ```
 Para otra zona: `--bounds oeste,sur,este,norte` en la elevación, y `AREA=` y `BOUNDS=` en el mapa (ver `server/src/maps/build-vector.sh`).
+Si `osmdata.openstreetmap.de` (polígonos de agua) no responde, `WATER_URL=` permite usar otra copia, por ejemplo la del Wayback Machine.
 
-**Cómo lo usa la app.** En *Mapas offline → Origen de los mapas* se elige entre tres opciones:
+**Actualizar el mapa cada 3 meses.** `server/src/maps/update-maps.sh` compara la fecha del extracto de Geofabrik con la del `vector.pmtiles` y, si hay datos de más de 30 días más nuevos (`MIN_DAYS=`), vuelve a armar el mapa. El archivo se reemplaza recién cuando está completo. La elevación no se regenera, porque Terrain Tiles es un conjunto fijo. Con cron:
+```
+0 4 1 2,5,8,11 * sh /ruta/PrepperApp/server/src/maps/update-maps.sh /ruta/PrepperApp/deploy/maps
+```
+El registro queda en `deploy/maps/update.log`.
+
+**Cómo lo usa la app.** En *Ajustes → Conexiones → Bajar los mapas de* se elige entre tres opciones:
 - **Automático** (por defecto): pide cada tesela a este servidor. Si no responde, está sobrecargado (503) o no tiene esa zona, la pide a las fuentes públicas, y deja de lado al servidor por un rato (lo que diga `Retry-After`, o 5 minutos). Una zona más grande que el límite público se baja solo del servidor: si falla a mitad de camino, quedan teselas sin bajar y se completa repitiendo la descarga más tarde.
 - **Solo mi servidor.**
 - **Solo servidores públicos**, como antes.

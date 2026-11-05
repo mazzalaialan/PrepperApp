@@ -14,7 +14,8 @@
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "maps:elevation": "node src/maps/buildElevation.ts",
-    "maps:vector": "sh src/maps/build-vector.sh"
+    "maps:vector": "sh src/maps/build-vector.sh",
+    "maps:update": "sh src/maps/update-maps.sh"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",
