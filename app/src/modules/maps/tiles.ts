@@ -1,4 +1,5 @@
 import { archiveContains, fetchTile, type MapSourceMode, type ServerMaps, type TileKind } from './sources';
+import { importedTile } from './imported';
 
 /**
  * Mapas offline (ARQUITECTURA §12): fuentes, cuentas de teselas y descarga
@@ -249,6 +250,16 @@ export async function cachedOr(key: string, load: () => Promise<ArrayBuffer | nu
 
 /** Una tesela fuera de lo descargado, según la fuente elegida (servidor propio o públicas). */
 export const networkTile = (kind: TileKind, z: number, x: number, y: number) => async () => (await fetchTile(kind, z, x, y)).data;
+
+/**
+ * Una tesela para el mapa, en orden: los mapas importados (.pmtiles), lo
+ * descargado por zonas y, con conexión, el servidor propio o las públicas.
+ */
+export async function mapTile(kind: TileKind, z: number, x: number, y: number): Promise<ArrayBuffer | null> {
+  const local = await importedTile(kind, z, x, y).catch(() => undefined);
+  if (local !== undefined) return local;
+  return cachedOr(fill(kind === 'vector' ? LOCAL_TILE : DEM_URL, z, x, y), networkTile(kind, z, x, y));
+}
 
 /** Lo que no son teselas (letras): directo de su URL. */
 export const networkUrl = (url: string) => async () => {

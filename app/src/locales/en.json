@@ -644,6 +644,27 @@
     "outsideServer": "Your server doesn't have a map of this whole zone. To download it from the public servers, choose \"Automatic\" or \"Public servers only\" in Settings → Connections → Download maps from.",
     "noServer": "Your server has no maps loaded or isn't responding. Choose \"Automatic\" or \"Public servers only\" in Settings → Connections → Download maps from.",
     "sourceHint": "Map source: {{mode}}. Change it in Settings → Connections.",
+    "coveredByImport": "This area is already in the imported map “{{name}}”: no need to download it.",
+    "imported": {
+      "title": "Imported maps",
+      "hint": "Load a .pmtiles file (a whole region, for example built with Planetiler or copied from another device) and use it offline without downloading areas. Supported: maps with the OpenMapTiles schema and elevation in Terrarium format.",
+      "button": "Import .pmtiles file",
+      "copying": "Copying to the device: {{done}} of {{total}} MB…",
+      "done": "Done: “{{name}}” ({{kind}}) is available offline.",
+      "summary": "{{kind}} · zoom {{min}} to {{max}} · {{mb}} MB",
+      "kinds": { "vector": "Map", "elevation": "Elevation" },
+      "delete": "Delete {{name}}",
+      "confirmDelete": "Delete the imported map “{{name}}” from this device?",
+      "errors": {
+        "notPmtiles": "This is not a valid .pmtiles file.",
+        "unknownSchema": "The map doesn't use the OpenMapTiles schema (the one from OpenFreeMap and Planetiler): the app can't draw it.",
+        "mapboxTerrain": "The elevation is in Mapbox format; the app uses Terrarium (the one from AWS Terrain Tiles).",
+        "unsupportedType": "The file has neither a vector map nor elevation.",
+        "noSpace": "There isn't enough space on the device for this file.",
+        "noStorage": "This browser can't store large files for offline use.",
+        "other": "The file couldn't be imported."
+      }
+    },
     "fromServer": "Downloaded from your server.",
     "fromPublic": "Downloaded from the public servers (OpenFreeMap and AWS).",
     "source": {
@@ -916,7 +937,23 @@
     "lasts_one": "lasts {{count}} day",
     "lasts_other": "lasts {{count}} days",
     "missing": "{{missing}} {{unit}} short",
-    "noMatchingItems": "No item in the category uses \"{{unit}}\"."
+    "noMatchingItems": "No item in the category uses \"{{unit}}\".",
+    "plan": "Plan for {{span}}",
+    "planOn": "{{on}} of {{total}} checked",
+    "planOff": "not checked",
+    "daysSpan_one": "{{count}} day",
+    "daysSpan_other": "{{count}} days",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "control": "Check “{{name}}”",
+    "rule": "rule",
+    "notControlled": "Not checked: no alert if short.",
+    "addExamples": "Add example rules",
+    "examplesAdded_one": "Added {{count}} example rule.",
+    "examplesAdded_other": "Added {{count}} example rules.",
+    "examplesThere": "The example rules are already there.",
+    "examplesHint": "Examples: water (3 L per person per day, for drinking and cooking) and dry non-perishable food (0.5 kg per person per day), in 3-day, 7-day and 6-month plans. Only the 7-day plan is checked; tick or untick whichever you want. For your own plan, create rules with another number of days.",
+    "examples": {"water": "Drinking and cooking water", "food": "Non-perishable food"}
   },
   "starmap": {
     "loading": "Loading the star catalog…",

@@ -43,6 +43,8 @@ interface Props {
   preview: MapCircle | null;
   /** Contorno de la región (sin conexión y fuera de las zonas, al menos se ve dónde estás). */
   outline: FeatureCollection | null;
+  /** Cambia cuando se importa o borra un mapa: se vuelven a pedir las teselas. */
+  tilesVersion?: number;
   /** Cambia `key` para mover la vista. */
   flyTo: (ViewState & { key: number }) | null;
   /** Vista que sigue tu posición (y gira con el rumbo, si hay) o libre. */
@@ -287,6 +289,15 @@ export function MapView(props: Props) {
     // Puntos grabados a la vista (para las pruebas).
     container.current?.setAttribute('data-recorded', String(props.recorded?.flat().length ?? 0));
   }, [props.waypoints, props.routes, props.tracks, props.done, props.recorded, props.here, props.zones, props.preview, props.outline]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !styleReady.current || !props.tilesVersion) return;
+    for (const id of ['osm', 'dem', 'terrain', 'slope']) {
+      const src = m.getSource(id) as { tiles?: string[]; setTiles?: (tiles: string[]) => void } | undefined;
+      if (src?.tiles && src.setTiles) src.setTiles([...src.tiles]);
+    }
+  }, [props.tilesVersion]);
 
   useEffect(() => {
     if (props.flyTo) map.current?.flyTo({ center: [props.flyTo.lon, props.flyTo.lat], zoom: props.flyTo.zoom, essential: true });

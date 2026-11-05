@@ -5,11 +5,11 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import './appSources';
 import { decodeTerrarium, HATCH_RECENT, HATCH_USUAL, overzoomElevation, paintSlopeTile, slopeTile, type SlopeStyle } from './slope';
 import { themeColors } from './style';
-import { cachedOr, DEM_MAX_ZOOM, DEM_URL, fill, GLYPHS_URL, LOCAL_TILE, networkTile, networkUrl } from './tiles';
+import { cachedOr, DEM_MAX_ZOOM, DEM_URL, GLYPHS_URL, mapTile, networkUrl } from './tiles';
 
 /**
- * Protocolos propios de MapLibre: cada pedido busca primero en lo descargado
- * y, si falta y hay conexión, en el servidor propio o las fuentes públicas
+ * Protocolos propios de MapLibre: cada pedido busca primero en los mapas
+ * importados y lo descargado y, si falta y hay conexión, en el servidor propio o las fuentes públicas
  * (sources.ts). Así una zona descargada sigue andando aunque OpenFreeMap
  * publique una versión nueva del mapa.
  */
@@ -27,7 +27,7 @@ function demHeights(z: number, x: number, y: number): Promise<Float32Array | nul
   if (hit) {
     decoded.delete(key);
   } else {
-    hit = cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y)).then((png) => (png ? decodeTerrarium(png) : null));
+    hit = mapTile('dem', z, x, y).then((png) => (png ? decodeTerrarium(png) : null));
     // Una falla no se recuerda: puede volver la conexión.
     hit.then((h) => h ?? decoded.delete(key)).catch(() => decoded.delete(key));
   }
@@ -48,14 +48,14 @@ export function setupProtocols(): { contoursUrl: string } {
 
   maplibregl.addProtocol('vktile', async (params) => {
     const { z, x, y } = parseZxy(params.url);
-    const data = await cachedOr(fill(LOCAL_TILE, z, x, y), networkTile('vector', z, x, y));
+    const data = await mapTile('vector', z, x, y);
     // Sin datos: tesela vacía (se ve el fondo y el contorno), no un error.
     return { data: data ?? new ArrayBuffer(0) };
   });
 
   maplibregl.addProtocol('vkdem', async (params) => {
     const { z, x, y } = parseZxy(params.url);
-    const data = await cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y));
+    const data = await mapTile('dem', z, x, y);
     if (!data) throw new Error('sin elevación');
     return { data };
   });
@@ -78,7 +78,7 @@ export function setupProtocols(): { contoursUrl: string } {
       const style: SlopeStyle = { colors, minElevation, lee: list('lee'), leeUsual: list('usual') };
       return { data: await paintSlopeTile(elev, z, x, y, style, 1) };
     }
-    const dem = await cachedOr(fill(DEM_URL, z, x, y), networkTile('dem', z, x, y));
+    const dem = await mapTile('dem', z, x, y);
     if (!dem) throw new Error('sin elevación');
     return { data: await slopeTile(dem, z, x, y, colors, minElevation, list('lee'), list('usual')) };
   });
@@ -98,7 +98,7 @@ export function setupProtocols(): { contoursUrl: string } {
   if (manager && 'getTile' in manager) {
     manager.getTile = async (url: string) => {
       const m = /\/(\d+)\/(\d+)\/(\d+)\.png$/.exec(url);
-      const data = m ? await cachedOr(url, networkTile('dem', Number(m[1]), Number(m[2]), Number(m[3]))) : null;
+      const data = m ? await mapTile('dem', Number(m[1]), Number(m[2]), Number(m[3])) : null;
       if (!data) throw new Error('sin elevación');
       return { data: new Blob([data], { type: 'image/png' }) };
     };

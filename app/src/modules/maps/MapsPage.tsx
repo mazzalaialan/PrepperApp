@@ -15,11 +15,13 @@ import { loadGeoData } from '@/modules/weathermap/geo';
 import { FullscreenStage } from '@/ui/FullscreenStage';
 import './appSources';
 import { CameraButtons } from './CameraButtons';
+import { ImportedMaps } from './ImportedMaps';
+import type { ImportedMap } from './imported';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapZones, type MapZone } from './store';
 import { carryPrevailing, chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsLivePrevailing, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
 import { compassList, fetchPrevailing, leeAspects } from './wind';
-import { serverMaps, type ServerMaps } from './sources';
+import { archiveContains, serverMaps, type ServerMaps } from './sources';
 import { DETAILS, downloadZone, planZone, zoneSource, type DetailId, type DownloadProgress } from './tiles';
 
 // 100 y 200 km solo entran en el límite del servidor propio.
@@ -73,6 +75,8 @@ export function MapsPage() {
   const [abort, setAbort] = useState<AbortController | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [usage, setUsage] = useState<number | null>(null);
+  const [imported, setImported] = useState<ImportedMap[]>([]);
+  const [tilesVersion, setTilesVersion] = useState(0);
   const snowlineManual = useSettings((s) => s.settings.snowlineManual);
   const snowlineFallback = useSettings((s) => s.settings.snowlineFallback);
   const weatherUrl = useSettings((s) => s.settings.weatherUrl);
@@ -232,6 +236,8 @@ export function MapsPage() {
   const maxZoom = panel ? DETAILS.find((d) => d.id === panel.detail)!.maxZoom : 0;
   const plan = useMemo(() => (panel ? planZone(view.lat, view.lon, panel.radiusKm, maxZoom) : null), [panel, view.lat, view.lon, maxZoom]);
   const source = plan && serverInfo !== undefined ? zoneSource(plan, serverInfo, sourceMode) : null;
+  // Una zona que ya está entera en un mapa importado no hace falta bajarla.
+  const coveredBy = plan ? imported.find((m) => m.kind === 'vector' && archiveContains({ ...m, updatedAt: m.importedAt }, plan.bounds, plan.maxZoom)) : undefined;
   const preview = useMemo(() => (panel ? { id: 'preview', name: panel.name, lat: view.lat, lon: view.lon, radiusKm: panel.radiusKm } : null), [panel, view.lat, view.lon]);
 
   const mb = (bytes: number) => new Intl.NumberFormat(i18n.language, { maximumFractionDigits: bytes < 10 * 1024 * 1024 ? 1 : 0 }).format(bytes / 1024 / 1024);
@@ -314,6 +320,7 @@ export function MapsPage() {
           preview={preview}
           outline={outline}
           flyTo={flyTo}
+          tilesVersion={tilesVersion}
           follow={follow && !!fix}
           heading={heading?.trueHeading ?? null}
           onFollowBreak={() => setFollow(false)}
@@ -500,6 +507,11 @@ export function MapsPage() {
                     : t(`maps.${source.reason}`, { tiles: serverInfo?.maxZoneTiles ?? 0, mb: serverInfo?.maxZoneMb ?? 0 }))}
               </p>
             )}
+            {coveredBy && (
+              <p className="hint" style={{ margin: 0 }} data-testid="zone-covered">
+                {t('maps.coveredByImport', { name: coveredBy.name })}
+              </p>
+            )}
             {progress && (
               <div role="status" aria-live="polite">
                 <span className="progress">
@@ -557,6 +569,16 @@ export function MapsPage() {
           {t('maps.sourceHint', { mode: t(`maps.source.${sourceMode}`) })}
         </p>
       </section>
+
+      <ImportedMaps
+        onShow={(v) => {
+          // El mapa está arriba: se sube para verlo.
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setFlyTo({ ...v, key: Date.now() });
+        }} onChange={(l) => {
+          setImported(l);
+          setTilesVersion((v) => v + 1);
+        }} />
 
       <p className="hint">{t('maps.attribution')}</p>
     </div>

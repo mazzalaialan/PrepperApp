@@ -644,6 +644,27 @@
     "outsideServer": "Tu servidor no tiene mapa de toda esta zona. Para bajarla de los servidores públicos, elegí \"Automático\" o \"Solo servidores públicos\" en Ajustes → Conexiones → Bajar los mapas de.",
     "noServer": "Tu servidor no tiene mapas cargados o no responde. Elegí \"Automático\" o \"Solo servidores públicos\" en Ajustes → Conexiones → Bajar los mapas de.",
     "sourceHint": "Origen de los mapas: {{mode}}. Se cambia en Ajustes → Conexiones.",
+    "coveredByImport": "Esta zona ya está en el mapa importado “{{name}}”: no hace falta bajarla.",
+    "imported": {
+      "title": "Mapas importados",
+      "hint": "Cargá un archivo .pmtiles (una región entera, por ejemplo armada con Planetiler o copiada de otro dispositivo) y se usa sin conexión, sin bajar zonas. Sirve el mapa con esquema OpenMapTiles y la elevación en formato Terrarium.",
+      "button": "Importar archivo .pmtiles",
+      "copying": "Copiando al dispositivo: {{done}} de {{total}} MB…",
+      "done": "Listo: “{{name}}” ({{kind}}) quedó disponible sin conexión.",
+      "summary": "{{kind}} · zoom {{min}} a {{max}} · {{mb}} MB",
+      "kinds": { "vector": "Mapa", "elevation": "Elevación" },
+      "delete": "Borrar {{name}}",
+      "confirmDelete": "¿Borrar el mapa importado “{{name}}” de este dispositivo?",
+      "errors": {
+        "notPmtiles": "No es un archivo .pmtiles válido.",
+        "unknownSchema": "El mapa no tiene el esquema OpenMapTiles (el de OpenFreeMap y Planetiler): la app no lo sabe dibujar.",
+        "mapboxTerrain": "La elevación está en formato Mapbox; la app usa Terrarium (el de Terrain Tiles de AWS).",
+        "unsupportedType": "El archivo no tiene ni mapa vectorial ni elevación.",
+        "noSpace": "No hay espacio suficiente en el dispositivo para este archivo.",
+        "noStorage": "Este navegador no permite guardar archivos grandes para usar sin conexión.",
+        "other": "No se pudo importar el archivo."
+      }
+    },
     "fromServer": "Se baja de tu servidor.",
     "fromPublic": "Se baja de los servidores públicos (OpenFreeMap y AWS).",
     "source": {
@@ -916,7 +937,23 @@
     "lasts_one": "alcanza para {{count}} día",
     "lasts_other": "alcanza para {{count}} días",
     "missing": "Faltan {{missing}} {{unit}}",
-    "noMatchingItems": "Ningún artículo de la categoría está en \"{{unit}}\"."
+    "noMatchingItems": "Ningún artículo de la categoría está en \"{{unit}}\".",
+    "plan": "Plan para {{span}}",
+    "planOn": "se controlan {{on}} de {{total}}",
+    "planOff": "no se controla",
+    "daysSpan_one": "{{count}} día",
+    "daysSpan_other": "{{count}} días",
+    "months_one": "{{count}} mes",
+    "months_other": "{{count}} meses",
+    "control": "Controlar «{{name}}»",
+    "rule": "regla",
+    "notControlled": "No se controla: no avisa si falta.",
+    "addExamples": "Agregar reglas de ejemplo",
+    "examplesAdded_one": "Se agregó {{count}} regla de ejemplo.",
+    "examplesAdded_other": "Se agregaron {{count}} reglas de ejemplo.",
+    "examplesThere": "Las reglas de ejemplo ya están.",
+    "examplesHint": "Ejemplos: agua (3 L por persona por día, para tomar y cocinar) y alimentos no perecederos secos (0,5 kg por persona por día), en planes de 3 días, 7 días y 6 meses. Se controla solo el de 7 días; tildá o destildá el que quieras. Para un plan propio, creá reglas con otra cantidad de días.",
+    "examples": {"water": "Agua para tomar y cocinar", "food": "Alimentos no perecederos"}
   },
   "starmap": {
     "loading": "Cargando el catálogo de estrellas…",

@@ -287,3 +287,49 @@ test('mapas offline desde el servidor propio, con las fuentes públicas de respa
   await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '50 km' });
   await expect(page.getByTestId('zone-estimate')).toContainText('Es demasiado para bajar de los servidores públicos');
 });
+
+test('mapas importados a mano: un .pmtiles se copia al dispositivo y se usa sin bajar zonas', async ({ page }) => {
+  test.setTimeout(90_000);
+  await mockMaps(page);
+  const fixture = (name: string) => new URL(`./fixtures/${name}`, import.meta.url).pathname;
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/orientation/maps');
+  await expect(page.getByRole('heading', { name: 'Mapas importados' })).toBeVisible();
+
+  // Un mapa con otro esquema (Protomaps): no se importa.
+  await page.getByTestId('import-input').setInputFiles(fixture('protomaps.pmtiles'));
+  await expect(page.getByTestId('import-message')).toHaveText(/no tiene el esquema OpenMapTiles/);
+  await expect(page.getByTestId('imported-list')).toHaveCount(0);
+
+  // Uno de OpenMapTiles alrededor de Buenos Aires: queda en la lista.
+  await page.getByTestId('import-input').setInputFiles(fixture('buenos-aires.pmtiles'));
+  await expect(page.getByTestId('import-message')).toHaveText('Listo: “buenos-aires.pmtiles” (Mapa) quedó disponible sin conexión.');
+  await expect(page.getByTestId('imported-list')).toContainText('Mapa · zoom 0 a 14');
+  const stored = await page.evaluate(async () => {
+    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('maps-imported');
+    return (await (await dir.getFileHandle('buenos-aires.pmtiles')).getFile()).size;
+  });
+  expect(stored).toBe(284);
+
+  // Una zona dentro del mapa importado: avisa que no hace falta bajarla.
+  await page.getByRole('button', { name: 'Descargar una zona' }).click();
+  await page.getByLabel('Radio alrededor del centro del mapa').selectOption({ label: '2 km' });
+  await expect(page.getByTestId('zone-covered')).toContainText('ya está en el mapa importado “buenos-aires.pmtiles”');
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+
+  // Sigue después de recargar, y se borra.
+  await page.reload();
+  await page.getByLabel('Contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await page.goto('/#/orientation/maps');
+  await expect(page.getByTestId('imported-list')).toContainText('buenos-aires.pmtiles');
+  page.once('dialog', (d) => void d.accept());
+  await page.getByRole('button', { name: 'Borrar buenos-aires.pmtiles' }).click();
+  await expect(page.getByTestId('imported-list')).toHaveCount(0);
+});
