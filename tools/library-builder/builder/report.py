@@ -64,6 +64,15 @@ def write_report(entries: list[Entry], out: str) -> None:
         + (f" · convertidos {len(conv)} ({_mb(total_conv)})" if conv else "")
         + "</p>"
     )
+    from .status import book_state
+
+    pend = [x for x in entries if book_state(x, conv) in ("pendiente", "error")]
+    table(
+        "Falta convertir",
+        ["Libro", "Categoría", "Formato", "Estado"],
+        [[e_(x.title), e_(x.category), e_(KIND_NAME.get(x.kind, x.kind)), e_(conv.get(x.id, {}).get("error") or "pendiente")] for x in sorted(pend, key=lambda x: (x.category, x.title))],
+        "Para sumarlos: <code>sh tools/library-builder/run.sh update</code> (los libros nuevos que agregues a la carpeta aparecen acá solos).",
+    )
     table("Por formato", ["Formato", "Libros"], [[e_(KIND_NAME.get(k, k)), str(n)] for k, n in kinds.most_common()])
     table(
         "Por categoría",

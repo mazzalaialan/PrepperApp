@@ -33,6 +33,9 @@ def main() -> None:
     c.add_argument("--book", action="append", default=[], help="ruta de un libro (para probar)")
     c.add_argument("--no-ocr", action="store_true", help="saltear los escaneados")
     sub.add_parser("report", help="arma el informe")
+    sub.add_parser("status", help="qué falta convertir (busca también archivos nuevos)")
+    u = sub.add_parser("update", help="analiza y convierte solo lo que falta")
+    u.add_argument("--no-ocr", action="store_true", help="dejar los escaneados para después")
     args = p.parse_args()
 
     if args.cmd == "scan":
@@ -44,9 +47,25 @@ def main() -> None:
         print(f"{len(entries)} archivos analizados → {OUT}/inventory.json y {OUT}/report.html")
     elif args.cmd == "convert":
         from .convert import convert
+        from .status import single_run
 
-        entries = load_inventory()
-        convert(entries, SRC, OUT, categories=args.category, all_=args.all, books=args.book, ocr=not args.no_ocr)
+        with single_run(OUT):
+            entries = load_inventory()
+            convert(entries, SRC, OUT, categories=args.category, all_=args.all, books=args.book, ocr=not args.no_ocr)
+    elif args.cmd in ("status", "update"):
+        from .report import write_report
+        from .status import print_status, single_run, status
+
+        # El análisis encuentra los archivos nuevos o cambiados (lo que ya analizó sale de la caché).
+        entries = scan(SRC, OUT, load_overrides())
+        json.dump([asdict(e) for e in entries], open(os.path.join(OUT, "inventory.json"), "w"), ensure_ascii=False, indent=1)
+        if args.cmd == "update":
+            from .convert import convert
+
+            with single_run(OUT):
+                convert(entries, SRC, OUT, categories=[], all_=True, books=[], ocr=not args.no_ocr)
+        write_report(entries, OUT)
+        print_status(status(entries, OUT))
     elif args.cmd == "report":
         from .report import write_report
 

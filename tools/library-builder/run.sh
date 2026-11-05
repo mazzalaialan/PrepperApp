@@ -3,6 +3,8 @@
 #   scan                     analiza la colección (formatos, escaneados, duplicados, licencias)
 #   convert --category X     convierte una categoría (o --all)
 #   report                   arma el informe
+#   status                   qué falta convertir (encuentra también los libros nuevos que agregaste)
+#   update                   convierte solo lo que falta (los nuevos, los que cambiaron, los que fallaron)
 # Variables: SRC (carpeta de origen), OUT (salida; por defecto ~/vikarg-library).
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
