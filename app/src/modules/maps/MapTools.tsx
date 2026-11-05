@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { Crosshair, MapPinPlus, Ruler, Trash2, Undo2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Copy, Crosshair, LocateFixed, MapPin, MapPinPlus, Plus, Ruler, Trash2, Undo2 } from 'lucide-react';
 import { Segmented } from '@/ui/Segmented';
-import { cardinalOf, type LatLon } from '@/core/geo/geo';
+import { cardinalOf, formatDecimal, type LatLon } from '@/core/geo/geo';
 import { declinationAt } from '@/core/sensors/heading';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
@@ -71,7 +71,35 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
     setInfo(null);
   }
 
+  // Acciones del menú del clic derecho (o mantener apretado en el celular).
+  const [menu, setMenu] = useState<{ p: LatLon; x: number; y: number } | null>(null);
+  const navigate = useNavigate();
+  function measureFrom(p: LatLon) {
+    setToolState('measure');
+    setPoints([p]);
+    setTarget(null);
+    setOrigin(null);
+  }
+  function directionTo(p: LatLon) {
+    setToolState('target');
+    setPoints([]);
+    // Con un origen marcado en el mapa se sigue desde ahí; si no, desde tu ubicación.
+    if (!(tool === 'target' && fromMode === 'point' && origin)) {
+      setFromMode('here');
+      setOrigin(null);
+    }
+    setTarget(p);
+  }
+  function directionFrom(p: LatLon) {
+    setToolState('target');
+    setPoints([]);
+    setFromMode('point');
+    setOrigin(p);
+    setTarget(null);
+  }
+
   function onMapClick(p: LatLon) {
+    setMenu(null);
     if (tool === 'measure') setPoints((list) => [...list, p]);
     else if (tool === 'target') {
       if (usePoint && !origin) setOrigin(p);
@@ -252,5 +280,160 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
     );
   }
 
-  return { tool, onMapClick, measure: measureLine, target: targetLine, toolbar, panel };
+  // Botones sobre el mapa (se ven en pantalla completa).
+  const floating = (
+    <div className="maps-tools-float">
+      <button
+        className="icon-btn maps-camera-btn"
+        type="button"
+        aria-pressed={tool === 'measure'}
+        onClick={() => setTool(tool === 'measure' ? null : 'measure')}
+        aria-label={t('mapTools.measure')}
+        title={t('mapTools.measure')}
+      >
+        <Ruler size={20} />
+      </button>
+      <button
+        className="icon-btn maps-camera-btn"
+        type="button"
+        aria-pressed={tool === 'target'}
+        onClick={() => setTool(tool === 'target' ? null : 'target')}
+        aria-label={t('mapTools.target')}
+        title={t('mapTools.target')}
+      >
+        <Crosshair size={20} />
+      </button>
+    </div>
+  );
+
+  // Resumen corto encima del mapa, para la pantalla completa.
+  let overlay: ReactNode = null;
+  if (tool === 'measure') {
+    overlay = (
+      <div className="maps-tools-overlay" data-testid="tools-overlay">
+        {points.length >= 2 && summary ? (
+          <>
+            <span className="fs-big">{dist(summary.distance)}</span>
+            {summary.ascent !== null && <span>{t('mapTools.climbShort', { up: alt(summary.ascent), down: alt(summary.descent!) })}</span>}
+          </>
+        ) : (
+          <span>{points.length === 0 ? t('mapTools.measureHint') : t('mapTools.measureNext')}</span>
+        )}
+        {points.length > 0 && (
+          <span className="maps-tools-actions">
+            <button className="btn btn-small" type="button" onClick={() => setPoints((l) => l.slice(0, -1))}>
+              <Undo2 size={16} /> {t('mapTools.undo')}
+            </button>
+            <button className="btn btn-small" type="button" onClick={() => setPoints([])}>
+              <Trash2 size={16} /> {t('mapTools.clear')}
+            </button>
+          </span>
+        )}
+      </div>
+    );
+  } else if (tool === 'target') {
+    const decl = target ? declinationAt(target.lat, target.lon) : 0;
+    overlay = (
+      <div className="maps-tools-overlay" data-testid="tools-overlay">
+        {from && target && info ? (
+          <>
+            <span className="fs-big">
+              {bearingText(info.bearing)} · {dist(info.distance)}
+            </span>
+            <span>
+              {t('mapTools.magneticShort', { value: bearingText((((info.bearing - decl) % 360) + 360) % 360) })}
+              {info.targetAlt !== null && ` · ≈ ${alt(info.targetAlt)}`}
+            </span>
+          </>
+        ) : (
+          <span>{!usePoint ? t('mapTools.targetHintGps') : origin ? t('mapTools.targetHintTarget') : fix ? t('mapTools.targetHintPoint') : t('mapTools.targetHintOrigin')}</span>
+        )}
+        <span className="maps-tools-actions">
+          {fix && (
+            <button className="btn btn-small" type="button" onClick={() => chooseFrom(usePoint ? 'here' : 'point')}>
+              {usePoint ? <LocateFixed size={16} /> : <MapPin size={16} />} {usePoint ? t('mapTools.fromHere') : t('mapTools.fromMapPoint')}
+            </button>
+          )}
+          {usePoint && origin && (
+            <button className="btn btn-small" type="button" onClick={() => chooseFrom(fromMode)}>
+              <Undo2 size={16} /> {t('mapTools.newOrigin')}
+            </button>
+          )}
+        </span>
+      </div>
+    );
+  }
+
+  // Menú contextual: se cierra con Escape o con un clic afuera.
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !menuRef.current?.contains(e.target as Node)) setMenu(null);
+    };
+    window.addEventListener('keydown', close);
+    window.addEventListener('pointerdown', close, true);
+    return () => {
+      window.removeEventListener('keydown', close);
+      window.removeEventListener('pointerdown', close, true);
+    };
+  }, [menu]);
+  const act = (fn: () => void) => () => {
+    fn();
+    setMenu(null);
+  };
+  const menuNode = menu && (
+    <div
+      ref={menuRef}
+      className="maps-menu"
+      role="menu"
+      data-testid="map-menu"
+      style={{ left: menu.x, top: menu.y }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <span className="maps-menu-coords">{formatDecimal(menu.p)}</span>
+      <button type="button" role="menuitem" onClick={act(() => measureFrom(menu.p))}>
+        <Ruler size={16} aria-hidden /> {t('mapTools.menu.measureFrom')}
+      </button>
+      {tool === 'measure' && points.length > 0 && (
+        <button type="button" role="menuitem" onClick={act(() => setPoints((l) => [...l, menu.p]))}>
+          <Plus size={16} aria-hidden /> {t('mapTools.menu.addPoint')}
+        </button>
+      )}
+      {(fix || (tool === 'target' && fromMode === 'point' && origin)) && (
+        <button type="button" role="menuitem" onClick={act(() => directionTo(menu.p))}>
+          <Crosshair size={16} aria-hidden /> {tool === 'target' && fromMode === 'point' && origin ? t('mapTools.menu.directionToFromOrigin') : t('mapTools.menu.directionTo')}
+        </button>
+      )}
+      <button type="button" role="menuitem" onClick={act(() => directionFrom(menu.p))}>
+        <MapPin size={16} aria-hidden /> {t('mapTools.menu.directionFrom')}
+      </button>
+      <button type="button" role="menuitem" onClick={act(() => void navigator.clipboard?.writeText(formatDecimal(menu.p)).catch(() => undefined))}>
+        <Copy size={16} aria-hidden /> {t('mapTools.menu.copy')}
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        onClick={act(() => navigate('/orientation/waypoints/new', { state: { lat: menu.p.lat, lon: menu.p.lon, alt: null } satisfies NewWaypointDraft }))}
+      >
+        <MapPinPlus size={16} aria-hidden /> {t('mapTools.saveWaypoint')}
+      </button>
+    </div>
+  );
+
+  return {
+    tool,
+    onMapClick,
+    // El menú se abre hacia donde hay lugar (unos 240 × 280 px).
+    onContextMenu: (p: LatLon, x: number, y: number, width: number, height: number) =>
+      setMenu({ p, x: x + 240 > width ? Math.max(4, x - 240) : x, y: y + 280 > height ? Math.max(4, y - 280) : y }),
+    closeMenu: () => setMenu(null),
+    measure: measureLine,
+    target: targetLine,
+    toolbar,
+    panel,
+    floating,
+    overlay,
+    menu: menuNode,
+  };
 }

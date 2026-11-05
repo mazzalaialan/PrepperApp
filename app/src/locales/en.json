@@ -639,6 +639,9 @@
     "fromMapPoint": "A point on the map",
     "targetHintPoint": "First tap where you want to measure from (for example, a hut), then the point.",
     "newOrigin": "Choose another origin",
+    "climbShort": "+{{up}} / −{{down}}",
+    "magneticShort": "Compass: {{value}}",
+    "menu": {"measureFrom": "Measure from here", "addPoint": "Add point to the measurement", "directionTo": "Direction to here (from my location)", "directionToFromOrigin": "Direction to here (from the marked origin)", "directionFrom": "Direction from here", "copy": "Copy coordinates"},
     "saveWaypoint": "Save as waypoint"
   },
   "maps": {

@@ -66,6 +66,10 @@ interface Props {
   /** Línea desde el origen hasta el punto marcado, en [lon, lat]. */
   target?: { from: [number, number]; to: [number, number] | null } | null;
   onMapClick?: (p: { lat: number; lon: number }) => void;
+  /** Clic derecho (o mantener apretado): menú con las herramientas en ese punto (x, y dentro del mapa). */
+  onContextMenu?: (p: { lat: number; lon: number }, x: number, y: number, width: number, height: number) => void;
+  /** Se movió el mapa: se cierra el menú. */
+  onMoveStart?: () => void;
 }
 
 export interface MapTrack {
@@ -293,6 +297,12 @@ export function MapView(props: Props) {
       const c = m.getCenter();
       latest.current.onMove({ lat: c.lat, lon: c.lng, zoom: m.getZoom() });
     });
+    m.on('contextmenu', (e) => {
+      e.preventDefault();
+      const box = m.getContainer();
+      latest.current.onContextMenu?.({ lat: e.lngLat.lat, lon: e.lngLat.lng }, e.point.x, e.point.y, box.clientWidth, box.clientHeight);
+    });
+    m.on('movestart', () => latest.current.onMoveStart?.());
     // Con una herramienta activa, el toque marca un punto.
     m.on('click', (e) => {
       if (latest.current.tool) latest.current.onMapClick?.({ lat: e.lngLat.lat, lon: e.lngLat.lng });

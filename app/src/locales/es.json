@@ -639,6 +639,9 @@
     "fromMapPoint": "Un punto del mapa",
     "targetHintPoint": "Tocá primero desde dónde querés medir (por ejemplo, un refugio) y después el punto.",
     "newOrigin": "Elegir otro origen",
+    "climbShort": "+{{up}} / −{{down}}",
+    "magneticShort": "Brújula: {{value}}",
+    "menu": {"measureFrom": "Medir desde aquí", "addPoint": "Agregar punto a la medición", "directionTo": "Dirección hasta aquí (desde mi ubicación)", "directionToFromOrigin": "Dirección hasta aquí (desde el origen marcado)", "directionFrom": "Dirección desde aquí", "copy": "Copiar coordenadas"},
     "saveWaypoint": "Guardar como waypoint"
   },
   "maps": {

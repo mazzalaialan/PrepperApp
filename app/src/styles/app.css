@@ -3537,3 +3537,88 @@ a.module-card:hover {
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
+
+/* Herramientas del mapa en pantalla completa: botones a la izquierda, debajo del de pantalla completa. */
+.maps-tools-float {
+  position: absolute;
+  left: 8px;
+  top: calc(max(8px, env(safe-area-inset-top)) + 52px);
+  z-index: 2;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.maps-stage[data-fullscreen='true'] .maps-tools-float {
+  display: flex;
+}
+
+/* El resumen va entre el botón de pantalla completa (izquierda) y el zoom (derecha). */
+.maps-stage .fs-overlay {
+  left: 60px;
+  right: 56px;
+  max-width: 460px;
+}
+
+.maps-tools-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.maps-tools-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  pointer-events: auto;
+}
+
+.btn-small {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  gap: 4px;
+}
+
+/* Menú del clic derecho sobre el mapa. */
+.maps-menu {
+  position: absolute;
+  z-index: 5;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.maps-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.maps-menu button:hover,
+.maps-menu button:focus-visible {
+  background: var(--surface-2);
+}
+
+.maps-menu-coords {
+  padding: 4px 10px 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}

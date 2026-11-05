@@ -393,3 +393,57 @@ test('herramientas del mapa: medir distancia y recorrido, y dirección a un punt
   await page.getByRole('link', { name: 'Guardar como waypoint' }).click();
   await expect(page.getByLabel('Coordenadas', { exact: true })).toHaveValue(/^-34\.\d+, -58\.\d+$/);
 });
+
+test('herramientas del mapa con clic derecho y en pantalla completa', async ({ page }, testInfo) => {
+  await mockMaps(page);
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/orientation/maps');
+  const canvas = page.getByTestId('offline-map').locator('canvas');
+  await expect(page.getByTestId('map-center')).toHaveText(/zoom 12$/, { timeout: 15_000 });
+  const box = (await canvas.boundingBox())!;
+  const cx = box.width / 2;
+  const cy = box.height / 2;
+  const menu = page.getByTestId('map-menu');
+
+  // Clic derecho: medir desde aquí y agregar un punto.
+  await canvas.click({ button: 'right', position: { x: cx - 150, y: cy } });
+  await expect(menu).toContainText(/^-34\.\d+, -58\.\d+/);
+  await menu.getByRole('menuitem', { name: 'Medir desde aquí' }).click();
+  await expect(menu).toHaveCount(0);
+  await canvas.click({ button: 'right', position: { x: cx + 150, y: cy } });
+  await menu.getByRole('menuitem', { name: 'Agregar punto a la medición' }).click();
+  await expect(page.getByTestId('measure-distance')).toContainText('en línea recta');
+
+  // Dirección desde un punto marcado con clic derecho hasta otro.
+  await canvas.click({ button: 'right', position: { x: cx - 150, y: cy } });
+  await menu.getByRole('menuitem', { name: 'Dirección desde aquí' }).click();
+  await canvas.click({ button: 'right', position: { x: cx - 150, y: cy - 150 } });
+  await menu.getByRole('menuitem', { name: 'Dirección hasta aquí (desde el origen marcado)' }).click();
+  await expect(page.getByTestId('target-bearing')).toHaveText(/^(359|0|1)° N · \d+,\d+ km$/);
+  // Escape cierra el menú.
+  await canvas.click({ button: 'right', position: { x: cx, y: cy } });
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+
+  // Pantalla completa: botones sobre el mapa y el resultado arriba.
+  await page.getByRole('button', { name: 'Pantalla completa' }).click();
+  const overlay = page.getByTestId('tools-overlay');
+  await expect(overlay).toContainText(/^(359|0|1)° N · \d+,\d+ km/);
+  await expect(overlay).toContainText('Brújula:');
+  await page.locator('.maps-tools-float').getByRole('button', { name: 'Medir' }).click();
+  await expect(overlay).toContainText('Tocá el mapa para marcar el primer punto.');
+  await canvas.click({ position: { x: cx - 100, y: cy + 50 } });
+  await canvas.click({ position: { x: cx + 100, y: cy + 50 } });
+  await expect(overlay).toContainText(/\d+,\d+ km/);
+  await expect(overlay).toContainText('+0 m / −0 m');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-75-map-tools-fullscreen.png` });
+  await overlay.getByRole('button', { name: 'Borrar' }).click();
+  await expect(overlay).toContainText('Tocá el mapa para marcar el primer punto.');
+});

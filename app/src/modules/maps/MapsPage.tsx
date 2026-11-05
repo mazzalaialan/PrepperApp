@@ -308,7 +308,7 @@ export function MapsPage() {
       </div>
       {!online && <p className="hint" role="status">{t('maps.offline')}</p>}
 
-      <FullscreenStage className="maps-stage">
+      <FullscreenStage className="maps-stage" overlay={tools.overlay}>
         <MapView
           initial={initial}
           layers={{ ...layers, slopeMin, slopeLee, slopeLeeUsual }}
@@ -336,7 +336,11 @@ export function MapsPage() {
           measure={tools.measure}
           target={tools.target}
           onMapClick={tools.onMapClick}
+          onContextMenu={tools.onContextMenu}
+          onMoveStart={tools.closeMenu}
         />
+        {tools.floating}
+        {tools.menu}
         <CameraButtons threeD={layers.terrain3d} onThreeD={(on) => setLayer('terrain3d', on)} follow={follow && !!fix} onFollow={setFollow} canFollow={!!fix}>
           <RecordButton />
         </CameraButtons>
