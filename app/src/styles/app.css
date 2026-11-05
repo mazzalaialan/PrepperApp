@@ -3051,3 +3051,162 @@ a.module-card:hover {
   font-weight: 700;
 }
 
+
+/* ---------- Huerta ---------- */
+
+.garden-chip {
+  text-decoration: none;
+  color: inherit;
+  border-left-width: 4px;
+}
+
+.garden-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.garden-plan-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.garden-strip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.garden-month {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 1px;
+  border-radius: 4px;
+}
+
+.garden-month-now {
+  background: var(--surface-2);
+  outline: 1px solid var(--accent);
+}
+
+.garden-month-name {
+  font-size: 0.7rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.garden-bar {
+  display: inline-block;
+  height: 5px;
+  min-width: 10px;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.garden-legend .garden-bar,
+.garden-plan-title .garden-bar {
+  width: 18px;
+  height: 8px;
+}
+
+.garden-bar.on.garden-bar-nursery {
+  background: #8bc34a;
+}
+.garden-bar.on.garden-bar-sow {
+  background: #d9a441;
+}
+.garden-bar.on.garden-bar-transplant {
+  background: #b5475f;
+}
+.garden-bar.on.garden-bar-harvest {
+  background: #4f9fb8;
+}
+
+.garden-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.garden-year {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.garden-year-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 36px;
+}
+
+.garden-year-name {
+  width: 30%;
+  max-width: 150px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garden-facts {
+  display: grid;
+  grid-template-columns: minmax(110px, 40%) 1fr;
+  gap: 6px 12px;
+  margin: 0;
+}
+
+.garden-facts dt {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.garden-facts dd {
+  margin: 0;
+}
+
+.garden-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.garden-grid {
+  display: grid;
+  gap: 3px;
+  max-width: 480px;
+}
+
+.garden-cell {
+  aspect-ratio: 1;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-shadow: 0 0 2px #000;
+  cursor: pointer;
+  padding: 0;
+}
+
+.garden-cell.selected {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+  background: var(--surface);
+}

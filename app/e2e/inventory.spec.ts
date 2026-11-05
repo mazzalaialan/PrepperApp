@@ -60,7 +60,8 @@ test('configuración inicial, ubicaciones, artículo con lote y alerta', async (
   } else {
     await page.getByRole('link', { name: 'Huerta' }).click();
   }
-  await expect(page.getByText('Próximamente', { exact: true })).toHaveCount(2);
+  await expect(page.getByRole('link', { name: /Calendario de siembra/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Mis canteros/ })).toBeVisible();
   await shot(page, '03b-garden');
 
   // Ubicaciones

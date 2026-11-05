@@ -1,0 +1,155 @@
+import { expect, test, type Page } from '@playwright/test';
+
+const PASSWORD = 'prueba-segura-123';
+// Una casa en La Plata (zona Pampeana).
+const HOME = { latitude: -34.92, longitude: -57.95 };
+test.use({ geolocation: HOME, permissions: ['geolocation'] });
+
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+const day = (offset: number) => iso(new Date(Date.now() + offset * 86_400_000));
+
+/** Clima de la huerta: 10 días sin lluvia y helada fuerte mañana. */
+function gardenWeather() {
+  const days = Array.from({ length: 13 }, (_, i) => day(i - 10));
+  return {
+    latitude: HOME.latitude,
+    longitude: HOME.longitude,
+    timezone: 'America/Argentina/Buenos_Aires',
+    daily: {
+      time: days,
+      et0_fao_evapotranspiration: days.map(() => 5),
+      precipitation_sum: days.map(() => 0),
+      temperature_2m_min: days.map((d) => (d === day(1) ? -1 : 8)),
+    },
+  };
+}
+
+async function shot(page: Page, name: string, project: string) {
+  await page.screenshot({ path: `e2e-results/screens/${project}-${name}.png`, fullPage: true });
+}
+
+test('huerta: calendario por zona, canteros con waypoint, grilla, avisos por lugar, cosecha al inventario y almácigo', async ({ page, context }, testInfo) => {
+  const p = testInfo.project.name;
+  await context.route('https://api.open-meteo.com/v1/forecast**', (route) => {
+    const url = route.request().url();
+    if (url.includes('et0_fao_evapotranspiration')) return route.fulfill({ json: gardenWeather() });
+    return route.fulfill({ status: 503 });
+  });
+
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  // Calendario: sin lugar, Pampeana; la NEA avisa que es estimada.
+  await page.goto('/#/garden/calendar');
+  await expect(page.getByLabel('Zona')).toBeVisible();
+  await expect(page.getByTestId('plan-sow')).toBeVisible();
+  await page.getByLabel('Zona').selectOption('nea');
+  await expect(page.getByTestId('zone-estimated')).toBeVisible();
+  await page.getByLabel('Zona').selectOption('auto');
+  await shot(page, '39-garden-calendar', p);
+  await page.getByRole('link', { name: /^Tomate/ }).first().click();
+  await expect(page.getByRole('heading', { name: 'Tomate' })).toBeVisible();
+  await expect(page.getByText('Se lleva bien con')).toBeVisible();
+  await shot(page, '40-garden-crop', p);
+
+  // Cantero 1, marcado con el GPS: queda como waypoint.
+  await page.goto('/#/garden/beds');
+  await page.getByRole('button', { name: 'Cantero', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Ancho (cm)').fill('120');
+  await dialog.getByLabel('Largo (cm)').fill('240');
+  await expect(dialog.getByText('Grilla de 4 × 8 cuadros de 30 cm.')).toBeVisible();
+  await dialog.getByRole('button', { name: /marcarlo con el GPS/ }).click();
+  await expect(dialog.getByLabel('Dónde está (waypoint)')).toHaveValue(/.+/);
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByRole('heading', { name: 'Cantero 1' })).toBeVisible();
+  await expect(page.getByTestId('bed-place')).toContainText('Cantero 1');
+
+  // Lechuga en dos cuadros, tomate en otro.
+  async function plant(cells: number[], crop: string) {
+    for (const c of cells) await page.getByTestId(`cell-${c}`).click();
+    await page.getByTestId('plant-here').click();
+    await page.getByRole('dialog').getByLabel('Cultivo').selectOption({ label: crop });
+    await page.getByTestId('save-planting').click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+  await plant([0, 1], 'Lechuga');
+  await plant([2], 'Tomate');
+  await expect(page.getByTestId('cell-0')).toHaveText('Le');
+  await expect(page.getByTestId('cell-2')).toHaveText('To');
+  await expect(page.getByTestId('bed-recs-list')).toBeVisible();
+  await shot(page, '41-garden-bed', p);
+
+  // Cantero 2 en el mismo lugar (otro waypoint a metros) y un invernadero sin ubicación.
+  await page.goto('/#/garden/beds');
+  await page.getByRole('button', { name: 'Cantero', exact: true }).click();
+  await dialog.getByRole('button', { name: /marcarlo con el GPS/ }).click();
+  await expect(dialog.getByLabel('Dónde está (waypoint)')).toHaveValue(/.+/);
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByRole('heading', { name: 'Cantero 2' })).toBeVisible();
+  await plant([0], 'Pimiento (morrón)');
+  await page.goto('/#/garden/beds');
+  await page.getByRole('button', { name: 'Cantero', exact: true }).click();
+  await dialog.getByLabel('Nombre').fill('Invernadero');
+  await dialog.getByTestId('bed-greenhouse').check();
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByRole('heading', { name: 'Invernadero' })).toBeVisible();
+  await plant([0], 'Berenjena');
+
+  // Un solo aviso de helada y uno de riego para todo lo de casa; la berenjena del invernadero no cuenta.
+  await page.goto('/#/garden/beds');
+  await expect(page.getByTestId('garden-frost')).toHaveCount(1);
+  await expect(page.getByTestId('garden-frost')).toContainText('Tomate');
+  await expect(page.getByTestId('garden-frost')).toContainText('Pimiento');
+  await expect(page.getByTestId('garden-frost')).not.toContainText('Berenjena');
+  await expect(page.getByTestId('garden-water')).toHaveCount(1);
+  await expect(page.getByTestId('garden-unplaced')).toHaveCount(0);
+  await shot(page, '42-garden', p);
+  await page.getByTestId('garden-water').getByRole('button', { name: 'Regué' }).click();
+  await expect(page.getByTestId('garden-water')).toHaveCount(0);
+  await expect(page.getByTestId('garden-water-ok')).toBeVisible();
+
+  // En Inicio, el mismo aviso de helada.
+  await page.getByRole('link', { name: 'Inicio' }).click();
+  await expect(page.getByTestId('garden-frost')).toHaveCount(1);
+
+  // Cosecha de lechuga al inventario (sin ubicaciones: crea "Despensa").
+  await page.goto('/#/garden/beds');
+  await page.getByRole('link', { name: /^Cantero 1/ }).click();
+  await page.getByTestId('cell-0').click();
+  await dialog.getByRole('button', { name: 'Empecé a cosechar' }).click();
+  await dialog.getByLabel('Cantidad').fill('3');
+  await dialog.getByLabel('Unidad').selectOption('u');
+  await expect(dialog.getByTestId('harvest-to-inventory')).toBeChecked();
+  await dialog.getByRole('button', { name: 'Anotar cosecha' }).click();
+  await expect(dialog.getByTestId('harvest-list')).toContainText('3 unidades');
+  await expect(dialog.getByTestId('harvest-list')).toContainText('en el inventario');
+  await dialog.getByRole('button', { name: 'Cerrar' }).click();
+  await page.goto('/#/inventory/items');
+  await expect(page.getByText('Lechuga (de la huerta)')).toBeVisible();
+
+  // Almácigo de hace 2 meses: tarea de trasplantar, y se ubica en un cantero.
+  await page.goto('/#/garden/beds');
+  await page.getByRole('button', { name: 'Almácigo', exact: true }).click();
+  await dialog.getByLabel('Cultivo').selectOption({ label: 'Tomate' });
+  await dialog.getByLabel('Almácigo hecho el').fill(day(-60));
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByTestId('garden-tasks')).toContainText('Trasplantar Tomate');
+  await page.getByTestId('garden-tasks').getByRole('button', { name: /Trasplantar Tomate/ }).click();
+  await page.getByTestId('transplant').click();
+  await expect(page.getByTestId('transplant-choose-bed')).toBeVisible();
+  await page.getByRole('link', { name: /^Cantero 2/ }).click();
+  await expect(page.getByTestId('transplant-banner')).toBeVisible();
+  await page.getByTestId('cell-3').click();
+  await page.getByTestId('place-transplant').click();
+  await expect(page.getByTestId('cell-3')).toHaveText('To');
+  await expect(page.getByTestId('transplant-banner')).toHaveCount(0);
+  await page.goto('/#/garden/beds');
+  await expect(page.getByTestId('garden-tasks')).toHaveCount(0);
+  await expect(page.getByTestId('nursery-list')).toHaveCount(0);
+});

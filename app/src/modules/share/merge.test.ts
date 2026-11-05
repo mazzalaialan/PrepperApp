@@ -49,6 +49,7 @@ const empty: LocalData = {
   waypoints: [],
   routes: [],
   tracks: [],
+  garden: { beds: [], plantings: [] },
 };
 const none = (): MergeDecisions => ({ separate: new Set(), useTheirs: new Set() });
 
@@ -345,5 +346,47 @@ describe('tracks importados al compartir', () => {
     const r = mergeShare({ ...empty, tracks: [mine] }, payload({ waypoints: [], tracks: [sameDownloaded, other] }), none());
     expect(r.waypoints).toMatchObject({ tracks: 1 });
     expect(r.writes.tracks.map((t) => t.name)).toEqual(['Cerro Otto']);
+  });
+
+  it('huerta: canteros con su waypoint, siembras sin pisar cuadros ocupados, y recibir dos veces no duplica', () => {
+    const meta = { createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null };
+    const wp = { id: 'w1', name: 'Casa', lat: -34.9, lon: -57.9, alt: null, icon: 'pin', notes: '', rainAlerts: false, ...meta };
+    const bed = { id: 'b1', name: 'Cantero 1', kind: 'bed' as const, greenhouse: false, widthCm: 120, lengthCm: 240, sunHours: 8, waypointId: 'w1', notes: '', order: 0, ...meta };
+    const planting = (id: string, cells: number[]) => ({
+      id,
+      cropId: 'lechuga',
+      variety: '',
+      bedId: 'b1',
+      cells,
+      method: 'direct' as const,
+      sownOn: '2026-10-01',
+      transplantedOn: null,
+      status: 'growing' as const,
+      endedOn: null,
+      notes: '',
+      harvests: [{ id: 'h', date: '2026-10-20', quantity: 1, unit: 'kg', lotId: 'lot-de-ella' }],
+      ...meta,
+    });
+    const incoming = payload({ garden: { beds: [bed], plantings: [planting('p1', [0]), planting('p2', [5])], waypoints: [wp] } });
+
+    // Sin nada: se agrega el cantero con su waypoint (aunque no se compartan los waypoints) y las dos siembras.
+    const r = mergeShare(empty, incoming, none());
+    expect(r.garden).toEqual({ beds: 1, plantings: 2 });
+    expect(r.writes.waypoints).toHaveLength(1);
+    expect(r.writes.beds[0]!.waypointId).toBe(r.writes.waypoints[0]!.id);
+    expect(r.writes.plantings.every((p) => p.bedId === r.writes.beds[0]!.id)).toBe(true);
+    // La cosecha no apunta a un lote del inventario de otro.
+    expect(r.writes.plantings[0]!.harvests[0]!.lotId).toBeNull();
+
+    // Ya tengo ese cantero (mismo nombre) con algo plantado en el cuadro 0: solo entra la del cuadro 5.
+    const mine = { ...empty, waypoints: [wp], garden: { beds: [{ ...bed, id: 'mi-cantero' }], plantings: [{ ...planting('mia', [0]), bedId: 'mi-cantero' }] } };
+    const r2 = mergeShare(mine, incoming, none());
+    expect(r2.writes.beds).toHaveLength(0);
+    expect(r2.writes.plantings.map((p) => p.cells)).toEqual([[5]]);
+    expect(r2.writes.plantings[0]!.bedId).toBe('mi-cantero');
+
+    // Recibir de nuevo lo mismo no agrega nada.
+    const again = { ...empty, waypoints: [wp], garden: { beds: [bed], plantings: [planting('p1', [0]), planting('p2', [5])] } };
+    expect(mergeShare(again, incoming, none()).garden).toEqual({ beds: 0, plantings: 0 });
   });
 });

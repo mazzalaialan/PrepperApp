@@ -84,6 +84,56 @@ interface AlertInput {
   notifyFrom: string;
 }
 
+const gardenPlaceSchema = {
+  type: 'object',
+  required: ['id', 'lat', 'lon', 'frost'],
+  properties: {
+    id: { type: 'string', maxLength: 64 },
+    label: { type: ['string', 'null'], maxLength: 300 },
+    lat: { type: 'number', minimum: -90, maximum: 90 },
+    lon: { type: 'number', minimum: -180, maximum: 180 },
+    frost: {
+      type: 'array',
+      maxItems: 60,
+      items: { type: 'object', required: ['name', 'threshold'], properties: { name: { type: 'string', maxLength: 80 }, threshold: { type: 'number' } } },
+    },
+    water: {
+      type: ['object', 'null'],
+      required: ['kc', 'thresholdMm', 'wateredOn'],
+      properties: {
+        kc: { type: 'number', minimum: 0, maximum: 2 },
+        thresholdMm: { type: 'number', minimum: 1, maximum: 200 },
+        wateredOn: { type: ['string', 'null'], pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+      },
+    },
+  },
+} as const;
+
+const gardenTaskSchema = {
+  type: 'object',
+  required: ['id', 'text', 'date'],
+  properties: {
+    id: { type: 'string', maxLength: 100 },
+    text: { type: 'string', maxLength: 200 },
+    date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+  },
+} as const;
+
+interface GardenPlaceInput {
+  id: string;
+  label?: string | null;
+  lat: number;
+  lon: number;
+  frost: { name: string; threshold: number }[];
+  water?: { kc: number; thresholdMm: number; wateredOn: string | null } | null;
+}
+
+interface GardenTaskInput {
+  id: string;
+  text: string;
+  date: string;
+}
+
 const hashToken = (token: string) => createHash('sha256').update(token).digest();
 
 export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): void {
@@ -225,6 +275,86 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
           const near = before && Math.abs(before.lat - lat) < 0.1 && Math.abs(before.lon - lon) < 0.1;
           const notified = near ? before.notified : 0;
           insert.run(id, p.id, p.label ?? null, lat, lon, p.fixAt ?? null, notified);
+        }
+        db.exec('COMMIT');
+      } catch (err) {
+        db.exec('ROLLBACK');
+        throw err;
+      }
+      return reply.code(204).send();
+    },
+  );
+
+  /**
+   * Huerta con la app cerrada: un lugar por grupo de canteros (~1 km), con lo
+   * necesario para la helada y el riego, y las tareas próximas. Se reemplaza
+   * todo; se conserva lo ya avisado (misma helada, mismo episodio de riego,
+   * misma tarea) para no repetir.
+   */
+  app.put<{ Params: { id: string }; Body: { places: GardenPlaceInput[]; tasks: GardenTaskInput[] } }>(
+    '/api/devices/:id/garden',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['places', 'tasks'],
+          properties: {
+            places: { type: 'array', maxItems: 20, items: gardenPlaceSchema },
+            tasks: { type: 'array', maxItems: 100, items: gardenTaskSchema },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
+      const { id } = req.params;
+      db.exec('BEGIN');
+      try {
+        const oldPlaces = new Map(
+          (db.prepare('SELECT place_id, lat, lon, water, frost_notified_date, water_notified, water_checked_day FROM garden_places WHERE device_id = ?').all(id) as unknown as {
+            place_id: string;
+            lat: number;
+            lon: number;
+            water: string | null;
+            frost_notified_date: string | null;
+            water_notified: number;
+            water_checked_day: string | null;
+          }[]).map((r) => [r.place_id, r]),
+        );
+        const oldTasks = new Map(
+          (db.prepare('SELECT task_id, date, notified FROM garden_tasks WHERE device_id = ?').all(id) as unknown as { task_id: string; date: string; notified: number }[]).map((r) => [r.task_id, r]),
+        );
+        db.prepare('DELETE FROM garden_places WHERE device_id = ?').run(id);
+        db.prepare('DELETE FROM garden_tasks WHERE device_id = ?').run(id);
+        const insertPlace = db.prepare(
+          `INSERT INTO garden_places (device_id, place_id, label, lat, lon, frost, water, frost_notified_date, water_notified, water_checked_day)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        );
+        for (const p of [...new Map(req.body.places.map((x) => [x.id, x])).values()]) {
+          const lat = coarse(p.lat);
+          const lon = coarse(p.lon);
+          const before = oldPlaces.get(p.id);
+          const same = before && Math.abs(before.lat - lat) < 0.02 && Math.abs(before.lon - lon) < 0.02;
+          const oldWatered = before?.water ? (JSON.parse(before.water) as { wateredOn: string | null }).wateredOn : null;
+          // Si marcó "regué" de nuevo, empieza otro episodio de riego.
+          const sameWaterEpisode = same && oldWatered === (p.water?.wateredOn ?? null);
+          insertPlace.run(
+            id,
+            p.id,
+            p.label ?? null,
+            lat,
+            lon,
+            JSON.stringify(p.frost),
+            p.water ? JSON.stringify(p.water) : null,
+            same ? before.frost_notified_date : null,
+            sameWaterEpisode ? before.water_notified : 0,
+            sameWaterEpisode ? before.water_checked_day : null,
+          );
+        }
+        const insertTask = db.prepare('INSERT INTO garden_tasks (device_id, task_id, text, date, notified) VALUES (?, ?, ?, ?, ?)');
+        for (const t of [...new Map(req.body.tasks.map((x) => [x.id, x])).values()]) {
+          const before = oldTasks.get(t.id);
+          insertTask.run(id, t.id, t.text, t.date, before && before.date === t.date ? before.notified : 0);
         }
         db.exec('COMMIT');
       } catch (err) {

@@ -17,12 +17,14 @@ describe('migraciones', () => {
 
     const upgraded = new UserDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(5);
+    expect(upgraded.verno).toBe(6);
     expect(await upgraded.items.count()).toBe(1);
     await upgraded.medicalProfiles.put({ id: 'p', updatedAt: 'x', deletedAt: null, iv: new Uint8Array(12), ct: new ArrayBuffer(4) });
     expect(await upgraded.medicalProfiles.count()).toBe(1);
     await upgraded.contacts.put({ id: 'c', updatedAt: 'x', deletedAt: null, iv: new Uint8Array(12), ct: new ArrayBuffer(4) });
     expect(await upgraded.contacts.count()).toBe(1);
+    await upgraded.gardenBeds.put({ id: 'b', updatedAt: 'x', deletedAt: null, iv: new Uint8Array(12), ct: new ArrayBuffer(4) });
+    expect(await upgraded.gardenBeds.count()).toBe(1);
     upgraded.close();
   });
 });

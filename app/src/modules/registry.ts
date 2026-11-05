@@ -67,8 +67,8 @@ export const MODULES: ModuleDef[] = [
   { id: 'weather', section: 'weather', icon: CloudSun, implemented: true, path: '/weather/forecast' },
   { id: 'weatherMap', section: 'weather', icon: MapIcon, implemented: true, path: '/weather/map' },
   { id: 'astronomy', section: 'weather', icon: Moon, implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },
-  { id: 'gardenCalendar', section: 'garden', icon: CalendarDays, implemented: false },
-  { id: 'gardenBeds', section: 'garden', icon: Sprout, implemented: false },
+  { id: 'gardenCalendar', section: 'garden', icon: CalendarDays, implemented: true, path: '/garden/calendar' },
+  { id: 'gardenBeds', section: 'garden', icon: Sprout, implemented: true, path: '/garden/beds' },
   { id: 'library', section: 'library', icon: BookOpen, implemented: false },
 ];
 

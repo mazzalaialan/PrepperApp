@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BellRing, CircleCheck } from 'lucide-react';
 import { AlertList, ShortageList } from '@/modules/inventory/components/AlertList';
 import { DocumentExpiryList, useExpiringDocuments } from '@/modules/documents/DocumentExpiryList';
@@ -8,6 +8,8 @@ import { useAlerts, useShortages } from '@/modules/inventory/selectors';
 import { useInventory } from '@/modules/inventory/store';
 import { RecommendationShortageList, useRecommendationShortages } from '@/modules/recommendations/RecommendationShortageList';
 import { SECTIONS } from '@/modules/registry';
+import { GardenTaskList, GardenWeatherNotices } from '@/modules/garden/GardenPage';
+import { gardenAlertCount, useGardenStatus } from '@/modules/garden/status';
 import { ModuleGrid } from '@/ui/ModuleGrid';
 
 const HOME_ALERT_LIMIT = 5;
@@ -19,7 +21,10 @@ function AlertSummary() {
   const shortages = useShortages();
   const recShortages = useRecommendationShortages();
   const docs = useExpiringDocuments();
-  const total = alerts.length + shortages.length + recShortages.length + docs.length;
+  const garden = useGardenStatus();
+  const navigate = useNavigate();
+  const gardenCount = gardenAlertCount(garden);
+  const total = alerts.length + shortages.length + recShortages.length + docs.length + gardenCount;
   // Los documentos van primero: renovarlos lleva turnos y semanas de trámite.
   const left = HOME_ALERT_LIMIT - docs.length;
 
@@ -42,6 +47,9 @@ function AlertSummary() {
         <h2 style={{ flex: 1 }}>{t('home.alertsCount', { count: total })}</h2>
         <Link to="/inventory/alerts">{t('home.seeAll')}</Link>
       </div>
+      {/* Helada y riego primero: son para hoy. */}
+      {gardenCount > 0 && <GardenWeatherNotices status={garden} compact />}
+      {garden.tasks.length > 0 && <GardenTaskList tasks={garden.tasks.slice(0, 3)} onOpen={() => navigate('/garden/beds')} />}
       {docs.length > 0 && <DocumentExpiryList rows={docs} limit={HOME_ALERT_LIMIT} />}
       {left > 0 && alerts.length > 0 && <AlertList alerts={alerts} limit={left} />}
       {alerts.length < left && shortages.length > 0 && <ShortageList shortages={shortages.slice(0, left - alerts.length)} />}

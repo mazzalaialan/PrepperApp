@@ -79,7 +79,22 @@ export interface Settings {
   firstAidEnv: FirstAidEnv;
   /** País: define los números de emergencia y de la guía. */
   country: Country;
+  /** Zona de la huerta; `null` = la sugerida según la ubicación. */
+  gardenZone: GardenZone | null;
+  /** Fecha de la última helada de primavera en el lugar, "MM-DD" (opcional). */
+  gardenLastFrost: string | null;
+  /** Avisar si va a helar y hay plantas sensibles en canteros al aire libre. */
+  gardenFrostAlerts: boolean;
+  /** Avisar cuando la lluvia no alcanza y hay que regar. */
+  gardenWaterAlerts: boolean;
+  /**
+   * Último riego marcado en cada lugar (ISO), por celda de ~1 km de los
+   * waypoints de los canteros: desde ahí se vuelve a contar el balance de agua.
+   */
+  gardenWateredAt: Record<string, string>;
 }
+
+export type GardenZone = 'pampeana' | 'nea' | 'noa' | 'cuyo' | 'patagoniaNorte' | 'patagoniaSur';
 
 export type FirstAidEnv = 'city' | 'wild';
 export type Country = 'AR' | 'CL' | 'UY';
@@ -184,6 +199,11 @@ export const DEFAULT_SETTINGS: Settings = {
   guideVoice: false,
   firstAidEnv: 'city',
   country: detectCountry(),
+  gardenZone: null,
+  gardenLastFrost: null,
+  gardenFrostAlerts: true,
+  gardenWaterAlerts: true,
+  gardenWateredAt: {},
 };
 
 const SETTINGS_KEY = 'app';

@@ -65,6 +65,29 @@ const MIGRATIONS = [
      notified_at INTEGER NOT NULL,
      PRIMARY KEY (device_id, place_id, event_key)
    );`,
+  // Huerta (opcional): un lugar por cada grupo de canteros a menos de ~1 km, con lo que hace falta para la
+  // helada (nombre del cultivo y desde qué mínima se quema) y el riego (coeficiente, umbral y último riego).
+  `CREATE TABLE garden_places (
+     device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+     place_id TEXT NOT NULL,
+     label TEXT,
+     lat REAL NOT NULL,
+     lon REAL NOT NULL,
+     frost TEXT NOT NULL,
+     water TEXT,
+     frost_notified_date TEXT,
+     water_notified INTEGER NOT NULL DEFAULT 0,
+     water_checked_day TEXT,
+     PRIMARY KEY (device_id, place_id)
+   );
+   CREATE TABLE garden_tasks (
+     device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+     task_id TEXT NOT NULL,
+     text TEXT NOT NULL,
+     date TEXT NOT NULL,
+     notified INTEGER NOT NULL DEFAULT 0,
+     PRIMARY KEY (device_id, task_id)
+   );`,
 ];
 
 export type Db = DatabaseSync;

@@ -57,6 +57,8 @@ export const repos = {
   routes: new Repository('routes'),
   contacts: new Repository('contacts'),
   tracks: new Repository('tracks'),
+  gardenBeds: new Repository('gardenBeds'),
+  plantings: new Repository('plantings'),
 } satisfies { [K in EntityTable]: Repository<K> };
 
 /** Binarios cifrados (fotos), leídos bajo demanda. */

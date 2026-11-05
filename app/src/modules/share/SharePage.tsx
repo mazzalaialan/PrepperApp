@@ -27,7 +27,7 @@ export function SharePage() {
 
 function SendSection() {
   const { t } = useTranslation();
-  const [selection, setSelection] = useState<ShareSelection>({ medical: true, contacts: true, documents: true, inventory: false, waypoints: true });
+  const [selection, setSelection] = useState<ShareSelection>({ medical: true, contacts: true, documents: true, inventory: false, waypoints: true, garden: true });
   const [password, setPassword] = useState('');
   const [repeat, setRepeat] = useState('');
   const [busy, setBusy] = useState(false);
@@ -252,6 +252,7 @@ function MergePreview({ payload, local, onCancel, onApplied }: { payload: ShareP
         <li>{t('share.documents', { added: result.newDocuments, existing: result.existingDocuments })}</li>
         {result.inventory && <li data-testid="share-inventory">{t('share.inventory', result.inventory)}</li>}
         {result.waypoints && <li data-testid="share-waypoints">{t('share.waypoints', result.waypoints)}</li>}
+        {result.garden && <li data-testid="share-garden">{t('share.garden', result.garden)}</li>}
       </ul>
       <p className="hint" style={{ margin: 0 }}>{t('share.neverDeletes')}</p>
 

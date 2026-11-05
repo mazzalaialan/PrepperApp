@@ -40,7 +40,7 @@ const V1_ENTITY_TABLES = [
   'recommendationRules',
 ] as const satisfies readonly EntityTable[];
 
-export const ENTITY_TABLES = [...V1_ENTITY_TABLES, 'medicalProfiles', 'routes', 'contacts', 'tracks'] as const satisfies readonly EntityTable[];
+export const ENTITY_TABLES = [...V1_ENTITY_TABLES, 'medicalProfiles', 'routes', 'contacts', 'tracks', 'gardenBeds', 'plantings'] as const satisfies readonly EntityTable[];
 
 /** Binarios cifrados (fotos), separados para no cargarlos a memoria al desbloquear. */
 export interface BlobRow extends Sealed {
@@ -66,6 +66,8 @@ export class UserDb extends Dexie {
   routes!: Table<EncryptedRow, string>;
   contacts!: Table<EncryptedRow, string>;
   tracks!: Table<EncryptedRow, string>;
+  gardenBeds!: Table<EncryptedRow, string>;
+  plantings!: Table<EncryptedRow, string>;
 
   constructor(name = 'vikarg-user') {
     super(name);
@@ -88,6 +90,8 @@ export class UserDb extends Dexie {
     this.version(4).stores({ contacts: 'id, updatedAt' });
     // v5: tracks importados de GPX (Wikiloc y otras apps).
     this.version(5).stores({ tracks: 'id, updatedAt' });
+    // v6: huerta (canteros y siembras).
+    this.version(6).stores({ gardenBeds: 'id, updatedAt', plantings: 'id, updatedAt' });
   }
 
   entityTable(name: EntityTable): Table<EncryptedRow, string> {

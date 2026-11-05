@@ -110,7 +110,7 @@ export interface PersonalDocument extends BaseEntity {
 
 export type DocumentCategory = 'general' | 'medical';
 
-export type AttachmentOwner = 'item' | 'document' | 'location' | 'waypoint' | 'medicalProfile';
+export type AttachmentOwner = 'item' | 'document' | 'location' | 'waypoint' | 'medicalProfile' | 'planting';
 
 export interface Attachment extends BaseEntity {
   ownerType: AttachmentOwner;
@@ -306,6 +306,55 @@ export interface EntityMap {
   routes: Route;
   contacts: EmergencyContact;
   tracks: Track;
+  gardenBeds: GardenBed;
+  plantings: Planting;
+}
+
+/** Cantero o maceta de la huerta (ARQUITECTURA §10.1). Se dibuja como grilla de cuadros de 30 cm. */
+export interface GardenBed extends BaseEntity {
+  name: string;
+  kind: 'bed' | 'pot';
+  /** En invernadero: no cuenta para el aviso de helada ni para el riego por lluvia. */
+  greenhouse: boolean;
+  widthCm: number;
+  lengthCm: number;
+  /** Horas de sol directo por día. */
+  sunHours: number;
+  /** Dónde está (uno de "Mis waypoints"); `null` = el lugar general de la huerta. */
+  waypointId: Id | null;
+  notes: string;
+  order: number;
+}
+
+export type PlantingStatus = 'nursery' | 'growing' | 'harvesting' | 'done';
+
+export interface HarvestEntry {
+  id: Id;
+  date: IsoDay;
+  quantity: number;
+  /** "kg", "u" o "atados". */
+  unit: string;
+  /** Lote del inventario creado con esta cosecha (si se sumó al inventario). */
+  lotId: Id | null;
+}
+
+/** Una siembra: un cultivo en un cantero (o todavía en almácigo), con su seguimiento y su cosecha. */
+export interface Planting extends BaseEntity {
+  /** Id de la ficha de cultivo (modules/garden/crops.ts). */
+  cropId: string;
+  /** Variedad o nombre propio (ej.: "Tomate platense"). */
+  variety: string;
+  /** `null` mientras está en el almácigo. */
+  bedId: Id | null;
+  /** Cuadros que ocupa: fila * columnas + columna. */
+  cells: number[];
+  method: 'direct' | 'nursery';
+  sownOn: IsoDay;
+  transplantedOn: IsoDay | null;
+  status: PlantingStatus;
+  endedOn: IsoDay | null;
+  notes: string;
+  harvests: HarvestEntry[];
 }
 
 /** Punto con nombre que trae un track importado (refugio, agua, mirador…). No es un waypoint propio. */

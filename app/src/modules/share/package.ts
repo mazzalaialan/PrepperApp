@@ -2,7 +2,8 @@ import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate';
 import { fromB64, sealedFromJson, sealedToJson, toB64, wrappedFromJson, wrappedToJson, type SealedJson, type WrappedJson } from '@/core/backup/backup';
 import { generateDek, open, PBKDF2_ITERATIONS, seal, unwrapDek, wrapDek } from '@/core/crypto/crypto';
 import { blobStore, repos } from '@/core/db/repository';
-import type { Attachment, Category, EmergencyContact, Item, Location, Lot, MedicalProfile, PersonalDocument, Route, StockMin, Track, Waypoint } from '@/core/model/types';
+import type { Attachment, Category, EmergencyContact, GardenBed, Item, Location, Lot, MedicalProfile, PersonalDocument, Planting, Route, StockMin, Track, Waypoint } from '@/core/model/types';
+import { useGarden } from '@/modules/garden/store';
 import { useDocuments } from '@/modules/documents/store';
 import { useContacts } from '@/modules/emergency/store';
 import { useMedical } from '@/modules/firstAid/medicalStore';
@@ -13,7 +14,7 @@ import type { LocalData, MergeResult } from './merge';
 
 /**
  * Paquete para compartir con un familiar (ARQUITECTURA §8.3): las secciones
- * elegidas (fichas, contactos, documentos, inventario, waypoints y rutas),
+ * elegidas (fichas, contactos, documentos, inventario, waypoints y rutas, huerta),
  * cifradas con una contraseña elegida para el envío (no la del usuario). Del
  * otro lado se mezclan sin borrar nada (ver merge.ts).
  */
@@ -27,7 +28,7 @@ export const SHARE_EXTENSION = '.vikshare';
  * suya (y su regla de mezcla en merge.ts): así la huerta y lo que venga se
  * comparten igual.
  */
-export const SHARE_SECTIONS = ['medical', 'contacts', 'documents', 'inventory', 'waypoints'] as const;
+export const SHARE_SECTIONS = ['medical', 'contacts', 'documents', 'inventory', 'waypoints', 'garden'] as const;
 export type ShareSection = (typeof SHARE_SECTIONS)[number];
 export type ShareSelection = Record<ShareSection, boolean>;
 
@@ -37,6 +38,13 @@ export interface InventoryShare {
   items: Item[];
   lots: Lot[];
   stockMins: StockMin[];
+}
+
+/** Huerta: canteros y siembras, con los waypoints de los canteros (sin ellos no hay helada ni riego). */
+export interface GardenShare {
+  beds: GardenBed[];
+  plantings: Planting[];
+  waypoints: Waypoint[];
 }
 
 export interface SharePayload {
@@ -53,6 +61,7 @@ export interface SharePayload {
   /** Tracks importados (van con "Waypoints y rutas"). */
   tracks?: Track[];
   routes?: Route[];
+  garden?: GardenShare;
   /** Fotos de fichas, documentos, artículos, ubicaciones y waypoints. */
   attachments: Attachment[];
   /** Bytes de cada foto (por id de adjunto), en base64. */
@@ -98,7 +107,17 @@ export async function collectShare(selection: ShareSelection): Promise<SharePayl
       }
     : undefined;
 
+  const bedWaypointIds = new Set(local.garden.beds.map((b) => b.waypointId).filter((id): id is string => !!id));
+  const garden: GardenShare | undefined = selection.garden
+    ? {
+        beds: local.garden.beds,
+        plantings: local.garden.plantings.map((p) => ({ ...p, harvests: p.harvests.map((h) => ({ ...h, lotId: null })) })),
+        waypoints: local.waypoints.filter((w) => bedWaypointIds.has(w.id)),
+      }
+    : undefined;
+
   const owners = new Set<string>([
+    ...(garden ? garden.plantings.map((p) => p.id) : []),
     ...profileIds,
     ...sharedDocuments.map((d) => d.id),
     ...(inventory ? [...inventory.items, ...inventory.locations].map((e) => e.id) : []),
@@ -121,6 +140,7 @@ export async function collectShare(selection: ShareSelection): Promise<SharePayl
     waypoints,
     routes: selection.waypoints ? local.routes : undefined,
     tracks: selection.waypoints ? local.tracks : undefined,
+    garden,
     attachments: sharedAttachments,
     blobs,
   };
@@ -163,7 +183,7 @@ export const blobBytes = (payload: SharePayload, id: string): Uint8Array<ArrayBu
 
 /** Lo que ya hay en este dispositivo, para mezclar. */
 export async function loadLocalData(): Promise<LocalData> {
-  const [profiles, contacts, documents, attachments, categories, locations, items, lots, stockMins, waypoints, routes, tracks] = await Promise.all([
+  const [profiles, contacts, documents, attachments, categories, locations, items, lots, stockMins, waypoints, routes, tracks, beds, plantings] = await Promise.all([
     repos.medicalProfiles.loadAll(),
     repos.contacts.loadAll(),
     repos.documents.loadAll(),
@@ -176,8 +196,10 @@ export async function loadLocalData(): Promise<LocalData> {
     repos.waypoints.loadAll(),
     repos.routes.loadAll(),
     repos.tracks.loadAll(),
+    repos.gardenBeds.loadAll(),
+    repos.plantings.loadAll(),
   ]);
-  return { profiles, contacts, documents, attachments, inventory: { categories, locations, items, lots, stockMins }, waypoints, routes, tracks };
+  return { profiles, contacts, documents, attachments, inventory: { categories, locations, items, lots, stockMins }, waypoints, routes, tracks, garden: { beds, plantings } };
 }
 
 /** Guarda la mezcla (solo agrega o completa: nunca borra) y recarga las pantallas. */
@@ -195,6 +217,8 @@ export async function applyMerge(result: MergeResult, payload: SharePayload): Pr
   for (const x of w.contacts) await repos.contacts.put(x);
   for (const x of w.profiles) await repos.medicalProfiles.put(x);
   for (const x of w.documents) await repos.documents.put(x);
+  for (const x of w.beds) await repos.gardenBeds.put(x);
+  for (const x of w.plantings) await repos.plantings.put(x);
   for (const { attachment, from } of w.attachments) {
     const bytes = blobBytes(payload, from);
     if (!bytes) continue;
@@ -208,6 +232,7 @@ export async function applyMerge(result: MergeResult, payload: SharePayload): Pr
     useInventory.getState().load(),
     useWaypoints.getState().load(),
     useTracks.getState().load(),
+    useGarden.getState().load(),
   ]);
 }
 

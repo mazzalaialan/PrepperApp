@@ -4,12 +4,14 @@ import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { db } from '@/core/db/db';
 import {
   alertsNotification,
+  gardenNotification,
   lightningNotification,
   rainNotification,
   testNotification,
   updateNotification,
   hazardNotification,
   type AlertSummary,
+  type GardenPush,
   type HazardPush,
   type LightningPush,
   type RainPush,
@@ -56,7 +58,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -87,6 +89,18 @@ self.addEventListener('push', (event) => {
           renotify: true,
           ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
           data: { url: '#/weather/map' },
+        } as NotificationOptions);
+      } else if (payload.type === 'garden' && payload.garden) {
+        const g = payload.garden;
+        const { title, body } = gardenNotification(g, lang);
+        await self.registration.showNotification(title, {
+          body,
+          icon: ICON,
+          badge: ICON,
+          // Una sola notificación por lugar (helada o riego) y una para las tareas.
+          tag: g.kind === 'tasks' ? 'garden-tasks' : `garden-${g.kind}-${g.placeId}`,
+          ...(g.kind === 'frost' ? { renotify: true, vibrate: [300, 150, 300] } : {}),
+          data: { url: '#/garden/beds' },
         } as NotificationOptions);
       } else if (payload.type === 'update' && payload.update) {
         // Al abrir la app, el service worker baja la versión nueva (y la app ofrece actualizar).

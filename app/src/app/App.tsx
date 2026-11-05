@@ -41,6 +41,10 @@ import { WeatherPage } from '@/modules/weather/WeatherPage';
 import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
 import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
 import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
+import { BedPage } from '@/modules/garden/BedPage';
+import { CropPage } from '@/modules/garden/CropPage';
+import { GardenCalendarPage } from '@/modules/garden/GardenCalendarPage';
+import { GardenPage } from '@/modules/garden/GardenPage';
 import { HomePage } from './pages/HomePage';
 import { SectionPage } from './pages/SectionPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -115,6 +119,10 @@ const router = createHashRouter([
       { path: '/weather/forecast', element: <WeatherPage /> },
       { path: '/weather/map', element: <WeatherMapPage /> },
       { path: '/garden', element: <SectionPage section="garden" /> },
+      { path: '/garden/calendar', element: <GardenCalendarPage /> },
+      { path: '/garden/crops/:id', element: <CropPage /> },
+      { path: '/garden/beds', element: <GardenPage /> },
+      { path: '/garden/beds/:id', element: <BedPage /> },
       // Ruta de la sección "Campo" (v0.3), dividida en Orientación y Meteorología.
       { path: '/field', element: <Navigate to="/orientation" replace /> },
       { path: '/library', element: <SectionPage section="library" /> },

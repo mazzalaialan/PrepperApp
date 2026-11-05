@@ -42,6 +42,12 @@ const TEXT = {
     hazardBody: (name: string, level: string) => `${name}. Alerta ${level} de GDACS (ONU y Comisión Europea).`,
     levels: { Green: 'verde', Orange: 'naranja', Red: 'roja' },
     hazardInformative: 'Aviso informativo, no oficial: seguí las indicaciones de los organismos oficiales (INPRES, SMN, Protección Civil).',
+    gardenFrost: (when: string, min: number) => `Helada ${when}: mínima de ${min} °C`,
+    gardenFrostBody: (crops: string, place: string | null) => `Tapá ${crops}${place ? ` (${place})` : ''}.`,
+    gardenTonight: 'esta noche',
+    gardenWater: (place: string | null) => `Hay que regar la huerta${place ? ` · ${place}` : ''}`,
+    gardenWaterBody: (mm: number, rain: number) => `Al suelo le faltan unos ${mm} mm (llovieron ${rain} mm en 10 días).`,
+    gardenTasks: (n: number) => (n === 1 ? 'Huerta: 1 tarea para hoy' : `Huerta: ${n} tareas para hoy`),
   },
   en: {
     title: (n: number) => (n === 1 ? '1 pending alert' : `${n} pending alerts`),
@@ -73,6 +79,12 @@ const TEXT = {
     hazardBody: (name: string, level: string) => `${name}. GDACS ${level} alert (UN and European Commission).`,
     levels: { Green: 'green', Orange: 'orange', Red: 'red' },
     hazardInformative: 'Informational, not official: follow the instructions of the official agencies.',
+    gardenFrost: (when: string, min: number) => `Frost ${when}: low of ${min} °C`,
+    gardenFrostBody: (crops: string, place: string | null) => `Cover ${crops}${place ? ` (${place})` : ''}.`,
+    gardenTonight: 'tonight',
+    gardenWater: (place: string | null) => `Time to water the garden${place ? ` · ${place}` : ''}`,
+    gardenWaterBody: (mm: number, rain: number) => `The soil is short about ${mm} mm (${rain} mm of rain in 10 days).`,
+    gardenTasks: (n: number) => (n === 1 ? 'Garden: 1 task for today' : `Garden: ${n} tasks for today`),
   },
 } as const;
 
@@ -193,4 +205,22 @@ export function rainNotification(rain: RainPush, lang: Lang, now = Date.now()): 
   const main = rain.observedMmH !== undefined ? tx.rainObserved(fmt.format(rain.observedMmH)) : tx.rainBody(fmt.format(rain.mm));
   const body = main + lastFixNote(rain.fixAt, lang, now) + `\n${tx.informative}`;
   return { title, body };
+}
+
+/** Aviso de la huerta del servidor (helada, riego o tareas). ⚠ Mismo tipo que GardenPush en server/src/push.ts. */
+export type GardenPush =
+  | { kind: 'frost'; placeId: string; label: string | null; date: string; min: number; crops: string[] }
+  | { kind: 'water'; placeId: string; label: string | null; mm: number; rain: number }
+  | { kind: 'tasks'; tasks: string[] };
+
+export function gardenNotification(g: GardenPush, lang: Lang): { title: string; body: string } {
+  const tx = TEXT[lang];
+  if (g.kind === 'frost') {
+    // La helada es la de la madrugada del día `date`: se avisa la tarde anterior.
+    return { title: tx.gardenFrost(tx.gardenTonight, g.min), body: tx.gardenFrostBody(g.crops.join(', '), g.label) };
+  }
+  if (g.kind === 'water') return { title: tx.gardenWater(g.label), body: tx.gardenWaterBody(g.mm, g.rain) };
+  const lines = g.tasks.slice(0, MAX_LISTED);
+  if (g.tasks.length > MAX_LISTED) lines.push(tx.more(g.tasks.length - MAX_LISTED));
+  return { title: tx.gardenTasks(g.tasks.length), body: lines.join('\n') };
 }

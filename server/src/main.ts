@@ -14,6 +14,7 @@ import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
 import { fetchGdacs, fetchQuakes, type HazardEvent } from './hazards/sources.ts';
 import { HAZARD_DEFAULTS, runHazardWatch } from './hazards/watch.ts';
+import { openMeteoGarden, runGardenWatch } from './garden/watch.ts';
 
 const config = loadConfig();
 const db = openDb(config.dataDir);
@@ -143,6 +144,18 @@ async function hazardTick() {
   }
 }
 const hazardTimer = setInterval(() => void hazardTick(), 5 * 60_000);
+
+const gardenWeather = openMeteoGarden(config.weatherUrl);
+async function gardenTick() {
+  try {
+    const { sent, removed } = await runGardenWatch(db, push, gardenWeather);
+    if (sent || removed) app.log.info({ sent, removed }, 'avisos de la huerta enviados');
+  } catch (err) {
+    app.log.error(err, 'fallaron los avisos de la huerta');
+  }
+}
+// Cada 15 minutos: la helada se avisa a partir de las 17 y el riego y las tareas a la hora de aviso de cada uno.
+const gardenTimer = setInterval(() => void gardenTick(), 15 * 60_000);
 setTimeout(() => void hazardTick(), 30_000);
 
 const timer = setInterval(() => void tick(), config.schedulerIntervalMs);
@@ -162,6 +175,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     clearInterval(observedRainTimer);
     clearInterval(lightningTimer);
     clearInterval(hazardTimer);
+    clearInterval(gardenTimer);
     await app.close();
     db.close();
     process.exit(0);

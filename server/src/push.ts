@@ -6,9 +6,14 @@ export interface PushSubscriptionJson {
   keys: { p256dh: string; auth: string };
 }
 
+export type GardenPush =
+  | { kind: 'frost'; placeId: string; label: string | null; date: string; min: number; crops: string[] }
+  | { kind: 'water'; placeId: string; label: string | null; mm: number; rain: number }
+  | { kind: 'tasks'; tasks: string[] };
+
 /** Contenido de la notificación; la app la arma en el idioma del usuario (ver app/src/sw.ts). */
 export interface PushPayload {
-  type: 'alerts' | 'rain' | 'lightning' | 'test' | 'update' | 'hazard';
+  type: 'alerts' | 'rain' | 'lightning' | 'test' | 'update' | 'hazard' | 'garden';
   alerts?: { itemName: string; kind: string; dueDate: string | null }[];
   /** Aviso de lluvia en un lugar; `label` null = "donde estoy", y `fixAt` es de cuándo es esa ubicación. */
   rain?: { placeId: string; label: string | null; state: 'raining' | 'soon'; inMinutes: number; mm: number; fixAt: string | null; observedMmH?: number };
@@ -28,6 +33,8 @@ export interface PushPayload {
     level?: 'Green' | 'Orange' | 'Red';
     url: string;
   };
+  /** Huerta: helada (por lugar), riego (por lugar) o las tareas del día juntas (ver garden/watch.ts). */
+  garden?: GardenPush;
   /** Actualización importante: la app muestra el texto en su idioma (ver announce.ts). */
   update?: { version: string; title: { es: string; en: string }; body: { es: string; en: string } };
 }
@@ -40,7 +47,7 @@ export interface PushSender {
 
 /** Prioridad del push (RFC 8030): alta para lo que no puede esperar. */
 export function urgencyOf(payload: PushPayload): 'high' | 'normal' {
-  return payload.type === 'hazard' || payload.type === 'lightning' || payload.type === 'rain' ? 'high' : 'normal';
+  return payload.type === 'hazard' || payload.type === 'lightning' || payload.type === 'rain' || payload.garden?.kind === 'frost' ? 'high' : 'normal';
 }
 
 /** Claves VAPID: se generan en el primer arranque y se guardan en la base. */

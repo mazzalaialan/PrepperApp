@@ -6,6 +6,7 @@ import type {
   Doctor,
   EmergencyContact,
   EmergencyContactRef,
+  GardenBed,
   Id,
   Item,
   Location,
@@ -13,6 +14,7 @@ import type {
   MedicalProfile,
   PersonalDocument,
   PetHealth,
+  Planting,
   Route,
   Track,
   StockMin,
@@ -37,6 +39,7 @@ export interface LocalData {
   waypoints: Waypoint[];
   routes: Route[];
   tracks: Track[];
+  garden: { beds: GardenBed[]; plantings: Planting[] };
 }
 
 /** Datos sueltos de una ficha que pueden estar cargados distinto. */
@@ -91,6 +94,7 @@ export interface MergeResult {
   /** Ausentes si el archivo no trae esa sección. */
   inventory: { items: number; lots: number; locations: number; categories: number } | null;
   waypoints: { waypoints: number; routes: number; tracks: number } | null;
+  garden: { beds: number; plantings: number } | null;
   writes: {
     profiles: MedicalProfile[];
     contacts: EmergencyContact[];
@@ -103,6 +107,8 @@ export interface MergeResult {
     waypoints: Waypoint[];
     routes: Route[];
     tracks: Track[];
+    beds: GardenBed[];
+    plantings: Planting[];
     /** Adjuntos nuevos y de qué adjunto del paquete salen sus bytes. */
     attachments: { attachment: Attachment; from: Id }[];
   };
@@ -390,8 +396,12 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
   const routeWrites: Route[] = [];
   const trackWrites: Track[] = [];
   let waypointSummary: MergeResult['waypoints'] = null;
-  if (incoming.waypoints) {
-    for (const w of incoming.waypoints) {
+  if (incoming.waypoints || incoming.garden) {
+    // Los waypoints de los canteros viajan con la huerta aunque no se compartan los demás.
+    const seen = new Set<Id>();
+    for (const w of [...(incoming.waypoints ?? []), ...(incoming.garden?.waypoints ?? [])]) {
+      if (seen.has(w.id)) continue;
+      seen.add(w.id);
       // El mismo punto: mismo id, o mismo nombre a menos de 30 m.
       const found = local.waypoints.find((l) => l.id === w.id) ?? local.waypoints.find((l) => norm(l.name) === norm(w.name) && metersBetween(l, w) < 30);
       if (found) {
@@ -423,7 +433,50 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       });
       if (!same) trackWrites.push({ ...tr, id: freshId(tr.id), updatedAt: now, deletedAt: null });
     }
-    waypointSummary = { waypoints: waypointWrites.length, routes: routeWrites.length, tracks: trackWrites.length };
+    if (incoming.waypoints) waypointSummary = { waypoints: waypointWrites.length, routes: routeWrites.length, tracks: trackWrites.length };
+  }
+
+  // ---------- huerta ----------
+  const bedWrites: GardenBed[] = [];
+  const plantingWrites: Planting[] = [];
+  let gardenSummary: MergeResult['garden'] = null;
+  if (incoming.garden) {
+    // Canteros: el mismo si tiene el mismo id o se llama igual; si no, se agrega con su waypoint.
+    const bedMap = new Map<Id, Id>();
+    for (const b of incoming.garden.beds) {
+      const found = local.garden.beds.find((l) => l.id === b.id) ?? local.garden.beds.find((l) => norm(l.name) === norm(b.name));
+      if (found) {
+        bedMap.set(b.id, found.id);
+        continue;
+      }
+      const id = freshId(b.id);
+      bedMap.set(b.id, id);
+      bedWrites.push({ ...b, id, waypointId: b.waypointId ? (waypointMap.get(b.waypointId) ?? null) : null, updatedAt: now, deletedAt: null });
+    }
+    // Siembras: las que no están (por id). En un cantero que ya existía, las que todavía están en la tierra no
+    // se agregan si caen en cuadros ocupados: no se pisa lo plantado de este lado.
+    const taken = new Map<Id, Set<number>>();
+    for (const p of local.garden.plantings) {
+      if (!p.bedId || p.status === 'done') continue;
+      const set = taken.get(p.bedId) ?? new Set<number>();
+      p.cells.forEach((c) => set.add(c));
+      taken.set(p.bedId, set);
+    }
+    for (const p of incoming.garden.plantings) {
+      if (local.garden.plantings.some((l) => l.id === p.id)) continue;
+      const bedId = p.bedId ? (bedMap.get(p.bedId) ?? null) : null;
+      if (p.bedId && !bedId) continue;
+      if (bedId && p.status !== 'done') {
+        const occupied = taken.get(bedId) ?? new Set<number>();
+        if (p.cells.some((c) => occupied.has(c))) continue;
+        p.cells.forEach((c) => occupied.add(c));
+        taken.set(bedId, occupied);
+      }
+      const id = freshId(p.id);
+      plantingWrites.push({ ...p, id, bedId, harvests: p.harvests.map((h) => ({ ...h, lotId: null })), updatedAt: now, deletedAt: null });
+      copyPhotos('planting', p.id, id);
+    }
+    gardenSummary = { beds: bedWrites.length, plantings: plantingWrites.length };
   }
 
   // ---------- inventario ----------
@@ -534,6 +587,7 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
     existingDocuments,
     inventory: inventorySummary,
     waypoints: waypointSummary,
+    garden: gardenSummary,
     writes: {
       profiles: profileWrites,
       contacts: contactWrites,
@@ -546,6 +600,8 @@ export function mergeShare(local: LocalData, incoming: SharePayload, decisions: 
       waypoints: waypointWrites,
       routes: routeWrites,
       tracks: trackWrites,
+      beds: bedWrites,
+      plantings: plantingWrites,
       attachments: attachmentWrites,
     },
   };
