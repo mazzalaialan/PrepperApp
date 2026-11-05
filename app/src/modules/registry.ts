@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Anchor,
+  Search,
   BellRing,
   BookA,
   Cable,
@@ -77,7 +78,8 @@ export const MODULES: ModuleDef[] = [
   { id: 'knotGlossary', section: 'knots', icon: BookA, implemented: true, path: '/knots/glossary' },
   { id: 'gardenCalendar', section: 'garden', icon: CalendarDays, implemented: true, path: '/garden/calendar' },
   { id: 'gardenBeds', section: 'garden', icon: Sprout, implemented: true, path: '/garden/beds' },
-  { id: 'library', section: 'library', icon: BookOpen, implemented: false },
+  { id: 'libraryBooks', section: 'library', icon: BookOpen, implemented: true, path: '/library/books' },
+  { id: 'librarySearch', section: 'library', icon: Search, implemented: true, path: '/library/search' },
 ];
 
 export type ModuleStatus =

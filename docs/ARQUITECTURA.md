@@ -480,13 +480,14 @@ Sección propia en Inicio, **antes de Huerta**: Guía de nudos, Anclajes, Cuerda
 
 ## 11. Biblioteca
 
-### 11.1 En la app
-- **Paquetes por categoría**, siguiendo la organización actual de las carpetas del autor. Cada libro conserva su idioma original. Categorías iniciales (20): Agua y aguas negras · Alimento · Animales e insectos · Cabuyería · Catástrofes · Cocina · Comunicaciones · Construcciones y herramientas · Cultivo · Defensa y entrenamiento · Energía · Higiene · Literatura general · Medicina y primeros auxilios · Mochilas, kits y preparación del hogar · Orientación · Psicología · Revista Comando · Supervivencia general · Vehículos y movilidad.
-- Las categorías de la biblioteca son **independientes** de las categorías del inventario.
-- Descarga bajo demanda desde una lista de **espejos** (GitHub Releases y/o servidor propio); se puede cambiar de espejo.
-- Cada paquete incluye su **índice de búsqueda ya generado**: búsqueda de texto completo offline sin procesar nada en el dispositivo.
-- El usuario también puede **importar** sus propios HTML, PDF o paquetes; esos contenidos se indexan al importarse.
-- Visor HTML en `iframe` aislado (§7.4); visor PDF con pdf.js.
+### 11.1 En la app (hecha el 05/11/2026)
+- **Libros** (`/library/books`): el catálogo del servidor propio por categoría (secciones = subcarpetas). Cada libro muestra si es **libre** (verde: dominio público o licencia libre) o **con derechos** (candado). Se elige una categoría entera o libro por libro y se bajan juntos, con progreso. Los con derechos piden la **clave VikArg** (se comprueba sin conexión con la prueba de clave del catálogo; opcionalmente se recuerda, cifrada con la bóveda) y muestran el aviso de uso personal.
+- **Cifrado:** los con derechos llegan cifrados (PBKDF2-SHA256, 600.000 iteraciones, + AES-256-GCM, formato `VKLB1` + IV + texto cifrado) y se descifran en el dispositivo. Se verifica el SHA-256 de cada descarga.
+- **Sin conexión:** cada libro se guarda descomprimido en Cache Storage y lo sirve el service worker (`/library/books/<id>/…`, antes que la navegación de la app). El catálogo también queda guardado.
+- **Visor** (`/library/read/:id`): `iframe` sin scripts (`sandbox="allow-same-origin"`), con el estilo de la app inyectado (tema y tamaño de letra), capítulos, anterior y siguiente.
+- **Buscar en los libros** (`/library/search`): en el texto de los libros bajados (`text.txt` de cada paquete), sin acentos.
+- **Actualizaciones:** si el SHA-256 del catálogo cambió, el libro muestra "hay una versión nueva" y se puede volver a bajar.
+- Pendiente: espejos públicos (GitHub Releases) para los libres e importar libros propios en el dispositivo.
 
 ### 11.2 Herramienta de conversión (`tools/library-builder`) — definida el 05/11/2026
 
@@ -516,7 +517,7 @@ Sección propia en Inicio, **antes de Huerta**: Guía de nudos, Anclajes, Cuerda
 - **Actualización:** hash por libro: actualizar un paquete baja solo lo que cambió.
 
 **Públicos y privados:**
-- **Privado por defecto.** Los privados quedan **solo en el servidor propio**, detrás de una **clave de acceso a la biblioteca privada** configurada en el servidor; la app la pide una vez y al descargar muestra "Uso personal: no compartir estos libros".
+- **Privado por defecto.** Los privados quedan **solo en el servidor propio**, **cifrados con la clave VikArg** (`run.sh package`; la clave en `~/vikarg-library/.library-key`, nunca en git), y el servidor los entrega solo con la clave; la app la pide al elegirlos y muestra el aviso de uso personal.
 - **Públicos** (dominio público o licencia libre) van a los espejos. El conversor busca por el título y el origen (FM del ejército de EE. UU., FEMA, CDC, OMS, INTA, Cruz Roja, organismos públicos, licencias Creative Commons en el propio libro): lo que es público **con seguridad** se marca público; lo dudoso queda privado. Todo va en el informe para revisar.
 
 **En la app:** se puede bajar una categoría entera o libro por libro (casillas).

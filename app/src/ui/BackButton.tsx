@@ -16,11 +16,12 @@ export const ROUTE_PATHS = [
   '/orientation/starmap', '/orientation/maps', '/orientation/routes', '/orientation/tracks', '/orientation/tracks/:id',
   '/orientation/tracks/:id/follow', '/orientation/routes/:id', '/orientation/routes/:id/go/:step', '/weather', '/weather/sky',
   '/weather/forecast', '/weather/map', '/knots', '/knots/guide', '/knots/guide/:id', '/knots/anchors', '/knots/anchors/:id', '/knots/ropes', '/knots/glossary',
-  '/garden', '/garden/calendar', '/garden/crops/:id', '/garden/beds', '/garden/beds/:id', '/field', '/library', '/settings', '/about',
+  '/garden', '/garden/calendar', '/garden/crops/:id', '/garden/beds', '/garden/beds/:id', '/field', '/library', '/library/books', '/library/search', '/library/read/:id', '/settings', '/about',
 ];
 
 /** Donde no alcanza con sacar el último tramo de la ruta. */
 const PARENTS: Record<string, string> = {
+  '/library/read/:id': '/library/books',
   '/garden/crops/:id': '/garden/calendar',
   '/orientation/routes/:id': '/orientation/waypoints',
   '/orientation/routes/:id/go/:step': '/orientation/routes/:id',

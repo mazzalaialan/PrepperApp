@@ -15,10 +15,15 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
       TRANSFER_MAX_MB: ${TRANSFER_MAX_MB:-50}
       MAPS_DIR: /maps
+      LIBRARY_DIR: /library
+      # Clave de la biblioteca: la misma con la que se cifraron los libros con derechos (tools/library-builder).
+      LIBRARY_KEY: ${LIBRARY_KEY:-}
     volumes:
       - vikarg-data:/data
       # Mapas offline (vector.pmtiles y elevation.pmtiles); vacía, la app usa las fuentes públicas. Ver docs/SERVIDOR.md.
       - ${MAPS_PATH:-./maps}:/maps:ro
+      # Paquetes de la biblioteca (catalog.json y books/), los que arma tools/library-builder (run.sh package).
+      - ${LIBRARY_PATH:-./library}:/library:ro
 
   caddy:
     image: caddy:2-alpine

@@ -174,6 +174,23 @@ docker compose logs -f vikarg
 - **Riego:** a la hora de aviso, balance de agua del suelo (ET0 × Kc menos la lluvia útil desde el último "regué"); si falta más que lo que las raíces sacan fácil, un aviso por episodio. Al marcar "Regué" en la app se vuelve a contar.
 - **Tareas** (trasplantar, empezar a cosechar, terminar): a la hora de aviso, todas las que ya corresponden juntas en un solo aviso, una vez.
 
+## Biblioteca (opcional)
+
+La app lista los libros del servidor por categoría: los **libres** (dominio público o licencia libre) en verde, y los **con derechos** con candado. Estos últimos se bajan solo con la **clave VikArg** y llegan **cifrados** (PBKDF2-SHA256 + AES-256-GCM): se descifran en el celular. Si los archivos terminaran en git o copiados en otro lado, sin la clave no se pueden abrir.
+
+```bash
+# 1. La clave (una sola vez; fuera del repositorio).
+echo 'la-clave' > ~/vikarg-library/.library-key && chmod 600 ~/vikarg-library/.library-key
+# 2. Convertir lo que falta (los libros nuevos que agregues a la carpeta se detectan solos) y armar los paquetes.
+sh tools/library-builder/run.sh status     # qué falta
+sh tools/library-builder/run.sh update     # convierte solo lo pendiente
+sh tools/library-builder/run.sh package    # catálogo + un ZIP por libro (los con derechos, cifrados)
+```
+
+En `deploy/.env`: `LIBRARY_PATH=/home/usuario/vikarg-library/packages` y `LIBRARY_KEY=` con la misma clave. El servidor relee el catálogo cuando cambia: no hace falta reiniciarlo.
+
+API: `GET /api/library` (catálogo), `POST /api/library/key` (comprobar la clave; 10 intentos por IP cada 10 minutos) y `GET /api/library/books/:id` (los con derechos piden la clave en `x-library-key`).
+
 ## Avisos de actualizaciones importantes
 
 No salen solos con cada versión: se mandan a mano, solo cuando una versión trae algo importante. Llegan a los dispositivos con notificaciones que no apagaron **Ajustes → Notificaciones → "Avisarme de actualizaciones importantes de la app"** (viene prendido). Al tocarlo se abre la app, que baja la versión nueva. Cada versión se anuncia una sola vez: el servidor anota cuáles ya mandó (tabla `announcements`).

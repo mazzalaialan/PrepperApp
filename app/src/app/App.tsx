@@ -42,6 +42,9 @@ import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
 import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
 import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
 import { BedPage } from '@/modules/garden/BedPage';
+import { LibraryPage } from '@/modules/library/LibraryPage';
+import { LibrarySearchPage } from '@/modules/library/LibrarySearchPage';
+import { ReaderPage } from '@/modules/library/ReaderPage';
 import { AnchorPage, AnchorsPage } from '@/modules/knots/AnchorPages';
 import { GlossaryPage, RopesPage } from '@/modules/knots/InfoPages';
 import { KnotGuidePage } from '@/modules/knots/KnotGuidePage';
@@ -137,6 +140,9 @@ const router = createHashRouter([
       // Ruta de la sección "Campo" (v0.3), dividida en Orientación y Meteorología.
       { path: '/field', element: <Navigate to="/orientation" replace /> },
       { path: '/library', element: <SectionPage section="library" /> },
+      { path: '/library/books', element: <LibraryPage /> },
+      { path: '/library/search', element: <LibrarySearchPage /> },
+      { path: '/library/read/:id', element: <ReaderPage /> },
       { path: '/settings', element: <SettingsPage /> },
       { path: '/about', element: <AboutPage /> },
     ],

@@ -38,6 +38,10 @@ export interface Config {
   /** Tamaño máximo de una zona que se baja del servidor (teselas y MB). */
   mapsMaxZoneTiles: number;
   mapsMaxZoneMb: number;
+  /** Paquetes de la biblioteca (catalog.json y books/*.zip de tools/library-builder); null = sin biblioteca. */
+  libraryDir: string | null;
+  /** Clave para bajar los libros con derechos (uso personal); vacía = solo se bajan los libres. */
+  libraryKey: string | null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -66,5 +70,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     mapsMaxConcurrent: Number(env.MAPS_MAX_CONCURRENT ?? 48),
     mapsMaxZoneTiles: Number(env.MAPS_MAX_ZONE_TILES ?? 60_000),
     mapsMaxZoneMb: Number(env.MAPS_MAX_ZONE_MB ?? 1_500),
+    libraryDir: env.LIBRARY_DIR?.trim() || null,
+    libraryKey: env.LIBRARY_KEY?.trim() || null,
   };
 }

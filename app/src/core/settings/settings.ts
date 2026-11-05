@@ -94,6 +94,8 @@ export interface Settings {
   gardenWateredAt: Record<string, string>;
   /** Nudos marcados como aprendidos (ids de la guía de nudos). */
   knotsLearned: string[];
+  /** Tamaño de letra del visor de la biblioteca (%). */
+  readerFontPct: number;
 }
 
 export type GardenZone = 'pampeana' | 'nea' | 'noa' | 'cuyo' | 'patagoniaNorte' | 'patagoniaSur';
@@ -207,6 +209,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenWaterAlerts: true,
   gardenWateredAt: {},
   knotsLearned: [],
+  readerFontPct: 100,
 };
 
 const SETTINGS_KEY = 'app';

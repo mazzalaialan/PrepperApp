@@ -2,3 +2,4 @@ PyMuPDF==1.24.10
 Pillow==10.4.0
 PyYAML==6.0.2
 mobi==0.3.3
+cryptography==43.0.3

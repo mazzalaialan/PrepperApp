@@ -3353,3 +3353,90 @@ a.module-card:hover {
 .chip-anchor {
   border-style: dashed;
 }
+
+/* ---------- Biblioteca ---------- */
+
+.pill-free {
+  color: #0b3d1a;
+  background: #5fbf7a;
+}
+
+.pill-rights {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+}
+
+.library-book.is-free {
+  border-left: 4px solid #5fbf7a;
+}
+
+.library-book.is-rights {
+  border-left: 4px solid var(--warn);
+}
+
+.library-book input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.library-cat summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  cursor: pointer;
+}
+
+.library-bar {
+  position: sticky;
+  bottom: 72px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+}
+
+.reader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reader-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reader-bar .select,
+.reader-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.reader-frame {
+  width: 100%;
+  height: calc(100dvh - 230px);
+  min-height: 360px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.reader-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}

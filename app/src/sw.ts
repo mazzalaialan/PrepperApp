@@ -31,6 +31,18 @@ const ALERTS_URL = '#/inventory/alerts';
 // ---------- Offline ----------
 
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Libros bajados de la biblioteca: solo desde el dispositivo (se registran antes que la navegación,
+// porque el visor abre cada capítulo como página).
+const LIBRARY_CACHE = 'vikarg-library-books';
+const LIBRARY_PREFIX = new URL('library/books/', self.registration.scope).pathname;
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith(LIBRARY_PREFIX),
+  async ({ url }) =>
+    (await caches.match(url.origin + url.pathname, { cacheName: LIBRARY_CACHE })) ??
+    new Response('Este libro no está en el dispositivo.', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } }),
+);
+
 registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')));
 
 // Elevación de los mapas offline: primero lo descargado por zona (curvas de nivel sin conexión).

@@ -13,6 +13,7 @@ import { createObservedRainStatus, type ObservedRainStatus } from './rain/noaaWa
 import { deviceRoutes } from './routes/devices.ts';
 import { lightningRoutes } from './routes/lightning.ts';
 import { mapRoutes } from './routes/maps.ts';
+import { libraryRoutes } from './routes/library.ts';
 import { rainMapRoutes } from './routes/rainMap.ts';
 import { transferRoutes } from './routes/transfers.ts';
 
@@ -39,6 +40,7 @@ export async function buildApp(
   lightningRoutes(app, lightning.store, lightning.wake);
   rainMapRoutes(app, rainMap.store, rainMap.wake);
   mapRoutes(app, maps, config);
+  libraryRoutes(app, config);
   app.addHook('onClose', () => maps.close());
 
   // Opcional: servir la propia PWA para una instalación 100% autónoma.

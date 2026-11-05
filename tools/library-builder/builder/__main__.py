@@ -33,6 +33,7 @@ def main() -> None:
     c.add_argument("--book", action="append", default=[], help="ruta de un libro (para probar)")
     c.add_argument("--no-ocr", action="store_true", help="saltear los escaneados")
     sub.add_parser("report", help="arma el informe")
+    sub.add_parser("package", help="arma los paquetes para la app (catálogo y un ZIP por libro)")
     sub.add_parser("status", help="qué falta convertir (busca también archivos nuevos)")
     u = sub.add_parser("update", help="analiza y convierte solo lo que falta")
     u.add_argument("--no-ocr", action="store_true", help="dejar los escaneados para después")
@@ -66,6 +67,10 @@ def main() -> None:
                 convert(entries, SRC, OUT, categories=[], all_=True, books=[], ocr=not args.no_ocr)
         write_report(entries, OUT)
         print_status(status(entries, OUT))
+    elif args.cmd == "package":
+        from .package import package
+
+        package(load_inventory(), OUT, os.environ.get("LIBRARY_KEY") or None)
     elif args.cmd == "report":
         from .report import write_report
 

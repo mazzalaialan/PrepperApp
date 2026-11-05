@@ -4,6 +4,7 @@
 #   convert --category X     convierte una categoría (o --all)
 #   report                   arma el informe
 #   status                   qué falta convertir (encuentra también los libros nuevos que agregaste)
+#   package                  arma los paquetes para la app (catálogo + un ZIP por libro)
 #   update                   convierte solo lo que falta (los nuevos, los que cambiaron, los que fallaron)
 # Variables: SRC (carpeta de origen), OUT (salida; por defecto ~/vikarg-library).
 set -eu
@@ -11,9 +12,11 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 SRC=${SRC:-"$HOME/Documentos/Biblioteca del Preparacionista"}
 OUT=${OUT:-"$HOME/vikarg-library"}
 mkdir -p "$OUT"
+# Clave de la biblioteca (cifra los libros con derechos): LIBRARY_KEY o el archivo $OUT/.library-key (nunca en git).
+if [ -z "${LIBRARY_KEY:-}" ] && [ -f "$OUT/.library-key" ]; then LIBRARY_KEY=$(cat "$OUT/.library-key"); fi
 docker build -q -t vikarg-library-builder "$HERE" >/dev/null
 # La colección se monta solo para leer; la red queda cortada.
 exec docker run --rm --network none --user "$(id -u):$(id -g)" \
-  -e HOME=/tmp \
+  -e HOME=/tmp -e LIBRARY_KEY="${LIBRARY_KEY:-}" \
   -v "$SRC:/src:ro" -v "$OUT:/out" -v "$HERE/books.yaml:/app/books.yaml:ro" \
   vikarg-library-builder "$@"
