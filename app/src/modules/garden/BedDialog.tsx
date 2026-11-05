@@ -1,10 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LocateFixed } from 'lucide-react';
-import { currentPosition } from '@/core/geo/useGeolocation';
-import { newEntity } from '@/core/model/entity';
-import type { GardenBed, Waypoint } from '@/core/model/types';
-import { useWaypoints } from '@/modules/waypoints/store';
+import type { GardenBed } from '@/core/model/types';
+import { WaypointField } from '@/modules/waypoints/WaypointField';
 import { Dialog } from '@/ui/Dialog';
 import { numToInput, parseNum } from '@/ui/numbers';
 import { Segmented } from '@/ui/Segmented';
@@ -13,35 +10,15 @@ import { gridSize } from './logic';
 /** Alta y edición de un cantero o maceta, con su waypoint (de ahí salen la helada y la lluvia). */
 export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; onClose: () => void; onSave: (b: GardenBed) => Promise<void>; onDelete?: () => void }) {
   const { t } = useTranslation();
-  const waypoints = useWaypoints((s) => s.waypoints);
-  const saveWaypoint = useWaypoints((s) => s.saveWaypoint);
   const [draft, setDraft] = useState(bed);
   const [width, setWidth] = useState(numToInput(bed.widthCm));
   const [length, setLength] = useState(numToInput(bed.lengthCm));
   const [sun, setSun] = useState(numToInput(bed.sunHours));
-  const [locating, setLocating] = useState(false);
-  const [gpsError, setGpsError] = useState(false);
   const w = parseNum(width);
   const l = parseNum(length);
   const h = parseNum(sun);
   const valid = draft.name.trim() !== '' && w !== null && w >= 10 && w <= 3000 && l !== null && l >= 10 && l <= 10000 && h !== null && h >= 0 && h <= 16;
-  const options = [...waypoints.values()].sort((a, b) => a.name.localeCompare(b.name));
   const size = valid ? gridSize({ widthCm: w!, lengthCm: l! }) : null;
-
-  async function markHere() {
-    setLocating(true);
-    setGpsError(false);
-    try {
-      const fix = await currentPosition();
-      const wp = newEntity<Waypoint>({ name: draft.name.trim() || t('garden.bedDefault', { n: 1 }), lat: fix.lat, lon: fix.lon, alt: fix.alt, icon: 'pin', notes: '', rainAlerts: false });
-      await saveWaypoint(wp);
-      setDraft((d) => ({ ...d, waypointId: wp.id }));
-    } catch {
-      setGpsError(true);
-    } finally {
-      setLocating(false);
-    }
-  }
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -101,22 +78,15 @@ export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; 
           {t('garden.inGreenhouse')}
         </label>
         <p className="hint" style={{ margin: 0 }}>{t('garden.greenhouseHint')}</p>
-        <div className="field">
-          <label htmlFor="bed-place">{t('garden.bedPlace')}</label>
-          <select id="bed-place" className="select" value={draft.waypointId ?? ''} onChange={(e) => setDraft({ ...draft, waypointId: e.target.value || null })}>
-            <option value="">{t('garden.noPlace')}</option>
-            {options.map((wp) => (
-              <option key={wp.id} value={wp.id}>
-                {wp.name}
-              </option>
-            ))}
-          </select>
-          <button className="btn" type="button" onClick={() => void markHere()} disabled={locating}>
-            <LocateFixed size={18} /> {locating ? t('garden.locating') : t('garden.markHere')}
-          </button>
-          {gpsError && <p className="error">{t('garden.gpsError')}</p>}
-          <p className="hint">{draft.greenhouse ? t('garden.placeHintGreenhouse') : t('garden.placeHint')}</p>
-        </div>
+        <WaypointField
+          id="bed-place"
+          label={t('garden.bedPlace')}
+          value={draft.waypointId}
+          onChange={(waypointId) => setDraft((d) => ({ ...d, waypointId }))}
+          newName={draft.name}
+          noneLabel={t('garden.noPlace')}
+          hint={draft.greenhouse ? t('garden.placeHintGreenhouse') : t('garden.placeHint')}
+        />
         <div className="field">
           <label htmlFor="bed-notes">{t('garden.notes')}</label>
           <textarea id="bed-notes" className="textarea" value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} rows={2} />

@@ -1220,6 +1220,10 @@
     "documentsTitle": "Documentos por vencer"
   },
   "locations": {
+    "place": "Dónde está (waypoint)",
+    "placeNone": "Sin ubicación",
+    "placeInherit": "La de la ubicación de arriba",
+    "placeHint": "Si cargás dónde está, el servidor te avisa de inundaciones, incendios, sismos y otros peligros cerca de tu reserva para que la pongas a resguardo.",
     "new": "Nueva ubicación",
     "edit": "Editar ubicación",
     "hint": "Organizá tus almacenes en hasta {{max}} niveles. Ej.: Casa › Sótano › Estante 3 › Caja A.",
@@ -1833,9 +1837,6 @@
     "inGreenhouse": "En invernadero",
     "greenhouseHint": "Los canteros en invernadero no cuentan para el aviso de helada ni para el riego por lluvia (no les llueve: se riegan a mano).",
     "bedPlace": "Dónde está (waypoint)",
-    "markHere": "Estoy en el cantero: marcarlo con el GPS",
-    "locating": "Buscando la ubicación…",
-    "gpsError": "No se pudo leer el GPS. Elegí un waypoint de la lista.",
     "placeHint": "De este lugar salen el pronóstico de helada y la lluvia para el riego. Se guarda en Mis waypoints.",
     "placeHintGreenhouse": "En invernadero no hay avisos de helada ni de riego, pero sirve para ubicarlo en el mapa.",
     "notes": "Notas",
@@ -1912,5 +1913,11 @@
     "inInventory": "en el inventario",
     "removeHarvest": "Quitar esta cosecha",
     "finish": "Terminó: liberar los cuadros"
+  },
+  "waypointField": {
+    "none": "Sin ubicación",
+    "markHere": "Estoy acá: marcarlo con el GPS",
+    "locating": "Buscando la ubicación…",
+    "gpsError": "No se pudo leer el GPS. Elegí un waypoint de la lista."
   }
 }

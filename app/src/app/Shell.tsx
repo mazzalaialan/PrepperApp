@@ -23,6 +23,7 @@ import { RainNotices } from '@/modules/weather/RainNotices';
 import { useZoneForecastRefresh } from '@/modules/maps/zoneForecast';
 import { useRainServerSync } from '@/modules/weather/rainServer';
 import { useGardenServerSync } from '@/modules/garden/serverSync';
+import { useStockServerSync } from '@/modules/inventory/stockServer';
 import { useRainWatcher } from '@/modules/weather/rainWatch';
 import { PortableUpdateNotice } from './PortableUpdateNotice';
 
@@ -52,6 +53,7 @@ export function Shell() {
   useRainWatcher();
   useRainServerSync();
   useGardenServerSync();
+  useStockServerSync();
   useZoneForecastRefresh();
 
   return (

@@ -17,6 +17,8 @@ interface PlaceRow {
   lon: number;
   fix_at: string | null;
   subscription: string;
+  /** Lugar donde hay reserva del inventario (no un lugar de aviso de lluvia). */
+  stock: number;
 }
 
 export interface HazardOptions {
@@ -42,27 +44,42 @@ export async function runHazardWatch(db: Db, push: PushSender, events: HazardEve
   const fresh = events.filter((e) => now.getTime() - e.at <= (e.kind === 'quake' ? options.quakeMaxAgeMs : options.gdacsMaxAgeMs) && radiusFor(e) > 0);
   if (fresh.length === 0) return result;
 
-  const rows = withoutDuplicateHere(
+  const rainRows = withoutDuplicateHere(
     db
       .prepare(
-        `SELECT p.device_id, p.place_id, p.label, p.lat, p.lon, p.fix_at, d.subscription
+        `SELECT p.device_id, p.place_id, p.label, p.lat, p.lon, p.fix_at, d.subscription, 0 AS stock
          FROM rain_places p JOIN devices d ON d.id = p.device_id WHERE d.hazards = 1`,
       )
       .all() as unknown as PlaceRow[],
   ).filter((r) => r.fix_at === null || now.getTime() - Date.parse(r.fix_at) <= options.hereMaxAgeMs);
+  const stockRows = db
+    .prepare(
+      `SELECT s.device_id, 'stock:' || s.place_id AS place_id, s.label, s.lat, s.lon, NULL AS fix_at, d.subscription, 1 AS stock
+       FROM stock_places s JOIN devices d ON d.id = s.device_id WHERE d.hazards = 1`,
+    )
+    .all() as unknown as PlaceRow[];
+  const byDevice = new Map<string, PlaceRow[]>();
+  for (const r of [...rainRows, ...stockRows]) byDevice.set(r.device_id, [...(byDevice.get(r.device_id) ?? []), r]);
 
   const previous = db.prepare('SELECT level FROM hazard_notices WHERE device_id = ? AND place_id = ? AND event_key = ?');
   const mark = db.prepare('INSERT OR REPLACE INTO hazard_notices (device_id, place_id, event_key, level, notified_at) VALUES (?, ?, ?, ?, ?)');
   const removeDevice = db.prepare('DELETE FROM devices WHERE id = ?');
-  const gone = new Set<string>();
 
-  for (const row of rows) {
+  // Un solo aviso por evento y dispositivo, aunque toque varios lugares (donde estoy, waypoints, reservas):
+  // se nombra el más cercano y se dice si hay reserva cerca.
+  for (const [deviceId, rows] of byDevice) {
     for (const e of fresh) {
-      if (gone.has(row.device_id)) break;
-      const km = distanceKm(row, e);
-      if (km > radiusFor(e)) continue;
-      const before = previous.get(row.device_id, row.place_id, e.key) as { level: number } | undefined;
-      if (before && before.level >= severity(e)) continue;
+      const hit = rows
+        .map((row) => ({ row, km: distanceKm(row, e) }))
+        .filter(({ row, km }) => {
+          if (km > radiusFor(e)) return false;
+          const before = previous.get(deviceId, row.place_id, e.key) as { level: number } | undefined;
+          return !before || before.level < severity(e);
+        })
+        .sort((a, b) => a.km - b.km);
+      if (!hit.length) continue;
+      const { row, km } = hit[0]!;
+      const stock = [...new Set(hit.filter((h) => h.row.stock).map((h) => h.row.label ?? ''))].filter(Boolean);
       const delivered = await push.send(JSON.parse(row.subscription) as PushSubscriptionJson, {
         type: 'hazard',
         hazard: {
@@ -76,16 +93,16 @@ export async function runHazardWatch(db: Db, push: PushSender, events: HazardEve
           ...(e.magnitude !== undefined ? { magnitude: e.magnitude } : {}),
           ...(e.tsunami ? { tsunami: true } : {}),
           ...(e.level ? { level: e.level } : {}),
+          ...(stock.length ? { stock } : {}),
           url: e.url,
         },
       });
       if (!delivered) {
-        removeDevice.run(row.device_id);
-        gone.add(row.device_id);
+        removeDevice.run(deviceId);
         result.removed++;
         break;
       }
-      mark.run(row.device_id, row.place_id, e.key, severity(e), now.getTime());
+      for (const h of hit) mark.run(deviceId, h.row.place_id, e.key, severity(e), now.getTime());
       result.sent++;
     }
   }

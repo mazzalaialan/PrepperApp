@@ -7,6 +7,7 @@ import { KIT_TYPES, MAX_LOCATION_DEPTH, type Id, type KitType, type Location } f
 import { useSettings } from '@/core/settings/settings';
 import { formatWeight } from '@/core/units/units';
 import { Dialog } from '@/ui/Dialog';
+import { WaypointField } from '@/modules/waypoints/WaypointField';
 import { buildTree, canMoveTo, subtreeIds, type LocationNode } from '../domain/locations';
 import { weightAt } from '../domain/stock';
 import { useLocationOptions } from '../selectors';
@@ -123,6 +124,7 @@ export function LocationDialog({
   const [parentId, setParentId] = useState(location.parentId ?? '');
   const [notes, setNotes] = useState(location.notes);
   const [kitType, setKitType] = useState<KitType | ''>(location.kitType ?? '');
+  const [waypointId, setWaypointId] = useState<string | null>(location.waypointId);
   const [error, setError] = useState<string | null>(null);
 
   // Una ubicación nueva puede colgar de cualquier nivel menor a 4; una existente, de donde no rompa el árbol.
@@ -133,7 +135,7 @@ export function LocationDialog({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await saveLocation({ ...location, name: name.trim(), parentId: parentId || null, notes, kitType: kitType || null });
+    await saveLocation({ ...location, name: name.trim(), parentId: parentId || null, notes, kitType: kitType || null, waypointId });
     onClose();
   }
 
@@ -178,6 +180,15 @@ export function LocationDialog({
             ))}
           </select>
         </div>
+        <WaypointField
+          id="loc-place"
+          label={t('locations.place')}
+          value={waypointId}
+          onChange={setWaypointId}
+          newName={name}
+          noneLabel={parentId ? t('locations.placeInherit') : t('locations.placeNone')}
+          hint={t('locations.placeHint')}
+        />
         <div className="field">
           <label htmlFor="loc-notes">{t('items.notes')}</label>
           <textarea id="loc-notes" className="input textarea" value={notes} onChange={(e) => setNotes(e.target.value)} />

@@ -42,6 +42,7 @@ const TEXT = {
     hazardBody: (name: string, level: string) => `${name}. Alerta ${level} de GDACS (ONU y Comisión Europea).`,
     levels: { Green: 'verde', Orange: 'naranja', Red: 'roja' },
     hazardInformative: 'Aviso informativo, no oficial: seguí las indicaciones de los organismos oficiales (INPRES, SMN, Protección Civil).',
+    hazardStock: (places: string) => `Tenés reserva cerca: ${places}. Si podés, ponela a resguardo.`,
     gardenFrost: (when: string, min: number) => `Helada ${when}: mínima de ${min} °C`,
     gardenFrostBody: (crops: string, place: string | null) => `Tapá ${crops}${place ? ` (${place})` : ''}.`,
     gardenTonight: 'esta noche',
@@ -79,6 +80,7 @@ const TEXT = {
     hazardBody: (name: string, level: string) => `${name}. GDACS ${level} alert (UN and European Commission).`,
     levels: { Green: 'green', Orange: 'orange', Red: 'red' },
     hazardInformative: 'Informational, not official: follow the instructions of the official agencies.',
+    hazardStock: (places: string) => `You have supplies nearby: ${places}. If you can, move them to safety.`,
     gardenFrost: (when: string, min: number) => `Frost ${when}: low of ${min} °C`,
     gardenFrostBody: (crops: string, place: string | null) => `Cover ${crops}${place ? ` (${place})` : ''}.`,
     gardenTonight: 'tonight',
@@ -171,6 +173,8 @@ export interface HazardPush {
   magnitude?: number;
   tsunami?: boolean;
   level?: 'Green' | 'Orange' | 'Red';
+  /** Ubicaciones con reserva dentro del radio (ver server/src/hazards/watch.ts). */
+  stock?: string[];
   url: string;
 }
 
@@ -179,7 +183,7 @@ export function hazardNotification(h: HazardPush, lang: Lang, now = Date.now()):
   const dir = tx.dirs[Math.round((((h.bearing % 360) + 360) % 360) / 45) % 8]!;
   const place = h.label ?? tx.here;
   const km = Math.max(1, h.distanceKm);
-  const fix = lastFixNote(h.fixAt, lang, now);
+  const fix = lastFixNote(h.fixAt, lang, now) + (h.stock?.length ? `\n${tx.hazardStock(h.stock.join(', '))}` : '');
   if (h.kind === 'quake') {
     const mag = new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(h.magnitude ?? 0);
     const tsunami = h.tsunami ? `\n${tx.tsunami}` : '';

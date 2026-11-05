@@ -1220,6 +1220,10 @@
     "documentsTitle": "Documents expiring soon"
   },
   "locations": {
+    "place": "Where it is (waypoint)",
+    "placeNone": "No location",
+    "placeInherit": "Same as the location above",
+    "placeHint": "If you set where it is, the server warns you about floods, fires, earthquakes and other hazards near your supplies so you can protect them.",
     "new": "New location",
     "edit": "Edit location",
     "hint": "Organize your storage in up to {{max}} levels. E.g. Home › Basement › Shelf 3 › Box A.",
@@ -1833,9 +1837,6 @@
     "inGreenhouse": "In a greenhouse",
     "greenhouseHint": "Greenhouse beds don't count for frost alerts or rain-based watering (rain doesn't reach them: water them by hand).",
     "bedPlace": "Where it is (waypoint)",
-    "markHere": "I'm at the bed: mark it with GPS",
-    "locating": "Getting location…",
-    "gpsError": "Couldn't read the GPS. Choose a waypoint from the list.",
     "placeHint": "The frost forecast and the rain for watering come from this place. It is saved in My waypoints.",
     "placeHintGreenhouse": "In a greenhouse there are no frost or watering alerts, but it places the bed on the map.",
     "notes": "Notes",
@@ -1912,5 +1913,11 @@
     "inInventory": "in the inventory",
     "removeHarvest": "Remove this harvest",
     "finish": "Finished: free the squares"
+  },
+  "waypointField": {
+    "none": "No location",
+    "markHere": "I'm here: mark it with GPS",
+    "locating": "Getting location…",
+    "gpsError": "Couldn't read the GPS. Choose a waypoint from the list."
   }
 }

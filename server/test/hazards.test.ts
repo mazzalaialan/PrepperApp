@@ -106,4 +106,29 @@ describe('peligros naturales', () => {
     assert.equal(urgencyOf({ type: 'alerts' }), 'normal');
     assert.equal(urgencyOf({ type: 'update' }), 'normal');
   });
+
+  it('reservas del inventario: un solo aviso por evento aunque toque varios lugares, diciendo dónde hay reserva', async () => {
+    const db = setup();
+    // Dos ubicaciones con reserva en Mendoza (casa y galpón) y otra lejos.
+    const add = db.prepare('INSERT INTO stock_places (device_id, place_id, label, lat, lon) VALUES (?, ?, ?, ?, ?)');
+    add.run('d', 'l1', 'Casa', -32.89, -68.84);
+    add.run('d', 'l2', 'Galpón', -32.95, -68.8);
+    add.run('d', 'l3', 'Cabaña', -41.1, -71.4);
+    const push = new FakePush();
+    await runHazardWatch(db, push, [quake()], now);
+    assert.equal(push.sent.length, 1);
+    assert.deepEqual(push.sent[0]!.hazard!.stock, ['Casa', 'Galpón']);
+    await runHazardWatch(db, push, [quake()], now);
+    assert.equal(push.sent.length, 1, 'no se repite');
+  });
+
+  it('solo con reserva (sin lugares de lluvia) también avisa', async () => {
+    const db = setup();
+    db.prepare("DELETE FROM rain_places").run();
+    db.prepare('INSERT INTO stock_places (device_id, place_id, label, lat, lon) VALUES (?, ?, ?, ?, ?)').run('d', 'l1', 'Depósito', -32.89, -68.84);
+    const push = new FakePush();
+    await runHazardWatch(db, push, [quake()], now);
+    assert.equal(push.sent[0]!.hazard!.label, 'Depósito');
+    assert.deepEqual(push.sent[0]!.hazard!.stock, ['Depósito']);
+  });
 });

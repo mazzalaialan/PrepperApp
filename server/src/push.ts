@@ -31,6 +31,8 @@ export interface PushPayload {
     magnitude?: number;
     tsunami?: boolean;
     level?: 'Green' | 'Orange' | 'Red';
+    /** Ubicaciones con reserva del inventario dentro del radio: hay que ponerla a resguardo. */
+    stock?: string[];
     url: string;
   };
   /** Huerta: helada (por lugar), riego (por lugar) o las tareas del día juntas (ver garden/watch.ts). */

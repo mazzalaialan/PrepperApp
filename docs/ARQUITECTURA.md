@@ -335,6 +335,7 @@ A diferencia del backup (que reemplaza todo y se abre con la contraseña propia)
 | `GET /api/health` | Verificación desde la app; expone la clave pública VAPID |
 | `POST /api/devices` | Registra la suscripción push; devuelve id + token del dispositivo |
 | `PUT /api/devices/:id` | Reemplaza el índice de alertas (§5.3), zona horaria y hora de aviso |
+| `PUT /api/devices/:id/stock` | Lugares con reserva del inventario (waypoints de las ubicaciones, ~1 km), solo para los avisos de peligros naturales |
 | `PUT /api/devices/:id/garden` | Huerta (§10.1): un lugar por grupo de canteros a menos de ~1 km (coordenadas redondeadas, cultivos al aire libre y desde qué mínima se queman, datos del riego) y las tareas ya escritas. El servidor avisa la helada a partir de las 17 (la madrugada siguiente), el riego una vez por episodio y las tareas juntas a la hora de aviso |
 | `DELETE /api/devices/:id` · `POST /api/devices/:id/test` | Baja · notificación de prueba |
 | Tarea cada 10 min | Envía a cada dispositivo, a su hora local, solo las alertas nuevas o que vencen ese día |
@@ -657,4 +658,6 @@ El Servicio Meteorológico Nacional pidió aclarar (2026-11) que, según el marc
 ## Avisos de peligros naturales (servidor)
 
 `server/src/hazards/`: con los mismos lugares que lluvia y rayos (`rain_places`), avisa sismos de USGS y eventos de GDACS (incendio forestal, inundación, ciclón tropical, erupción; la sequía no, porque no es urgente) con distancia y rumbo. El radio crece con la magnitud o el nivel de alerta (ver docs/SERVIDOR.md). Cada evento se avisa una vez por lugar y otra si empeora (`hazard_notices`). Se apaga por dispositivo (`devices.hazards`, `hazardNotices` en la app). La notificación (`hazardNotification`) lleva la fuente y la aclaración de que es informativa; los sismos fuertes, con posible tsunami o con alerta roja vibran más y quedan fijos hasta tocarlos. GDACS devuelve de a 100 eventos, los vigentes primero: el servidor y el mapa del clima piden páginas mientras haya vigentes.
+
+**Reserva del inventario (05/11/2026):** cada ubicación del inventario puede tener su waypoint (se elige de "Mis waypoints" o se crea con el GPS; las de adentro heredan el de la ubicación de arriba). La app manda al servidor (`PUT /api/devices/:id/stock`) un punto por waypoint donde hay algo guardado, redondeado a ~1 km, con el nombre de la ubicación: nada más del inventario. Esos puntos se suman a los de lluvia para los peligros naturales, y el aviso dice "Tenés reserva cerca: Casa. Si podés, ponela a resguardo". **Un solo aviso por evento y dispositivo**, aunque toque varios lugares (donde estoy, waypoints, reservas): nombra el más cercano y lista las reservas dentro del radio.
 

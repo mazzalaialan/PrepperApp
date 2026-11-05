@@ -152,4 +152,17 @@ test('huerta: calendario por zona, canteros con waypoint, grilla, avisos por lug
   await page.goto('/#/garden/beds');
   await expect(page.getByTestId('garden-tasks')).toHaveCount(0);
   await expect(page.getByTestId('nursery-list')).toHaveCount(0);
+
+  // Inventario: la "Despensa" que creó la cosecha se ubica con el GPS (para los avisos de peligros cerca de la reserva).
+  await page.goto('/#/inventory/locations');
+  await expect(page.getByText('Despensa', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Editar', exact: true }).first().click();
+  const locDialog = page.getByRole('dialog');
+  await expect(locDialog.getByLabel('Dónde está (waypoint)')).toHaveValue('');
+  await locDialog.getByRole('button', { name: /marcarlo con el GPS/ }).click();
+  await expect(locDialog.getByLabel('Dónde está (waypoint)')).toHaveValue(/.+/);
+  await locDialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(locDialog).toHaveCount(0);
+  await page.goto('/#/orientation/waypoints');
+  await expect(page.getByText('Despensa', { exact: true })).toBeVisible();
 });

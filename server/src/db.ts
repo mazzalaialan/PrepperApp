@@ -88,6 +88,16 @@ const MIGRATIONS = [
      notified INTEGER NOT NULL DEFAULT 0,
      PRIMARY KEY (device_id, task_id)
    );`,
+  // Lugares donde el usuario guarda reserva (ubicaciones del inventario con waypoint), redondeados a ~1 km:
+  // solo para avisar de peligros naturales cerca (inundación, incendio, sismo…) y ponerla a resguardo.
+  `CREATE TABLE stock_places (
+     device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+     place_id TEXT NOT NULL,
+     label TEXT,
+     lat REAL NOT NULL,
+     lon REAL NOT NULL,
+     PRIMARY KEY (device_id, place_id)
+   );`,
 ];
 
 export type Db = DatabaseSync;

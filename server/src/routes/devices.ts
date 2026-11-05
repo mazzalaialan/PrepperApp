@@ -365,6 +365,53 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
     },
   );
 
+  /**
+   * Lugares donde se guarda reserva (ubicaciones del inventario con waypoint),
+   * solo para los avisos de peligros naturales. Se reemplaza la lista.
+   */
+  app.put<{ Params: { id: string }; Body: { places: { id: string; label?: string | null; lat: number; lon: number }[] } }>(
+    '/api/devices/:id/stock',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['places'],
+          properties: {
+            places: {
+              type: 'array',
+              maxItems: 50,
+              items: {
+                type: 'object',
+                required: ['id', 'lat', 'lon'],
+                properties: {
+                  id: { type: 'string', maxLength: 64 },
+                  label: { type: ['string', 'null'], maxLength: 200 },
+                  lat: { type: 'number', minimum: -90, maximum: 90 },
+                  lon: { type: 'number', minimum: -180, maximum: 180 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
+      const { id } = req.params;
+      db.exec('BEGIN');
+      try {
+        db.prepare('DELETE FROM stock_places WHERE device_id = ?').run(id);
+        const insert = db.prepare('INSERT INTO stock_places (device_id, place_id, label, lat, lon) VALUES (?, ?, ?, ?, ?)');
+        for (const p of [...new Map(req.body.places.map((x) => [x.id, x])).values()]) insert.run(id, p.id, p.label ?? null, coarse(p.lat), coarse(p.lon));
+        db.exec('COMMIT');
+      } catch (err) {
+        db.exec('ROLLBACK');
+        throw err;
+      }
+      return reply.code(204).send();
+    },
+  );
+
   app.delete<{ Params: { id: string } }>('/api/devices/:id', async (req, reply) => {
     if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
     db.prepare('DELETE FROM devices WHERE id = ?').run(req.params.id);
