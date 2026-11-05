@@ -151,7 +151,7 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
 
   // Guardar este lugar como waypoint: llega el formulario con las coordenadas y la dirección.
   await page.getByRole('link', { name: 'Guardar como waypoint' }).click();
-  await expect(page.getByLabel('Coordenadas')).toHaveValue(/^-41\.13350*, -71\.31030*$/);
+  await expect(page.getByRole('textbox', { name: 'Coordenadas' })).toHaveValue(/^-41\.13350*, -71\.31030*$/);
   await expect(page.getByLabel('Notas')).toHaveValue('Mitre 250, San Carlos de Bariloche, Río Negro');
   await page.getByLabel('Nombre').fill('Casa');
   await page.getByRole('button', { name: 'Guardar' }).click();
