@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
-import { Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { ListPlus, Pencil, Plus, Trash2, Users } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { HouseholdMember, RecommendationRule } from '@/core/model/types';
 import { categoryName } from '@/modules/inventory/domain/categories';
@@ -14,7 +14,16 @@ import { useRecommendations } from './store';
 
 export function RecommendationsPage() {
   const { t } = useTranslation();
-  const { members, rules } = useRecommendations(useShallow((s) => ({ members: s.members, rules: s.rules })));
+  const { members, rules, addExamples, setActive } = useRecommendations(
+    useShallow((s) => ({ members: s.members, rules: s.rules, addExamples: s.addExamples, setActive: s.setActive })),
+  );
+  const [examplesMsg, setExamplesMsg] = useState<string | null>(null);
+  // Agrupadas por plazo (3 días, 7 días, 6 meses…): cada plan se controla o no entero.
+  const groups = useMemo(() => {
+    const byDays = new Map<number, RecommendationRule[]>();
+    for (const r of rules.values()) byDays.set(r.targetDays, [...(byDays.get(r.targetDays) ?? []), r]);
+    return [...byDays.entries()].sort((a, b) => a[0] - b[0]).map(([days, list]) => ({ days, list: list.sort((a, b) => a.description.localeCompare(b.description)) }));
+  }, [rules]);
   const [editingMember, setEditingMember] = useState<HouseholdMember | null>(null);
   const [editingRule, setEditingRule] = useState<RecommendationRule | null>(null);
   const memberList = useMemo(() => [...members.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), [members]);
@@ -72,25 +81,65 @@ export function RecommendationsPage() {
             <Plus size={18} /> {t('recommendations.addRule')}
           </button>
         </div>
+        {memberList.length === 0 && rules.size > 0 && <p className="hint" style={{ margin: 0 }}>{t('recommendations.membersFirst')}</p>}
         {rules.size === 0 ? (
           <p className="hint">{memberList.length === 0 ? t('recommendations.membersFirst') : t('recommendations.noRules')}</p>
         ) : (
-          <ul className="list">
-            {[...rules.values()]
-              .sort((a, b) => a.description.localeCompare(b.description))
-              .map((rule) => (
-                <li key={rule.id}>
-                  <RuleCard rule={rule} onEdit={() => setEditingRule(rule)} />
-                </li>
-              ))}
-          </ul>
+          groups.map(({ days, list }) => {
+            const on = list.filter((r) => r.active !== false).length;
+            return (
+              <div key={days} className="stack rule-group" data-testid={`rule-group-${days}`}>
+                <label className="check rule-group-head">
+                  <input
+                    type="checkbox"
+                    checked={on === list.length}
+                    ref={(el) => {
+                      if (el) el.indeterminate = on > 0 && on < list.length;
+                    }}
+                    onChange={(e) => void setActive(list.map((r) => r.id), e.target.checked)}
+                  />
+                  <strong>{t('recommendations.plan', { span: span(days, t) })}</strong>
+                  <span className="hint">{on === 0 ? t('recommendations.planOff') : t('recommendations.planOn', { on, total: list.length })}</span>
+                </label>
+                <ul className="list">
+                  {list.map((rule) => (
+                    <li key={rule.id} className="rule-item" data-active={rule.active !== false}>
+                      <input
+                        type="checkbox"
+                        className="rule-check"
+                        checked={rule.active !== false}
+                        onChange={(e) => void setActive([rule.id], e.target.checked)}
+                        aria-label={t('recommendations.control', { name: rule.description || t('recommendations.rule') })}
+                      />
+                      <RuleCard rule={rule} onEdit={() => setEditingRule(rule)} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })
         )}
+        <button
+          className="btn"
+          type="button"
+          onClick={() => void addExamples().then((n) => setExamplesMsg(n ? t('recommendations.examplesAdded', { count: n }) : t('recommendations.examplesThere')))}
+        >
+          <ListPlus size={18} /> {t('recommendations.addExamples')}
+        </button>
+        {examplesMsg && <p className="hint" role="status" style={{ margin: 0 }}>{examplesMsg}</p>}
+        <p className="hint" style={{ margin: 0 }}>{t('recommendations.examplesHint')}</p>
       </section>
 
       {editingMember && <MemberDialog member={editingMember} onClose={() => setEditingMember(null)} />}
       {editingRule && <RuleDialog rule={editingRule} onClose={() => setEditingRule(null)} />}
     </div>
   );
+}
+
+/** "3 días", "2 semanas", "6 meses". */
+function span(days: number, t: (k: string, o?: Record<string, unknown>) => string): string {
+  if (days >= 60 && days % 30 === 0) return t('recommendations.months', { count: days / 30 });
+  return t('recommendations.daysSpan', { count: days });
 }
 
 function RuleCard({ rule, onEdit }: { rule: RecommendationRule; onEdit: () => void }) {
@@ -126,7 +175,8 @@ function RuleCard({ rule, onEdit }: { rule: RecommendationRule; onEdit: () => vo
           {t('recommendations.have', { current: fmt.format(r.current), target: fmt.format(r.target), unit })}
           {r.daysCovered !== null && ` · ${t('recommendations.lasts', { count: Math.floor(r.daysCovered) })}`}
         </span>
-        {!done && <span className="list-sub rule-missing">{t('recommendations.missing', { missing: fmt.format(r.missing), unit })}</span>}
+        {rule.active === false && <span className="list-sub">{t('recommendations.notControlled')}</span>}
+        {!done && rule.active !== false && <span className="list-sub rule-missing">{t('recommendations.missing', { missing: fmt.format(r.missing), unit })}</span>}
         {rule.categoryId && r.countedItems.length === 0 && <span className="list-sub">{t('recommendations.noMatchingItems', { unit })}</span>}
       </span>
     </button>

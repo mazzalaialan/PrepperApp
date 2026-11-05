@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { repos } from '@/core/db/repository';
+import { blobStore, repos } from '@/core/db/repository';
 import { touch } from '@/core/model/entity';
 import type { HouseholdMember, Id, RecommendationRule } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
@@ -8,6 +8,7 @@ import { categoryName } from '@/modules/inventory/domain/categories';
 import { today } from '@/modules/inventory/domain/dates';
 import { registerAlertSource, useInventory } from '@/modules/inventory/store';
 import { recommendationShortages } from './calc';
+import { exampleRules } from './examples';
 
 interface RecommendationsState {
   loaded: boolean;
@@ -19,7 +20,13 @@ interface RecommendationsState {
   deleteMember: (id: Id) => Promise<void>;
   saveRule: (r: RecommendationRule) => Promise<void>;
   deleteRule: (id: Id) => Promise<void>;
+  /** Agrega las reglas de ejemplo que falten (no toca las que ya están). */
+  addExamples: () => Promise<number>;
+  /** Controla o deja de controlar varias reglas a la vez. */
+  setActive: (ids: Id[], active: boolean) => Promise<void>;
 }
+
+const EXAMPLES_MARK = 'recommendation-examples';
 
 export const useRecommendations = create<RecommendationsState>((set, get) => ({
   loaded: false,
@@ -29,6 +36,11 @@ export const useRecommendations = create<RecommendationsState>((set, get) => ({
   async load() {
     const [members, rules] = await Promise.all([repos.householdMembers.loadAll(), repos.recommendationRules.loadAll()]);
     set({ loaded: true, members: new Map(members.map((m) => [m.id, m])), rules: new Map(rules.map((r) => [r.id, r])) });
+    // La primera vez en cada bóveda se agregan las reglas de ejemplo (una sola vez: si se borran, no vuelven solas).
+    if (!(await blobStore.get(EXAMPLES_MARK))) {
+      await get().addExamples();
+      await blobStore.put(EXAMPLES_MARK, new Uint8Array([1]));
+    }
   },
 
   clear() {
@@ -54,6 +66,34 @@ export const useRecommendations = create<RecommendationsState>((set, get) => ({
     const saved = touch(r);
     await repos.recommendationRules.put(saved);
     set({ rules: new Map(get().rules).set(saved.id, saved) });
+  },
+
+  async addExamples() {
+    const current = get().rules;
+    const missing = exampleRules((k) => i18n.t(k)).filter((r) => !current.has(r.id));
+    for (const r of missing) await repos.recommendationRules.put(r);
+    if (missing.length) {
+      const rules = new Map(current);
+      for (const r of missing) rules.set(r.id, r);
+      set({ rules });
+    }
+    return missing.length;
+  },
+
+  async setActive(ids, active) {
+    // Primero en pantalla (la casilla responde al instante) y después en la base.
+    const rules = new Map(get().rules);
+    const changed: RecommendationRule[] = [];
+    for (const id of ids) {
+      const r = rules.get(id);
+      if (!r || (r.active !== false) === active) continue;
+      const saved = touch({ ...r, active });
+      rules.set(id, saved);
+      changed.push(saved);
+    }
+    if (!changed.length) return;
+    set({ rules });
+    for (const r of changed) await repos.recommendationRules.put(r);
   },
 
   async deleteRule(id) {

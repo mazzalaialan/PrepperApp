@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { newEntity } from '@/core/model/entity';
 import type { HouseholdMember, Item, Lot, RecommendationRule } from '@/core/model/types';
 import { evaluateRule, recommendationShortages } from './calc';
+import { exampleRules } from './examples';
+import { systemCategoryId } from '@/modules/inventory/domain/categories';
 
 const member = (label: string, count: number) => newEntity<HouseholdMember>({ label, count });
 const item = (name: string, unit: string, categoryId = 'sys-water') =>
@@ -60,5 +62,31 @@ describe('evaluateRule', () => {
   it('sin miembros no hay necesidad ni días calculables', () => {
     const r = evaluateRule(rule({ categoryId: 'sys-water', unit: 'L', quantityPerMemberPerDay: 4, targetDays: 14 }), [], new Map(), []);
     expect(r).toMatchObject({ people: 0, target: 0, missing: 0, daysCovered: null });
+  });
+
+  it('una regla destildada no se controla: no es un faltante', () => {
+    const short = rule({ categoryId: 'sys-water', unit: 'L', quantityPerMemberPerDay: 4, targetDays: 14 });
+    expect(recommendationShortages([short], [adults], new Map(), [])).toHaveLength(1);
+    expect(recommendationShortages([{ ...short, active: false }], [adults], new Map(), [])).toEqual([]);
+    expect(recommendationShortages([{ ...short, active: true }], [adults], new Map(), [])).toHaveLength(1);
+  });
+
+  it('reglas de ejemplo: agua y alimentos para 3 días, 7 días y 6 meses; solo se controla la de 7 días', () => {
+    const ex = exampleRules((k) => k);
+    expect(ex.map((r) => [r.targetDays, r.unit, r.quantityPerMemberPerDay, r.active])).toEqual([
+      [3, 'L', 3, false],
+      [3, 'kg', 0.5, false],
+      [7, 'L', 3, true],
+      [7, 'kg', 0.5, true],
+      [180, 'L', 3, false],
+      [180, 'kg', 0.5, false],
+    ]);
+    expect(ex[2]!.categoryId).toBe(systemCategoryId('water'));
+    // Ids fijos: agregarlas de nuevo no las duplica.
+    expect(new Set(ex.map((r) => r.id)).size).toBe(6);
+    expect(exampleRules((k) => k).map((r) => r.id)).toEqual(ex.map((r) => r.id));
+    // 2 adultos sin agua: faltan 3 L × 2 × 7 días = 42 L.
+    const short = recommendationShortages(ex, [adults], new Map(), []);
+    expect(short.map((x) => x.result.missing)).toEqual([42, 7]);
   });
 });

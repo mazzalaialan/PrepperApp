@@ -69,6 +69,7 @@ export function recommendationShortages(
   lots: Lot[],
 ): RecommendationShortage[] {
   return rules.flatMap((rule) => {
+    if (rule.active === false) return [];
     const result = evaluateRule(rule, members, items, lots);
     if (result.people === 0 || result.missing <= 0) return [];
     // Sin historial no se sabe cuándo empezó a faltar: se usa el último cambio de lo que interviene,

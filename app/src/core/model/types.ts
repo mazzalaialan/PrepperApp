@@ -182,6 +182,8 @@ export interface RecommendationRule extends BaseEntity {
   targetDays: number;
   /** Miembros a los que aplica; vacío = todos. */
   memberIds: Id[];
+  /** `false`: la regla queda guardada pero no se controla (ni avisa). Sin el campo, se controla. */
+  active?: boolean;
 }
 
 export interface Medication {
