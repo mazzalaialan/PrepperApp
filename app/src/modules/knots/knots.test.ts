@@ -33,6 +33,10 @@ describe('guía de nudos: búsqueda', () => {
   it('por nombre sin acentos y por alias', () => {
     expect(searchKnots({ ...all, query: 'as de guia' }, 'es')[0]!.id).toBe('as-de-guia');
     expect(searchKnots({ ...all, query: 'Marchand' }, 'es').map((k) => k.id)).toContain('machard');
+    // Corredizos: los tres aparecen buscando "corredizo" (también en inglés).
+    expect(searchKnots({ ...all, query: 'corredizo' }, 'es').map((k) => k.id)).toEqual(expect.arrayContaining(['corredizo', 'escape', 'as-de-guia-corredizo']));
+    expect(searchKnots({ ...all, query: 'noose' }, 'en')[0]!.id).toBe('corredizo');
+    expect(searchKnots({ ...all, query: 'slip knot' }, 'en')[0]!.id).toBe('escape');
     expect(searchKnots({ ...all, query: 'bowline' }, 'es')[0]!.id).toBe('as-de-guia');
   });
 

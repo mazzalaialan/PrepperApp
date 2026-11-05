@@ -17,7 +17,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   expect(titles.indexOf('Cabuyería y anclajes')).toBeLessThan(titles.indexOf('Huerta y cultivo'));
 
   await page.getByRole('link', { name: /Guía de nudos/ }).click();
-  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 36 nudos.');
+  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 39 nudos.');
   await page.getByRole('button', { name: 'Rappel y escalada' }).click();
   await expect(page.getByText(/practicá primero con un instructor/)).toBeVisible();
   const list = page.getByTestId('knot-list');
@@ -47,7 +47,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await page.getByTestId('knot-learned').click();
   await expect(page.getByTestId('knot-learned')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('back').click();
-  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 1 de 36 nudos.');
+  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 1 de 39 nudos.');
 
   // Asistente: unir dos cuerdas de distinto grosor → vuelta de escota.
   await page.getByText('¿Qué necesito hacer?').click();
@@ -55,6 +55,20 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await expect(page.getByTestId('wizard-options')).toContainText('De distinto grosor');
   await page.getByTestId('wizard-options').getByRole('link', { name: 'Vuelta de escota (doble)' }).click();
   await expect(page.getByRole('heading', { name: 'Vuelta de escota (doble)' })).toBeVisible();
+
+  // Corredizos: buscar "corredizo" trae los tres; el lazo advierte que nunca alrededor de una persona.
+  await page.goto('/#/knots/guide');
+  await page.getByLabel('Buscar un nudo').fill('corredizo');
+  const list2 = page.getByTestId('knot-list');
+  await expect(list2.getByRole('link')).toHaveCount(3);
+  await expect(list2).toContainText('Nudo corredizo (lazo)');
+  await expect(list2).toContainText('As de guía corredizo');
+  await expect(list2).toContainText('Nudo de escape (simple corredizo)');
+  await list2.getByRole('link', { name: /Nudo corredizo \(lazo\)/ }).click();
+  await expect(page.getByRole('heading', { name: 'Nudo corredizo (lazo)' })).toBeVisible();
+  await expect(page.getByText(/Nunca alrededor del cuello ni del cuerpo de una persona/)).toBeVisible();
+  await expect(page.getByTestId('knot-credits')).toContainText('USCG');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-53-noose.png`, fullPage: true });
 
   // Anclajes: el árbol con el diámetro explícito, y desde la ficha del nudo a sus anclajes.
   await page.goto('/#/knots/anchors');

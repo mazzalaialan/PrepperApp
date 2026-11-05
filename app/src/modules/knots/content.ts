@@ -60,6 +60,12 @@ export const NEEDS: Need[] = [
       { label: l('Rápido y ajustable (un palo, un mosquetón)', 'Quick and adjustable (a pole, a carabiner)'), knots: ['ballestrinque'] },
       { label: l('Tensar mucho (carga, tendedero, lona)', 'Tension hard (load, clothesline, tarp)'), knots: ['camionero'] },
       { label: l('Arrastrar o levantar un tronco', 'Drag or lift a log'), knots: ['lenador'] },
+      {
+        label: l('Un lazo que se cierre alrededor de un bulto, una rama o algo lejos', 'A loop that closes around a bundle, a branch or something out of reach'),
+        knots: ['corredizo', 'as-de-guia-corredizo'],
+        note: l('Nunca alrededor de una persona.', 'Never around a person.'),
+      },
+      { label: l('Que se suelte de un tirón', 'Released with one pull'), knots: ['escape'], note: l('No para cargas importantes.', 'Not for important loads.') },
       { label: l('Una cinta al árbol o al arnés', 'A sling to a tree or harness'), knots: ['alondra'] },
     ],
   },
@@ -93,7 +99,10 @@ export const NEEDS: Need[] = [
   {
     id: 'stop',
     label: l('Que la punta no se escape', 'Stop the end from slipping out'),
-    options: [{ label: l('Tope en la punta', 'Stopper at the end'), knots: ['tope', 'simple'] }],
+    options: [
+      { label: l('Tope en la punta', 'Stopper at the end'), knots: ['tope', 'simple'] },
+      { label: l('Tope que se suelta de un tirón', 'Stopper released with one pull'), knots: ['escape'] },
+    ],
   },
   {
     id: 'shorten',
