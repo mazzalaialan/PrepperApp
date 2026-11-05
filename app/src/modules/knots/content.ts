@@ -8,6 +8,8 @@ export interface NeedOption {
   label: L;
   /** Nudos recomendados, el mejor primero. */
   knots: string[];
+  /** Anclajes (fichas de Anclajes). */
+  anchors?: string[];
   note?: L;
 }
 
@@ -18,6 +20,16 @@ export interface Need {
 }
 
 export const NEEDS: Need[] = [
+  {
+    id: 'anchor',
+    label: l('Armar un punto fijo (anclaje)', 'Build a fixed point (anchor)'),
+    options: [
+      { label: l('En un árbol o una roca', 'On a tree or a rock'), knots: ['ocho-doble', 'alondra'], anchors: ['arbol', 'bloque', 'cinta', 'sin-tension'] },
+      { label: l('Repartido entre dos o tres puntos', 'Shared between two or three points'), knots: ['pescador-doble', 'ocho-dos-gazas'], anchors: ['prerrepartido', 'dos-arboles', 'angulos'] },
+      { label: l('Para rappel y recuperar la cuerda', 'For rappelling and pulling the rope down'), knots: ['union-rappel', 'tope'], anchors: ['rappel'] },
+      { label: l('Sin árboles ni rocas (arena, nieve, campo abierto)', 'No trees or rocks (sand, snow, open ground)'), knots: ['ballestrinque', 'camionero'], anchors: ['estacas', 'hombre-muerto'] },
+    ],
+  },
   {
     id: 'loop',
     label: l('Hacer una gaza (un lazo fijo)', 'Make a fixed loop'),

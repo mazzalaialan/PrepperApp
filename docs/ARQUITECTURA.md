@@ -452,9 +452,9 @@ Las publicaciones del repositorio del INTA tienen licencia CC BY-NC-SA 4.0: de e
 
 **Compartir** (§8.3): sección propia "Huerta" (canteros y siembras); se reconoce lo mismo por id y no se pisa lo del otro.
 
-### 10.2 Cabuyería (definida el 05/11/2026)
+### 10.2 Cabuyería y anclajes (definida el 05/11/2026)
 
-Sección propia en Inicio, **antes de Huerta**. Todo dentro de la app, sin conexión.
+Sección propia en Inicio, **antes de Huerta**: Guía de nudos, Anclajes, Cuerdas y Glosario. Todo dentro de la app, sin conexión.
 
 **Guía de nudos** (~40 para empezar). Cada ficha: nombres (principal, alternativos y en inglés, y el número de *The Ashley Book of Knots* cuando corresponde), para qué sirve, **paso a paso con imagen**, datos clave (si aguanta bajo carga, si se desata fácil después de cargarlo, si necesita nudo de seguridad, cuánta resistencia le saca a la cuerda, si sirve con cuerda mojada o resbalosa), errores comunes y cómo revisarlo, nudos relacionados y "para leer más" en la biblioteca. Los textos son propios.
 
@@ -471,6 +471,10 @@ Sección propia en Inicio, **antes de Huerta**. Todo dentro de la app, sin conex
 4. **Biblioteca privada del usuario:** cada ficha guarda dónde aparece el nudo en los libros (ej.: "Enciclopedia ilustrada de los nudos, pág. 87"); si el paquete privado está en el dispositivo, la ficha muestra esas imágenes y el enlace al libro. La app no las lleva: las toma de la copia del usuario.
 
 **Hecho (05/11/2026):** `modules/knots`, 36 nudos con 65 imágenes (~0,9 MB, en `public/knots/`, disponibles sin conexión): figuras de los FM separadas por paso con `tools/knot-images/extract.py`, y de Wikimedia Commons con autor y licencia en cada ficha. Búsqueda por nombre y alias sin acentos, uso, tipo y propiedades; asistente con 10 necesidades; modo práctica con voz; "aprendido" en Ajustes (`knotsLearned`). Las referencias a la biblioteca privada se suman cuando esté el visor de la Biblioteca.
+
+**Anclajes** (`modules/knots/anchors.ts`, 19 fichas): lo básico (principios: fuerte, redundante, repartido, sin extensión, simple; ángulos y fuerzas; cómo probarlo), puntos naturales (árbol, bloques, piedras trabadas, salientes y puentes de roca, arbustos), cómo sujetar (cinta apoyada, rodeando o con alondra; cuerda atada; anclaje sin tensión), armados (repartido con cordino, autorrepartido, dos árboles con ocho de dos gazas, rappel con anillo de abandono) e improvisados (estacas con su tabla de resistencia, "hombre muerto", vehículo, vientos de carpa). Fuentes: FM 3-97.61 cap. 5 y FM 5-125 cap. 4 (dominio público), figuras incluidas. **Árbol:** el manual no da un tamaño; la app recomienda al menos 20 cm de diámetro (~63 cm alrededor del tronco) para una persona y 30 cm (~94 cm) para rescate, siempre vivo, sano, bien arraigado y atado abajo. **Ángulos:** la tabla del FM 3-97.61 (fig. 5-20) da 1150 % para 170°, un error (la cuenta es 574 %): la app usa los valores calculados y muestra solo el dibujo. Cada ficha enlaza sus nudos y cada nudo los anclajes en que se usa; el asistente suma "Armar un punto fijo".
+
+**Revisión (05/11/2026):** se sacaron los números de Ashley que no se pudieron confirmar y se corrigió el nudo guarda según el FM 3-97.61 (dos mosquetones iguales, mejor ovalados).
 
 ---
 

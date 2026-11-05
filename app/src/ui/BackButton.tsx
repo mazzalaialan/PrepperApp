@@ -15,7 +15,7 @@ export const ROUTE_PATHS = [
   '/orientation/waypoints/:id', '/orientation/waypoints/:id/go', '/orientation/compass', '/orientation/inclinometer',
   '/orientation/starmap', '/orientation/maps', '/orientation/routes', '/orientation/tracks', '/orientation/tracks/:id',
   '/orientation/tracks/:id/follow', '/orientation/routes/:id', '/orientation/routes/:id/go/:step', '/weather', '/weather/sky',
-  '/weather/forecast', '/weather/map', '/knots', '/knots/guide', '/knots/guide/:id', '/knots/ropes', '/knots/glossary',
+  '/weather/forecast', '/weather/map', '/knots', '/knots/guide', '/knots/guide/:id', '/knots/anchors', '/knots/anchors/:id', '/knots/ropes', '/knots/glossary',
   '/garden', '/garden/calendar', '/garden/crops/:id', '/garden/beds', '/garden/beds/:id', '/field', '/library', '/settings', '/about',
 ];
 

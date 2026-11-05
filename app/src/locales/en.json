@@ -34,7 +34,7 @@
     "documents": "Documents",
     "orientation": "Orientation",
     "weather": "Weather",
-    "knots": "Knots and ropes", "garden": "Garden & crops",
+    "knots": "Knots, ropes and anchors", "garden": "Garden & crops",
     "library": "Library"
   },
   "home": {
@@ -45,6 +45,7 @@
     "seeAll": "See all"
   },
   "modules": {
+    "anchors": {"title": "Anchors", "desc": "Trees, rocks, slings, equalized anchors, pickets and deadmen"},
     "knotGuide": {"title": "Knot guide", "desc": "By name, by use (rappel, rescue, camp…) or by what you need to do"},
     "ropes": {"title": "Ropes", "desc": "Types, strength and care"},
     "knotGlossary": {"title": "Glossary", "desc": "Working end, standing part, bight, loop…"},
@@ -2003,6 +2004,21 @@
         "yes": "Can be tied one-handed",
         "no": "Needs both hands"
       }
+    }
+  },
+  "anchors": {
+    "safety": "A badly built anchor is the most serious failure in rappelling and rescue. Learn with an instructor and always test it before trusting a person to it.",
+    "search": "Search an anchor",
+    "searchHint": "Tree, pickets, equalized, rappel…",
+    "how": "How to build it",
+    "knots": "Knots used",
+    "usedIn": "Used in these anchors",
+    "kinds": {
+      "basics": "Basics",
+      "natural": "Natural anchors",
+      "attach": "Attaching to the anchor",
+      "system": "Built anchors",
+      "improvised": "Improvised (no trees or rocks)"
     }
   }
 }

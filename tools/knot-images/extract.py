@@ -1,5 +1,5 @@
 """
-Figuras de nudos de los manuales del Ejército de EE. UU. (dominio público):
+Figuras de nudos y anclajes (cap. 4 y 5 del FM 3-97.61) de los manuales del Ejército de EE. UU. (dominio público):
 FM 3-97.61 "Military Mountaineering" (2002) y FM 3-05.70 "Survival" (2002),
 Apéndice G (ARQUITECTURA §10.2). Saca cada figura de la página, la separa en
 pasos (los paneles que trae, divididos por líneas o espacios en blanco) y deja
@@ -19,8 +19,10 @@ import fitz
 from PIL import Image
 
 SOURCES = {
-    "fm39761": ("/src/src-fm39761.pdf", r"Figure (4-\d+)\.\s*(.+)"),
+    "fm39761": ("/src/src-fm39761.pdf", r"Figure ([45]-\d+)\.\s*(.+)"),
     "fm30570": ("/src/src-fm30570.pdf", r"Figure (G-\d+)\.\s*(.+)"),
+    # FM 5-125 "Rigging Techniques, Procedures and Applications" (2001), cap. 4: anclajes y vientos.
+    "fm5125": ("/src/src-fm5125.pdf", r"Figure (4-\d+)\.\s*(.+)"),
 }
 DPI = 220
 OUT = "/out"

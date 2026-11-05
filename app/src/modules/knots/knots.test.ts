@@ -55,3 +55,33 @@ describe('guía de nudos: búsqueda', () => {
     expect(searchKnots({ ...all, query: 'tronco' }, 'es').map((k) => k.id)).toContain('lenador');
   });
 });
+
+describe('anclajes', () => {
+  it('cada imagen y cada nudo referido existen; el asistente apunta a anclajes que existen', async () => {
+    const { ANCHORS, ANCHOR_BY_ID } = await import('./anchors');
+    for (const a of ANCHORS) {
+      for (const k of a.knots) expect(KNOT_BY_ID.has(k), `${a.id} → ${k}`).toBe(true);
+      for (const f of a.images) expect(existsSync(new URL(`../../../public/anchors/${f}`, import.meta.url)), f).toBe(true);
+      expect(a.steps.length, a.id).toBeGreaterThanOrEqual(2);
+    }
+    for (const n of NEEDS) for (const o of n.options) for (const id of o.anchors ?? []) expect(ANCHOR_BY_ID.has(id), id).toBe(true);
+  });
+
+  it('la tabla de ángulos coincide con la cuenta: carga ÷ (2 × cos(ángulo / 2))', async () => {
+    const { ANCHOR_BY_ID } = await import('./anchors');
+    for (const [angle, pct] of ANCHOR_BY_ID.get('angulos')!.table!.rows) {
+      const a = parseFloat(angle);
+      expect(parseFloat(pct)).toBeCloseTo(100 / (2 * Math.cos((a / 2) * (Math.PI / 180))), -0.5);
+    }
+  });
+
+  it('el árbol dice diámetro y su equivalente alrededor del tronco', async () => {
+    const { ANCHOR_BY_ID } = await import('./anchors');
+    const size = ANCHOR_BY_ID.get('arbol')!.steps[0]!.es;
+    expect(size).toContain('20 cm de diámetro');
+    expect(size).toContain('63 cm alrededor');
+    expect(size).toContain('30 cm de diámetro');
+    expect(Math.round(Math.PI * 20)).toBe(63);
+    expect(Math.round(Math.PI * 30)).toBe(94);
+  });
+});

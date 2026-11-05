@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CircleCheck, Circle, Dumbbell, Volume2, VolumeX, X } from 'lucide-react';
 import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { useSettings } from '@/core/settings/settings';
+import { anchorsUsing } from './anchors';
 import { creditFor, KNOT_BY_ID, knotImages, RISKY_USES, type Knot } from './knots';
 import { tl } from './KnotGuidePage';
 
@@ -188,6 +189,19 @@ export function KnotPage() {
                 </Link>
               ) : null;
             })}
+          </div>
+        </section>
+      )}
+
+      {anchorsUsing(knot.id).length > 0 && (
+        <section className="card stack">
+          <h2 className="section-title" style={{ margin: 0 }}>{t('anchors.usedIn')}</h2>
+          <div className="chips" data-testid="knot-anchors">
+            {anchorsUsing(knot.id).map((a) => (
+              <Link key={a.id} className="chip chip-anchor" to={`/knots/anchors/${a.id}`}>
+                {tl(a.name, lang)}
+              </Link>
+            ))}
           </div>
         </section>
       )}

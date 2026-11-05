@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  Anchor,
   BellRing,
   BookA,
   Cable,
@@ -71,6 +72,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'weatherMap', section: 'weather', icon: MapIcon, implemented: true, path: '/weather/map' },
   { id: 'astronomy', section: 'weather', icon: Moon, implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },
   { id: 'knotGuide', section: 'knots', icon: Cable, implemented: true, path: '/knots/guide' },
+  { id: 'anchors', section: 'knots', icon: Anchor, implemented: true, path: '/knots/anchors' },
   { id: 'ropes', section: 'knots', icon: Spool, implemented: true, path: '/knots/ropes' },
   { id: 'knotGlossary', section: 'knots', icon: BookA, implemented: true, path: '/knots/glossary' },
   { id: 'gardenCalendar', section: 'garden', icon: CalendarDays, implemented: true, path: '/garden/calendar' },

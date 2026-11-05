@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CircleCheck, Search, Sparkles } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { KNOT_BY_ID, KNOT_TYPES, KNOT_USES, knotImages, type Knot, type KnotType, type KnotUse, type L } from './knots';
+import { ANCHOR_BY_ID } from './anchors';
 import { NEEDS } from './content';
 import { KNOT_PROPS, searchKnots, type KnotProp } from './search';
 
@@ -55,6 +56,14 @@ function NeedWizard() {
                   {o.note ? ` · ${tl(o.note, lang)}` : ''}
                 </span>
                 <div className="chips">
+                  {o.anchors?.map((id) => {
+                    const a = ANCHOR_BY_ID.get(id);
+                    return a ? (
+                      <Link key={`a-${id}`} className="chip chip-anchor" to={`/knots/anchors/${id}`}>
+                        {tl(a.name, lang)}
+                      </Link>
+                    ) : null;
+                  })}
                   {o.knots.map((id) => {
                     const k = KNOT_BY_ID.get(id);
                     return k ? (

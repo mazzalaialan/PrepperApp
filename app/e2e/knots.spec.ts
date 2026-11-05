@@ -13,8 +13,8 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
 
   // En Inicio, Cabuyería va antes de Huerta.
   const titles = await page.locator('h2.section-title').allTextContents();
-  expect(titles.indexOf('Cabuyería')).toBeGreaterThan(-1);
-  expect(titles.indexOf('Cabuyería')).toBeLessThan(titles.indexOf('Huerta y cultivo'));
+  expect(titles.indexOf('Cabuyería y anclajes')).toBeGreaterThan(-1);
+  expect(titles.indexOf('Cabuyería y anclajes')).toBeLessThan(titles.indexOf('Huerta y cultivo'));
 
   await page.getByRole('link', { name: /Guía de nudos/ }).click();
   await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 36 nudos.');
@@ -55,6 +55,18 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await expect(page.getByTestId('wizard-options')).toContainText('De distinto grosor');
   await page.getByTestId('wizard-options').getByRole('link', { name: 'Vuelta de escota (doble)' }).click();
   await expect(page.getByRole('heading', { name: 'Vuelta de escota (doble)' })).toBeVisible();
+
+  // Anclajes: el árbol con el diámetro explícito, y desde la ficha del nudo a sus anclajes.
+  await page.goto('/#/knots/anchors');
+  await expect(page.getByTestId('anchors-natural')).toContainText('Árbol');
+  await page.getByRole('link', { name: /^Árbol/ }).click();
+  await expect(page.getByTestId('anchor-steps')).toContainText('20 cm de diámetro');
+  await expect(page.getByTestId('anchor-safety')).toBeVisible();
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-52-anchor.png`, fullPage: true });
+  await page.getByRole('link', { name: 'Ocho doble (para encordarse)' }).click();
+  await expect(page.getByTestId('knot-anchors')).toContainText('Árbol');
+  await page.goto('/#/knots/anchors/angulos');
+  await expect(page.getByRole('cell', { name: '574 %' })).toBeVisible();
 
   await page.goto('/#/knots/glossary');
   await expect(page.getByTestId('knot-glossary')).toContainText('Chicote');

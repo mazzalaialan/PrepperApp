@@ -3336,3 +3336,20 @@ a.module-card:hover {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+
+.anchor-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 420px;
+}
+
+.anchor-table th,
+.anchor-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.chip-anchor {
+  border-style: dashed;
+}

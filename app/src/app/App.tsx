@@ -42,6 +42,7 @@ import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
 import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
 import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
 import { BedPage } from '@/modules/garden/BedPage';
+import { AnchorPage, AnchorsPage } from '@/modules/knots/AnchorPages';
 import { GlossaryPage, RopesPage } from '@/modules/knots/InfoPages';
 import { KnotGuidePage } from '@/modules/knots/KnotGuidePage';
 import { KnotPage } from '@/modules/knots/KnotPage';
@@ -124,6 +125,8 @@ const router = createHashRouter([
       { path: '/knots', element: <SectionPage section="knots" /> },
       { path: '/knots/guide', element: <KnotGuidePage /> },
       { path: '/knots/guide/:id', element: <KnotPage /> },
+      { path: '/knots/anchors', element: <AnchorsPage /> },
+      { path: '/knots/anchors/:id', element: <AnchorPage /> },
       { path: '/knots/ropes', element: <RopesPage /> },
       { path: '/knots/glossary', element: <GlossaryPage /> },
       { path: '/garden', element: <SectionPage section="garden" /> },

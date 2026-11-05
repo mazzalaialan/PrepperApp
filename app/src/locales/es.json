@@ -34,7 +34,7 @@
     "documents": "Documentos",
     "orientation": "Orientación",
     "weather": "Meteorología",
-    "knots": "Cabuyería", "garden": "Huerta y cultivo",
+    "knots": "Cabuyería y anclajes", "garden": "Huerta y cultivo",
     "library": "Biblioteca"
   },
   "home": {
@@ -45,6 +45,7 @@
     "seeAll": "Ver todas"
   },
   "modules": {
+    "anchors": {"title": "Anclajes", "desc": "Árboles, rocas, cintas, anclajes repartidos, estacas y \"hombre muerto\""},
     "knotGuide": {"title": "Guía de nudos", "desc": "Por nombre, por uso (rappel, rescate, campamento…) o por lo que necesitás hacer"},
     "ropes": {"title": "Cuerdas", "desc": "Tipos, resistencia y cuidado"},
     "knotGlossary": {"title": "Glosario", "desc": "Chicote, firme, seno, gaza, cote…"},
@@ -2003,6 +2004,21 @@
         "yes": "Se puede hacer con una mano",
         "no": "Necesita las dos manos"
       }
+    }
+  },
+  "anchors": {
+    "safety": "Un anclaje mal armado es la falla más grave en rappel y rescate. Aprendé con un instructor y probalo siempre antes de confiarle una persona.",
+    "search": "Buscar un anclaje",
+    "searchHint": "Árbol, estacas, repartido, rappel…",
+    "how": "Cómo se arma",
+    "knots": "Nudos que se usan",
+    "usedIn": "Se usa en estos anclajes",
+    "kinds": {
+      "basics": "Lo básico",
+      "natural": "Puntos naturales",
+      "attach": "Cómo sujetar al anclaje",
+      "system": "Anclajes armados",
+      "improvised": "Improvisados (sin árboles ni rocas)"
     }
   }
 }
