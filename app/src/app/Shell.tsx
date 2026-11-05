@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Cable, CloudSun, Compass, Ellipsis, FileText, House, Lock, Package, Settings, Siren, Sprout } from 'lucide-react';
+import { BookOpen, CloudSun, Compass, Ellipsis, FileText, House, Lasso, Lock, Package, Settings, Siren, Sprout } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
 import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
@@ -28,7 +28,7 @@ const NAV = [
 
 const MORE = [
   { to: '/inventory', key: 'inventory', icon: Package },
-  { to: '/knots', key: 'knots', icon: Cable },
+  { to: '/knots', key: 'knots', icon: Lasso },
   { to: '/garden', key: 'garden', icon: Sprout },
   { to: '/library', key: 'library', icon: BookOpen },
 ] as const;
