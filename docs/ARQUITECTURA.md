@@ -411,7 +411,7 @@ La guía de primeros auxilios escribe los números con marcas (`{medical}`, `{sa
 | Documentos | Documentos personales con N fotos y vencimiento opcional: avisa 60 días antes (turnos y trámites), en Inicio, Alertas y notificaciones (`doc:<id>` en el índice, tipo `expiry`) | — |
 | Recomendaciones | Calculadora según grupo familiar y reglas del usuario | — |
 | Brújula | Rumbo magnético y verdadero (WMM); integrada con mapas y estrellas | Deshabilitada |
-| Inclinómetro | Pendiente en grados con la escala de avalanchas (como CalTopo y swisstopo): menos de 25° verde, 25–30° ámbar, 30–45° rojo (la gran mayoría de las placas), 45–55° naranja (menos placas, coladas frecuentes) y más de 55° gris (pared o roca); el riesgo nunca baja con más pendiente; aviso de que es orientativo | Deshabilitado |
+| Inclinómetro | Pendiente en grados con la escala de avalanchas (como CalTopo y swisstopo): menos de 25° verde, 25–30° ámbar, 30–45° rojo (la gran mayoría de las placas), 45–55° naranja (menos placas, coladas frecuentes) y más de 55° gris (pared o roca); el riesgo nunca baja con más pendiente; aviso de que es orientativo. Tres modos con un dibujo de cómo poner el celular: Apoyado (sobre la ladera), Apuntando (a lo largo de la mira) y Horizonte (parado, vertical u horizontal: horizonte artificial e inclinación lateral con un decimal, "derecho" o hacia qué lado; sin zonas de avalancha) | Deshabilitado |
 | Mapas offline | §12. En Orientación va tercero, después de Brújula e Inclinómetro | — |
 | Waypoints y Rutas | Guardar puntos; rumbo y distancia a un waypoint. Las rutas (puntos unidos en orden) van abajo, en la misma pantalla (`/orientation/routes` redirige ahí) | Coordenadas manuales |
 | Tracks | Importados (GPX) y grabados con la app (§16, Mapas) | — |
