@@ -532,7 +532,7 @@ Detalle de las capas de tiempo:
 | PWA en GitHub Pages | Canal principal |
 | PWA servida por el servidor Docker propio | Alternativa autónoma |
 | Paquete portable para PC (GitHub Releases, uno por versión) | App compilada + servidor local (`Iniciar VikArg.bat` con PowerShell en Windows, Python en Linux/Mac) en `localhost:47613`, puerto fijo porque los datos del navegador van por dirección. Para PCs sin internet o en pendrive |
-| App nativa Android, y quizá iOS (port completo de la app) | **Última fase, después de Biblioteca** (ver §13.1). Permitiría instalar en un celular sin internet (el APK se pasa por cable o Bluetooth) y usar el GPS en segundo plano. Una PWA no puede servirse a un celular desde otra PC por Wi-Fi: Chrome solo habilita cifrado y modo offline en HTTPS o `localhost` |
+| App nativa Android, y quizá iOS (port completo de la app) | **Última fase, después de Biblioteca y la guía de nudos** (ver §13.1). Permitiría instalar en un celular sin internet (el APK se pasa por cable o Bluetooth) y usar el GPS en segundo plano. Una PWA no puede servirse a un celular desde otra PC por Wi-Fi: Chrome solo habilita cifrado y modo offline en HTTPS o `localhost` |
 | Google Play Store | **Descartado por ahora**: agrega dependencia de Google (cuenta, verificación, revisión, 12 testers × 14 días) sin aportar funcionalidad. Se puede sumar más adelante sin cambiar la arquitectura |
 
 ### 13.1 App nativa: port completo a Android, y quizá iOS (pendiente, última fase)
@@ -606,10 +606,11 @@ Detalle de las capas de tiempo:
 | **Huerta: calendario** | Gráfico con la época del año actual y una línea de tiempo de qué se puede sembrar, trasplantar y cosechar, con datos del INTA por zona (a terminar de analizar) |
 | **Huerta: canteros** | Fase exclusiva. Carga de canteros y macetas (tamaño, horas de sol), recomendaciones de qué plantar según sol, época y zona, y seguimiento de cada planta con sus tareas. Referencia: https://huerta.diariodeljardin.com/planear/ (a terminar de analizar) |
 | **Servidor (cuando esté instalado)** | Avisos de lluvia con la app cerrada (última ubicación conocida y waypoints): hecho con el pronóstico de Open-Meteo; falta la lluvia observada (GOES‑19 RRQPE, radar del SMN). Detector de rayos GOES‑19 con aviso por distancia |
+| **Guía de nudos** | Nudos útiles (amarre, unión de cuerdas, lazos, rescate, carga), cada uno con dibujos paso a paso, para qué sirve y errores comunes; sin conexión. Agregada el 05/11/2026, antes de la app nativa |
 | **App nativa** | Port completo de la app a Android, y quizá iOS: GPS con la pantalla apagada y la app cerrada, instalación sin internet (§13.1) |
 
 **Orden de ejecución** (decidido el 31/10/2026; actualizado el 04/11/2026, cuando se dejaron los códigos F0–F8 y las fases pasaron a nombrarse por su contenido):
-Base → Inventario → Servidor → Orientación, meteorología y botiquín (hechas) → **Mapa estelar** → Mapas (incluye el mapa de Meteorología) → Servidor (avisos en segundo plano, rayos, peligros naturales) → Huerta (calendario y canteros) → Biblioteca → **App nativa (port completo a Android, y quizá iOS; §13.1), al final** (agregada el 04/11/2026).
+Base → Inventario → Servidor → Orientación, meteorología y botiquín (hechas) → **Mapa estelar** → Mapas (incluye el mapa de Meteorología) → Servidor (avisos en segundo plano, rayos, peligros naturales) → Huerta (calendario y canteros) → Biblioteca → Guía de nudos (agregada el 05/11/2026) → **App nativa (port completo a Android, y quizá iOS; §13.1), al final** (agregada el 04/11/2026).
 
 ---
 
