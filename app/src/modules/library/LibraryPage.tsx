@@ -75,7 +75,7 @@ export function LibraryPage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const serverUrl = useSettings((s) => s.settings.serverUrl);
-  const { catalog, offline, loading, installed, selected, key, progress, failures, stopped, refresh, toggle, setSelected, download, cancelDownload, remove, forgetKey, passphrase } = useLibrary(
+  const { catalog, offline, loading, installed, selected, key, progress, failures, stopped, refresh, toggle, setSelected, download, cancelDownload, remove, removeMany, forgetKey, passphrase } = useLibrary(
     useShallow((s) => ({
       catalog: s.catalog,
       offline: s.offline,
@@ -92,6 +92,7 @@ export function LibraryPage() {
       download: s.download,
       cancelDownload: s.cancelDownload,
       remove: s.remove,
+      removeMany: s.removeMany,
       forgetKey: s.forgetKey,
       passphrase: s.passphrase,
     })),
@@ -99,6 +100,10 @@ export function LibraryPage() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [askKey, setAskKey] = useState(false);
+  // Modo borrar: los casilleros eligen libros bajados para sacarlos del dispositivo.
+  const [delMode, setDelMode] = useState(false);
+  const [toDelete, setToDelete] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     void refresh(serverUrl);
@@ -127,9 +132,34 @@ export function LibraryPage() {
   const canPrivate = !!catalog?.privateAvailable;
   const upToDate = (b: LibraryBook) => installed.get(b.id)?.sha256 === b.sha256;
   const selectable = (b: LibraryBook) => !upToDate(b) && (b.license === 'public' || canPrivate);
-  const visibleIds = visible.flatMap((c) => c.books.filter((b) => selectable(b)).map((b) => b.id));
+  const pickable = (b: LibraryBook) => (delMode ? installed.has(b.id) : selectable(b));
+  const visibleIds = visible.flatMap((c) => c.books.filter((b) => pickable(b)).map((b) => b.id));
   const visibleSet = new Set(visibleIds);
   const visibleBytes = visible.flatMap((c) => c.books).filter((b) => visibleSet.has(b.id)).reduce((s, b) => s + b.bytes, 0);
+
+  const delBooks = [...toDelete].map((id) => installed.get(id)).filter((b): b is NonNullable<typeof b> => !!b);
+  const delBytes = delBooks.reduce((s, b) => s + b.bytes, 0);
+  const pick = (ids: string[], on: boolean) => {
+    if (!delMode) return setSelected(ids, on);
+    const next = new Set(toDelete);
+    for (const id of ids) (on ? next.add(id) : next.delete(id));
+    setToDelete(next);
+  };
+  const isPicked = (id: string) => (delMode ? toDelete.has(id) : selected.has(id));
+  function leaveDelMode() {
+    setDelMode(false);
+    setToDelete(new Set());
+  }
+  async function deletePicked() {
+    if (!window.confirm(t('library.confirmRemoveMany', { count: delBooks.length, mb: mb(delBytes, lang) }))) return;
+    setDeleting(true);
+    try {
+      await removeMany(delBooks.map((b) => b.id));
+    } finally {
+      setDeleting(false);
+      leaveDelMode();
+    }
+  }
 
   function start() {
     if (needsKey) setAskKey(true);
@@ -149,6 +179,17 @@ export function LibraryPage() {
     <div className="stack library">
       <div className="page-head">
         <h1 className="page-title" style={{ flex: 1, margin: 0 }}>{t('modules.libraryBooks.title')}</h1>
+        {installed.size > 0 && !progress && (
+          <button
+            className="btn"
+            type="button"
+            aria-pressed={delMode}
+            onClick={() => (delMode ? leaveDelMode() : (setSelected([...selected], false), setDelMode(true)))}
+            data-testid="library-delete-mode"
+          >
+            <Trash2 size={18} /> {t(delMode ? 'library.deleteModeOff' : 'library.deleteMode')}
+          </button>
+        )}
         <button className="icon-btn" type="button" onClick={() => void refresh(serverUrl)} disabled={loading} aria-label={t('library.refresh')}>
           <RefreshCw size={20} />
         </button>
@@ -186,11 +227,13 @@ export function LibraryPage() {
           </div>
           {visibleIds.length > 0 && (
             <div className="row-between" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
-              <button className="btn" type="button" onClick={() => setSelected(visibleIds, true)} data-testid="library-select-visible">
-                {t('library.selectVisible', { count: visibleIds.length, mb: mb(visibleBytes, lang) })}
+              <button className="btn" type="button" onClick={() => pick(visibleIds, true)} data-testid="library-select-visible">
+                {delMode
+                  ? t('library.selectVisibleInstalled', { count: visibleIds.length })
+                  : t('library.selectVisible', { count: visibleIds.length, mb: mb(visibleBytes, lang) })}
               </button>
-              {selected.size > 0 && (
-                <button className="btn-link" type="button" onClick={() => setSelected([...selected], false)}>
+              {(delMode ? toDelete.size : selected.size) > 0 && (
+                <button className="btn-link" type="button" onClick={() => (delMode ? setToDelete(new Set()) : setSelected([...selected], false))}>
                   {t('library.clearSelection')}
                 </button>
               )}
@@ -198,9 +241,9 @@ export function LibraryPage() {
           )}
 
           {visible.map((cat) => {
-            const ids = cat.books.filter(selectable).map((b) => b.id);
-            const allOn = ids.length > 0 && ids.every((id) => selected.has(id));
-            const some = ids.some((id) => selected.has(id));
+            const ids = cat.books.filter(pickable).map((b) => b.id);
+            const allOn = ids.length > 0 && ids.every(isPicked);
+            const some = ids.some(isPicked);
             const have = cat.books.filter((b) => installed.has(b.id)).length;
             return (
               <details key={cat.id} className="card library-cat" data-testid={`library-cat-${cat.id}`} open={visible.length === 1 || !!query}>
@@ -216,7 +259,7 @@ export function LibraryPage() {
                       ref={(el) => {
                         if (el) el.indeterminate = some && !allOn;
                       }}
-                      onChange={() => setSelected(ids, !allOn)}
+                      onChange={() => pick(ids, !allOn)}
                       aria-label={t('library.selectCategory', { name: cat.name })}
                     />
                     {t('library.selectAll')}
@@ -230,10 +273,10 @@ export function LibraryPage() {
                       <li key={b.id} className={`list-row library-book ${b.license === 'public' ? 'is-free' : 'is-rights'}`} data-testid={`book-${b.id}`}>
                         <input
                           type="checkbox"
-                          checked={selected.has(b.id)}
-                          disabled={!selectable(b)}
-                          onChange={() => toggle(b.id)}
-                          aria-label={t('library.selectBook', { title: b.title })}
+                          checked={isPicked(b.id)}
+                          disabled={!pickable(b)}
+                          onChange={() => (delMode ? pick([b.id], !toDelete.has(b.id)) : toggle(b.id))}
+                          aria-label={t(delMode ? 'library.selectBookDelete' : 'library.selectBook', { title: b.title })}
                         />
                         <span className="list-main">
                           <span className="list-title">{b.title}</span>
@@ -270,7 +313,18 @@ export function LibraryPage() {
         </>
       )}
 
-      {(chosen.length > 0 || progress) && (
+      {delMode && (
+        <div className="library-bar" data-testid="library-delete-bar">
+          <span style={{ flex: 1 }}>{t('library.toDelete', { count: delBooks.length, mb: mb(delBytes, lang) })}</span>
+          <button className="btn" type="button" onClick={leaveDelMode}>
+            {t('common.cancel')}
+          </button>
+          <button className="btn btn-danger" type="button" disabled={!delBooks.length || deleting} onClick={() => void deletePicked()} data-testid="library-delete">
+            <Trash2 size={18} /> {t('library.deleteSelected')}
+          </button>
+        </div>
+      )}
+      {!delMode && (chosen.length > 0 || progress) && (
         <div className="library-bar" data-testid="library-bar">
           {progress ? (
             <div style={{ flex: 1 }} role="status" aria-live="polite">

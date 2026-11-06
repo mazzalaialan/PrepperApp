@@ -44,6 +44,8 @@ interface LibraryState {
   /** Corta la descarga en curso: lo ya bajado queda; lo que falta sigue seleccionado para después. */
   cancelDownload: (reason?: 'cancelled' | 'cellular') => void;
   remove: (id: string) => Promise<void>;
+  /** Borra varios libros del dispositivo (el índice se guarda una sola vez). */
+  removeMany: (ids: string[]) => Promise<void>;
 }
 
 /** Descarga en curso (para cancelarla). */
@@ -204,9 +206,15 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   async remove(id) {
-    await removeBookFiles(id);
+    await get().removeMany([id]);
+  },
+
+  async removeMany(ids) {
     const installed = new Map(get().installed);
-    installed.delete(id);
+    for (const id of ids) {
+      await removeBookFiles(id);
+      installed.delete(id);
+    }
     set({ installed });
     await saveIndex(installed);
   },

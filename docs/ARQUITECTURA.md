@@ -105,6 +105,8 @@ Servicios externos opcionales y reemplazables:
 | Tests | Vitest + Playwright | |
 | Servidor | Node.js + Fastify + SQLite, empaquetado en Docker | Mínimo, autoalojable en cualquier máquina |
 
+**Arranque liviano (06/11/2026):** cada pantalla se carga recién al abrirla (`React.lazy` en `app/App.tsx`, `Suspense` alrededor del contenido en `Shell`); solo Inicio y las portadas de sección vienen en el archivo principal. Los stores que cargan datos al desbloquear o quedan escuchando (grabador de tracks, avisos) se importan igual al arrancar (`app/stores.ts`). El inglés se baja recién si se elige (el español es el respaldo y viene siempre). Lo que baja el celular al abrir la app pasó de 1,64 MB a 0,92 MB; todo sigue precacheado para usarse sin conexión.
+
 ---
 
 ## 5. Modelo de datos

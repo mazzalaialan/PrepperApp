@@ -83,6 +83,24 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await page.goto('/#/knots/guide/cornamusa');
   await expect(page.getByTestId('knot-library')).toContainText('No aparece en los 2 libros de nudos');
   await context.setOffline(false);
+
+  // Espacio: Ajustes muestra cuánto ocupan los libros bajados.
+  await page.goto('/#/settings');
+  await expect(page.getByTestId('storage-books')).toContainText('2 libros de la biblioteca');
+
+  // Borrar varios libros a la vez: modo "Elegir para borrar", elegir los dos y borrarlos.
+  await page.goto('/#/library/books');
+  page.on('dialog', (d) => void d.accept());
+  await page.getByTestId('library-delete-mode').click();
+  await page.getByTestId('book-montanismo').getByRole('checkbox').check();
+  await page.getByTestId('book-enciclopedia').getByRole('checkbox').check();
+  await expect(page.getByTestId('library-delete-bar')).toContainText('2 libros para borrar');
+  await page.getByTestId('library-delete').click();
+  await expect(page.getByTestId('book-montanismo').getByLabel('En el dispositivo')).toHaveCount(0);
+  await expect(page.getByTestId('book-enciclopedia').getByLabel('En el dispositivo')).toHaveCount(0);
+  await expect(page.getByTestId('library-delete-mode')).toHaveCount(0);
+  await page.goto('/#/settings');
+  await expect(page.getByTestId('storage-books')).toContainText('0 libros de la biblioteca');
 });
 
 test('biblioteca: cancelar una descarga en curso no gasta más datos y deja lo que falta elegido', async ({ page }) => {

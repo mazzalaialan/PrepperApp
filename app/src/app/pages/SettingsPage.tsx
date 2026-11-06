@@ -21,6 +21,9 @@ import { AUTO_LOCK_OPTIONS, COUNTRIES, LANGUAGES, THEMES, useSettings, type RedS
 import { roundForDusk } from '@/core/settings/theme';
 import { serverIsDown, serverMaps, type MapSourceMode, type ServerMaps } from '@/modules/maps/sources';
 import { Segmented } from '@/ui/Segmented';
+import { useLibrary } from '@/modules/library/store';
+import { useMapZones } from '@/modules/maps/store';
+import { listImported, type ImportedMap } from '@/modules/maps/imported';
 import { NotificationsSection } from './NotificationsSection';
 
 export function SettingsPage() {
@@ -465,30 +468,98 @@ function StorageSection() {
   const { t, i18n } = useTranslation();
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
+  const [imported, setImported] = useState<ImportedMap[]>([]);
+  const [busy, setBusy] = useState(false);
+  const books = useLibrary((s) => s.installed);
+  const removeBooks = useLibrary((s) => s.removeMany);
+  const zones = useMapZones((s) => s.zones);
+  const removeZone = useMapZones((s) => s.remove);
 
-  useEffect(() => {
+  const refresh = () => {
     void navigator.storage?.estimate().then(setEstimate);
+    void listImported()
+      .then(setImported)
+      .catch(() => setImported([]));
+  };
+  useEffect(() => {
+    refresh();
     void navigator.storage?.persisted().then(setPersisted);
   }, []);
 
   if (!navigator.storage) return null;
+  const fmt = (b: number) => formatBytes(b, i18n.language);
+  const booksBytes = [...books.values()].reduce((s, b) => s + b.bytes, 0);
+  const zonesBytes = zones.reduce((s, z) => s + z.bytes, 0);
+  const importedBytes = imported.reduce((s, m) => s + m.bytes, 0);
+  const rest = Math.max(0, (estimate?.usage ?? 0) - booksBytes - zonesBytes - importedBytes);
+
+  async function clearAll(kind: 'books' | 'zones') {
+    const count = kind === 'books' ? books.size : zones.length;
+    if (!window.confirm(t(`settings.storageClear.${kind}`, { count }))) return;
+    setBusy(true);
+    try {
+      if (kind === 'books') await removeBooks([...books.keys()]);
+      else for (const z of zones) await removeZone(z.id);
+    } finally {
+      setBusy(false);
+      refresh();
+    }
+  }
 
   return (
-    <section className="card stack">
+    <section className="card stack" data-testid="storage">
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('settings.storage')}</h2>
-      {estimate && (
-        <p style={{ margin: 0 }}>
-          {t('settings.storageUsed', {
-            used: formatBytes(estimate.usage ?? 0, i18n.language),
-            quota: formatBytes(estimate.quota ?? 0, i18n.language),
-          })}
-        </p>
-      )}
-      {persisted !== null && (
-        <p className={persisted ? 'success' : 'hint'}>
-          {t(persisted ? 'settings.storagePersistent' : 'settings.storageNotPersistent')}
-        </p>
-      )}
+      {estimate && <p style={{ margin: 0 }}>{t('settings.storageUsed', { used: fmt(estimate.usage ?? 0), quota: fmt(estimate.quota ?? 0) })}</p>}
+      <ul className="list storage-list">
+        <li className="list-row" data-testid="storage-books">
+          <span className="list-main">
+            <span className="list-title">{t('settings.storageBooks', { count: books.size })}</span>
+            <span className="list-sub">{fmt(booksBytes)}</span>
+          </span>
+          <Link className="btn" to="/library/books">
+            {t('settings.storageManage')}
+          </Link>
+          {books.size > 0 && (
+            <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void clearAll('books')} data-testid="storage-clear-books">
+              {t('settings.storageClearAll')}
+            </button>
+          )}
+        </li>
+        <li className="list-row" data-testid="storage-zones">
+          <span className="list-main">
+            <span className="list-title">{t('settings.storageZones', { count: zones.length })}</span>
+            <span className="list-sub">{fmt(zonesBytes)}</span>
+          </span>
+          <Link className="btn" to="/orientation/maps">
+            {t('settings.storageManage')}
+          </Link>
+          {zones.length > 0 && (
+            <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void clearAll('zones')}>
+              {t('settings.storageClearAll')}
+            </button>
+          )}
+        </li>
+        {imported.length > 0 && (
+          <li className="list-row">
+            <span className="list-main">
+              <span className="list-title">{t('settings.storageImported', { count: imported.length })}</span>
+              <span className="list-sub">{fmt(importedBytes)}</span>
+            </span>
+            <Link className="btn" to="/orientation/maps">
+              {t('settings.storageManage')}
+            </Link>
+          </li>
+        )}
+        {estimate && (
+          <li className="list-row">
+            <span className="list-main">
+              <span className="list-title">{t('settings.storageRest')}</span>
+              <span className="list-sub">{fmt(rest)}</span>
+            </span>
+          </li>
+        )}
+      </ul>
+      {persisted !== null && <p className={persisted ? 'success' : 'hint'}>{t(persisted ? 'settings.storagePersistent' : 'settings.storageNotPersistent')}</p>}
       {persisted === false && (
         <button className="btn" type="button" onClick={() => void navigator.storage.persist().then(setPersisted)}>
           {t('settings.storagePersist')}
