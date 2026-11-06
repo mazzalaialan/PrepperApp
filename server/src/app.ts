@@ -12,6 +12,7 @@ import { createRainMapStore, type RainMapStore } from './rain/map.ts';
 import { createObservedRainStatus, type ObservedRainStatus } from './rain/noaaWatch.ts';
 import { deviceRoutes } from './routes/devices.ts';
 import { lightningRoutes } from './routes/lightning.ts';
+import { createOfficialStore, officialRoutes, type OfficialStore } from './official/store.ts';
 import { mapRoutes } from './routes/maps.ts';
 import { libraryRoutes } from './routes/library.ts';
 import { rainMapRoutes } from './routes/rainMap.ts';
@@ -28,6 +29,7 @@ export async function buildApp(
   observedRain: ObservedRainStatus = createObservedRainStatus(),
   rainMap: { store: RainMapStore; wake: () => void } = { store: createRainMapStore(), wake: () => undefined },
   maps: MapsService = createMapsService(config.mapsDir),
+  official: OfficialStore = createOfficialStore(),
 ): Promise<FastifyInstance> {
   const app = Fastify({ logger, trustProxy: true });
 
@@ -41,6 +43,7 @@ export async function buildApp(
   rainMapRoutes(app, rainMap.store, rainMap.wake);
   mapRoutes(app, maps, config);
   libraryRoutes(app, config);
+  officialRoutes(app, official);
   app.addHook('onClose', () => maps.close());
 
   // Opcional: servir la propia PWA para una instalación 100% autónoma.

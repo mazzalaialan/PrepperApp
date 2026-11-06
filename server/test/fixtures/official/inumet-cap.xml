@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+                  <?xml-stylesheet type="text/xsl" href="cap-style.xsl" ?>
+                    <cap:alert xmlns:cap="urn:oasis:names:tc:emergency:cap:1.2"><cap:identifier>urn:oid:2.49.0.1.858.0.2026.11.03.21.32.35</cap:identifier>
+                <cap:sender>contacto@inumet.gub.uy</cap:sender>
+                <cap:sent>2026-11-03T21:30:00-03:00</cap:sent>
+                <cap:status>Actual</cap:status>
+                <cap:msgType>Alert</cap:msgType>
+                <cap:scope>Public</cap:scope><cap:info>
+                <cap:language>es</cap:language>
+                <cap:category>Met</cap:category>
+                <cap:event>Tormentas fuertes y puntualmente severas</cap:event>
+                <cap:responseType>None</cap:responseType>
+                <cap:urgency>Future</cap:urgency>
+                <cap:severity>Severe</cap:severity>
+                <cap:certainty>Likely</cap:certainty>
+                <cap:onset>2026-11-03T21:30:00-03:00</cap:onset> 
+                <cap:expires>2026-11-04T00:30:00-03:00</cap:expires>
+                <cap:senderName>Instituto Uruguayo de Meteorología</cap:senderName>
+                <cap:headline>Tormentas fuertes y puntualmente severas</cap:headline>
+                <cap:description>El área será afectada por tormentas (puntualmente) fuertes y/o severas.
+Podrán estar acompañadas por precipitaciones copiosas en cortos períodos, granizo, rachas de vientos muy fuertes e intensa actividad eléctrica.</cap:description>
+                <cap:web>https://www.inumet.gub.uy</cap:web>
+                <cap:area>
+                  <cap:areaDesc>Artigas : Baltasar Brum, Diego Lamas, Paso Campamento y Sequeira.Durazno : Baygorria y Centenario.Paysandú(Todo el departamento), Río Negro : Algorta, Bellaco, El Ombú, Gartental, General Borges, Grecco, Menafra, Paso de los mellizos, Sarandí de Navarro, Tres Quintas, Villa María y Young.Rivera : Cerro Pelado , Cerros de la Calera, Lagos del Norte, Masoller, Minas de Corrales, Paso Ataques y Tranqueras.Salto(Todo el departamento), Tacuarembó : Achar, Ansina, Arerungua, Balneario Iporá, Cerro Chato, Clara, Cuchilla de Peralta, Curtina, La Hilera, La Pedrera, Paso Bonilla, Paso de los Toros, Paso del Cerro, Piedra Sola, Pueblo de Arriba, Rincón del Bonete, San Gregorio de Polanco, Sauce de Batoví, Tacuarembó y Tambores.</cap:areaDesc>
+                  <cap:polygon>-30.627552491072,-56.206791812426 -30.825876384016,-56.018994266039 -31.075558640108,-56.006977969653 -31.094964064347,-55.942604953295 -31.064972193349,-55.867245608812 -31.014964721137,-55.812485629565 -31.007314204131,-55.749485904223 -30.864784874435,-55.64820569182 -30.863606061129,-55.601857120043 -31.041442537266,-55.351918155199 -31.26826056418,-55.250294620043 -31.340825486895,-55.038661465012 -31.341642681627,-55.038866872713 -31.34164268163,-55.038866872714 -31.448353414442,-55.065689373466 -31.448781033576,-55.065840096418 -31.449125071358,-55.066135415798 -31.750602474591,-55.222650883955 -32.087494944905,-55.413296253304 -32.251116561594,-55.503621472207 -32.744963599985,-55.762352587201 -32.950325336425,-56.830294087189 -32.967919389347,-56.879377313385 -32.995340439187,-57.305809335702 -32.883528557433,-58.107977205603 -32.883555528262,-58.108230420527 -32.883510312325,-58.109194082171 -32.742506453226,-58.114979678637 -32.430087665036,-58.178151065356 -32.328027327449,-58.090260440356 -31.87782934652,-58.157551700122 -31.829420753301,-58.066571170336 -31.793827157895,-58.051121646411 -31.685211255237,-57.991383487231 -31.637178817723,-57.9788467013 -31.585242428303,-57.965290957934 -31.55423613493,-57.985890323168 -31.460569724636,-58.075154239184 -31.386741411017,-57.972157413012 -31.345114150924,-57.978337222583 -31.303468461666,-57.955677920825 -31.230690987448,-57.903492862231 -31.085996898637,-57.867787295825 -31.041221919213,-57.855427676684 -30.999957358715,-57.862294131762 -30.945499065762,-57.902119571215 -30.925768671626,-57.808392459399 -30.907065211829,-57.799981051928 -30.884822482677,-57.791569644457 -30.725517326702,-57.79584906887 -30.468542057975,-56.419602621805 -30.468218001447,-56.408459465495 -30.627552491072,-56.206791812426 -30.627552491072,-56.206791812426</cap:polygon>
+                </cap:area>
+              </cap:info><cap:info>
+                <cap:language>es</cap:language>
+                <cap:category>Met</cap:category>
+                <cap:event>Tormentas puntualmente fuertes</cap:event>
+                <cap:responseType>None</cap:responseType>
+                <cap:urgency>Future</cap:urgency>
+                <cap:severity>Moderate</cap:severity>
+                <cap:certainty>Likely</cap:certainty>
+                <cap:onset>2026-11-03T21:30:00-03:00</cap:onset> 
+                <cap:expires>2026-11-04T00:30:00-03:00</cap:expires>
+                <cap:senderName>Instituto Uruguayo de Meteorología</cap:senderName>
+                <cap:headline>Tormentas puntualmente fuertes</cap:headline>
+                <cap:description>El área será afectada por tormentas (puntualmente) fuertes.
+
+Podrán estar acompañadas por precipitaciones abundantes en cortos períodos, granizo, rachas de vientos muy fuertes e intensa actividad eléctrica.</cap:description>
+                <cap:web>https://www.inumet.gub.uy</cap:web>
+                <cap:area>
+                  <cap:areaDesc>Colonia : Agraciada.Durazno : Aguas Buenas, Blanquillo, Carlos Reyles, Carmen, Durazno, Feliciano, La Paloma, Ombúes de Oribe, Pueblo de Álvarez, San Jorge y Santa Bernardina.Flores : Andresito, Ismael Cortinas, Juan José Castro y Trinidad.Río Negro : Fray Bentos, Los Arrayanes y Nuevo Berlín.Rivera : Amarillo, Arroyo Blanco, Cerrillada, La Puente , Las Flores y Moirones.Soriano : Agraciada, Chacras de Dolores, Dolores, Egaña, José Enrique Rodó, Mercedes, Palmitas, Risso y Villa Soriano.Tacuarembó : Punta de Carretera.</cap:areaDesc>
+                  <cap:polygon>-31.344080423318,-55.029168552475 -31.489673679476,-54.604550720618 -33.368600718284,-55.963934667969 -33.874656487343,-58.404089473931 -33.47181155379,-58.417103702074 -33.13206924433,-58.342945987231 -33.09813734647,-58.231022769457 -33.078865096898,-58.175747806078 -33.049229372188,-58.128712588793 -32.970632062367,-58.112576419359 -32.893689418883,-58.108827714383 -32.893569368699,-58.108308493324 -32.997770334434,-57.30503582613 -32.99784241025,-57.303280186426 -32.977908375251,-56.878908100632 -32.977728775211,-56.877434133267 -32.977332894303,-56.876003009835 -32.959999530533,-56.82764704442 -32.754783684285,-55.760464216384 -32.754288235493,-55.758739946529 -32.753492666218,-55.75713195226 -32.752422582461,-55.755691988098 -32.751112425681,-55.754466400382 -32.749604364271,-55.753494635585 -32.255853944515,-55.494814140003 -32.092374034899,-55.404567148676 -31.755527508219,-55.213947778546 -31.755210143229,-55.21377567186 -31.454760102847,-55.057793570967 -31.454586546095,-55.057644591189 -31.452985118734,-55.05671891505 -31.452105283583,-55.056408799482 -31.452105283583,-55.056408799482 -31.451677664448,-55.05625807653 -31.451677664448,-55.05625807653 -31.451240597511,-55.056104023511 -31.450791156129,-55.055991053227 -31.450791156129,-55.055991053227 -31.344080423318,-55.029168552475 -31.344080423318,-55.029168552475</cap:polygon>
+                </cap:area>
+              </cap:info></cap:alert>

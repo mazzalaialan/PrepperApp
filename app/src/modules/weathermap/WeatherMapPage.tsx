@@ -14,7 +14,10 @@ import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
 import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
 import {
+  alertCovers,
   fetchHazards,
+  fetchOfficialAlerts,
+  liveAlerts,
   fetchLightning,
   fetchRainMap,
   fetchQuakes,
@@ -34,6 +37,7 @@ import {
   writeMapCache,
   type Hazard,
   type LightningBatch,
+  type OfficialAlert,
   type RainMap,
   type Quake,
   type RadarFrames,
@@ -48,13 +52,13 @@ const SETTLE_MS = 500;
 /** Teselas de radar por cuadro (si hacen falta más, se usa un zoom menor). */
 const RADAR_TILES_MAX = 16;
 const PRELOAD_PARALLEL = 4;
-const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'waypoints'];
+const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['official', 'satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'waypoints'];
 /** Cada cuánto se piden los rayos (el satélite saca un archivo cada 20 s). */
 const LIGHTNING_MS = 20_000;
 /** La lluvia estimada sale cada 10 minutos. */
 const RAIN_MAP_MS = 5 * 60_000;
 const VALUES: WeatherMapValue[] = ['temp', 'rain', 'wind'];
-type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards' | 'lightning' | 'satRain';
+type SourceKey = 'satellite' | 'radar' | 'zoneWeather' | 'earthquakes' | 'hazards' | 'lightning' | 'satRain' | 'official';
 
 export function WeatherMapPage() {
   const { t, i18n } = useTranslation();
@@ -80,6 +84,8 @@ export function WeatherMapPage() {
 
   const [quakes, setQuakes] = useState<{ fetchedAt: string; items: Quake[] } | null>(null);
   const [hazards, setHazards] = useState<{ fetchedAt: string; items: Hazard[] } | null>(null);
+  const [official, setOfficial] = useState<{ fetchedAt: string; items: OfficialAlert[] } | null>(null);
+  const showOfficial = layers.official && !!serverUrl;
   const [zones, setZones] = useState<{ fetchedAt: string; items: ZoneWeather[] } | null>(null);
   const [satTimes, setSatTimes] = useState<Date[] | null>(null);
   const [radar, setRadar] = useState<RadarFrames | null>(null);
@@ -98,6 +104,7 @@ export function WeatherMapPage() {
     void readMapCache().then((cache) => {
       if (cache.quakes) setQuakes(cache.quakes);
       if (cache.hazards) setHazards(cache.hazards);
+      if (cache.official) setOfficial(cache.official);
       if (cache.zones) setZones(cache.zones);
     });
     const onLine = () => setOnline(navigator.onLine);
@@ -187,6 +194,20 @@ export function WeatherMapPage() {
           ),
         );
       }
+      // Alertas oficiales (SMN, DMC, INUMET): las junta el servidor propio; quedan guardadas para verlas sin conexión.
+      if (showOfficial && stale(official?.fetchedAt)) {
+        jobs.push(
+          fetchOfficialAlerts(serverUrl).then(
+            async (items) => {
+              const entry = { fetchedAt: new Date().toISOString(), items };
+              setOfficial(entry);
+              fail('official', false);
+              await writeMapCache({ official: entry });
+            },
+            () => fail('official', true),
+          ),
+        );
+      }
       if (layers.radar) {
         jobs.push(
           fetchRadarFrames().then(
@@ -203,7 +224,7 @@ export function WeatherMapPage() {
       setFrame(FRAME_COUNT - 1);
     },
     // Las marcas de tiempo se leen en el momento; no deben reiniciar la descarga.
-    [geo, layers, base, saver],
+    [geo, layers, base, saver, showOfficial, serverUrl, official?.fetchedAt],
   );
 
   // Al abrir, al prender una capa y cada 10 minutos.
@@ -378,6 +399,7 @@ export function WeatherMapPage() {
     for (const day of fireDays()) overlays.push({ url: gibsUrl(FIRE_LAYER, day, request.view, request.size, ratio), bbox, opacity: 1, fire: true });
   }
 
+  const activeAlerts = useMemo(() => liveAlerts(official?.items ?? [], now), [official, now]);
   const waypoints = useMemo(
     () => (layers.waypoints ? [...waypointMap.values()].map((w) => ({ id: w.id, name: w.name, lon: w.lon, lat: w.lat })) : null),
     [layers.waypoints, waypointMap],
@@ -424,6 +446,7 @@ export function WeatherMapPage() {
             zoneValue={zoneValue}
             quakes={layers.earthquakes ? (quakes?.items ?? null) : null}
             hazards={layers.hazards ? (hazards?.items ?? null) : null}
+            official={showOfficial ? activeAlerts : null}
             volcanoes={layers.volcanoes ? geo.volcanoes : null}
             waypoints={waypoints}
             here={here}
@@ -489,13 +512,14 @@ export function WeatherMapPage() {
       <MapTimes sat={layers.satellite ? satTime : undefined} rain={satRainTime} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />
 
       {selected && <FeatureCard feature={selected} u={u} now={now} onClose={() => setSelected(null)} />}
+      {showOfficial && official && <AlertsHere alerts={activeAlerts} here={here} waypoints={waypointMap} onSelect={(a) => setSelected({ kind: 'official', item: a })} />}
 
       <section className="card stack" aria-labelledby="wmap-layers">
         <h2 id="wmap-layers" className="section-title" style={{ margin: 0 }}>{t('weatherMap.layers')}</h2>
         <div className="chips" role="group" aria-label={t('weatherMap.layers')}>
           {LAYER_KEYS.map((key) => {
             // Los rayos los junta el servidor propio: sin servidor, no hay.
-            const noServer = (key === 'lightning' || key === 'satRain') && !serverUrl;
+            const noServer = (key === 'lightning' || key === 'satRain' || key === 'official') && !serverUrl;
             return (
               <button
                 key={key}
@@ -520,7 +544,7 @@ export function WeatherMapPage() {
             ))}
           </div>
         )}
-        <Legend layers={{ ...layers, lightning: showLightning, satRain: showSatRain }} zoneValue={zoneValue} windUnit={u.windUnit} />
+        <Legend layers={{ ...layers, lightning: showLightning, satRain: showSatRain, official: showOfficial }} zoneValue={zoneValue} windUnit={u.windUnit} />
         {showLightning && (
           <p className="hint" style={{ margin: 0 }} data-testid="lightning-status">
             {lightning?.updatedAt
@@ -555,6 +579,7 @@ function MapTimes({ sat, rain, radar, fmt }: { sat: Date | undefined; rain?: Dat
 function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zoneValue: WeatherMapValue; windUnit: string }) {
   const { t } = useTranslation();
   const items: [boolean, string, string][] = [
+    [layers.official, 'official', t('weatherMap.legend.official')],
     [layers.regionWeather && zoneValue === 'wind', 'wind', t('weatherMap.legend.wind', { unit: windUnit })],
     [layers.satellite, 'satellite', t('weatherMap.legend.satellite')],
     [layers.satRain, 'satRain', t('weatherMap.legend.satRain')],
@@ -606,6 +631,20 @@ function FeatureCard({ feature, u, now, onClose }: { feature: MapFeature; u: Ret
       link = h.url;
       break;
     }
+    case 'official': {
+      const a = feature.item;
+      title = a.headline;
+      lines = [
+        `${a.senderName || a.source} · ${t(`weatherMap.severity.${a.severity}`)}`,
+        t('weatherMap.alertValid', { from: when.format(new Date(a.onset)), to: when.format(new Date(a.expires)) }),
+        a.areas.map((x) => x.desc).filter(Boolean).slice(0, 4).join(' · '),
+        a.description,
+        a.instruction,
+        t('weatherMap.alertVerbatim', { sender: a.senderName || a.source }),
+      ].filter(Boolean);
+      link = a.web;
+      break;
+    }
     case 'volcano': {
       const v = feature.item;
       title = v.name;
@@ -650,6 +689,53 @@ function FeatureCard({ feature, u, now, onClose }: { feature: MapFeature; u: Ret
         <a href={link} target="_blank" rel="noreferrer">
           <ExternalLink size={14} aria-hidden /> {t('weatherMap.moreInfo')}
         </a>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Alertas oficiales vigentes donde estoy y en mis waypoints: la lista, para
+ * no tener que buscarlas en el mapa. Tocar una la muestra arriba.
+ */
+function AlertsHere({
+  alerts,
+  here,
+  waypoints,
+  onSelect,
+}: {
+  alerts: OfficialAlert[];
+  here: { lat: number; lon: number } | null;
+  waypoints: Map<string, { name: string; lat: number; lon: number }>;
+  onSelect: (a: OfficialAlert) => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const when = new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const places = [...(here ? [{ name: t('weatherMap.alertHere'), lat: here.lat, lon: here.lon }] : []), ...waypoints.values()];
+  const hits = alerts
+    .map((a) => ({ a, at: places.filter((p) => alertCovers(a, p.lat, p.lon)).map((p) => p.name) }))
+    .filter((x) => x.at.length);
+  return (
+    <section className="card stack" aria-labelledby="alerts-here-title" data-testid="alerts-here">
+      <h2 id="alerts-here-title" className="section-title" style={{ margin: 0 }}>{t('weatherMap.alertsHereTitle')}</h2>
+      {hits.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>{t(places.length ? 'weatherMap.alertsHereNone' : 'weatherMap.alertsHereNoPlaces', { count: alerts.length })}</p>
+      ) : (
+        <ul className="list">
+          {hits.map(({ a, at }) => (
+            <li key={a.key} className="contact-row">
+              <button type="button" className="list-main alert-row" onClick={() => onSelect(a)}>
+                <span className="list-title">
+                  <span className={`alert-dot alert-${a.severity}`} aria-hidden /> {a.headline}
+                </span>
+                <span className="list-sub">
+                  {a.senderName || a.source} · {t(`weatherMap.severity.${a.severity}`)} · {t('weatherMap.alertUntil', { time: when.format(new Date(a.expires)) })}
+                </span>
+                <span className="list-sub">{at.join(', ')}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

@@ -10,6 +10,8 @@ import {
   testNotification,
   updateNotification,
   hazardNotification,
+  officialNotification,
+  type OfficialPush,
   type AlertSummary,
   type GardenPush,
   type HazardPush,
@@ -70,7 +72,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -99,6 +101,20 @@ self.addEventListener('push', (event) => {
           badge: ICON,
           tag: `hazard-${payload.hazard.placeId}-${payload.hazard.kind}`,
           renotify: true,
+          ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
+          data: { url: '#/weather/map' },
+        } as NotificationOptions);
+      } else if (payload.type === 'official' && payload.official) {
+        const o = payload.official;
+        const { title, body } = officialNotification(o, lang);
+        const urgent = o.severity === 'Severe' || o.severity === 'Extreme';
+        await self.registration.showNotification(title, {
+          body,
+          icon: ICON,
+          badge: ICON,
+          // Una por alerta: una renovación con otro identificador reemplaza la anterior del mismo fenómeno.
+          tag: `official-${o.source}-${o.event}`,
+          renotify: urgent,
           ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
           data: { url: '#/weather/map' },
         } as NotificationOptions);

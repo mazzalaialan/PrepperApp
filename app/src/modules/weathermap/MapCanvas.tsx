@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import type { WeatherMapValue } from '@/core/settings/settings';
 import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels';
 import type { GeoData, Volcano } from './geo';
-import { fitBounds, pan, project, REGION_BOUNDS, zoomAt, type Size, type View } from './projection';
+import { fitBounds, pan, project, REGION_BOUNDS, unproject, zoomAt, type Size, type View } from './projection';
 import { readyImage } from './images';
-import type { Flash, Hazard, HazardLevel, Quake, ZoneWeather } from './sources';
+import { alertCovers, type Flash, type Hazard, type HazardLevel, type OfficialAlert, type OfficialSeverity, type Quake, type ZoneWeather } from './sources';
 
 /** Imagen georreferenciada (satélite, tesela de radar, focos de calor), en metros Mercator. */
 export interface Overlay {
@@ -25,6 +25,7 @@ export interface MapWaypoint {
 export type MapFeature =
   | { kind: 'quake'; item: Quake }
   | { kind: 'hazard'; item: Hazard }
+  | { kind: 'official'; item: OfficialAlert }
   | { kind: 'volcano'; item: Volcano }
   | { kind: 'zone'; item: ZoneWeather }
   | { kind: 'waypoint'; item: MapWaypoint };
@@ -38,6 +39,8 @@ interface Props {
   zoneValue: WeatherMapValue;
   quakes: Quake[] | null;
   hazards: Hazard[] | null;
+  /** Alertas oficiales vigentes (SMN, DMC, INUMET): zonas pintadas por severidad. */
+  official: OfficialAlert[] | null;
   volcanoes: Volcano[] | null;
   waypoints: MapWaypoint[] | null;
   here: { lon: number; lat: number } | null;
@@ -78,6 +81,8 @@ const scaleColor = (c: Record<string, string>, color: ScaleColor | null, fallbac
 
 /** Niveles de GDACS: verde (seguimiento), naranja, rojo. */
 const HAZARD_COLOR: Record<HazardLevel, ScaleColor> = { Green: 3, Orange: 5, Red: 6 };
+/** Severidad CAP de las alertas oficiales: amarillo, naranja, rojo. */
+export const OFFICIAL_COLOR: Record<OfficialSeverity, ScaleColor> = { Unknown: 3, Minor: 4, Moderate: 4, Severe: 5, Extreme: 6 };
 /** Ícono de cada tipo, que se entiende sin leer la leyenda. */
 export const HAZARD_ICON: Record<Hazard['type'], string> = { TC: '🌀', FL: '🌊', DR: '🏜️', WF: '🔥', VO: '🌋' };
 const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
@@ -277,7 +282,12 @@ function hitTest(x: number, y: number, size: Size, view: View, p: Props): MapFea
   p.hazards?.forEach((h) => consider(h.lon, h.lat, { kind: 'hazard', item: h }, 4));
   p.volcanoes?.forEach((v) => consider(v.lon, v.lat, { kind: 'volcano', item: v }));
   p.zones?.forEach((z) => consider(z.lon, z.lat, { kind: 'zone', item: z }));
-  return (best as { f: MapFeature } | null)?.f ?? null;
+  const point = (best as { f: MapFeature } | null)?.f ?? null;
+  if (point || !p.official?.length) return point;
+  // Sin nada puntual cerca: la alerta oficial (la más grave) cuya zona incluye el toque.
+  const { lon, lat } = unproject(x, y, view, size);
+  const inside = p.official.filter((a) => alertCovers(a, lat, lon));
+  return inside.length ? { kind: 'official', item: inside[0]! } : null;
 }
 
 function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: number | null) {
@@ -358,6 +368,31 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
   }
   ctx.globalAlpha = 1;
 
+  // Zonas de las alertas oficiales: relleno suave y borde del color de la severidad (las graves encima).
+  for (const a of [...(p.official ?? [])].reverse()) {
+    const color = c[`s${OFFICIAL_COLOR[a.severity]}`]!;
+    const selectedAlert = p.selected?.kind === 'official' && p.selected.item.key === a.key;
+    ctx.beginPath();
+    for (const area of a.areas) {
+      for (const ring of area.polygons) {
+        ring.forEach(([lat, lon], i) => {
+          const s = proj(lon, lat);
+          if (i === 0) ctx.moveTo(s.x, s.y);
+          else ctx.lineTo(s.x, s.y);
+        });
+        ctx.closePath();
+      }
+    }
+    ctx.globalAlpha = selectedAlert ? 0.4 : 0.22;
+    ctx.fillStyle = color;
+    ctx.fill('evenodd');
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = selectedAlert ? c.accent! : color;
+    ctx.lineWidth = selectedAlert ? 2.5 : 1.2;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
   const labels: { x: number; y: number; w: number; h: number }[] = [];
   const free = (x: number, y: number, w: number, h: number) => {
     if (x < 0 || y < 0 || x + w > size.width || y + h > size.height) return false;
@@ -380,7 +415,7 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
 
   // Lo seleccionado se marca primero, para que su etiqueta no quede tapada.
   const sel = p.selected;
-  if (sel) {
+  if (sel && sel.kind !== 'official') {
     const s = proj(sel.item.lon, sel.item.lat);
     ctx.strokeStyle = c.accent!;
     ctx.lineWidth = 2;

@@ -3769,3 +3769,29 @@ a.module-card:hover {
   color: var(--danger);
   font-weight: 600;
 }
+
+/* Alertas oficiales (SMN, DMC, INUMET): color por severidad CAP. */
+.wmap-swatch-official { background: linear-gradient(90deg, var(--scale-4), var(--scale-5), var(--scale-6)); opacity: 0.7; }
+.alert-row {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.alert-dot {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  vertical-align: baseline;
+  background: var(--scale-3);
+}
+.alert-dot.alert-Minor,
+.alert-dot.alert-Moderate { background: var(--scale-4); }
+.alert-dot.alert-Severe { background: var(--scale-5); }
+.alert-dot.alert-Extreme { background: var(--scale-6); }

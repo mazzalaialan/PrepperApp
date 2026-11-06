@@ -763,7 +763,7 @@
     "loading": "Loading the map…",
     "offline": "Offline: the map, volcanoes, your waypoints and the last downloaded earthquakes and weather are shown.",
     "failed": "Couldn't update: {{sources}}. Showing the latest available.",
-    "source": { "satellite": "satellite", "radar": "radar", "zoneWeather": "weather by area", "earthquakes": "earthquakes", "hazards": "disaster alerts", "lightning": "lightning", "satRain": "estimated rain" },
+    "source": { "satellite": "satellite", "radar": "radar", "zoneWeather": "weather by area", "earthquakes": "earthquakes", "hazards": "disaster alerts", "lightning": "lightning", "satRain": "estimated rain", "official": "official alerts" },
     "layers": "Layers",
     "layer": {
       "satellite": "Satellite (clouds)",
@@ -775,7 +775,8 @@
       "fires": "Hotspots",
       "volcanoes": "Volcanoes",
       "waypoints": "My waypoints",
-      "lightning": "Lightning"
+      "lightning": "Lightning",
+      "official": "Official alerts"
     },
     "needsServer": "Needs your own server (Settings → Connections)",
     "lightningStatus": "{{count}} flashes in the region · updated {{time}}",
@@ -794,6 +795,7 @@
     "radarAt": "Radar {{time}}",
     "satRainAt": "Estimated rain {{time}}",
     "legend": {
+      "official": "Current official alerts from SMN (Argentina), the Chilean Meteorological Directorate and INUMET (Uruguay), with their original text: areas in yellow (minor or moderate), orange (severe) or red (extreme). Tap an area for details",
       "lightning": "⚡ Lightning from the last few minutes (GOES-19 satellite, from your server): yellow circles, with one bolt per group. Rings at 10, 20 and 30 km around you: the alert fires within 30 km.",
       "satellite": "GOES‑19 infrared satellite: colors mark very high, cold clouds — storm clouds (NASA, every 10 min, ~45 min delay)",
       "satRain": "Rain estimated from GOES-19 infrared every 10 min by your server: light blue (1 mm/h) to red (over 40 mm/h). Approximate: it uses cloud-top temperature, so very cold high clouds can show rain that is not falling and rain from low clouds is missed. Where there is radar, radar is more accurate",
@@ -804,6 +806,16 @@
       "hazards": "Disaster alerts (GDACS, UN and European Commission): 🌀 cyclone or hurricane, 🌊 flood, 🏜️ drought, 🔥 wildfire, 🌋 eruption. Green, orange or red background by severity",
       "wind": "Wind by area in {{unit}}; the arrow shows where it blows to"
     },
+    "severity": {"Extreme": "extreme", "Severe": "severe", "Moderate": "moderate", "Minor": "minor", "Unknown": "no level"},
+    "alertValid": "In effect from {{from}} to {{to}}",
+    "alertUntil": "until {{time}}",
+    "alertVerbatim": "Official text from {{sender}}, unchanged. If in doubt, follow their instructions.",
+    "alertHere": "Your location",
+    "alertsHereTitle": "Official alerts where you are",
+    "alertsHereNone_one": "None at your location or waypoints ({{count}} in effect in the region: see the map).",
+    "alertsHereNone_other": "None at your location or waypoints ({{count}} in effect in the region: see the map).",
+    "alertsHereNoPlaces_one": "{{count}} alert in effect in the region. To see if it affects you, turn on \"My waypoints\" or allow location.",
+    "alertsHereNoPlaces_other": "{{count}} alerts in effect in the region. To see if they affect you, turn on \"My waypoints\" or allow location.",
     "hazardType": { "TC": "Tropical cyclone / hurricane", "FL": "Flood", "DR": "Drought", "WF": "Wildfire", "VO": "Volcanic eruption" },
     "hazardLevel": { "Green": "green alert", "Orange": "orange alert", "Red": "red alert" },
     "hazardDates": "From {{from}} to {{to}}",
@@ -1436,8 +1448,8 @@
   "notifications": {
     "serverLocationHint": "The server receives the last location read with the app open (only if you already allowed GPS), rounded to ~1 km, and warns you with the app closed about rain or lightning within 30 km. With the app closed the phone doesn't give GPS to the app: a location older than 24 hours is not used. If you are near a waypoint with alerts, only the waypoint alerts. Turning it off makes the server delete it.",
     "serverLocation": "Use my last known location for rain and lightning alerts",
-    "hazards": "Tell me about nearby earthquakes, wildfires, floods, cyclones and eruptions",
-    "hazardsHint": "At the same places as rain and lightning (waypoints with notices and where you are). USGS earthquakes: magnitude 3.5 within 40 km, 4 within 100 km, 5 within 300 km, 6 within 600 km and 7 or more within 1500 km. Wildfires, floods, cyclones and eruptions from GDACS (UN and European Commission): green alert within 100 km, orange within 500 km and red within 800 km. Each event is notified once (again if it gets worse). These are informational, not official.",
+    "hazards": "Tell me about official alerts and nearby earthquakes, wildfires, floods, cyclones and eruptions",
+    "hazardsHint": "At the same places as rain and lightning (waypoints with notices and where you are). USGS earthquakes: magnitude 3.5 within 40 km, 4 within 100 km, 5 within 300 km, 6 within 600 km and 7 or more within 1500 km. Wildfires, floods, cyclones and eruptions from GDACS (UN and European Commission): green alert within 100 km, orange within 500 km and red within 800 km. Each event is notified once (again if it gets worse). These are informational, not official. Official alerts from SMN, the Chilean Meteorological Directorate and INUMET: when their area includes where you are, a waypoint with notices, a supplies location or your garden (once per alert; again if the level rises), with the agency's text.",
     "updates": "Tell me about important app updates",
     "updatesHint": "Only when a version brings something important, not on every update. The notice carries none of your data.",
     "title": "Notifications",

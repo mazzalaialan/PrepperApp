@@ -43,6 +43,12 @@ const TEXT = {
     levels: { Green: 'verde', Orange: 'naranja', Red: 'roja' },
     hazardInformative: 'Aviso informativo, no oficial: seguí las indicaciones de los organismos oficiales (INPRES, SMN, Protección Civil).',
     hazardStock: (places: string) => `Tenés reserva cerca: ${places}. Si podés, ponela a resguardo.`,
+    official: (source: string, headline: string) => `${source}: ${headline}`,
+    officialWhere: (places: string) => `Incluye ${places}.`,
+    officialHere: 'tu ubicación',
+    officialValid: (from: string, to: string) => `Rige desde ${from} hasta ${to}.`,
+    officialFooter: (sender: string) => `Alerta oficial de ${sender}. Tocá para ver la zona y las indicaciones.`,
+    severities: { Extreme: 'extrema', Severe: 'severa', Moderate: 'moderada', Minor: 'leve', Unknown: '' },
     gardenFrost: (when: string, min: number) => `Helada ${when}: mínima de ${min} °C`,
     gardenFrostBody: (crops: string, place: string | null) => `Tapá ${crops}${place ? ` (${place})` : ''}.`,
     gardenTonight: 'esta noche',
@@ -81,6 +87,12 @@ const TEXT = {
     levels: { Green: 'green', Orange: 'orange', Red: 'red' },
     hazardInformative: 'Informational, not official: follow the instructions of the official agencies.',
     hazardStock: (places: string) => `You have supplies nearby: ${places}. If you can, move them to safety.`,
+    official: (source: string, headline: string) => `${source}: ${headline}`,
+    officialWhere: (places: string) => `Includes ${places}.`,
+    officialHere: 'your location',
+    officialValid: (from: string, to: string) => `In effect from ${from} to ${to}.`,
+    officialFooter: (sender: string) => `Official alert from ${sender}. Tap to see the area and instructions.`,
+    severities: { Extreme: 'extreme', Severe: 'severe', Moderate: 'moderate', Minor: 'minor', Unknown: '' },
     gardenFrost: (when: string, min: number) => `Frost ${when}: low of ${min} °C`,
     gardenFrostBody: (crops: string, place: string | null) => `Cover ${crops}${place ? ` (${place})` : ''}.`,
     gardenTonight: 'tonight',
@@ -193,6 +205,40 @@ export function hazardNotification(h: HazardPush, lang: Lang, now = Date.now()):
     title: tx.hazard(tx.hazardKinds[h.kind], km, dir, place),
     body: tx.hazardBody(h.name, tx.levels[h.level ?? 'Green']) + fix + `\n${tx.hazardInformative}`,
   };
+}
+
+/** Alerta oficial (SMN, DMC, INUMET) que manda el servidor. ⚠ Mismo tipo que `official` en server/src/push.ts. */
+export interface OfficialPush {
+  key: string;
+  source: 'SMN' | 'DMC' | 'INUMET';
+  senderName: string;
+  event: string;
+  headline: string;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+  onset: string;
+  expires: string;
+  here: boolean;
+  fixAt: string | null;
+  places: string[];
+  stock: string[];
+  url: string;
+}
+
+export function officialNotification(o: OfficialPush, lang: Lang, now = Date.now()): { title: string; body: string } {
+  const tx = TEXT[lang];
+  const when = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const where = [...(o.here ? [tx.officialHere] : []), ...o.places];
+  const sev = tx.severities[o.severity];
+  const title = tx.official(o.source, o.headline) + (sev ? ` (${sev})` : '');
+  const body = [
+    where.length ? tx.officialWhere(where.join(', ')) : '',
+    tx.officialValid(when.format(new Date(o.onset)), when.format(new Date(o.expires))),
+    o.stock.length ? tx.hazardStock(o.stock.join(', ')) : '',
+    tx.officialFooter(o.senderName || o.source),
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return { title, body: body + (o.here ? lastFixNote(o.fixAt, lang, now) : '') };
 }
 
 export function lightningNotification(l: LightningPush, lang: Lang, now = Date.now()): { title: string; body: string } {

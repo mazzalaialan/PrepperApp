@@ -15,6 +15,10 @@ import { runScheduler } from './scheduler.ts';
 import { fetchGdacs, fetchQuakes, type HazardEvent } from './hazards/sources.ts';
 import { HAZARD_DEFAULTS, runHazardWatch } from './hazards/watch.ts';
 import { openMeteoGarden, runGardenWatch } from './garden/watch.ts';
+import { createOfficialStore } from './official/store.ts';
+import { createOfficialCache, FEEDS, fetchOfficial } from './official/sources.ts';
+import { OFFICIAL_DEFAULTS, runOfficialWatch } from './official/watch.ts';
+import type { OfficialAlert, OfficialSource } from './official/cap.ts';
 
 const config = loadConfig();
 const db = openDb(config.dataDir);
@@ -23,6 +27,8 @@ const lightningStore = createLightningStore();
 // `lightningTick` se define más abajo; la ruta solo lo despierta.
 const observedRain = createObservedRainStatus();
 const rainMapStore = createRainMapStore();
+const officialStore = createOfficialStore();
+const officialCache = createOfficialCache();
 const app = await buildApp(
   config,
   db,
@@ -31,6 +37,8 @@ const app = await buildApp(
   { store: lightningStore, wake: () => void lightningTick() },
   observedRain,
   { store: rainMapStore, wake: () => void rainMapTick() },
+  undefined,
+  officialStore,
 );
 
 async function tick() {
@@ -145,6 +153,38 @@ async function hazardTick() {
 }
 const hazardTimer = setInterval(() => void hazardTick(), 5 * 60_000);
 
+// Alertas oficiales (SMN, DMC, INUMET): cada 10 minutos, para el mapa y para avisar. Se bajan solo los CAP nuevos.
+let officialBusy = false;
+async function officialTick() {
+  if (!config.hazardsEnabled || officialBusy) return;
+  officialBusy = true;
+  try {
+    const all: OfficialAlert[] = [];
+    const failed: string[] = [];
+    for (const source of Object.keys(FEEDS) as OfficialSource[]) {
+      try {
+        all.push(...(await fetchOfficial(source, officialCache)));
+      } catch (err) {
+        failed.push(source);
+        // Si falla una fuente, quedan sus alertas de la vuelta anterior (todavía vigentes).
+        all.push(...officialStore.alerts.filter((a) => a.source === source && Date.parse(a.expires) > Date.now()));
+        app.log.warn({ err: String(err), source }, 'no se pudieron leer las alertas oficiales');
+      }
+    }
+    officialStore.alerts = all;
+    officialStore.failed = failed;
+    officialStore.updatedAt = Date.now();
+    const { sent, removed } = await runOfficialWatch(db, push, all, new Date(), { ...OFFICIAL_DEFAULTS, hereMaxAgeMs: config.rainHereMaxAgeMs });
+    if (sent || removed) app.log.info({ sent, removed }, 'avisos de alertas oficiales enviados');
+  } catch (err) {
+    app.log.error(err, 'fallaron las alertas oficiales');
+  } finally {
+    officialBusy = false;
+  }
+}
+const officialTimer = setInterval(() => void officialTick(), 10 * 60_000);
+void officialTick();
+
 const gardenWeather = openMeteoGarden(config.weatherUrl);
 async function gardenTick() {
   try {
@@ -175,6 +215,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     clearInterval(observedRainTimer);
     clearInterval(lightningTimer);
     clearInterval(hazardTimer);
+    clearInterval(officialTimer);
     clearInterval(gardenTimer);
     await app.close();
     db.close();

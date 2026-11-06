@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="rss.xsl" type="text/xsl" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+      <title>Sistema de Alerta Temprana</title>
+      <link>https://archivos.meteochile.gob.cl/portaldmc/rss/rss.php</link>
+      <language>es-CL</language>
+      <copyright>public domain</copyright>
+      <pubDate>Thu, 05 Nov 2026 12:25:01 -0300</pubDate>
+      <description>Avisos, Alertas y Alarmas publicados por la Dirección Meteorológica de Chile</description>
+      <atom:link href="https://archivos.meteochile.gob.cl/portaldmc/rss/rss.php" rel="self" type="application/rss+xml" />
+      <generator>SIDAT (appweb)</generator>
+      <item>
+         <title>Aviso A608/2026: Probables Tormentas Eléctricas en zonas de las regiones de La Araucanía, Los Ríos y Los Lagos</title>
+         <link>https://archivos.meteochile.gob.cl/portaldmc/rss/meteochile_A608_2026_cap.xml</link>
+         <pubDate>Thu, 05 Nov 2026 12:19:17 -0300</pubDate>
+         <category>Aviso</category>
+         <author>meteochile@meteochile.cl (DMC)</author>
+         <description>Probables Tormentas Eléctricas en zonas de las regiones de La Araucanía, Los Ríos y Los Lagos Probabilidad de fuertes rachas de vientos locales desde la tarde del jueves 05 de noviembre del 2026 hasta la noche del jueves 05 de noviembre del 2026. Afecta a: La Araucanía (Precordillera), Los Ríos (Valle, Precordillera), Los Lagos (Valle, Precordillera, Chiloé, Litoral Interior)</description>
+         <guid>https://archivos.meteochile.gob.cl/portaldmc/AAA/doc/evento_A608_2026.php</guid>
+      </item>
+      <item>
+         <title>Aviso A605-2/2026 [Actualización]: Altas Temperaturas en zonas desde la región de Atacama a la región de La Araucanía</title>
+         <link>https://archivos.meteochile.gob.cl/portaldmc/rss/meteochile_A605-2_2026_cap.xml</link>
+         <pubDate>Thu, 05 Nov 2026 11:58:36 -0300</pubDate>
+         <category>Aviso</category>
+         <author>meteochile@meteochile.cl (DMC)</author>
+         <description>Altas Temperaturas en zonas desde la región de Atacama a la región de La Araucanía desde la tarde del sábado 07 de noviembre del 2026 hasta la tarde del domingo 08 de noviembre del 2026. Afecta a: Atacama (Cordillera Costa y sectores de valles, Pampa, Precordillera), Coquimbo (Litoral, Cordillera Costa, Precordillera y valles precordilleranos), Valparaíso (Litoral, Cordillera Costa, Precordillera y valles precordilleranos), Metropolitana (Cordillera Costa, Valle, Precordillera), O'Higgins (Cordillera Costa, Valle, Precordillera), Maule (Cordillera Costa, Valle, Precordillera), Ñuble (Cordillera Costa, Valle, Precordillera), Biobío (Cordillera Costa, Valle, Precordillera), La Araucanía (Valle, Precordillera)</description>
+         <guid>https://archivos.meteochile.gob.cl/portaldmc/AAA/doc/evento_A605-2_2026.php</guid>
+      </item>
+      <item>
+         <title>Aviso A607/2026: Probables Tormentas Eléctricas en cordillera de las regiones de Arica y Parinacota y Tarapacá</title>
+         <link>https://archivos.meteochile.gob.cl/portaldmc/rss/meteochile_A607_2026_cap.xml</link>
+         <pubDate>Thu, 05 Nov 2026 11:51:42 -0300</pubDate>
+         <category>Aviso</category>
+         <author>meteochile@meteochile.cl (DMC)</author>
+         <description>Probables Tormentas Eléctricas en cordillera de las regiones de Arica y Parinacota y Tarapacá Preferentemente durante la tarde-noche, con precipitaciones aisladas desde la tarde del viernes 06 de noviembre del 2026 hasta la noche del lunes 09 de noviembre del 2026. Afecta a: Arica y Parinacota (Cordillera), Tarapacá (Cordillera)</description>
+         <guid>https://archivos.meteochile.gob.cl/portaldmc/AAA/doc/evento_A607_2026.php</guid>
+      </item>
+      <item>
+         <title>Aviso A599-1/2026 [Actualización]: Viento Normal a Moderado en Litoral provincia de Huasco - Región de Atacama</title>
+         <link>https://archivos.meteochile.gob.cl/portaldmc/rss/meteochile_A599-1_2026_cap.xml</link>
+         <pubDate>Thu, 05 Nov 2026 11:53:13 -0300</pubDate>
+         <category>Aviso</category>
+         <author>meteochile@meteochile.cl (DMC)</author>
+         <description>Viento Normal a Moderado en Litoral provincia de Huasco - Región de Atacama Probabilidad de tormentas de arena desde la tarde del jueves 05 de noviembre del 2026 hasta la noche del sábado 07 de noviembre del 2026. Afecta a: Litoral provincia de Huasco - Región de Atacama</description>
+         <guid>https://archivos.meteochile.gob.cl/portaldmc/AAA/doc/evento_A599-1_2026.php</guid>
+      </item>
+      <item>
+         <title>Aviso A601-2/2026 [Actualización]: Viento Normal a Moderado en zonas de las regiones de Coquimbo, Valparaíso, O'Higgins, Maule, Ñuble y Biobío</title>
+         <link>https://archivos.meteochile.gob.cl/portaldmc/rss/meteochile_A601-2_2026_cap.xml</link>
+         <pubDate>Thu, 05 Nov 2026 11:53:51 -0300</pubDate>
+         <category>Aviso</category>
+         <author>meteochile@meteochile.cl (DMC)</author>
+         <description>Viento Normal a Moderado en zonas de las regiones de Coquimbo, Valparaíso, O'Higgins, Maule, Ñuble y Biobío desde la tarde del jueves 05 de noviembre del 2026 hasta la tarde del sábado 07 de noviembre del 2026. Afecta a: Coquimbo (Litoral), Valparaíso (Litoral), O'Higgins (Litoral), Maule (Litoral), Ñuble (Litoral, Cordillera Costa, Valle), Biobío (Litoral, Cordillera Costa, Valle)</description>
+         <guid>https://archivos.meteochile.gob.cl/portaldmc/AAA/doc/evento_A601-2_2026.php</guid>
+      </item>
+      <item>
+         <title>Aviso A606/2026: Viento Normal a Moderado en cordillera de las regiones de Coquimbo, Valparaíso y Metropolitana</title>
+         <link>https://archivos.meteochile.gob.cl/portaldmc/rss/meteochile_A606_2026_cap.xml</link>
+         <pubDate>Thu, 05 Nov 2026 11:43:51 -0300</pubDate>
+         <category>Aviso</category>
+         <author>meteochile@meteochile.cl (DMC)</author>
+         <description>Viento Normal a Moderado en cordillera de las regiones de Coquimbo, Valparaíso y Metropolitana desde la madrugada del viernes 06 de noviembre del 2026 hasta la noche del viernes 06 de noviembre del 2026. Afecta a: Coquimbo (Cordillera), Valparaíso (Cordillera), Metropolitana (Cordillera)</description>
+         <guid>https://archivos.meteochile.gob.cl/portaldmc/AAA/doc/evento_A606_2026.php</guid>
+      </item>
+</channel>
+</rss>

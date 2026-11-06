@@ -142,6 +142,8 @@ export interface WeatherMapLayers {
   satRain: boolean;
   /** Rayos de los últimos minutos (GOES-19, desde el servidor propio) y anillos de 10, 20 y 30 km alrededor mío. */
   lightning: boolean;
+  /** Alertas oficiales de los servicios meteorológicos (SMN, DMC, INUMET), desde el servidor propio. */
+  official: boolean;
 }
 
 export type WeatherMapValue = 'temp' | 'rain' | 'wind';
@@ -192,7 +194,7 @@ export const DEFAULT_SETTINGS: Settings = {
   duskPlace: null,
   starmapRed: true,
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
-  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
+  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, official: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
   weatherMapValue: 'temp',
   mapSource: 'auto',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, windLoad: true, terrain3d: false },

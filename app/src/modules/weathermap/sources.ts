@@ -210,6 +210,51 @@ export async function fetchRainMap(serverUrl: string): Promise<RainMap> {
   return { at: data.at ?? null, bounds: data.bounds, image: data.image ? `${base}${data.image}` : null };
 }
 
+// ---------- Alertas oficiales (SMN, DMC, INUMET; desde el servidor propio) ----------
+
+export type OfficialSeverity = 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+
+/** Alerta de un servicio meteorológico, tal como la publica (CAP). Ver server/src/official/. */
+export interface OfficialAlert {
+  key: string;
+  source: 'SMN' | 'DMC' | 'INUMET';
+  senderName: string;
+  event: string;
+  headline: string;
+  description: string;
+  instruction: string;
+  severity: OfficialSeverity;
+  onset: string;
+  expires: string;
+  web: string;
+  /** Zonas: anillos [lat, lon]. */
+  areas: { desc: string; polygons: [number, number][][] }[];
+}
+
+export async function fetchOfficialAlerts(serverUrl: string): Promise<OfficialAlert[]> {
+  const data = await getJson<{ alerts?: OfficialAlert[] }>(`${serverUrl.replace(/\/+$/, '')}/api/alerts`, 'official');
+  return (data.alerts ?? []).filter((a) => a && typeof a.key === 'string' && Array.isArray(a.areas));
+}
+
+function inRing(ring: [number, number][], lat: number, lon: number): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [yi, xi] = ring[i]!;
+    const [yj, xj] = ring[j]!;
+    if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** ¿La zona de la alerta incluye el punto? */
+export const alertCovers = (a: OfficialAlert, lat: number, lon: number) => a.areas.some((area) => area.polygons.some((p) => inRing(p, lat, lon)));
+
+/** Vigentes ahora o por empezar (las vencidas, no). Las más graves primero. */
+export function liveAlerts(items: OfficialAlert[], now = Date.now()): OfficialAlert[] {
+  const rank = { Extreme: 4, Severe: 3, Moderate: 2, Minor: 1, Unknown: 0 };
+  return items.filter((a) => Date.parse(a.expires) > now).sort((a, b) => rank[b.severity] - rank[a.severity] || Date.parse(a.onset) - Date.parse(b.onset));
+}
+
 // ---------- Alertas de desastres (GDACS) ----------
 
 /** Ciclones tropicales, inundaciones, sequías, incendios forestales y erupciones (los sismos ya vienen de USGS). */
@@ -349,6 +394,7 @@ export async function fetchZoneWeather(base: string, points: ZonePoint[]): Promi
 
 export interface MapCache {
   quakes?: { fetchedAt: string; items: Quake[] };
+  official?: { fetchedAt: string; items: OfficialAlert[] };
   hazards?: { fetchedAt: string; items: Hazard[] };
   zones?: { fetchedAt: string; items: ZoneWeather[] };
 }

@@ -98,6 +98,17 @@ const MIGRATIONS = [
      lon REAL NOT NULL,
      PRIMARY KEY (device_id, place_id)
    );`,
+  // Alertas oficiales (SMN, DMC, INUMET) ya avisadas a cada dispositivo, por organismo y fenómeno:
+  // una renovación o actualización con otro identificador no se vuelve a avisar, salvo que empeore.
+  `CREATE TABLE official_notices (
+     device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+     family TEXT NOT NULL,
+     alert_key TEXT NOT NULL,
+     severity INTEGER NOT NULL,
+     expires_at INTEGER NOT NULL,
+     notified_at INTEGER NOT NULL,
+     PRIMARY KEY (device_id, family)
+   );`,
 ];
 
 export type Db = DatabaseSync;

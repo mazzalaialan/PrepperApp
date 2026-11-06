@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <?xml-stylesheet type="text/xsl" href="rss-style.xsl" ?>
+        <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+        <channel>
+            <atom:link rel="hub" href="//alert-hub.appspot.com" />
+            <atom:link rel="self" href="https://www.inumet.gub.uy/reportes/riesgo/rss.xml" type="application/rss+xml" />
+            <title>Advertencias INUMET</title>
+            <link>https://www.inumet.gub.uy/alerta</link>
+            <description>Advertencias meteorologicas para el territorio Uruguayo</description>
+            <language>es-ES</language>      
+            <copyright>public domain</copyright>   
+            <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+            <image>
+                <title>Advertencias INUMET</title>
+                <url>https://www.inumet.gub.uy/themes/custom/inumet/images/logo-inumet.png</url>
+                <link>https://www.inumet.gub.uy</link>
+            </image>
+            <pubDate>Wed, 04 Nov 2026 03:30:00 +0000</pubDate><item>
+                    <title>Tormentas puntualmente fuertes</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_21_32_35.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea7d234f548</guid>
+                    <pubDate>Wed, 04 Nov 2026 00:30:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas fuertes y puntualmente severas</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_21_32_35.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea7d2348e2b</guid>
+                    <pubDate>Wed, 04 Nov 2026 00:30:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas puntualmente fuertes</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_19_14_20.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea5cbc8045a</guid>
+                    <pubDate>Tue, 03 Nov 2026 22:15:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas fuertes y puntualmente severas</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_19_14_20.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea5cbc7c392</guid>
+                    <pubDate>Tue, 03 Nov 2026 22:15:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas puntualmente fuertes</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_17_28_13.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea43dda4a6f</guid>
+                    <pubDate>Tue, 03 Nov 2026 20:25:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas fuertes y puntualmente severas</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_17_28_13.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea43dd9c5d9</guid>
+                    <pubDate>Tue, 03 Nov 2026 20:25:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas puntualmente fuertes</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_16_25_23.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea3523cb89f</guid>
+                    <pubDate>Tue, 03 Nov 2026 19:25:00 +0000</pubDate>
+                </item><item>
+                    <title>Tormentas fuertes y puntualmente severas</title>
+                    <link>https://www.inumet.gub.uy/reportes/riesgo/cap_2026_11_03_16_25_23.xml</link>
+                    <description>Advertencia meteorológica</description>
+                    <author>f.pereyra@inumet.gub.uy (Francisco Pereyra)</author>
+                    <category>Met</category>
+                    <guid isPermaLink="false">cap.6aea3523c6130</guid>
+                    <pubDate>Tue, 03 Nov 2026 19:25:00 +0000</pubDate>
+                </item></channel>
+        </rss>

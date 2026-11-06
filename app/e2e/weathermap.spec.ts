@@ -74,6 +74,23 @@ async function mockSources(page: Page) {
     [ROSARIO.lat, ROSARIO.lon, 30],
     [ROSARIO.lat + 0.02, ROSARIO.lon + 0.02, 50],
   ];
+  // Alertas oficiales (servidor propio): tormentas del SMN sobre Buenos Aires y un aviso de Chile en la Araucanía.
+  const square = (lat: number, lon: number, d: number) => [[lat - d, lon - d], [lat - d, lon + d], [lat + d, lon + d], [lat + d, lon - d], [lat - d, lon - d]];
+  const hours = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString();
+  await ctx.route('**/api/alerts', (route) =>
+    route.fulfill({
+      json: {
+        updatedAt: new Date().toISOString(),
+        failed: [],
+        alerts: [
+          { key: 'SMN:1:0', source: 'SMN', senderName: 'Servicio Meteorologico Nacional', event: 'Tormentas', headline: 'Tormentas', description: 'El área será afectada por tormentas de variada intensidad.', instruction: '1- Evitá salir.', severity: 'Moderate', onset: hours(-1), expires: hours(6), web: 'https://www.smn.gob.ar/alertas', areas: [{ desc: 'Ciudad de Buenos Aires', polygons: [square(-34.6, -58.4, 0.5)] }] },
+          { key: 'DMC:1:0', source: 'DMC', senderName: 'Dirección Meteorológica de Chile', event: 'Viento', headline: 'Viento fuerte en la Araucanía', description: 'Rachas de 70 km/h.', instruction: '', severity: 'Minor', onset: hours(-2), expires: hours(10), web: 'https://www.meteochile.gob.cl', areas: [{ desc: 'Araucanía: Cordillera', polygons: [square(-39.5, -71.6, 0.6)] }] },
+          { key: 'SMN:viejo:0', source: 'SMN', senderName: 'Servicio Meteorologico Nacional', event: 'Viento', headline: 'Vencida', description: '', instruction: '', severity: 'Severe', onset: hours(-30), expires: hours(-2), web: '', areas: [{ desc: '', polygons: [square(-34.6, -58.4, 0.5)] }] },
+        ],
+      },
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    }),
+  );
   await ctx.route('**/api/lightning', (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), flashes: lightningBatch }, headers: { 'Access-Control-Allow-Origin': '*' } }));
   await ctx.route('https://api.open-meteo.com/v1/forecast**', (route) => {
     const n = new URL(route.request().url()).searchParams.get('latitude')!.split(',').length;
@@ -208,5 +225,39 @@ test('mapa de tiempo: capas, animación, tocar un sismo o una alerta, y sin cone
   await page.goto('/#/weather/map');
   await expect(page.getByText('Sin conexión: se ven el mapa')).toBeVisible();
   await expect(page.getByTestId('weather-map')).toBeVisible();
+  await context.setOffline(false);
+});
+
+test('alertas oficiales: zonas en el mapa, las de donde estoy y el texto del organismo, también sin conexión', async ({ page, context }) => {
+  await mockSources(page);
+  await setup(page);
+  await page.goto('/#/weather/map');
+  await expect(page.getByRole('button', { name: 'Alertas oficiales' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText(/Alertas oficiales vigentes del SMN/)).toBeVisible();
+  // Donde estoy (Buenos Aires): la del SMN; la vencida no aparece.
+  const here = page.getByTestId('alerts-here');
+  await expect(here).toContainText('Tormentas');
+  await expect(here).toContainText('Servicio Meteorologico Nacional · moderada');
+  await expect(here).toContainText('Tu ubicación');
+  await expect(here).not.toContainText('Vencida');
+  await here.getByRole('button', { name: /Tormentas/ }).click();
+  const card = page.getByTestId('map-feature');
+  await expect(card).toContainText('Rige desde');
+  await expect(card).toContainText('1- Evitá salir.');
+  await expect(card).toContainText('Texto oficial de Servicio Meteorologico Nacional, sin cambios');
+  await expect(card.getByRole('link', { name: 'Más información' })).toHaveAttribute('href', 'https://www.smn.gob.ar/alertas');
+  // Tocar la zona de Chile en el mapa (sin volcanes ni clima por zona: lo puntual tiene prioridad sobre las zonas).
+  await page.getByRole('button', { name: 'Satélite (nubes)' }).click();
+  await page.getByRole('button', { name: 'Volcanes' }).click();
+  await page.getByRole('button', { name: 'Clima por zona' }).click();
+  await page.waitForTimeout(700);
+  await tap(page, -71.6, -39.5);
+  await expect(card).toContainText('Viento fuerte en la Araucanía');
+  await expect(card).toContainText('Dirección Meteorológica de Chile · leve');
+  // Sin conexión: quedan las guardadas.
+  await context.setOffline(true);
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/map');
+  await expect(page.getByTestId('alerts-here')).toContainText('Tormentas');
   await context.setOffline(false);
 });
