@@ -65,7 +65,7 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const distance = fix ? distanceMeters(fix, target) : null;
   const trueBearing = fix ? bearingDeg(fix, target) : null;
   const arrived = distance !== null && fix !== null && distance <= Math.max(ARRIVAL_M, fix.accuracy);
-  // Rumbo al punto en la referencia de la brújula (verdadera o magnética).
+  // Rumbo al punto en la referencia de la brújula (geográfica o magnética).
   const shownBearing =
     trueBearing === null ? null : heading?.reference === 'magnetic' && heading.declination !== null ? normalizeDeg(trueBearing - heading.declination) : trueBearing;
   const turn = heading?.trueHeading != null && trueBearing !== null ? angleDiff(heading.trueHeading, trueBearing) : null;

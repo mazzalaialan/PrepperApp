@@ -290,7 +290,7 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   await page.getByTestId('drawing-rotate').click();
   await expect(page.getByTestId('drawing-rotate')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('follow-north')).toBeVisible();
-  // Rumbo verdadero: 90° más la declinación magnética de Bariloche.
+  // Rumbo geográfico: 90° más la declinación magnética de Bariloche.
   await expect
     .poll(async () => {
       const m = /rotate\((-?[\d.]+) 150 150\)/.exec((await page.getByTestId('follow-drawing').getAttribute('transform')) ?? '');

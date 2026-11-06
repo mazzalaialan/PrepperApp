@@ -140,7 +140,7 @@ export async function summarizePath(pts: LatLon[], load: HeightLoader = defaultL
 
 export interface TargetInfo {
   distance: number;
-  /** Rumbo verdadero desde el origen. */
+  /** Rumbo geográfico desde el origen. */
   bearing: number;
   /** Altura del punto y del origen (null: sin datos). */
   targetAlt: number | null;

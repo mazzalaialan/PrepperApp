@@ -252,7 +252,7 @@ function MiniMap({
   doneM: number;
   /** Lo grabado, en [lon, lat]. */
   recorded: [number, number][][] | null;
-  /** Rumbo verdadero hacia donde mirás (brújula), o null. */
+  /** Rumbo geográfico hacia donde mirás (brújula), o null. */
   heading: number | null;
   /** Girar el dibujo con la brújula: lo que tenés adelante queda arriba. */
   rotate: boolean;

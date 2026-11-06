@@ -65,7 +65,7 @@ describe('cámara del celular', () => {
     close(cam.right, [1, 0, 0]);
   });
 
-  it('con declinación 10° E, el norte magnético está a 10° del verdadero', () => {
+  it('con declinación 10° E, el norte magnético está a 10° del geográfico', () => {
     expect(vectorToHorizontal(cameraFromDevice(0, 90, 0, 10, 0, 60).forward).az).toBeCloseTo(10);
   });
 

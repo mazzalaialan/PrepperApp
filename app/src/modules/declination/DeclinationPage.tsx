@@ -21,7 +21,7 @@ const num = (s: string) => {
   return s.trim() !== '' && Number.isFinite(n) ? n : null;
 };
 
-/** Dibujo: norte verdadero arriba y la aguja (norte magnético) girada por la declinación. */
+/** Dibujo: norte geográfico arriba y la aguja (norte magnético) girada por la declinación. */
 function DeclinationDial({ value }: { value: number }) {
   const { t } = useTranslation();
   const r = 80;

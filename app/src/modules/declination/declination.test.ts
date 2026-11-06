@@ -14,7 +14,7 @@ describe('declinómetro', () => {
     expect(declinationInfo(-34.6, -58.4, 0, new Date('2032-01-01T00:00:00Z')).valid).toBe(false);
   });
 
-  it('convierte rumbos: Este se suma de magnético a verdadero, Oeste se resta', () => {
+  it('convierte rumbos: Este se suma de magnético a geográfico, Oeste se resta', () => {
     expect(magneticToTrue(100, 5)).toBe(105);
     expect(magneticToTrue(100, -8)).toBe(92);
     expect(trueToMagnetic(92, -8)).toBe(100);

@@ -23,7 +23,7 @@ export interface Settings {
   notificationsEnabled: boolean;
   /** Hora local (0–23) a partir de la cual el servidor envía el aviso del día. */
   notifyHour: number;
-  /** Referencia de la brújula: norte verdadero (corrige la declinación) o magnético. */
+  /** Referencia de la brújula: norte geográfico (corrige la declinación) o magnético. */
   northReference: NorthReference;
   /**
    * Lugar para sol, luna y clima: un waypoint guardado (solo su id; las

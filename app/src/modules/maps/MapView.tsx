@@ -49,7 +49,7 @@ interface Props {
   flyTo: (ViewState & { key: number }) | null;
   /** Vista que sigue tu posición (y gira con el rumbo, si hay) o libre. */
   follow?: boolean;
-  /** Rumbo verdadero hacia donde mirás, para girar el mapa al seguirte. */
+  /** Rumbo geográfico hacia donde mirás, para girar el mapa al seguirte. */
   heading?: number | null;
   /** Moviste el mapa con la mano: se deja de seguir. */
   onFollowBreak?: () => void;

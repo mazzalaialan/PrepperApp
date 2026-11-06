@@ -4,7 +4,7 @@ import { normalizeDeg } from '@/core/geo/geo';
 /**
  * Rumbo a partir de `deviceorientationabsolute` (W3C: R = Rz(α)·Rx(β)·Ry(γ),
  * marco terrestre x = este, y = norte, z = arriba). En Android el norte de ese
- * marco es el magnético: el rumbo verdadero se obtiene sumando la declinación.
+ * marco es el magnético: el rumbo geográfico se obtiene sumando la declinación.
  */
 
 const rad = (d: number) => (d * Math.PI) / 180;

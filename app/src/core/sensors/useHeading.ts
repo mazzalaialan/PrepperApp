@@ -6,9 +6,9 @@ import { declinationAt, type HoldMode } from './heading';
 import { useOrientation } from './useOrientation';
 
 export interface Heading {
-  /** Rumbo en la referencia que se muestra (verdadero si hay declinación, si no magnético). */
+  /** Rumbo en la referencia que se muestra (geográfico si hay declinación, si no magnético). */
   heading: number;
-  /** Rumbo verdadero, para comparar con rumbos geográficos (waypoints). `null` sin ubicación. */
+  /** Rumbo geográfico, para comparar con rumbos geográficos (waypoints). `null` sin ubicación. */
   trueHeading: number | null;
   /** Declinación usada (este positivo), o `null` si no hay ubicación para calcularla. */
   declination: number | null;

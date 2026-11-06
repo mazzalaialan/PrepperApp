@@ -25,7 +25,7 @@ export function distanceMeters(a: LatLon, b: LatLon): number {
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/** Rumbo verdadero inicial de `a` hacia `b`, en grados [0, 360). */
+/** Rumbo geográfico inicial de `a` hacia `b`, en grados [0, 360). */
 export function bearingDeg(a: LatLon, b: LatLon): number {
   const φ1 = rad(a.lat);
   const φ2 = rad(b.lat);

@@ -5,8 +5,8 @@ import { declinationAt } from '@/core/sensors/heading';
  * Declinómetro: declinación magnética de un lugar (modelo WMM, sin conexión),
  * su cambio anual, conversión de rumbos y la cuenta para un mapa de papel viejo.
  * Convención: declinación Este positiva, Oeste negativa.
- *   verdadero = magnético + declinación
- *   magnético = verdadero − declinación
+ *   geográfico = magnético + declinación
+ *   magnético = geográfico − declinación
  */
 
 export { MODEL_EPOCH, MODEL_VALID_UNTIL };

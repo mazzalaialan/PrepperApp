@@ -12,7 +12,7 @@ const rad = (d: number) => (d * Math.PI) / 180;
 const deg = (r: number) => (r * 180) / Math.PI;
 
 export interface Horizontal {
-  /** Acimut verdadero, grados desde el norte hacia el este. */
+  /** Acimut geográfico, grados desde el norte hacia el este. */
   az: number;
   /** Altura sobre el horizonte, grados. */
   alt: number;
@@ -131,7 +131,7 @@ export function cameraFromDevice(alpha: number, beta: number, gamma: number, dec
   const xAxis: Vec3 = [cA * cG - sA * sB * sG, sA * cG + cA * sB * sG, -cB * sG];
   const yAxis: Vec3 = [-sA * cB, cA * cB, sB];
   const zAxis: Vec3 = [cA * sG + sA * sB * cG, sA * sG - cA * sB * cG, cB * cG];
-  // Magnético → verdadero: el acimut verdadero es el magnético más la declinación.
+  // Magnético → geográfico: el acimut geográfico es el magnético más la declinación.
   const d = rad(declination);
   const toTrue = (v: Vec3): Vec3 => [v[0] * Math.cos(d) + v[1] * Math.sin(d), -v[0] * Math.sin(d) + v[1] * Math.cos(d), v[2]];
   const [x, y, z] = [toTrue(xAxis), toTrue(yAxis), toTrue(zAxis)];

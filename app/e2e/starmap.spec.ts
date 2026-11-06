@@ -115,7 +115,7 @@ test('mapa estelar: apuntar al cielo con la brújula del celular', async ({ page
   await page.getByLabel('Fecha y hora').fill('2026-05-15T22:00');
   await page.getByRole('button', { name: 'Apuntar al cielo' }).click();
   await expect(page.getByTestId('sky-hint')).toHaveText(/Levantá el celular hacia el cielo/);
-  // Mirando al sur verdadero (~180°), 20° por encima del horizonte.
+  // Mirando al sur geográfico (~180°), 20° por encima del horizonte.
   await expect(page.getByTestId('sky-pointing')).toHaveText(/^Mirando a 1(79|80|81)° \(S\), 20° sobre el horizonte$/);
   await page.waitForTimeout(500);
   expect(await litPixels(page)).toBeGreaterThan(200);
