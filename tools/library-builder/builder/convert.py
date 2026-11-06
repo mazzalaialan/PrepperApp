@@ -167,7 +167,10 @@ def convert(entries: list[Entry], src: str, out: str, categories: list[str], all
         # Un salteado (OCR para después) o con error no está hecho.
         return st.get("key") == f"{e.md5}|{e.title}|{e.license}|{e.kind}" and not st.get("error") and not st.get("skipped")
 
-    pending = [e for e in wanted if not done(e) and (ocr or e.kind != "pdf-ocr")]
+    # Libros para rehacer aunque ya estén (un arreglo del conversor): ids en redo.txt, uno por línea.
+    redo_path = os.path.join(out, "redo.txt")
+    redo = {l.strip() for l in open(redo_path)} - {""} if os.path.exists(redo_path) else set()
+    pending = [e for e in wanted if (e.id in redo or not done(e)) and (ocr or e.kind != "pdf-ocr")]
     # Los que ya fallaron, al final: no frenan a los demás en cada tanda.
     pending.sort(key=lambda e: bool(status.get(e.id, {}).get("error")))
     if limit is not None:
@@ -185,6 +188,10 @@ def convert(entries: list[Entry], src: str, out: str, categories: list[str], all
         res["seconds"] = round(time.time() - t0, 1)
         status[e.id] = res
         json.dump(status, open(status_path, "w"), ensure_ascii=False, indent=1)
+        if e.id in redo and "error" not in res:
+            redo.discard(e.id)
+            left = [l.strip() for l in open(redo_path) if l.strip() and l.strip() != e.id] if os.path.exists(redo_path) else []
+            open(redo_path, "w").write("".join(f"{x}\n" for x in left))
         flag = "ERROR " + res["error"] if "error" in res else res.get("skipped") or f"{res['chapters']} cap, {res['images']} img, {res['bytes_out'] // 1024} KB"
         print(f"[{n}/{len(pending)}] {e.title[:60]} — {flag} ({res['seconds']} s)", flush=True)
         if "error" not in res and not res.get("skipped"):

@@ -44,6 +44,8 @@ REPEAT = 0.3
 # Dibujos vectoriales: cuántos trazos hacen falta para que valga la pena recortarlos.
 MIN_DRAWINGS = 12
 MIN_DRAWING_AREA = 0.04  # del área de la página
+# Si el texto ocupa más que esto de una zona de trazos, no es un dibujo (son líneas alrededor del texto).
+MAX_TEXT_IN_DRAWING = 0.35
 DRAWING_DPI = 150
 
 
@@ -83,8 +85,13 @@ def _body_size(doc: fitz.Document) -> float:
     return sizes.most_common(1)[0][0] if sizes else 10.0
 
 
-def _drawing_regions(page: fitz.Page) -> list[fitz.Rect]:
-    """Zonas con muchos trazos vectoriales (dibujos, esquemas), unidas si se tocan."""
+def _drawing_regions(page: fitz.Page, text_rects: list[fitz.Rect] | None = None) -> list[fitz.Rect]:
+    """Zonas con muchos trazos vectoriales (dibujos, esquemas), unidas si se tocan.
+
+    Se descartan las que son casi todo texto: líneas decorativas, subrayados o
+    marcos alrededor de los párrafos (si no, se guardaba la página entera como
+    imagen, como en "Salud de la botica del Señor").
+    """
     try:
         drawings = page.get_drawings()
     except Exception:
@@ -112,7 +119,10 @@ def _drawing_regions(page: fitz.Page) -> list[fitz.Rect]:
             merged[-1] |= r
         else:
             merged.append(r)
-    return [r & page.rect for r in merged if abs(r) >= page_area * MIN_DRAWING_AREA and r.width > 60 and r.height > 60]
+    out = [r & page.rect for r in merged if abs(r) >= page_area * MIN_DRAWING_AREA and r.width > 60 and r.height > 60]
+    if text_rects:
+        out = [r for r in out if sum(abs(r & t) for t in text_rects) < abs(r) * MAX_TEXT_IN_DRAWING]
+    return out
 
 
 def extract(path: str, images: ImageStore) -> Extracted:
@@ -201,7 +211,8 @@ def extract(path: str, images: ImageStore) -> Extracted:
             if src:
                 items.append((bbox.y0, Block("img", src=src, page=pno)))
         # Dibujos vectoriales.
-        for r in _drawing_regions(page):
+        text_rects = [fitz.Rect(b["bbox"]) for b in text_dict["blocks"] if b.get("type") == 0]
+        for r in _drawing_regions(page, text_rects):
             pix = page.get_pixmap(clip=r, dpi=DRAWING_DPI)
             src = images.from_pixmap(pix)
             if src:
