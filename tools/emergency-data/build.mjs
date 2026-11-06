@@ -26,6 +26,7 @@
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
+import { overpass } from '../lib/overpass.mjs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -201,32 +202,11 @@ const policeAll = addNational(police, securityIgn);
 const healthAll = addNational(health, healthIgn);
 
 // ---------- Teléfonos de OpenStreetMap ----------
-const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const OSM_QUERY = `[out:json][timeout:300];area["ISO3166-1"="AR"][admin_level=2]->.ar;(
 nwr["amenity"~"^(police|hospital|clinic|ranger_station|doctors)$"]["phone"](area.ar);
 nwr["amenity"~"^(police|hospital|clinic|ranger_station|doctors)$"]["contact:phone"](area.ar);
 nwr["healthcare"~"^(centre|hospital|clinic)$"]["phone"](area.ar);
 nwr["healthcare"~"^(centre|hospital|clinic)$"]["contact:phone"](area.ar););out center tags;`;
-
-async function overpass(query) {
-  for (const url of OVERPASS) {
-    try {
-      const res = await fetch(url, { method: 'POST', headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: `data=${encodeURIComponent(query)}` });
-      if (res.ok) {
-        const body = await res.json();
-        // Overpass responde 200 con "remark" cuando corta por tiempo o memoria: probar el espejo.
-        if (body.remark) {
-          console.warn(`${url}: ${body.remark}`);
-          continue;
-        }
-        return body.elements;
-      }
-    } catch {
-      // probar el espejo
-    }
-  }
-  throw new Error('Overpass no respondió');
-}
 
 const fold = (s) => (s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 /** Palabras que no distinguen un lugar de otro. */

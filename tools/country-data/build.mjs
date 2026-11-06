@@ -21,6 +21,7 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { inflateRawSync } from 'node:zlib';
+import { overpass as overpassQuery } from '../lib/overpass.mjs';
 import { fileURLToPath } from 'node:url';
 
 // Salida: los paquetes de la app (por defecto) o, con VIKARG_DATA_OUT, la carpeta que sirve el servidor
@@ -53,7 +54,6 @@ function unzipSync(buf) {
 }
 const strFromU8 = (u8) => Buffer.from(u8).toString('utf8');
 const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
-const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 
 /** Radio Uruguay (Radiodifusión Nacional del Uruguay): Montevideo y repetidoras FM del interior. */
 const RADIO_UY = [
@@ -193,16 +193,7 @@ area["ISO3166-1"="${cc}"][admin_level=2]->.a;
   nwr["healthcare"~"^(hospital|clinic|centre)$"](area.a);
 );
 out center tags;`;
-  for (const endpoint of OVERPASS) {
-    try {
-      const res = await fetch(endpoint, { method: 'POST', body: `data=${encodeURIComponent(query)}`, headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' } });
-      if (!res.ok) throw new Error(String(res.status));
-      return (await res.json()).elements;
-    } catch (err) {
-      console.warn(`Overpass ${endpoint}: ${err.message}`);
-    }
-  }
-  throw new Error('Overpass no respondió');
+  return overpassQuery(query);
 }
 
 function toPlace(e, fallbackName) {

@@ -18,12 +18,12 @@
  */
 
 import { writeFile } from 'node:fs/promises';
+import { overpass } from '../lib/overpass.mjs';
 import { fileURLToPath } from 'node:url';
 
 // Con VIKARG_DATA_OUT escribe en la carpeta que sirve el servidor (actualización mensual).
 const OUT = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/parks-CL.json` : fileURLToPath(new URL('../../app/public/data/parks-CL.json', import.meta.url));
 const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
-const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const SITEMAP = 'https://www.conaf.cl/parque_nacionales-sitemap.xml';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -110,34 +110,6 @@ function radioIn(page) {
 }
 
 // ---------- Límites de OpenStreetMap ----------
-async function overpass(query) {
-  // Overpass limita los pedidos seguidos: hasta tres vueltas por los dos servidores, con espera.
-  for (let round = 0; round < 3; round++) {
-    if (round) await sleep(30_000);
-    const elements = await overpassOnce(query);
-    if (elements) return elements;
-  }
-  throw new Error('Overpass no respondió');
-}
-
-async function overpassOnce(query) {
-  for (const url of OVERPASS) {
-    try {
-      const res = await fetch(url, { method: 'POST', headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: `data=${encodeURIComponent(query)}` });
-      if (!res.ok) continue;
-      const body = await res.json();
-      if (body.remark) {
-        console.warn(`${url}: ${body.remark}`);
-        continue;
-      }
-      return body.elements;
-    } catch {
-      // probar el espejo
-    }
-  }
-  return null;
-}
-
 const key = (p) => `${p.lon},${p.lat}`;
 /** Une los tramos (ways) de una relación en anillos cerrados. */
 function stitch(segments) {
