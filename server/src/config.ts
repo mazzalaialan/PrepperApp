@@ -42,6 +42,12 @@ export interface Config {
   libraryDir: string | null;
   /** Clave para bajar los libros con derechos (uso personal); vacía = solo se bajan los libres. */
   libraryKey: string | null;
+  /** Avisos al administrador (fuentes caídas): correo de destino y servidor SMTP (smtps://usuario:clave@host:465). Sin SMTP_URL, solo queda en el log. */
+  adminEmail: string | null;
+  smtpUrl: string | null;
+  mailFrom: string | null;
+  /** Dirección pública del servidor (para enlaces en los mails). */
+  publicUrl: string | null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -68,6 +74,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     hazardsEnabled: (env.HAZARDS_ENABLED ?? 'true') !== 'false',
     mapsDir: env.MAPS_DIR === '' ? null : (env.MAPS_DIR ?? `${env.DATA_DIR ?? './data'}/maps`),
     mapsMaxConcurrent: Number(env.MAPS_MAX_CONCURRENT ?? 48),
+    adminEmail: env.ADMIN_EMAIL === '' ? null : (env.ADMIN_EMAIL?.trim() ?? 'contacto.vikarg@gmail.com'),
+    smtpUrl: env.SMTP_URL?.trim() || null,
+    mailFrom: env.MAIL_FROM?.trim() || null,
+    publicUrl: env.PUBLIC_URL?.trim() || null,
     mapsMaxZoneTiles: Number(env.MAPS_MAX_ZONE_TILES ?? 60_000),
     mapsMaxZoneMb: Number(env.MAPS_MAX_ZONE_MB ?? 1_500),
     libraryDir: env.LIBRARY_DIR?.trim() || null,

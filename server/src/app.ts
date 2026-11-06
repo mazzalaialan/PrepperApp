@@ -36,7 +36,15 @@ export async function buildApp(
   await app.register(cors, { origin: config.allowedOrigins === '*' ? true : config.allowedOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] });
 
   // `observedRain`: si NOAA volvió a publicar lluvia estimada en el bucket abierto (ver rain/noaaWatch.ts).
-  app.get('/api/health', async () => ({ ok: true, version: VERSION, vapidPublicKey: push.publicKey, observedRain }));
+  // `sourcesDown`: fuentes externas que están fallando ahora (se avisa por mail al pasar el umbral; ver monitor/sources.ts).
+  const sourcesDown = db.prepare('SELECT source, since, failures FROM source_status ORDER BY since');
+  app.get('/api/health', async () => ({
+    ok: true,
+    version: VERSION,
+    vapidPublicKey: push.publicKey,
+    observedRain,
+    sourcesDown: (sourcesDown.all() as unknown as { source: string; since: number; failures: number }[]).map((r) => ({ ...r, since: new Date(r.since).toISOString() })),
+  }));
   deviceRoutes(app, db, push);
   transferRoutes(app, db, config);
   lightningRoutes(app, lightning.store, lightning.wake);

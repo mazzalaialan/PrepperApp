@@ -22,10 +22,18 @@ import type { CapSource, OfficialAlert } from './official/cap.ts';
 import { fetchAshSigmets } from './official/sigmet.ts';
 import { fetchVolcanoAlerts } from './volcanoes/oavv.ts';
 import { runVolcanoWatch } from './volcanoes/watch.ts';
+import { createMailNotifier, createSourceMonitor } from './monitor/sources.ts';
 
 const config = loadConfig();
 const db = openDb(config.dataDir);
 const push = createPushSender(db, config.vapidSubject);
+// Fuentes externas caídas: un mail al correo de contacto por caída (y otro cuando vuelve).
+const monitor = createSourceMonitor(
+  db,
+  await createMailNotifier(config.smtpUrl, config.adminEmail, config.mailFrom),
+  (msg, data) => console.warn(JSON.stringify({ msg, ...data })),
+  { minFailures: 3, minDownMs: 30 * 60_000, publicUrl: config.publicUrl ?? undefined },
+);
 const lightningStore = createLightningStore();
 // `lightningTick` se define más abajo; la ruta solo lo despierta.
 const observedRain = createObservedRainStatus();
@@ -61,7 +69,9 @@ async function rainTick() {
   try {
     const { sent, removed } = await runRainWatch(db, push, rainSource, new Date(), config.rainHereMaxAgeMs);
     if (sent || removed) app.log.info({ sent, removed }, 'avisos de lluvia enviados');
+    await monitor.ok('open-meteo', 'El pronóstico de lluvia (Open-Meteo)');
   } catch (err) {
+    await monitor.fail('open-meteo', 'El pronóstico de lluvia (Open-Meteo)', err);
     app.log.error(err, 'fallaron los avisos de lluvia');
   }
 }
@@ -76,7 +86,14 @@ async function lightningTick() {
   lightningBusy = true;
   try {
     const filesBefore = glm.stats().files;
-    const flashes = await glm.poll(new Date());
+    let flashes;
+    try {
+      flashes = await glm.poll(new Date());
+      await monitor.ok('glm', 'Los rayos del satélite GOES-19 (GLM, NOAA)');
+    } catch (err) {
+      await monitor.fail('glm', 'Los rayos del satélite GOES-19 (GLM, NOAA)', err);
+      throw err;
+    }
     // Para el mapa: la tanda nueva reemplaza a la anterior, aunque venga vacía; si no hubo archivos nuevos, queda la última.
     if (glm.stats().files > filesBefore) {
       lightningStore.flashes = flashes;
@@ -136,15 +153,24 @@ let gdacsAt = 0;
 async function hazardTick() {
   if (!config.hazardsEnabled || !hasPlaces(db)) return;
   try {
-    const quakes = await fetchQuakes().catch((err) => {
-      app.log.warn(err, 'no se pudieron leer los sismos de USGS');
-      return [];
-    });
+    const quakes = await fetchQuakes().then(
+      async (q) => {
+        await monitor.ok('usgs', 'Los sismos de USGS');
+        return q;
+      },
+      async (err) => {
+        await monitor.fail('usgs', 'Los sismos de USGS', err);
+        app.log.warn(err, 'no se pudieron leer los sismos de USGS');
+        return [];
+      },
+    );
     if (Date.now() - gdacsAt > 30 * 60_000) {
       try {
         gdacsEvents = await fetchGdacs();
         gdacsAt = Date.now();
+        await monitor.ok('gdacs', 'Los eventos de GDACS (inundaciones, ciclones, incendios, volcanes)');
       } catch (err) {
+        await monitor.fail('gdacs', 'Los eventos de GDACS (inundaciones, ciclones, incendios, volcanes)', err);
         app.log.warn(err, 'no se pudieron leer los eventos de GDACS');
       }
     }
@@ -166,9 +192,12 @@ async function officialTick() {
     const all: OfficialAlert[] = [];
     const failed: string[] = [];
     for (const source of Object.keys(FEEDS) as CapSource[]) {
+      const label = { SMN: 'Las alertas del SMN', DMC: 'Las alertas de la Dirección Meteorológica de Chile', INUMET: 'Las alertas de INUMET (Uruguay)' }[source];
       try {
         all.push(...(await fetchOfficial(source, officialCache)));
+        await monitor.ok(source, label);
       } catch (err) {
+        await monitor.fail(source, label, err);
         failed.push(source);
         // Si falla una fuente, quedan sus alertas de la vuelta anterior (todavía vigentes).
         all.push(...officialStore.alerts.filter((a) => a.source === source && Date.parse(a.expires) > Date.now()));
@@ -178,7 +207,9 @@ async function officialTick() {
     // Ceniza volcánica (SIGMET de aviación, vía NOAA).
     try {
       all.push(...(await fetchAshSigmets()));
+      await monitor.ok('SIGMET', 'Los SIGMET de ceniza volcánica (NOAA)');
     } catch (err) {
+      await monitor.fail('SIGMET', 'Los SIGMET de ceniza volcánica (NOAA)', err);
       failed.push('SIGMET');
       all.push(...officialStore.alerts.filter((a) => a.source === 'SIGMET' && Date.parse(a.expires) > Date.now()));
       app.log.warn({ err: String(err) }, 'no se pudieron leer los SIGMET de ceniza');
@@ -188,9 +219,11 @@ async function officialTick() {
       try {
         officialStore.volcanoes = await fetchVolcanoAlerts();
         volcanoesAt = Date.now();
+        await monitor.ok('OAVV', 'El nivel de alerta de los volcanes (OAVV, SEGEMAR)');
         const v = await runVolcanoWatch(db, push, officialStore.volcanoes, new Date(), config.rainHereMaxAgeMs);
         if (v.sent || v.removed) app.log.info(v, 'avisos de volcanes enviados');
       } catch (err) {
+        await monitor.fail('OAVV', 'El nivel de alerta de los volcanes (OAVV, SEGEMAR)', err);
         failed.push('OAVV');
         app.log.warn({ err: String(err) }, 'no se pudo leer el nivel de alerta de los volcanes (OAVV)');
       }

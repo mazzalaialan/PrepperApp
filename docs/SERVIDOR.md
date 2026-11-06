@@ -87,6 +87,10 @@ La app queda servida en `https://TU_DOMINIO/` y se puede instalar desde ahí.
 | `MAPS_MAX_CONCURRENT` | `48` | Teselas que entrega a la vez; con más responde 503 y la app usa las fuentes públicas un rato |
 | `MAPS_MAX_ZONE_TILES` | `60000` | Teselas máximas de una zona que la app baja del servidor |
 | `MAPS_MAX_ZONE_MB` | `1500` | MB máximos de una zona que la app baja del servidor |
+| `SMTP_URL` | (vacío) | Servidor de correo para avisarte cuando una fuente externa no responde, por ejemplo `smtps://contacto.vikarg%40gmail.com:CONTRASEÑA_DE_APLICACION@smtp.gmail.com:465`. Sin esto, el aviso queda solo en el log y en `/api/health` (`sourcesDown`) |
+| `ADMIN_EMAIL` | `contacto.vikarg@gmail.com` | A quién avisar; vacío = a nadie |
+| `MAIL_FROM` | el usuario de `SMTP_URL` | Remitente de los avisos |
+| `PUBLIC_URL` | (vacío) | Dirección pública del servidor, para el enlace al estado en los mails |
 
 ## Mapas offline (opcional)
 
@@ -192,6 +196,10 @@ El orden es siempre el mismo: primero los libros con texto (segundos cada uno) y
 En `deploy/.env`: `LIBRARY_PATH=/home/usuario/vikarg-library/packages` y `LIBRARY_KEY=` con la misma clave. El servidor relee el catálogo cuando cambia: no hace falta reiniciarlo.
 
 API: `GET /api/library` (catálogo), `POST /api/library/key` (comprobar la clave; 10 intentos por IP cada 10 minutos) y `GET /api/library/books/:id` (los con derechos piden la clave en `x-library-key`).
+
+## Aviso de fuentes caídas
+
+Si una fuente externa (SMN, Dirección Meteorológica de Chile, INUMET, SIGMET de ceniza, OAVV, USGS, GDACS, Open-Meteo o los rayos del GOES-19) falla 3 veces seguidas durante al menos 30 minutos, el servidor manda **un** mail a `ADMIN_EMAIL`, y otro cuando vuelve a responder. El estado se guarda en la base (`source_status`), así que reiniciar no repite el aviso. Mientras tanto la app sigue mostrando lo último que se pudo leer. Para Gmail hace falta la verificación en 2 pasos y una contraseña de aplicación (Cuenta de Google → Seguridad → Contraseñas de aplicaciones).
 
 ## Avisos de actualizaciones importantes
 

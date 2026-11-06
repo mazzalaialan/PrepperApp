@@ -109,6 +109,14 @@ const MIGRATIONS = [
      notified_at INTEGER NOT NULL,
      PRIMARY KEY (device_id, family)
    );`,
+  // Fuentes externas que están fallando (para avisar al administrador una sola vez por caída).
+  `CREATE TABLE source_status (
+     source TEXT PRIMARY KEY,
+     failures INTEGER NOT NULL,
+     since INTEGER NOT NULL,
+     last_error TEXT,
+     notified INTEGER NOT NULL DEFAULT 0
+   );`,
 ];
 
 export type Db = DatabaseSync;

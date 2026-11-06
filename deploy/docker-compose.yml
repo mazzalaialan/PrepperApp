@@ -18,6 +18,11 @@ services:
       LIBRARY_DIR: /library
       # Clave de la biblioteca: la misma con la que se cifraron los libros con derechos (tools/library-builder).
       LIBRARY_KEY: ${LIBRARY_KEY:-}
+      # Aviso por mail cuando una fuente externa no responde (ver docs/SERVIDOR.md).
+      SMTP_URL: ${SMTP_URL:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-contacto.vikarg@gmail.com}
+      MAIL_FROM: ${MAIL_FROM:-}
+      PUBLIC_URL: ${PUBLIC_URL:-https://${DOMAIN}}
     volumes:
       - vikarg-data:/data
       # Mapas offline (vector.pmtiles y elevation.pmtiles); vacía, la app usa las fuentes públicas. Ver docs/SERVIDOR.md.
