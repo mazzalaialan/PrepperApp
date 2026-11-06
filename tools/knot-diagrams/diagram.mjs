@@ -164,5 +164,5 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
     for (const c of xs) body.push(`<text x="${r1(c.x)}" y="${r1(c.y + 5)}" font-size="15" font-weight="bold" fill="red" text-anchor="middle">${Math.round(c.x)},${Math.round(c.y)}</text>`);
   }
   const marker = arrows.length ? `<marker id="${P}ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${ARROW}"/></marker>` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><defs>${marker}${defs.join('')}</defs><rect width="100%" height="100%" fill="${BG}"/><g fill="none" stroke-linejoin="round">${body.join('')}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><defs>${marker}${defs.join('')}</defs><rect width="100%" height="100%" fill="${BG}"/><g fill="none" stroke-linejoin="round"${spec.zoom ? ` transform="translate(${spec.zoom[1]} ${spec.zoom[2]}) scale(${spec.zoom[0]}) translate(${-spec.zoom[1]} ${-spec.zoom[2]})"` : ''}>${body.join('')}</g></svg>`;
 }

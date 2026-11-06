@@ -1,4 +1,4 @@
-import { A, B, G, coilH, coilV, move, rev } from '../helpers.mjs';
+import { A, B, G, coilAlong, coilH, coilV, move, rev } from '../helpers.mjs';
 
 // Palo vertical (x 170–220, eje en 195).
 const post = { x: 170, y: -10, w: 50, h: 320 };
@@ -19,7 +19,13 @@ export default {
     { poles: [post], ropes: [{ ...A, path: [...clove1, [140, 172], [110, 200]] }], arrows: [[[95, 215], [120, 250], [150, 255]]] },
     { poles: [post], ropes: [{ ...A, path: [...clove2, [140, 225], [110, 240]] }], arrows: [[[110, 260], [140, 200], [175, 182]]] },
     { poles: [post], ropes: [{ ...A, path: [...clove2, ...cloveEnd] }] },
-    null,
+    (() => {
+      // En un mosquetón: el mismo ballestrinque sobre la barra larga (lomo) del mosquetón.
+      const biner = { kind: 'path', d: 'M200 20c-50 0-70 35-66 75l6 120c3 50 117 50 120 0l6-120c4-40-16-75-66-75zm0 16c38 0 52 28 50 60l-6 117c-2 34-86 34-88 0l-6-117c-2-32 12-60 50-60z', fill: '#9aa1ab', stroke: '#5c626b' };
+      const sx = 143; // lomo del mosquetón
+      const c = [[-20, 100], [80, 104], ...coilV({ x: sx, y: 110, n: 2, pitch: 46, r: 24 }), [110, 205], [128, 186, 0.5], [158, 168, 0.5], [190, 160], [300, 170], [380, 180]];
+      return { height: 320, poles: [{ x: 160, y: 0, w: 80, h: 14, rx: 5, fill: '#8f949b', stroke: '#585c62' }, biner], ropes: [{ ...A, path: c }] };
+    })(),
   ],
   'vuelta-redonda': [
     { poles: [post], ropes: [{ ...A, path: rt }], arrows: [[[95, 170], [70, 185]]] },
@@ -43,22 +49,40 @@ export default {
     { poles: [post], ropes: [{ ...A, path: [...clove2, [150, 205], [172, 168, 0.5], [195, 135, 0.5], [216, 110, 0.5], [250, 96], [330, 92], [380, 95]] }] },
   ],
   ancla: (() => {
-    const ring = { kind: 'ring', x: 200, y: 60, r: 52 };
-    const turns = [[150, 250], [165, 180], ...coilH({ x: 172, y: 112, n: 2, pitch: 22, r: 16, from: 'top' }), [232, 150], [245, 200]];
+    // Argolla arriba; el firme sube desde abajo a la izquierda y da dos vueltas a la barra de abajo de la argolla (y = 150).
+    const ring = { kind: 'ring', x: 200, y: 88, r: 62, w: 13 };
+    const turns = [[120, 345], [150, 260], [166, 190], ...coilH({ x: 168, y: 150, n: 2, pitch: 30, r: 22, from: 'bottom' })];
+    // El chicote baja, rodea el firme por detrás y sube por dentro de las dos vueltas (entre ellas y la argolla).
+    const tuck = [[236, 195], [225, 240], [190, 252], [160, 250, -1], [128, 240], [132, 215], [160, 205, 1], [195, 182, 0.5], [200, 150, 0.5], [205, 118], [225, 100], [262, 110]];
+    // Medio cote alrededor del firme, más abajo.
+    const halfHitch = [[280, 160], [262, 250], [205, 290], [168, 288, 1], [140, 280], [132, 302], [150, 312, -1], [178, 312], [190, 300, 1], [230, 318], [270, 330]];
     return [
-      { poles: [ring], ropes: [{ ...A, path: [...turns, [250, 250]] }] },
-      { poles: [ring], ropes: [{ ...A, path: [...turns, [235, 240], [180, 245], [150, 215, 1], [140, 180], [165, 150], [195, 120, 0.5], [235, 95], [270, 90]] }] },
-      { poles: [ring], ropes: [{ ...A, path: [...turns, [235, 240], [180, 245], [150, 215, 1], [140, 180], [165, 150], [195, 120, 0.5], [230, 112], [215, 175], [170, 205, 1], [130, 220], [132, 250, -1], [165, 262], [190, 275]] }] },
+      { height: 340, poles: [ring], ropes: [{ ...A, path: [...turns, [240, 210], [245, 250]] }] },
+      { height: 340, poles: [ring], ropes: [{ ...A, path: [...turns, ...tuck] }] },
+      { height: 340, poles: [ring], ropes: [{ ...A, path: [...turns, ...tuck, ...halfHitch] }] },
     ];
   })(),
   lenador: (() => {
-    const log = { x: 40, y: 140, w: 330, h: 60, rx: 22 };
-    const around = [[200, -20], [200, 60], [200, 120], [205, 170, 1], [215, 210], [240, 210], [245, 170, -1], [245, 128], [230, 100]];
+    // Tronco acostado; el firme baja desde arriba. La vuelta cruza el frente en diagonal, pasa por abajo y sube por detrás.
+    const log = { x: 20, y: 140, w: 360, h: 70, rx: 26 };
+    const loop = [[110, -20], [112, 60], [118, 108], [150, 150, 1], [190, 196, 1], [205, 222], [225, 212], [215, 170, -1], [185, 130, -1], [160, 112]];
+    // El chicote rodea el firme (por detrás y por delante) y vuelve sobre la diagonal de adelante.
+    const collar = [[150, 98], [128, 70, -1], [96, 68], [82, 92], [100, 116, 2], [130, 126]];
+    const dog = coilAlong([138, 130], [196, 200], 3, 17).map(([x, y, zz]) => [x, y, zz * 2]);
     return [
-      { poles: [log], ropes: [{ ...A, path: [...around.slice(0, -1), [255, 100], [300, 80]] }] },
-      { poles: [log], ropes: [{ ...A, path: [...around, [190, 85, 1], [165, 95], [170, 125], [220, 128]] }] },
-      { poles: [log], ropes: [{ ...A, path: [...around, [190, 85, 1], [165, 95], [168, 122], ...coilH({ x: 180, y: 130, n: 3, pitch: 18, r: 9, from: 'top' }).slice(1), [250, 132], [275, 128]] }], arrows: [[[230, 20], [230, -5]]] },
-      null,
+      { poles: [log], ropes: [{ ...A, path: [...loop, [170, 95], [200, 70]] }], arrows: [[[215, 60], [160, 50], [100, 70]]] },
+      { poles: [log], ropes: [{ ...A, path: [...loop, ...collar, [150, 135], [165, 160]] }], arrows: [[[200, 130], [222, 160], [214, 200]]] },
+      { poles: [log], ropes: [{ ...A, path: [...loop, ...collar, ...dog, [206, 212], [212, 222]] }], arrows: [[[85, 40], [85, 5]]] },
+      (() => {
+        // Para arrastrar: el firme sigue por el tronco y da un cote cerca de la punta.
+        const tail = [[110, 60], [112, 90]];
+        const hitch = [[330, 125], [322, 150, 1], [318, 200, 1], [330, 222], [350, 212], [348, 170, -1], [340, 132, -1], [325, 118], [300, 122], [300, 140, 2], [310, 160, 2], [345, 168, 3], [420, 168]];
+        return {
+          poles: [log],
+          ropes: [{ ...A, path: [[440, 168], [400, 168], ...rev(hitch).slice(2, -3), [300, 128], [220, 128], [150, 118], [125, 112], ...loop.slice(3), ...collar, ...dog, [206, 212], [212, 222]] }],
+          arrows: [[[350, 100], [392, 100]]],
+        };
+      })(),
     ];
   })(),
   tensor: (() => {

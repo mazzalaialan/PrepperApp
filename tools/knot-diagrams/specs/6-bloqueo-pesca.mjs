@@ -1,4 +1,4 @@
-import { A, B, G, coilH, coilV, offset, overhand, rev } from '../helpers.mjs';
+import { A, B, G, OHZ, coilH, coilV, move, offset, overhand, rev } from '../helpers.mjs';
 
 const H = { height: 340 };
 const main = { ...B, path: [[200, -20], [200, 170], [200, 360]], end: false };
@@ -12,7 +12,8 @@ const biner = (x, y, s = 1) => ({ kind: 'path', d: `M${x} ${y}c${-22 * s} 0 ${-3
 // Ojo del anzuelo y tanza fina.
 const eye = { kind: 'ring', x: 330, y: 150, r: 14, w: 7 };
 const hook = { kind: 'path', d: 'M330 164 L330 250 C330 290 280 290 278 255 L278 240 L290 248 L290 256 C292 272 318 272 318 250 L318 164 Z', fill: '#9aa1ab', stroke: '#5c626b' };
-const L = { rope: 8 };
+const L = { rope: 6, zoom: [1.6, 270, 165] };
+const LP = { rope: 8 };
 
 export default {
   prusik: [
@@ -37,19 +38,26 @@ export default {
     { ...H, ropes: [main, { ...G, path: [[222, 330], [225, 260], ...coilV({ x: 215, y: 240, n: 3, pitch: 26, r: 34, up: true }), [245, 140], [236, 120, -1]], end: false }], poles: [biner(235, 100)] },
     { ...H, ropes: [main, { ...G, path: [[222, 330], [225, 260], ...coilV({ x: 215, y: 240, n: 3, pitch: 26, r: 34, up: true }), [245, 140], [236, 120, -1]], end: false }], poles: [biner(235, 100)], arrows: [[[280, 250], [280, 320]], [[290, 180], [290, 110]]] },
   ],
-  palomar: [
-    { ...L, poles: [eye], ropes: [{ ...A, path: [[-20, 140], [200, 140], [300, 142], [322, 140, 1], [345, 150], [322, 160, -1], [300, 158], [200, 160], [-20, 160]], end: false }] },
-    { ...L, poles: [eye], ropes: [{ ...A, path: [...overhand({ x: 200, y: 150, k: 0.45 }).path.map(([x, y]) => [x - 40, y]).slice(0, 1), [200, 140], [300, 142], [322, 140, 1], [345, 150], [322, 160, -1], [300, 158], [200, 160], [-20, 160]], end: false }, { ...A, path: overhand({ x: 140, y: 150, k: 0.55 }).path.map(([x, y]) => [x, y]) }], under: overhand({ x: 140, y: 150, k: 0.55 }).under },
-    { ...L, poles: [eye, hook], ropes: [{ ...A, path: [[-20, 140], [60, 140], [110, 140], [150, 150], [240, 150], [300, 145], [345, 130], [360, 175], [340, 290], [270, 300], [250, 230], [200, 170]], end: false }], arrows: [[[300, 300], [210, 280]]] },
-    { ...L, poles: [eye, hook], ropes: [{ ...A, path: [[-20, 150], [200, 150], [280, 150], [305, 140], [322, 140, 1], [342, 150], [322, 160, -1], [305, 160], [285, 175], [270, 195]] }], arrows: [[[60, 190], [10, 190]]] },
-  ],
+  palomar: (() => {
+    // Nudo simple hecho con la tanza doble; el seno (la punta del doble) queda libre y el anzuelo cuelga dentro del nudo.
+    const hookAt = (x, y) => [{ kind: 'ring', x, y, r: 12, w: 6 }, { kind: 'path', d: `M${x} ${y + 12} L${x} ${y + 95} C${x} ${y + 135} ${x - 50} ${y + 135} ${x - 52} ${y + 100} L${x - 52} ${y + 85} L${x - 40} ${y + 93} L${x - 40} ${y + 101} C${x - 38} ${y + 117} ${x - 12} ${y + 117} ${x - 12} ${y + 95} L${x - 12} ${y + 12} Z`, fill: '#9aa1ab', stroke: '#5c626b' }];
+    const oh = move(OHZ, 0, -5);
+    const dbl = [...oh.slice(0, -1), [300, 86], [318, 98], [300, 110], ...rev(offset(oh.slice(0, -1), -12))];
+    return [
+      { ...LP, poles: [eye], ropes: [{ ...A, path: [[-20, 140], [200, 140], [300, 142], [322, 140, 1], [345, 150], [322, 160, -1], [300, 158], [200, 160], [-20, 160]], end: false }] },
+      { ...LP, height: 400, poles: hookAt(214, 280), ropes: [{ ...A, path: dbl, end: false }] },
+      { ...LP, height: 400, poles: hookAt(214, 280), ropes: [{ ...A, path: dbl, end: false }], arrows: [[[240, 385], [345, 300], [335, 125]]] },
+      { ...LP, poles: [eye, hook], ropes: [{ ...A, path: [[-20, 150], [200, 150], [280, 150], [305, 140], [322, 140, 1], [342, 150], [322, 160, -1], [305, 160], [285, 175], [270, 195]] }], arrows: [[[60, 190], [10, 190]]] },
+    ];
+  })(),
   clinch: (() => {
     const thru = [[-20, 150], [200, 150], [300, 150], [318, 145, 1], [342, 150], [325, 162, -1], [300, 165]];
     const coil = coilH({ x: 280, y: 150, n: 5, pitch: 20, r: 14, from: 'bottom', left: true });
     return [
       { ...L, poles: [eye, hook], ropes: [{ ...A, path: [...thru, [200, 175], [150, 190]] }] },
       { ...L, poles: [eye, hook], ropes: [{ ...A, path: [...thru, ...coil, [160, 175]] }] },
-      { ...L, poles: [eye, hook], ropes: [{ ...A, path: [...thru, ...coil, [160, 175], [175, 205], [250, 205], [300, 180], [296, 155, 0.5], [270, 130], [220, 120]] }] },
+      // Por el lazo chico junto al ojo (por encima de una tanza y por debajo de la otra) y después por el lazo grande.
+      { ...L, poles: [eye, hook], ropes: [{ ...A, path: [...thru, ...coil, [160, 175], [175, 210], [250, 212], [298, 190], [302, 165, 0.5], [301, 150, -0.5], [290, 132], [262, 126], [232, 132], [216, 150, 2], [212, 175], [210, 212, -0.5], [205, 245], [195, 270]] }] },
       { ...L, poles: [eye, hook], ropes: [{ ...A, path: [[-20, 150], [200, 150], [292, 150], [318, 145, 1], [342, 150], [325, 162, -1], [305, 162], ...coilH({ x: 298, y: 150, n: 5, pitch: 7, r: 9, from: 'bottom', left: true }), [258, 140], [250, 125]] }], arrows: [[[60, 190], [10, 190]]] },
     ];
   })(),

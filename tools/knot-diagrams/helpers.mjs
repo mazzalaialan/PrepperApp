@@ -14,19 +14,20 @@ export const z = (pts, depth) => pts.map(([x, y]) => [x, y, depth]);
  * (z = 1) y vuelve por detrás (z = -1). `r`: distancia del eje a la cuerda en
  * los costados. `from`: de qué costado arranca.
  */
-export function coilV({ x, y, n, pitch, r, from = 'left', up = false }) {
+export function coilV({ x, y, n, pitch, r, from = 'left', up = false, tilt = 0 }) {
+  // `tilt`: un poco de perspectiva (la vuelta de atrás corrida), para que se lean como espiras y no como zigzag.
   const s = from === 'left' ? -1 : 1, d = up ? -1 : 1;
   const out = [];
   for (let i = 0; i <= n * 8; i++) {
     const th = (i / 8) * Math.PI * 2;
-    out.push([x + s * r * Math.cos(th), y + d * pitch * (i / 8), Math.sin(th) >= -1e-9 && Math.sin(th) <= 1e-9 ? 0 : Math.sin(th) > 0 ? 1 : -1]);
+    out.push([x + s * r * Math.cos(th), y + d * (pitch * (i / 8) + tilt * r * Math.sin(th)), Math.sin(th) >= -1e-9 && Math.sin(th) <= 1e-9 ? 0 : Math.sin(th) > 0 ? 1 : -1]);
   }
   return out;
 }
 
 /** Igual que coilV, alrededor de un eje horizontal en `y`, hacia la derecha (o la izquierda con `left`). */
-export function coilH({ x, y, n, pitch, r, from = 'top', left = false }) {
-  return coilV({ x: y, y: x, n, pitch, r, from: from === 'top' ? 'left' : 'right', up: left }).map(([a, b, c]) => [b, a, c]);
+export function coilH({ x, y, n, pitch, r, from = 'top', left = false, tilt = 0 }) {
+  return coilV({ x: y, y: x, n, pitch, r, from: from === 'top' ? 'left' : 'right', up: left, tilt }).map(([a, b, c]) => [b, a, c]);
 }
 
 // Nudo simple flojo (el del paso 2 del nudo simple): firme que llega por la izquierda en y = 210.
@@ -52,3 +53,15 @@ export const rev = (pts) => [...pts].reverse();
 export const E8 = [[-20, 220], [100, 220], [150, 220, 0.5], [194, 220, -0.5], [235, 216], [290, 180], [296, 135, 0.5], [290, 100], [245, 65], [185, 80], [168, 140], [178, 180, -0.5], [194, 220, 0.5], [215, 265], [180, 290], [140, 270], [150, 220, -0.5], [178, 180, 0.5], [245, 140], [296, 135, -0.5], [350, 142]];
 /** Simple flojo con la profundidad en cada cruce. Firme por la izquierda en y = 210. */
 export const OHZ = [[-20, 210], [100, 210], [173, 211, -0.5], [227, 208, 0.5], [270, 175], [286, 125], [279, 97, -0.5], [235, 60], [170, 72], [148, 130], [173, 211, 0.5], [185, 250], [212, 270], [238, 248], [227, 208, -0.5], [215, 150], [232, 112], [279, 97, 0.5], [345, 105]];
+
+/** Vueltas alrededor de un eje recto cualquiera, de `a` a `b` (por ejemplo, el chicote enroscado sobre un tramo de la misma cuerda). */
+export function coilAlong(a, b, n, r) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+  const nx = -dy / L, ny = dx / L;
+  const out = [];
+  for (let i = 0; i <= n * 8; i++) {
+    const t = i / (n * 8), th = (i / 8) * Math.PI * 2, s = Math.sin(th);
+    out.push([a[0] + dx * t + nx * r * Math.cos(th), a[1] + dy * t + ny * r * Math.cos(th), Math.abs(s) < 1e-9 ? 0 : s > 0 ? 1 : -1]);
+  }
+  return out;
+}

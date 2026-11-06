@@ -1234,6 +1234,35 @@ export const KNOTS: Knot[] = [
     mistakes: [l('Apretar demasiado antes de abrir las patas.', 'Tightening too much before spreading the legs.')],
     related: ['atadura-tijera', 'atadura-cuadrada'],
   },
+  {
+    id: 'escalera',
+    name: l('Escalera de cuerda', 'Rope ladder'),
+    aliases: ['escala de cuerda', 'escalera', 'escala', 'rope ladder', 'ladder'],
+    types: ['lashing', 'hitch'],
+    uses: ['survival', 'camp', 'rescue'],
+    purpose: l(
+      'Dos cuerdas y travesaños de madera, cada uno sujeto con un ballestrinque en cada punta: para subir a un árbol, a un techo o bajar un desnivel. Sin palos, una sola cuerda con mariposas cada 40 cm sirve de estribos.',
+      'Two ropes and wooden rungs, each held by a clove hitch at both ends: to climb a tree or a roof or get down a drop. Without poles, a single rope with butterfly loops every 40 cm works as foot loops.',
+    ),
+    steps: [
+      { text: l('Prepará los travesaños: palos sanos y firmes de 3 a 4 cm de grosor y unos 40 cm de largo. Marcá las dos cuerdas a la misma distancia, cada 30 a 35 cm.', 'Prepare the rungs: sound, strong sticks 3–4 cm thick and about 40 cm long. Mark both ropes at the same spacing, every 30–35 cm.') },
+      { text: l('En la primera marca hacé un ballestrinque alrededor de una punta del travesaño, a unos 5 cm del extremo.', 'At the first mark tie a clove hitch around one end of the rung, about 5 cm from the tip.') },
+      { text: l('Hacé lo mismo con la otra cuerda en la otra punta, a la misma altura. Para que no corran, hacé una muesca en cada punta del travesaño donde va el ballestrinque, o atá cada uno con hilo fuerte.', 'Do the same with the other rope at the other end, level with the first. So they cannot slide, cut a notch at each end of the rung where the clove hitch sits, or seize each one with strong twine.') },
+      { text: l('Repetí escalón por escalón. Antes de subir, probala cerca del suelo cargando cada escalón con todo el peso.', 'Repeat rung by rung. Before climbing, test it close to the ground by putting your full weight on each rung.') },
+    ],
+    images: [],
+    holdsLoad: true,
+    easyUntie: true,
+    needsBackup: true,
+    wet: false,
+    check: l('Los escalones quedan horizontales y a la misma distancia, y ningún ballestrinque corre al cargar el escalón con todo el peso.', 'The rungs sit level and evenly spaced, and no clove hitch slips when a rung takes your full weight.'),
+    mistakes: [
+      l('Ballestrinque sin muesca ni amarre: si el travesaño gira o se corre, el escalón se va de costado.', 'Clove hitch with no notch or seizing: if the rung rolls or slides, the step tips.'),
+      l('Palos secos, podridos o finos: se quiebran sin aviso.', 'Dry, rotten or thin sticks: they snap without warning.'),
+      l('Escalones a distinta altura de cada lado: el escalón queda inclinado y el pie resbala.', 'Rungs at different heights on each side: the step tilts and the foot slips.'),
+    ],
+    related: ['ballestrinque', 'medios-cotes', 'mariposa'],
+  },
 ];
 
 // Diagramas propios por paso; las imágenes que tenía cada paso pasan a la galería.

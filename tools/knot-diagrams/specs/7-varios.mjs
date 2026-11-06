@@ -19,29 +19,46 @@ const body = [
   { x: 213, y: 120, w: 62, h: 210, rx: 26, fill: '#e8c3a0', stroke: '#a77b58' },
 ];
 
-// Cadena: lazos que se encadenan (cicloide alargada).
-const chain = (n, x0 = 40) => {
-  const out = [[-20, 160], [x0 - 20, 160]];
-  for (let i = 0; i <= n * 8; i++) {
-    const t = (i / 8) * Math.PI * 2;
-    out.push([x0 + 9 * t - 34 * Math.sin(t), 160 - 34 * Math.cos(t) + 34, ...(Math.sin(t) > 0.3 ? [0.5] : [])]);
-  }
+// Cadena: cada seno (lágrima con la punta a la derecha) pasa por la punta del anterior, que lo rodea por encima.
+const link = (x, first = false) => [
+  ...(first ? [] : [[x, 150]]),
+  [x + 30, 136], [x + 72, 126], [x + 108, 134], [x + 122, 150, 1], [x + 108, 166], [x + 72, 174], [x + 44, 166], [x + 58, 155],
+];
+const chain = (n, end = false) => {
+  const out = [[-20, 150], [20, 150]];
+  for (let k = 0; k < n; k++) out.push(...link(30 + 70 * k, k === 0));
+  if (end) out.push([30 + 70 * n, 150], [30 + 70 * n + 80, 152], [30 + 70 * n + 150, 160]);
+  else out.push([30 + 70 * n + 40, 190], [30 + 70 * n + 90, 230]);
   return out;
 };
 
 export default {
-  dinamico: [
-    { ropes: [{ ...A, path: [[-20, 228], ...loopAt(150), ...loopAt(250), [420, 228]] }] },
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: munter }], arrows: [[[300, 150], [255, 120]]] },
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: munter }] },
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: [...munter.slice(0, -2), [236, 200], [180, 345]] }], arrows: [[[110, 300], [110, 340]], [[300, 300], [230, 335]]] },
-  ],
-  mula: [
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: [...munter.slice(0, -2), [236, 200], [245, 250], [190, 268, -1], [140, 262], [150, 245], [180, 250], [230, 290], [262, 345]] }] },
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: [...munter.slice(0, -2), [236, 200], [245, 250], [190, 268, -1], [140, 262], [138, 290], [160, 300, 1], [175, 280], [210, 270, 1], [250, 300], [262, 345]] }] },
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: [...munter.slice(0, -2), [236, 200], [245, 250], [190, 268, -1], [140, 262], [138, 290], [160, 300, 1], [175, 280], [210, 270, 1], [240, 285], [250, 310], [220, 320], [195, 300, 1], [170, 318], [262, 345]] }] },
-    { ...H, poles: [anchorBar, biner(200, 70)], ropes: [{ ...A, path: [...munter.slice(0, -2), [236, 200], [245, 250], [190, 268, -1], [140, 262], [138, 290], [160, 300, 1], [175, 280], [210, 270, 1], [250, 300], [262, 345]] }], arrows: [[[110, 300], [70, 330]]] },
-  ],
+  dinamico: (() => {
+    // Mosquetón grande (pera) visto de frente: la cuerda trabaja sobre su barra de abajo (y ≈ 175).
+    const pear = { kind: 'path', d: 'M200 15c-60 0-85 40-80 90l8 70c4 30 140 30 144 0l8-70c5-50-20-90-80-90zm0 18c45 0 63 32 60 72l-8 66c-3 18-101 18-104 0l-8-66c-3-40 15-72 60-72z', fill: '#9aa1ab', stroke: '#5c626b' };
+    // Carga abajo a la izquierda; sube por detrás de la barra, baja por delante, cruza la carga, otra vuelta al revés y sale el freno abajo a la derecha.
+    const munter = [[120, 345], [150, 260], [168, 205], [172, 182, -1], [182, 158], [205, 152], [214, 178, 1], [205, 210, 1], [178, 228, 2], [148, 222], [140, 190], [146, 176, -1], [165, 150], [215, 140], [236, 160], [240, 180, 1], [234, 230, 1], [250, 300], [272, 345]];
+    const handLoops = [[-20, 228], ...loopAt(150), ...loopAt(250), [420, 228]];
+    return [
+      { ropes: [{ ...A, path: handLoops }], arrows: [[[250, 90], [200, 60], [150, 90]]] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: munter }], arrows: [[[330, 150], [285, 120]]] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: munter }] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter.slice(0, -2), [220, 290], [175, 345]] }], arrows: [[[95, 300], [95, 340]], [[300, 300], [230, 335]]] },
+    ];
+  })(),
+  mula: (() => {
+    const pear = { kind: 'path', d: 'M200 15c-60 0-85 40-80 90l8 70c4 30 140 30 144 0l8-70c5-50-20-90-80-90zm0 18c45 0 63 32 60 72l-8 66c-3 18-101 18-104 0l-8-66c-3-40 15-72 60-72z', fill: '#9aa1ab', stroke: '#5c626b' };
+    const munter = [[120, 345], [150, 260], [168, 205], [172, 182, -1], [182, 158], [205, 152], [214, 178, 1], [205, 210, 1], [178, 228, 2], [148, 222], [140, 190], [146, 176, -1], [165, 150], [215, 140], [236, 160], [240, 180, 1], [234, 230, 1]];
+    // El freno baja, pasa un seno por detrás de la carga y lo cierra como un cote corredizo alrededor de ella.
+    const behind = [[236, 262], [200, 278, -1], [130, 285, -1], [95, 290], [92, 312], [118, 318]];
+    const slip = [[150, 312, 2], [200, 305, 2], [222, 290], [210, 268], [185, 270, 2], [175, 300, 2], [195, 330], [245, 340]];
+    return [
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter, ...behind, [160, 320], [250, 330]] }] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter, ...behind, ...slip] }] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter, ...behind, ...slip.slice(0, -2), [180, 318, 3], [165, 300], [140, 312, 3], [185, 335], [240, 345]] }] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter, ...behind, ...slip] }], arrows: [[[300, 300], [345, 280]]] },
+    ];
+  })(),
   guarda: (() => {
     const two = [anchorBar, biner(170, 40), biner(230, 40)];
     return [
@@ -72,10 +89,10 @@ export default {
     ];
   })(),
   cadena: [
-    { ropes: [{ ...A, path: chain(1, 300) }] },
-    { ropes: [{ ...A, path: chain(2, 240) }] },
-    { ropes: [{ ...A, path: chain(5, 60) }] },
-    { ropes: [{ ...A, path: [...chain(5, 60), [380, 175], [400, 200]] }], arrows: [[[60, 260], [10, 260]]] },
+    { width: 420, ropes: [{ ...A, path: chain(1) }], arrows: [[[150, 215], [120, 170]]] },
+    { width: 420, ropes: [{ ...A, path: chain(2) }], arrows: [[[220, 215], [190, 170]]] },
+    { width: 420, ropes: [{ ...A, path: chain(4) }] },
+    { width: 420, ropes: [{ ...A, path: chain(4, true) }], arrows: [[[40, 100], [5, 100]]] },
   ],
   margarita: (() => {
     const S = [[-20, 100], [150, 100], [290, 100], [322, 125], [290, 150], [200, 150], [110, 150], [78, 175], [110, 200], [250, 200], [420, 200]];

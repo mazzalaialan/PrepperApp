@@ -26,7 +26,11 @@ export default {
     { ...base, ropes: [{ ...A, path: [...small, ...big] }], arrows: [[[150, 45], [180, 8], [230, 10], [252, 50]]] },
     { ...base, ropes: [{ ...A, path: [...small, ...big, ...around] }], arrows: [[[246, 82], [238, 140], [234, 205]]] },
     { ...base, ropes: [{ ...A, path: bowline }] },
-    null,
+    (() => {
+      // Seguro: con el chicote, un nudo simple alrededor del tramo de abajo de la gaza grande.
+      const oh = overhand({ x: 205, y: 392, k: 0.45, flip: true });
+      return { ...base, height: 440, ropes: [{ ...A, path: [...bowline.slice(0, -1), [236, 280], [200, 318], [150, 345], ...oh.path, [265, 360]] }], under: [[202, 392], ...oh.under] };
+    })(),
   ],
   'as-de-guia-doble': [
     { ...base, ropes: [{ ...A, path: doubled([[192, -20], [192, 150], [192, 300]]), end: false }], arrows: [[[230, 320], [230, 380]]] },
@@ -57,11 +61,15 @@ export default {
       { width: 440, poles: [ring], ropes: [{ ...A, path: [...e8.slice(0, -1), ...tail, ...back.slice(1, -3), [90, 205]] }], arrows: [[[40, 160], [5, 160]]] },
     ];
   })(),
-  'ocho-direccional': [
-    { width: 440, ropes: [{ ...A, path: [[-20, 190], [150, 190], [215, 192], [240, 230], [255, 285], [285, 290], [300, 240], [320, 195], [380, 192], [460, 192]] }] },
-    { width: 440, rope: 12, ropes: [{ ...A, path: [...e8, ...eye, ...rev(offset(e8, 15)).slice(0, -4), [150, 250], [300, 285], [460, 285]] }] },
-    { width: 440, rope: 12, ropes: [{ ...A, path: [...e8, ...eye, ...rev(offset(e8, 15)).slice(0, -4), [150, 250], [300, 285], [460, 285]] }], arrows: [[[405, 60], [430, 25]]] },
-  ],
+  'ocho-direccional': (() => {
+    // Un ocho a lo largo de la cuerda, con una de sus orejas estirada: esa es la gaza (como en el FM 3-97.61).
+    const d8 = [[-20, 220], [100, 220], [150, 220, 0.5], [194, 220, -0.5], [235, 216], [290, 180], [296, 135, 0.5], [330, 100], [390, 65], [415, 30], [380, 12], [320, 25], [245, 58], [185, 80], [168, 140], [178, 180, -0.5], [194, 220, 0.5], [215, 265], [180, 290], [140, 270], [150, 220, -0.5], [178, 180, 0.5], [245, 140], [296, 135, -0.5], [350, 142], [460, 142]];
+    return [
+      { width: 440, ropes: [{ ...A, path: [...d8.slice(0, 15), [175, 175], [205, 205], [300, 225], [460, 228]], end: false }], arrows: [[[230, 290], [180, 300], [135, 280]]] },
+      { width: 440, ropes: [{ ...A, path: [...d8.slice(0, 21), [175, 175], [260, 160], [460, 160]], end: false }] },
+      { width: 440, ropes: [{ ...A, path: d8, end: false }], arrows: [[[425, 50], [440, 20]]] },
+    ];
+  })(),
   'ocho-dos-gazas': (() => {
     const ears = [[392, 155], [432, 185], [420, 235], [378, 215], [388, 120], [425, 95], [405, 55], [362, 105]];
     return [

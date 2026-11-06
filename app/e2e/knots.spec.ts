@@ -17,7 +17,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   expect(titles.indexOf('Cabuyería y anclajes')).toBeLessThan(titles.indexOf('Huerta y cultivo'));
 
   await page.getByRole('link', { name: /Guía de nudos/ }).click();
-  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 49 nudos.');
+  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 50 nudos.');
   await page.getByRole('button', { name: 'Rappel y escalada' }).click();
   await expect(page.getByText(/practicá primero con un instructor/)).toBeVisible();
   const list = page.getByTestId('knot-list');
@@ -53,7 +53,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await page.getByTestId('knot-learned').click();
   await expect(page.getByTestId('knot-learned')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('back').click();
-  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 1 de 49 nudos.');
+  await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 1 de 50 nudos.');
 
   // Asistente: unir dos cuerdas de distinto grosor → vuelta de escota.
   await page.getByText('¿Qué necesito hacer?').click();
