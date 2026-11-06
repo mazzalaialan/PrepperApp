@@ -206,7 +206,12 @@ export function NearbyPage() {
         </ul>
         </>
       )}
-      <p className="hint">{t('emergency.nearbySources')}</p>
+      {/* Argentina: el texto con todas las fuentes; Chile y Uruguay: las de su paquete. */}
+      <p className="hint">
+        {country === 'AR' || !data?.sources
+          ? t('emergency.nearbySources')
+          : t('emergency.nearbySourcesPackage', { sources: [data.sources.police, data.sources.fire, data.sources.health].filter(Boolean).join(' · ') })}
+      </p>
     </div>
   );
 }

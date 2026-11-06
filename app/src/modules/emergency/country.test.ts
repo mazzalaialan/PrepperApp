@@ -20,8 +20,20 @@ describe('paquetes de Chile y Uruguay', () => {
       expect(p.health.length).toBeGreaterThan(100);
       expect(p.radio.length).toBeGreaterThan(10);
       expect(p.places.length).toBeGreaterThan(100);
-      expect(p.osm).toBe(true);
     }
+    // Chile: todo de OpenStreetMap.
+    expect(cl.osm).toBe(true);
+  });
+
+  it('Uruguay: comisarías, bomberos y ASSE oficiales, completados con OpenStreetMap', () => {
+    expect(uy.osm).toBeUndefined();
+    expect(uy.police.filter((p) => !p.osm).length).toBeGreaterThan(250);
+    expect(uy.fire.filter((p) => !p.osm).length).toBeGreaterThan(70);
+    expect(uy.health.filter((p) => !p.osm && p.type === 'Hospital').length).toBeGreaterThan(40);
+    // Montevideo: una comisaría oficial con teléfono, y algún lugar de OpenStreetMap (mutualistas).
+    const near = officialNearby(uy, -34.9, -56.18, 3000);
+    expect(near.some((p) => p.kind === 'police' && p.source === 'official' && p.phone)).toBe(true);
+    expect(near.some((p) => p.source === 'osm')).toBe(true);
   });
 
   it('radio más cercana: Bío-Bío en Santiago, Radio Uruguay en Montevideo', () => {

@@ -16,6 +16,8 @@ export interface Place {
   phone?: string;
   address?: string;
   type?: string;
+  /** En un paquete con listados oficiales (Uruguay): este lugar viene de OpenStreetMap. */
+  osm?: boolean;
 }
 
 export interface RadioStation {
@@ -223,7 +225,7 @@ export function officialNearby(data: EmergencyData, lat: number, lon: number, ra
       lat: p.lat,
       lon: p.lon,
       distance,
-      source: data.osm ? 'osm' : 'official',
+      source: data.osm || p.osm ? 'osm' : 'official',
       detail: p.type ?? '',
     });
   };

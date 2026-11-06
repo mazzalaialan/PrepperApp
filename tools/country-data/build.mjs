@@ -7,11 +7,16 @@
  * - Localidades: GeoNames (CC BY 4.0), con población, para la detección de
  *   ciudad o zona agreste y para ubicar lugares por nombre.
  * - Bomberos, policía y centros de salud: OpenStreetMap (ODbL), vía Overpass.
+ *   Uruguay: la base son los listados oficiales del catálogo de datos abiertos
+ *   (Licencia de Datos Abiertos de Uruguay): comisarías y destacamentos de
+ *   bomberos del Ministerio del Interior y unidades asistenciales de ASSE, con
+ *   teléfono y dirección. De OpenStreetMap se suman los que no están (mutualistas,
+ *   emergencias móviles…) y el teléfono que le falte a uno oficial.
  * - Radios: Radiodifusión Nacional del Uruguay (Radio Uruguay y su red del
  *   interior) y la red de Radio Bío-Bío en Chile (privada, de cobertura nacional:
  *   Chile no tiene radio pública), ubicadas con GeoNames.
  *
- * Uso: node tools/country-data/build.mjs   (necesita conexión; el resultado se versiona)
+ * Uso: node tools/country-data/build.mjs [UY|CL]   (necesita conexión; el resultado se versiona; sin país, los dos)
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -206,6 +211,87 @@ function radios(list, all) {
   return out;
 }
 
+
+// ---------- Uruguay: listados oficiales ----------
+const UY_POLICE_KML = 'https://catalogodatos.gub.uy/dataset/b4fc162d-26cd-443f-b596-8c7a897e4bba/resource/719964a7-70a7-4299-84a3-c64815641f1b/download/comisarias.kml';
+const UY_FIRE_KML = 'https://catalogodatos.gub.uy/dataset/cc6a849b-86ac-4a55-ba7c-c08d2fe616a8/resource/64db651d-32c3-4ea5-9516-8d14b9b0fb9a/download/destacamentosbomberos.kml';
+const UY_ASSE = 'https://catalogodatos.gub.uy/api/3/action/package_show?id=unidades-asistenciales-de-asse';
+/** De ASSE, lo que sirve ante una emergencia (no salud mental ni residencias). */
+const UY_HEALTH = new Set(['HOSPITAL', 'CENTRO DE SALUD', 'POLICLINICA', 'CONSULTORIO']);
+
+/** "MALDONADO" → "Maldonado"; "JOSE IGNACIO" → "Jose Ignacio" (los listados vienen en mayúsculas y sin tildes). */
+/** Palabras de los listados oficiales que vienen sin tilde. */
+const ACCENTS = { Comisaria: 'Comisaría', Subcomisaria: 'Subcomisaría', Policlinica: 'Policlínica', Jefatura: 'Jefatura', Seccion: 'Sección', Region: 'Región', Policia: 'Policía' };
+const title = (s) =>
+  (s ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/(^|[\s(./-])\p{L}/gu, (c) => c.toUpperCase())
+    // Artículos y preposiciones en minúscula, salvo al principio.
+    .replace(/(?<=\S\s)(De|Del|La|Las|Los|Y|El|En)\b/g, (w) => w.toLowerCase())
+    .replace(/\p{L}+/gu, (w) => ACCENTS[w] ?? w);
+const r5 = (n) => Math.round(n * 1e5) / 1e5;
+const digits = (s) => (/\d{6,}/.test((s ?? '').replace(/\D/g, '')) ? String(s).trim() : '');
+
+function kmlPlacemarks(text) {
+  return [...text.matchAll(/<Placemark>([\s\S]*?)<\/Placemark>/g)].map((m) => {
+    const data = Object.fromEntries([...m[1].matchAll(/<SimpleData name="([^"]+)">([\s\S]*?)<\/SimpleData>/g)].map((d) => [d[1], d[2].trim()]));
+    const [lon, lat] = (m[1].match(/<coordinates>\s*([-\d.]+),([-\d.]+)/) ?? []).slice(1).map(Number);
+    return { data, lat, lon };
+  });
+}
+
+async function uyOfficial() {
+  const text = async (url) => new TextDecoder().decode(await getBytes(url));
+  const police = kmlPlacemarks(await text(UY_POLICE_KML))
+    .filter((p) => Number.isFinite(p.lat))
+    .map(({ data: d, lat, lon }) => ({
+      name: `${title(d.TIPO || 'Comisaría')} ${d.SECCIONAL ? `${d.SECCIONAL}.ª ` : ''}de ${title(d.CIUDAD_LOC || d.DEPTO)}`.replace(/\s+/g, ' '),
+      type: title(d.TIPO),
+      phone: digits(d.TELEFONO),
+      address: [title(d.DIRECCION), title(d.CIUDAD_LOC), title(d.DEPTO)].filter(Boolean).join(', '),
+      lat: r5(lat),
+      lon: r5(lon),
+    }));
+  const fire = kmlPlacemarks(await text(UY_FIRE_KML))
+    .filter((p) => Number.isFinite(p.lat))
+    .map(({ data: d, lat, lon }) => ({ name: `Bomberos ${title(d.NOMBRE)}`, address: title(d.DEPARTAMEN), lat: r5(lat), lon: r5(lon) }));
+  // El archivo de ASSE cambia de nombre con cada actualización: se busca en el catálogo.
+  const pkg = JSON.parse(await text(UY_ASSE));
+  const geojson = pkg.result.resources.find((r) => /geojson/i.test(r.format)).url;
+  const health = JSON.parse(await text(geojson))
+    .features.filter((f) => UY_HEALTH.has(f.properties.Categoria) && f.geometry?.type === 'Point')
+    .map((f) => {
+      const p = f.properties;
+      const cat = p.Categoria === 'POLICLINICA' ? 'Policlínica' : title(p.Categoria);
+      return {
+        name: title(p.Nombre),
+        type: cat,
+        phone: digits(p.Telefono),
+        address: [title(p.Direccion), title(p.Localidad), title(p.Departamento)].filter(Boolean).join(', '),
+        lat: r5(f.geometry.coordinates[1]),
+        lon: r5(f.geometry.coordinates[0]),
+      };
+    });
+  return { police, fire, health };
+}
+
+/** Distancia aproximada en metros (para no duplicar un lugar oficial con el de OpenStreetMap). */
+const meters = (a, b) => Math.hypot((a.lat - b.lat) * 111_320, (a.lon - b.lon) * 111_320 * Math.cos((a.lat * Math.PI) / 180));
+
+/** Oficiales + los de OSM que no están a menos de 150 m de uno oficial (marcados `osm`); el teléfono que falte, de OSM. */
+function withOsm(official, osm) {
+  const out = official.map((p) => ({ ...p }));
+  for (const o of osm.filter(Boolean)) {
+    const twin = out.find((p) => !p.osm && meters(p, o) < 150);
+    if (twin) {
+      if (!twin.phone && o.phone) twin.phone = o.phone;
+      if (!twin.address && o.address) twin.address = o.address;
+    } else out.push({ ...o, osm: true });
+  }
+  return out;
+}
+
 async function build(cc, radioList, labels) {
   const admin1 = await admin1Names();
   const { provinces, places, all } = await geonames(cc, admin1);
@@ -224,21 +310,32 @@ async function build(cc, radioList, labels) {
       health.push(place);
     }
   }
+  // Uruguay: los listados oficiales, completados con OpenStreetMap; Chile: solo OpenStreetMap.
+  const official = cc === 'UY' ? await uyOfficial() : null;
+  const UY_SRC = 'Ministerio del Interior (catalogodatos.gub.uy, Licencia de Datos Abiertos de Uruguay)';
   const data = {
     country: cc,
     generatedAt: new Date().toISOString().slice(0, 10),
-    // Los lugares vienen de OpenStreetMap (no de un listado oficial).
-    osm: true,
-    sources: {
-      fire: 'OpenStreetMap (ODbL)',
-      police: 'OpenStreetMap (ODbL)',
-      health: 'OpenStreetMap (ODbL)',
-      radio: labels.radioSource,
-      places: 'GeoNames (CC BY 4.0)',
-    },
-    fire: fire.filter(Boolean),
-    police: police.filter(Boolean),
-    health: health.filter(Boolean),
+    // Sin listados oficiales, todos los lugares vienen de OpenStreetMap.
+    ...(official ? {} : { osm: true }),
+    sources: official
+      ? {
+          fire: `Destacamentos de bomberos: ${UY_SRC}; los que faltan: OpenStreetMap (ODbL)`,
+          police: `Comisarías: ${UY_SRC}; las que faltan: OpenStreetMap (ODbL)`,
+          health: 'Unidades asistenciales de ASSE (catalogodatos.gub.uy, Licencia de Datos Abiertos de Uruguay); mutualistas y los que faltan: OpenStreetMap (ODbL)',
+          radio: labels.radioSource,
+          places: 'GeoNames (CC BY 4.0)',
+        }
+      : {
+          fire: 'OpenStreetMap (ODbL)',
+          police: 'OpenStreetMap (ODbL)',
+          health: 'OpenStreetMap (ODbL)',
+          radio: labels.radioSource,
+          places: 'GeoNames (CC BY 4.0)',
+        },
+    fire: official ? withOsm(official.fire, fire) : fire.filter(Boolean),
+    police: official ? withOsm(official.police, police) : police.filter(Boolean),
+    health: official ? withOsm(official.health, health) : health.filter(Boolean),
     radio: radios(radioList, all),
     provinces,
     places,
@@ -250,5 +347,6 @@ async function build(cc, radioList, labels) {
   );
 }
 
-await build('UY', RADIO_UY, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Radiodifusión Nacional del Uruguay (Wikipedia)' });
-await build('CL', RADIO_CL, { fire: 'Bomberos', police: 'Carabineros', health: 'Centro de salud', radioSource: 'Radio Bío-Bío (Wikipedia)' });
+const only = process.argv[2];
+if (!only || only === 'UY') await build('UY', RADIO_UY, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Radiodifusión Nacional del Uruguay (Wikipedia)' });
+if (!only || only === 'CL') await build('CL', RADIO_CL, { fire: 'Bomberos', police: 'Carabineros', health: 'Centro de salud', radioSource: 'Radio Bío-Bío (Wikipedia)' });
