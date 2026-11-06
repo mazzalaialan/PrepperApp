@@ -125,8 +125,8 @@ test('mapa de tiempo: capas, animación, tocar un sismo o una alerta, y sin cone
   await mockSources(page);
   await setup(page);
   await page.goto('/#/weather');
-  await page.getByRole('link', { name: /Mapa/ }).click();
-  await expect(page.getByRole('heading', { name: 'Mapa de tiempo' })).toBeVisible();
+  await page.getByRole('link', { name: /Mapa de alertas y clima/ }).click();
+  await expect(page.getByRole('heading', { name: 'Mapa de alertas y clima' })).toBeVisible();
   await expect(page.getByTestId('weather-map')).toBeVisible();
 
   // Satélite y lluvia estimada prendidos por defecto: 2 horas de imágenes para animar.

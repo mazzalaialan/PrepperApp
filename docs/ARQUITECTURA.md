@@ -364,7 +364,7 @@ La app se organiza en siete secciones:
 | Emergencias (antes "Botiquín") | Contactos de emergencia, mi ubicación para socorristas, botiquines por tipo, ficha médica familiar, guías de primeros auxilios, radio |
 | Documentos | Documentos personales con N fotos |
 | Orientación | Brújula, declinómetro, inclinómetro, GPS y waypoints, mapas offline, mapa estelar |
-| Meteorología | Clima, sol y luna, mapa de tiempo y peligros naturales (§12.4) |
+| Meteorología | Clima, sol y luna, Mapa de alertas y clima (alertas oficiales y peligros naturales, §12.4) |
 | Inventario | Artículos, ubicaciones, alertas, categorías, recomendaciones |
 | Huerta y cultivo | Calendario de siembra y cosecha, canteros y seguimiento |
 | Biblioteca | Manuales |

@@ -76,7 +76,7 @@
     "starmap": { "title": "Mapa estelar", "desc": "Orientación por las estrellas" },
     "gardenCalendar": { "title": "Calendario de siembra", "desc": "Qué sembrar y cosechar en esta época (INTA)" },
     "gardenBeds": { "title": "Mis canteros", "desc": "Qué plantar según el sol y seguimiento de cada planta" },
-    "weatherMap": { "title": "Mapa", "desc": "Tormentas, rayos, sismos, incendios y volcanes" },
+    "weatherMap": { "title": "Mapa de alertas y clima", "desc": "Alertas oficiales, tormentas, rayos, sismos, incendios y volcanes" },
     "library": { "title": "Manuales", "desc": "Biblioteca de supervivencia offline" }
   },
   "status": {
@@ -762,7 +762,7 @@
     "attribution": "Mapa: © OpenFreeMap, © OpenMapTiles, © colaboradores de OpenStreetMap. Elevación: Terrain Tiles (AWS Open Data)."
   },
   "weatherMap": {
-    "title": "Mapa de tiempo",
+    "title": "Mapa de alertas y clima",
     "loading": "Cargando el mapa…",
     "offline": "Sin conexión: se ven el mapa, los volcanes, tus waypoints y lo último descargado de sismos y clima.",
     "failed": "No se pudo actualizar: {{sources}}. Se muestra lo último que haya.",

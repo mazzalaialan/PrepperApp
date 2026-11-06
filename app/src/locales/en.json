@@ -76,7 +76,7 @@
     "starmap": { "title": "Star map", "desc": "Navigate by the stars" },
     "gardenCalendar": { "title": "Planting calendar", "desc": "What to sow and harvest this season (INTA)" },
     "gardenBeds": { "title": "My beds", "desc": "What to plant by sunlight, and plant tracking" },
-    "weatherMap": { "title": "Map", "desc": "Storms, lightning, earthquakes, fires and volcanoes" },
+    "weatherMap": { "title": "Alerts and weather map", "desc": "Official alerts, storms, lightning, earthquakes, fires and volcanoes" },
     "library": { "title": "Manuals", "desc": "Offline survival library" }
   },
   "status": {
@@ -762,7 +762,7 @@
     "attribution": "Map: © OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors. Elevation: Terrain Tiles (AWS Open Data)."
   },
   "weatherMap": {
-    "title": "Weather map",
+    "title": "Alerts and weather map",
     "loading": "Loading the map…",
     "offline": "Offline: the map, volcanoes, your waypoints and the last downloaded earthquakes and weather are shown.",
     "failed": "Couldn't update: {{sources}}. Showing the latest available.",

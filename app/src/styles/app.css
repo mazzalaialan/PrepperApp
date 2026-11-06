@@ -1980,7 +1980,7 @@ a.module-card:hover {
 .lvl .wind-arrow { color: inherit; }
 .weather-facts .wind-arrow { vertical-align: -4px; }
 
-/* ---------- Mapa de tiempo ---------- */
+/* ---------- Mapa de alertas y clima ---------- */
 
 .wmap {
   height: min(68dvh, 680px);
