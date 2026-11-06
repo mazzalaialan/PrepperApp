@@ -2232,6 +2232,13 @@
     "selected_other": "{{count}} libros elegidos · {{mb}} MB",
     "download": "Descargar",
     "downloading": "Bajando {{n}} de {{total}}: {{title}}",
+    "cancelDownload": "Cancelar descarga",
+    "stopped": {
+      "cancelled_one": "Descarga cancelada. Lo ya bajado queda guardado; falta {{count}} libro, que sigue elegido para cuando quieras.",
+      "cancelled_other": "Descarga cancelada. Lo ya bajado queda guardado; faltan {{count}} libros, que siguen elegidos para cuando quieras.",
+      "cellular_one": "Se pausó la descarga porque el celular pasó a datos móviles. Falta {{count}} libro: tocá Descargar para seguir.",
+      "cellular_other": "Se pausó la descarga porque el celular pasó a datos móviles. Faltan {{count}} libros: tocá Descargar para seguir."
+    },
     "keyTitle": "Clave VikArg",
     "key": "Clave VikArg",
     "keyOk": "Desbloquear",
@@ -2249,10 +2256,12 @@
       "too-many-tries": "demasiados intentos, probá más tarde",
       "download": "no se pudo bajar",
       "corrupt": "llegó dañado",
-      "no-storage": "este navegador no puede guardarlo"
+      "no-storage": "este navegador no puede guardarlo",
+      "cancelled": "descarga cancelada"
     },
     "chapter": "Capítulo",
     "chapterOf": "{{n}} de {{total}}",
+    "preparing": "Preparando el lector…",
     "smaller": "Letra más chica",
     "bigger": "Letra más grande",
     "allBooks": "Todos los libros",

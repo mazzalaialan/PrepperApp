@@ -84,3 +84,36 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await expect(page.getByTestId('knot-library')).toContainText('No aparece en los 2 libros de nudos');
   await context.setOffline(false);
 });
+
+test('biblioteca: cancelar una descarga en curso no gasta más datos y deja lo que falta elegido', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/settings');
+  await page.getByRole('button', { name: 'Desbloquear para modificar' }).first().click();
+  await page.getByLabel('Servidor VikArg').fill(SERVER);
+  await page.getByRole('button', { name: 'Guardar' }).last().click();
+
+  // El libro tarda en llegar (como con mala señal): la descarga queda en curso.
+  let requested = 0;
+  await page.route(`${SERVER}/api/library/books/**`, async () => {
+    requested++;
+    await new Promise(() => {});
+  });
+  await page.goto('/#/library/books');
+  await page.getByRole('button', { name: 'Libres', exact: true }).click();
+  await page.getByTestId('library-select-visible').click();
+  await page.getByTestId('library-download').click();
+  await expect(page.getByTestId('library-bar')).toContainText('Bajando 1 de 1');
+  await expect.poll(() => requested).toBe(1);
+
+  await page.getByTestId('library-cancel').click();
+  await expect(page.getByTestId('library-stopped')).toContainText('Descarga cancelada');
+  await expect(page.getByTestId('library-bar')).toContainText('1 libro elegido');
+  await expect(page.getByTestId('book-montanismo').getByLabel('En el dispositivo')).toHaveCount(0);
+  expect(requested).toBe(1);
+});

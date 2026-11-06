@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AArrowDown, AArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -31,6 +31,28 @@ function readerCss(fontPct: number): string {
 }
 
 /** Visor de un libro bajado, sin conexión. */
+/**
+ * Los capítulos los sirve el service worker desde lo guardado en el dispositivo:
+ * hasta que controla la página (primera visita, recién instalado) el marco quedaría
+ * vacío. Se espera a que tome el control, como mucho 10 s (sin service worker, por
+ * ejemplo en desarrollo, se intenta igual).
+ */
+function useServiceWorkerControl(): boolean {
+  const sw = typeof navigator !== 'undefined' ? navigator.serviceWorker : undefined;
+  const [ready, setReady] = useState(() => !sw || !!sw.controller);
+  useEffect(() => {
+    if (ready || !sw) return;
+    const on = () => setReady(true);
+    sw.addEventListener('controllerchange', on);
+    const timer = setTimeout(on, 10_000);
+    return () => {
+      sw.removeEventListener('controllerchange', on);
+      clearTimeout(timer);
+    };
+  }, [ready, sw]);
+  return ready;
+}
+
 export function ReaderPage() {
   const { id = '' } = useParams();
   const [params, setParams] = useSearchParams();
@@ -41,6 +63,7 @@ export function ReaderPage() {
   const fontPct = useSettings((s) => s.settings.readerFontPct);
   const update = useSettings((s) => s.update);
   const frame = useRef<HTMLIFrameElement>(null);
+  const swReady = useServiceWorkerControl();
   const chapters = book?.chapters ?? [];
   const file = params.get('cap') ?? chapters[0]?.file ?? 'index.html';
   const idx = Math.max(0, chapters.findIndex((c) => c.file === file));
@@ -101,6 +124,11 @@ export function ReaderPage() {
           <AArrowUp size={20} />
         </button>
       </div>
+      {!swReady ? (
+        <p className="hint reader-frame" role="status" data-testid="reader-wait">
+          {t('library.preparing')}
+        </p>
+      ) : (
       <iframe
         ref={frame}
         key={file}
@@ -112,6 +140,7 @@ export function ReaderPage() {
         onLoad={style}
         data-testid="reader-frame"
       />
+      )}
       {chapters.length > 1 && (
         <div className="reader-nav">
           <button className="btn" type="button" disabled={idx === 0} onClick={() => go(idx - 1)}>

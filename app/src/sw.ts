@@ -61,6 +61,10 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();
 });
 
+// Al activarse toma las pestañas abiertas: en la primera visita la página no queda sin
+// service worker hasta recargar (lo necesitan el lector de libros y los mapas sin conexión).
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
 // ---------- Notificaciones ----------
 
 async function language(): Promise<'es' | 'en'> {

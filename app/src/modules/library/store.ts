@@ -30,6 +30,8 @@ interface LibraryState {
   progress: DownloadProgress | null;
   /** Errores por libro de la última descarga. */
   failures: Map<string, LibraryError['code']>;
+  /** Por qué se cortó la última descarga antes de terminar. */
+  stopped: 'cancelled' | 'cellular' | null;
   load: () => Promise<void>;
   clear: () => void;
   refresh: (serverUrl: string) => Promise<void>;
@@ -39,8 +41,18 @@ interface LibraryState {
   unlockPrivate: (passphrase: string, remember: boolean) => Promise<boolean>;
   forgetKey: () => Promise<void>;
   download: (serverUrl: string) => Promise<void>;
+  /** Corta la descarga en curso: lo ya bajado queda; lo que falta sigue seleccionado para después. */
+  cancelDownload: (reason?: 'cancelled' | 'cellular') => void;
   remove: (id: string) => Promise<void>;
 }
+
+/** Descarga en curso (para cancelarla). */
+let current: AbortController | null = null;
+let stopReason: 'cancelled' | 'cellular' | null = null;
+
+/** Conexión del dispositivo (Network Information API: Chrome para Android la tiene; Safari y Firefox no). */
+type Connection = EventTarget & { type?: string };
+const connection = () => (navigator as Navigator & { connection?: Connection }).connection;
 
 async function saveIndex(installed: Map<string, InstalledBook>) {
   await blobStore.put(INDEX_ID, strToU8(JSON.stringify([...installed.values()])) as Uint8Array<ArrayBuffer>);
@@ -62,6 +74,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   key: null,
   passphrase: null,
   progress: null,
+  stopped: null,
   failures: new Map(),
 
   async load() {
@@ -73,7 +86,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   clear() {
-    set({ ready: false, installed: new Map(), selected: new Set(), key: null, passphrase: null, progress: null, failures: new Map() });
+    set({ ready: false, installed: new Map(), selected: new Set(), key: null, passphrase: null, progress: null, failures: new Map(), stopped: null });
   },
 
   async refresh(serverUrl) {
@@ -128,6 +141,17 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     const ids = [...get().selected].filter((id) => books.has(id));
     const failures = new Map<string, LibraryError['code']>();
     void navigator.storage?.persist?.();
+    const ctrl = new AbortController();
+    current = ctrl;
+    stopReason = null;
+    set({ stopped: null });
+    // Si empezó con Wi-Fi (o cable) y el celular pasa a datos móviles, se pausa sola para no gastar el plan.
+    const conn = connection();
+    const startedOnCellular = conn?.type === 'cellular';
+    const onChange = () => {
+      if (!startedOnCellular && conn?.type === 'cellular') get().cancelDownload('cellular');
+    };
+    conn?.addEventListener('change', onChange);
     // Dos a la vez: un bloque grande baja más rápido sin saturar el celular.
     let next = 0;
     let done = 0;
@@ -137,7 +161,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     const report = (title: string) =>
       set({ progress: { title, n: Math.min(done + 1, ids.length), total: ids.length, bytes: [...got.values()].reduce((a, b) => a + b, 0), bookBytes: totalBytes } });
     async function worker() {
-      while (!stop && next < ids.length) {
+      while (!stop && !ctrl.signal.aborted && next < ids.length) {
         const id = ids[next++]!;
         const { book, categoryId } = books.get(id)!;
         report(book.title);
@@ -145,6 +169,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
           const inst = await installBook(serverUrl, book, categoryId, {
             key: get().key ?? undefined,
             passphrase: get().passphrase ?? undefined,
+            signal: ctrl.signal,
             onProgress: (bytes) => {
               got.set(id, bytes);
               report(book.title);
@@ -157,6 +182,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
           selected.delete(id);
           set({ selected });
         } catch (e) {
+          if (ctrl.signal.aborted) break; // cancelada: no es un error del libro
           failures.set(id, e instanceof LibraryError ? e.code : 'download');
           // Sin conexión o clave mal: no tiene sentido seguir con los demás.
           if (e instanceof LibraryError && (e.code === 'offline' || e.code === 'too-many-tries')) stop = true;
@@ -166,7 +192,15 @@ export const useLibrary = create<LibraryState>((set, get) => ({
       }
     }
     await Promise.all([worker(), worker()]);
-    set({ progress: null, failures });
+    conn?.removeEventListener('change', onChange);
+    if (current === ctrl) current = null;
+    set({ progress: null, failures, stopped: ctrl.signal.aborted ? stopReason : null });
+  },
+
+  cancelDownload(reason = 'cancelled') {
+    if (!current || current.signal.aborted) return;
+    stopReason = reason;
+    current.abort();
   },
 
   async remove(id) {

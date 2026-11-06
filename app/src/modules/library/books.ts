@@ -45,7 +45,7 @@ const CATALOG_KEY = 'catalog.json';
 export const bookUrl = (id: string, file = 'index.html') => `${import.meta.env.BASE_URL}library/books/${id}/${file}`;
 
 export class LibraryError extends Error {
-  constructor(public readonly code: 'offline' | 'no-library' | 'bad-key' | 'key-required' | 'too-many-tries' | 'download' | 'corrupt' | 'no-storage') {
+  constructor(public readonly code: 'offline' | 'no-library' | 'bad-key' | 'key-required' | 'too-many-tries' | 'download' | 'corrupt' | 'no-storage' | 'cancelled') {
     super(code);
   }
 }
@@ -125,7 +125,7 @@ export async function installBook(
   serverUrl: string,
   book: LibraryBook,
   categoryId: string,
-  opts: { key?: CryptoKey; passphrase?: string; onProgress?: (done: number, total: number) => void },
+  opts: { key?: CryptoKey; passphrase?: string; onProgress?: (done: number, total: number) => void; signal?: AbortSignal },
 ): Promise<InstalledBook> {
   if (!navigator.onLine) throw new LibraryError('offline');
   if (!('caches' in globalThis)) throw new LibraryError('no-storage');
@@ -136,9 +136,9 @@ export async function installBook(
   }
   let res: Response;
   try {
-    res = await fetch(`${base(serverUrl)}/api/library/books/${encodeURIComponent(book.id)}`, { headers });
+    res = await fetch(`${base(serverUrl)}/api/library/books/${encodeURIComponent(book.id)}`, { headers, signal: opts.signal });
   } catch {
-    throw new LibraryError('download');
+    throw new LibraryError(opts.signal?.aborted ? 'cancelled' : 'download');
   }
   if (res.status === 403) throw new LibraryError('bad-key');
   if (res.status === 429) throw new LibraryError('too-many-tries');
@@ -147,13 +147,19 @@ export async function installBook(
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
   let got = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    got += value.length;
-    opts.onProgress?.(got, book.bytes);
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      got += value.length;
+      opts.onProgress?.(got, book.bytes);
+    }
+  } catch {
+    throw new LibraryError(opts.signal?.aborted ? 'cancelled' : 'download');
   }
+  // Cancelada justo al terminar de bajar: no se guarda.
+  if (opts.signal?.aborted) throw new LibraryError('cancelled');
   const raw = new Uint8Array(got);
   let off = 0;
   for (const c of chunks) {

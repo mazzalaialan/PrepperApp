@@ -2232,6 +2232,13 @@
     "selected_other": "{{count}} books chosen · {{mb}} MB",
     "download": "Download",
     "downloading": "Downloading {{n}} of {{total}}: {{title}}",
+    "cancelDownload": "Cancel download",
+    "stopped": {
+      "cancelled_one": "Download cancelled. What was already downloaded is kept; {{count}} book is left and stays selected for later.",
+      "cancelled_other": "Download cancelled. What was already downloaded is kept; {{count}} books are left and stay selected for later.",
+      "cellular_one": "Download paused because the phone switched to mobile data. {{count}} book is left: tap Download to continue.",
+      "cellular_other": "Download paused because the phone switched to mobile data. {{count}} books are left: tap Download to continue."
+    },
     "keyTitle": "VikArg key",
     "key": "VikArg key",
     "keyOk": "Unlock",
@@ -2249,10 +2256,12 @@
       "too-many-tries": "too many tries, try later",
       "download": "could not download",
       "corrupt": "arrived damaged",
-      "no-storage": "this browser cannot store it"
+      "no-storage": "this browser cannot store it",
+      "cancelled": "download cancelled"
     },
     "chapter": "Chapter",
     "chapterOf": "{{n}} of {{total}}",
+    "preparing": "Getting the reader ready…",
     "smaller": "Smaller text",
     "bigger": "Larger text",
     "allBooks": "All books",

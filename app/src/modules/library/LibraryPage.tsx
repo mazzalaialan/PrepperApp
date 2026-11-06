@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { BookOpen, CircleCheck, Download, Lock, RefreshCw, Search, Trash2, Unlock } from 'lucide-react';
+import { BookOpen, CircleCheck, Download, Lock, RefreshCw, Search, Trash2, Unlock, X } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { Dialog } from '@/ui/Dialog';
 import type { LibraryBook } from './books';
@@ -75,7 +75,7 @@ export function LibraryPage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const serverUrl = useSettings((s) => s.settings.serverUrl);
-  const { catalog, offline, loading, installed, selected, key, progress, failures, refresh, toggle, setSelected, download, remove, forgetKey, passphrase } = useLibrary(
+  const { catalog, offline, loading, installed, selected, key, progress, failures, stopped, refresh, toggle, setSelected, download, cancelDownload, remove, forgetKey, passphrase } = useLibrary(
     useShallow((s) => ({
       catalog: s.catalog,
       offline: s.offline,
@@ -85,10 +85,12 @@ export function LibraryPage() {
       key: s.key,
       progress: s.progress,
       failures: s.failures,
+      stopped: s.stopped,
       refresh: s.refresh,
       toggle: s.toggle,
       setSelected: s.setSelected,
       download: s.download,
+      cancelDownload: s.cancelDownload,
       remove: s.remove,
       forgetKey: s.forgetKey,
       passphrase: s.passphrase,
@@ -279,8 +281,18 @@ export function LibraryPage() {
                 <span className="progress-bar" style={{ width: `${(100 * progress.bytes) / Math.max(1, progress.bookBytes)}%` }} />
               </span>
             </div>
+          ) : null}
+          {progress ? (
+            <button className="btn" type="button" onClick={() => cancelDownload()} data-testid="library-cancel">
+              <X size={18} /> {t('library.cancelDownload')}
+            </button>
           ) : (
             <>
+              {stopped && (
+                <span className="hint" role="status" data-testid="library-stopped" style={{ flexBasis: '100%' }}>
+                  {t(`library.stopped.${stopped}`, { count: chosen.length })}
+                </span>
+              )}
               <span style={{ flex: 1 }}>{t('library.selected', { count: chosen.length, mb: mb(chosenBytes, lang) })}</span>
               <button className="btn" type="button" onClick={() => setSelected([...selected], false)}>
                 {t('common.cancel')}
