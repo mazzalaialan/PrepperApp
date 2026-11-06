@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "e2e": "playwright test",
+    "e2e:full": "sh scripts/e2e-full.sh",
     "e2e:rapido": "playwright test --project=desktop --grep-invert \"mapa|seguir un track\"",
     "icons": "node scripts/generate-icons.mjs"
   },
