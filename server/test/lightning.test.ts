@@ -87,7 +87,7 @@ describe('avisos de rayos', () => {
     await runLightningWatch(db, push, [flashNorth(3)], at(1));
     assert.deepEqual(push.sent.map((p) => p.lightning!.placeId), ['w1']);
 
-    const rain: RainSource = { name: 'x', outlooks: async (pts: RainPoint[]) => pts.map(() => ({ state: 'raining' as const, mm: 2 })) };
+    const rain: RainSource = { name: 'x', outlooks: async (pts: RainPoint[]) => pts.map(() => ({ state: 'raining' as const, mm: 2, peakMmH: 2 })) };
     push.sent = [];
     await runRainWatch(db, push, rain, at(1));
     assert.deepEqual(push.sent.map((p) => p.rain!.placeId), ['w1']);

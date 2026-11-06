@@ -2,6 +2,7 @@ import type { Db } from '../db.ts';
 import { withoutDuplicateHere } from '../places.ts';
 import type { PushSender, PushSubscriptionJson } from '../push.ts';
 import type { RainSource } from './source.ts';
+import { nextEpisode } from './episode.ts';
 
 interface PlaceRow {
   device_id: string;
@@ -11,6 +12,8 @@ interface PlaceRow {
   lon: number;
   fix_at: string | null;
   notified: number;
+  rain_level: number;
+  dry_since: number | null;
   subscription: string;
 }
 
@@ -23,7 +26,9 @@ export interface RainWatchResult {
 /**
  * Una pasada de los avisos de lluvia con la app cerrada: consulta cada lugar
  * (los repetidos, una sola vez) y avisa una vez por episodio, igual que la app
- * abierta (app/src/modules/weather/rainWatch.ts). "Donde estoy" usa la última
+ * abierta (app/src/modules/weather/rainWatch.ts): el episodio termina recién
+ * después de 3 horas sin lluvia, y dentro de él solo se vuelve a avisar si la
+ * lluvia sube de nivel (rain/episode.ts). "Donde estoy" usa la última
  * ubicación que mandó la app; si es más vieja que `hereMaxAgeMs`, no se usa, y
  * si está cerca de un waypoint con aviso, avisa solo el waypoint.
  */
@@ -32,7 +37,7 @@ export async function runRainWatch(db: Db, push: PushSender, source: RainSource,
   const rows = withoutDuplicateHere(
     db
       .prepare(
-        `SELECT p.device_id, p.place_id, p.label, p.lat, p.lon, p.fix_at, p.notified, d.subscription
+        `SELECT p.device_id, p.place_id, p.label, p.lat, p.lon, p.fix_at, p.notified, p.rain_level, p.dry_since, d.subscription
          FROM rain_places p JOIN devices d ON d.id = p.device_id`,
       )
       .all() as unknown as PlaceRow[],
@@ -45,7 +50,7 @@ export async function runRainWatch(db: Db, push: PushSender, source: RainSource,
   const byKey = new Map(unique.map(([key], i) => [key, outlooks[i] ?? null]));
   result.checked = unique.length;
 
-  const setNotified = db.prepare('UPDATE rain_places SET notified = ? WHERE device_id = ? AND place_id = ?');
+  const save = db.prepare('UPDATE rain_places SET notified = ?, rain_level = ?, dry_since = ? WHERE device_id = ? AND place_id = ?');
   const removeDevice = db.prepare('DELETE FROM devices WHERE id = ?');
   const gone = new Set<string>();
 
@@ -53,11 +58,13 @@ export async function runRainWatch(db: Db, push: PushSender, source: RainSource,
     if (gone.has(row.device_id)) continue;
     const outlook = byKey.get(keyOf(row));
     if (!outlook) continue;
-    if (outlook.state === 'dry') {
-      if (row.notified) setNotified.run(0, row.device_id, row.place_id);
+    const prev = row.notified ? { level: row.rain_level || 1, drySince: row.dry_since } : null;
+    const { episode, notify } = nextEpisode(prev, outlook, now.getTime());
+    const store = () => save.run(episode ? 1 : 0, episode?.level ?? 0, episode?.drySince ?? null, row.device_id, row.place_id);
+    if (!notify || outlook.state === 'dry') {
+      if (prev?.level !== episode?.level || prev?.drySince !== episode?.drySince) store();
       continue;
     }
-    if (row.notified) continue;
     const delivered = await push.send(JSON.parse(row.subscription) as PushSubscriptionJson, {
       type: 'rain',
       rain: {
@@ -68,6 +75,7 @@ export async function runRainWatch(db: Db, push: PushSender, source: RainSource,
         mm: Math.round(outlook.mm * 10) / 10,
         fixAt: row.fix_at,
         ...(outlook.state === 'raining' && outlook.observedMmH !== undefined ? { observedMmH: outlook.observedMmH } : {}),
+        ...(notify === 'stronger' ? { stronger: true } : {}),
       },
     });
     if (!delivered) {
@@ -76,7 +84,7 @@ export async function runRainWatch(db: Db, push: PushSender, source: RainSource,
       result.removed++;
       continue;
     }
-    setNotified.run(1, row.device_id, row.place_id);
+    store();
     result.sent++;
   }
   return result;

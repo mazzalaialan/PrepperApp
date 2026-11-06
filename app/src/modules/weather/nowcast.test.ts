@@ -19,6 +19,8 @@ describe('rainOutlook', () => {
       inMinutes: 45,
       startsAt: '2026-10-30T14:45',
       mm: 3.7,
+      // El intervalo más fuerte: 2 mm en 15 minutos = 8 mm/h.
+      peakMmH: 8,
     });
   });
 

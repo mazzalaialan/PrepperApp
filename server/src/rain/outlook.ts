@@ -19,8 +19,8 @@ export interface Nowcast {
 
 export type RainOutlook =
   /** `observedMmH`: lluvia estimada por satélite en el lugar (solo en el servidor, ver observer.ts). */
-  | { state: 'raining'; mm: number; observedMmH?: number }
-  | { state: 'soon'; inMinutes: number; startsAt: string; mm: number }
+  | { state: 'raining'; mm: number; peakMmH: number; observedMmH?: number }
+  | { state: 'soon'; inMinutes: number; startsAt: string; mm: number; peakMmH: number }
   | { state: 'dry' };
 
 /** Por debajo de esto (en 15 min) no se considera lluvia: evita avisar por lloviznas de 0,1 mm. */
@@ -35,7 +35,9 @@ export function rainOutlook(nowcast: Nowcast): RainOutlook {
   const first = upcoming.findIndex((s) => s.mm >= RAIN_MM_PER_SLOT);
   if (first === -1) return { state: 'dry' };
   const mm = upcoming.slice(first).reduce((sum, s) => sum + s.mm, 0);
+  // Intensidad: el intervalo de 15 minutos más fuerte, en mm/h.
+  const peakMmH = Math.max(...upcoming.slice(first).map((s) => s.mm)) * 4;
   const startsIn = minutesBetween(nowcast.now.slice(0, 16), upcoming[first]!.time);
-  if (startsIn <= 0) return { state: 'raining', mm };
-  return { state: 'soon', inMinutes: Math.round(startsIn / 5) * 5, startsAt: upcoming[first]!.time, mm };
+  if (startsIn <= 0) return { state: 'raining', mm, peakMmH };
+  return { state: 'soon', inMinutes: Math.round(startsIn / 5) * 5, startsAt: upcoming[first]!.time, mm, peakMmH };
 }

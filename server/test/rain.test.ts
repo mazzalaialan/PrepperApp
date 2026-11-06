@@ -69,21 +69,21 @@ describe('avisos de lluvia', () => {
     assert.equal((await putPlaces(deviceId, token, [{ ...refugio, lat: 120 }])).statusCode, 400);
   });
 
-  it('avisa una vez por episodio y vuelve a avisar después de que se seca', async () => {
+  it('avisa una vez por episodio: no se repite si el pronóstico va y viene; sí si se intensifica o después de 3 horas secas', async () => {
     const { deviceId, token } = await register();
     await putPlaces(deviceId, token, [refugio]);
 
     await runRainWatch(db, push, source, NOW);
     assert.equal(push.sent.length, 0);
 
-    source.outlook = { state: 'soon', inMinutes: 45, startsAt: '2026-11-03T15:45', mm: 3.14 };
+    source.outlook = { state: 'soon', inMinutes: 45, startsAt: '2026-11-03T15:45', mm: 3.14, peakMmH: 2 };
     await runRainWatch(db, push, source, NOW);
     assert.deepEqual(push.sent[0], {
       type: 'rain',
       rain: { placeId: 'w1', label: 'Refugio', state: 'soon', inMinutes: 45, mm: 3.1, fixAt: null },
     });
 
-    source.outlook = { state: 'raining', mm: 5 };
+    source.outlook = { state: 'raining', mm: 5, peakMmH: 2 };
     await runRainWatch(db, push, source, NOW); // mismo episodio
     assert.equal(push.sent.length, 1);
 
@@ -94,11 +94,37 @@ describe('avisos de lluvia', () => {
 
     source.outlook = null; // la fuente no respondió: no cambia nada
     await runRainWatch(db, push, source, NOW);
+    const at = (min: number) => new Date(NOW.getTime() + min * 60_000);
+    // Un rato seco y vuelve la lluvia: es el mismo episodio, no se repite.
     source.outlook = { state: 'dry' };
-    await runRainWatch(db, push, source, NOW);
-    source.outlook = { state: 'raining', mm: 2 };
-    await runRainWatch(db, push, source, NOW);
+    await runRainWatch(db, push, source, at(15));
+    source.outlook = { state: 'raining', mm: 2, peakMmH: 2 };
+    await runRainWatch(db, push, source, at(30));
+    assert.equal(push.sent.length, 1);
+
+    // Se intensifica (de débil a fuerte): un aviso más, marcado como "se intensifica"; igual de fuerte, no.
+    source.outlook = { state: 'raining', mm: 6, peakMmH: 12 };
+    await runRainWatch(db, push, source, at(45));
     assert.equal(push.sent.length, 2);
+    assert.equal((push.sent[1] as { rain: { stronger?: boolean } }).rain.stronger, true);
+    await runRainWatch(db, push, source, at(60));
+    assert.equal(push.sent.length, 2);
+
+    // Seco por menos de 3 horas: sigue el episodio.
+    source.outlook = { state: 'dry' };
+    await runRainWatch(db, push, source, at(75));
+    await runRainWatch(db, push, source, at(75 + 170));
+    source.outlook = { state: 'raining', mm: 2, peakMmH: 2 };
+    await runRainWatch(db, push, source, at(75 + 175));
+    assert.equal(push.sent.length, 2);
+    // Seco 3 horas seguidas: terminó; la próxima lluvia se avisa de nuevo.
+    source.outlook = { state: 'dry' };
+    await runRainWatch(db, push, source, at(300));
+    await runRainWatch(db, push, source, at(300 + 180));
+    source.outlook = { state: 'raining', mm: 2, peakMmH: 2 };
+    await runRainWatch(db, push, source, at(300 + 195));
+    assert.equal(push.sent.length, 3);
+    assert.equal((push.sent[2] as { rain: { stronger?: boolean } }).rain.stronger, undefined);
   });
 
   it('consulta una sola vez los lugares repetidos', async () => {
@@ -106,7 +132,7 @@ describe('avisos de lluvia', () => {
     const b = await register();
     await putPlaces(a.deviceId, a.token, [refugio]);
     await putPlaces(b.deviceId, b.token, [{ ...refugio, id: 'otro', lat: -41.1702 }]);
-    source.outlook = { state: 'raining', mm: 1 };
+    source.outlook = { state: 'raining', mm: 1, peakMmH: 2 };
     const result = await runRainWatch(db, push, source, NOW);
     assert.equal(source.asked[0]!.length, 1);
     assert.equal(result.sent, 2);
@@ -116,7 +142,7 @@ describe('avisos de lluvia', () => {
     const { deviceId, token } = await register();
     const here = { id: 'here', label: null, lat: -34.6, lon: -58.38 };
     await putPlaces(deviceId, token, [{ ...here, fixAt: '2026-11-01T10:00:00.000Z' }]);
-    source.outlook = { state: 'raining', mm: 1 };
+    source.outlook = { state: 'raining', mm: 1, peakMmH: 2 };
     await runRainWatch(db, push, source, NOW);
     assert.equal(push.sent.length, 0);
 
@@ -143,7 +169,7 @@ describe('avisos de lluvia', () => {
     assert.equal((db.prepare('SELECT COUNT(*) AS n FROM rain_places').get() as { n: number }).n, 0);
 
     await putPlaces(deviceId, token, [refugio]);
-    source.outlook = { state: 'raining', mm: 1 };
+    source.outlook = { state: 'raining', mm: 1, peakMmH: 2 };
     push.gone = true;
     const result = await runRainWatch(db, push, source, NOW);
     assert.equal(result.removed, 1);
@@ -165,7 +191,7 @@ describe('avisos de lluvia', () => {
     const om = openMeteoSource('https://api.open-meteo.com/', fake);
 
     const two = await om.outlooks([{ lat: -34.6, lon: -58.4 }, { lat: -41.17, lon: -71.43 }]);
-    assert.deepEqual(two, [{ state: 'dry' }, { state: 'soon', inMinutes: 15, startsAt: '2026-11-03T15:15', mm: 2 }]);
+    assert.deepEqual(two, [{ state: 'dry' }, { state: 'soon', inMinutes: 15, startsAt: '2026-11-03T15:15', mm: 2, peakMmH: 4 }]);
     assert.match(urls[0]!, /^https:\/\/api\.open-meteo\.com\/v1\/forecast\?latitude=-34\.60%2C-41\.17&/);
     assert.equal((await om.outlooks([{ lat: 0, lon: 0 }]))[0]!.state, 'soon');
 

@@ -5,6 +5,7 @@ import { currentPosition } from '@/core/geo/useGeolocation';
 import { RAIN_CHECK_MS, useBatterySaver } from '@/core/power/saver';
 import { useSettings } from '@/core/settings/settings';
 import { useWaypoints } from '@/modules/waypoints/store';
+import { nextEpisode, type RainEpisode } from './rainEpisode';
 import { fetchNowcast, rainOutlook, type RainOutlook } from './nowcast';
 
 /**
@@ -41,8 +42,8 @@ export const useRainWatch = create<RainWatchState>((set, get) => ({
   },
 }));
 
-/** Lugares ya avisados en este episodio de lluvia; se limpian cuando el pronóstico vuelve a estar seco. */
-const notified = new Set<string>();
+/** Episodio de lluvia de cada lugar: no se repite el aviso hasta 3 horas sin lluvia, salvo que se intensifique (rainEpisode.ts). */
+const episodes = new Map<string, RainEpisode>();
 
 async function systemNotify(title: string, body: string, tag: string) {
   if (!('Notification' in window) || Notification.permission !== 'granted' || !('serviceWorker' in navigator)) return;
@@ -92,17 +93,17 @@ export function useRainWatcher() {
         const state = useRainWatch.getState();
         useRainWatch.setState({ statuses: new Map(state.statuses).set(place.id, status) });
 
-        if (outlook.state === 'dry') {
-          notified.delete(place.id);
-          continue;
-        }
-        if (notified.has(place.id)) continue;
-        notified.add(place.id);
+        const { episode, notify } = nextEpisode(episodes.get(place.id) ?? null, outlook, Date.now());
+        if (episode) episodes.set(place.id, episode);
+        else episodes.delete(place.id);
+        if (!notify || outlook.state === 'dry') continue;
         useRainWatch.setState({ notices: [...state.notices.filter((n) => n.placeId !== place.id), status] });
         const title =
-          outlook.state === 'raining'
-            ? t('rainAlerts.rainingTitle', { place: place.label })
-            : t('rainAlerts.soonTitle', { place: place.label, minutes: outlook.inMinutes });
+          notify === 'stronger'
+            ? t('rainAlerts.strongerTitle', { place: place.label })
+            : outlook.state === 'raining'
+              ? t('rainAlerts.rainingTitle', { place: place.label })
+              : t('rainAlerts.soonTitle', { place: place.label, minutes: outlook.inMinutes });
         await systemNotify(title, t('rainAlerts.body', { mm: mm.format(outlook.mm) }), `rain-${place.id}`);
       }
     }

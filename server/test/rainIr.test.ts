@@ -66,13 +66,13 @@ describe('lluvia estimada con el infrarrojo del GOES-19', () => {
   });
 
   it('si el satélite ve lluvia en el lugar, "está lloviendo" aunque el pronóstico diga seco', async () => {
-    const forecast: RainSource = { name: 'f', outlooks: async (pts) => pts.map((_, i) => (i === 2 ? { state: 'soon' as const, inMinutes: 30, startsAt: 'x', mm: 2 } : { state: 'dry' as const })) };
+    const forecast: RainSource = { name: 'f', outlooks: async (pts) => pts.map((_, i) => (i === 2 ? { state: 'soon' as const, inMinutes: 30, startsAt: 'x', mm: 2, peakMmH: 2 } : { state: 'dry' as const })) };
     const observer: IrObserver = {
       observe: async () => [{ here: 6.2, within10: 8, within25: 9, within50: 9 }, { here: 0, within10: 3, within25: 3, within50: 3 }, null],
       stats: () => ({ files: 0, bytes: 0 }),
     };
     const out = await withObservedRain(forecast, observer).outlooks([{ lat: 0, lon: 0 }, { lat: 1, lon: 1 }, { lat: 2, lon: 2 }]);
-    assert.deepEqual(out, [{ state: 'raining', mm: 6.2, observedMmH: 6.2 }, { state: 'dry' }, { state: 'soon', inMinutes: 30, startsAt: 'x', mm: 2 }]);
+    assert.deepEqual(out, [{ state: 'raining', mm: 6.2, peakMmH: 6.2, observedMmH: 6.2 }, { state: 'dry' }, { state: 'soon', inMinutes: 30, startsAt: 'x', mm: 2, peakMmH: 2 }]);
     // Si el satélite falla, queda el pronóstico.
     const broken: IrObserver = { observe: async () => Promise.reject(new Error('x')), stats: () => ({ files: 0, bytes: 0 }) };
     assert.deepEqual((await withObservedRain(forecast, broken).outlooks([{ lat: 0, lon: 0 }]))[0], { state: 'dry' });

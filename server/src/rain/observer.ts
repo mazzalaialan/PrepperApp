@@ -103,7 +103,7 @@ export function withObservedRain(forecast: RainSource, observer: IrObserver): Ra
       return points.map((_, i): RainOutlook | null => {
         const o = obs[i];
         const f = fc[i] ?? null;
-        if (o && o.here >= RAIN_MM_H) return { state: 'raining', mm: f && f.state !== 'dry' ? f.mm : o.here, observedMmH: o.here };
+        if (o && o.here >= RAIN_MM_H) return { state: 'raining', mm: f && f.state !== 'dry' ? f.mm : o.here, peakMmH: f && f.state !== 'dry' ? f.peakMmH : o.here, observedMmH: o.here };
         return f;
       });
     },

@@ -109,6 +109,9 @@ const MIGRATIONS = [
      notified_at INTEGER NOT NULL,
      PRIMARY KEY (device_id, family)
    );`,
+  // Episodio de lluvia: nivel avisado y desde cuándo está seco (para no repetir el aviso, ver rain/episode.ts).
+  `ALTER TABLE rain_places ADD COLUMN rain_level INTEGER NOT NULL DEFAULT 0;`,
+  `ALTER TABLE rain_places ADD COLUMN dry_since INTEGER;`,
   // Fuentes externas que están fallando (para avisar al administrador una sola vez por caída).
   `CREATE TABLE source_status (
      source TEXT PRIMARY KEY,
