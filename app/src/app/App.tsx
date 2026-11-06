@@ -1,71 +1,92 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, type ComponentType } from 'react';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { useAutoLock } from '@/core/security/useAutoLock';
 import { useVault } from '@/core/security/useVault';
 import { useSettings, type Theme } from '@/core/settings/settings';
 import { useEffectiveTheme } from '@/core/settings/theme';
 import { useBatterySaver } from '@/core/power/saver';
-import { AstronomyPage } from '@/modules/astronomy/AstronomyPage';
-import { BackupPage } from '@/modules/backup/BackupPage';
-import { SharePage } from '@/modules/share/SharePage';
-import { DocumentEditPage } from '@/modules/documents/DocumentEditPage';
-import { DocumentsPage } from '@/modules/documents/DocumentsPage';
-import { KitPage } from '@/modules/firstAid/KitPage';
-import { KitsPage } from '@/modules/firstAid/KitsPage';
-import { MedicalEditPage } from '@/modules/firstAid/MedicalEditPage';
-import { MedicalPage } from '@/modules/firstAid/MedicalPage';
-import { ContactEditPage } from '@/modules/emergency/ContactEditPage';
-import { ContactsPage } from '@/modules/emergency/ContactsPage';
-import { FrequencyEditPage } from '@/modules/emergency/FrequencyEditPage';
-import { MyLocationPage } from '@/modules/emergency/MyLocationPage';
-import { NearbyPage } from '@/modules/emergency/NearbyPage';
-import { RadioPage } from '@/modules/emergency/RadioPage';
-import { GuidesPage } from '@/modules/firstAid/guides/GuidesPage';
-import { GuideTopicPage } from '@/modules/firstAid/guides/GuideTopicPage';
-import { AlertsPage } from '@/modules/inventory/pages/AlertsPage';
-import { CategoriesPage } from '@/modules/inventory/pages/CategoriesPage';
-import { ItemEditPage } from '@/modules/inventory/pages/ItemEditPage';
-import { ItemsPage } from '@/modules/inventory/pages/ItemsPage';
-import { LocationsPage } from '@/modules/inventory/pages/LocationsPage';
-import { CompassPage } from '@/modules/compass/CompassPage';
-import { DeclinationPage } from '@/modules/declination/DeclinationPage';
-import { RecommendationsPage } from '@/modules/recommendations/RecommendationsPage';
-import { StarMapPage } from '@/modules/starmap/StarMapPage';
-import { InclinometerPage } from '@/modules/inclinometer/InclinometerPage';
-import { GoToPage } from '@/modules/waypoints/GoToPage';
-import { RouteEditPage } from '@/modules/waypoints/RouteEditPage';
-import { RouteGoPage } from '@/modules/waypoints/RouteGoPage';
-import { TrackFollowPage } from '@/modules/tracks/TrackFollowPage';
-import { TrackPage } from '@/modules/tracks/TrackPage';
-import { TracksPage } from '@/modules/tracks/TracksPage';
-import { WeatherPage } from '@/modules/weather/WeatherPage';
-import { WeatherMapPage } from '@/modules/weathermap/WeatherMapPage';
-import { WaypointEditPage } from '@/modules/waypoints/WaypointEditPage';
-import { WaypointsPage } from '@/modules/waypoints/WaypointsPage';
-import { BedPage } from '@/modules/garden/BedPage';
-import { LibraryPage } from '@/modules/library/LibraryPage';
-import { LibrarySearchPage } from '@/modules/library/LibrarySearchPage';
-import { ReaderPage } from '@/modules/library/ReaderPage';
-import { AnchorPage, AnchorsPage } from '@/modules/knots/AnchorPages';
-import { GlossaryPage, RopesPage } from '@/modules/knots/InfoPages';
-import { KnotGuidePage } from '@/modules/knots/KnotGuidePage';
-import { KnotPage } from '@/modules/knots/KnotPage';
-import { CropPage } from '@/modules/garden/CropPage';
-import { GardenCalendarPage } from '@/modules/garden/GardenCalendarPage';
-import { GardenPage } from '@/modules/garden/GardenPage';
 import { HomePage } from './pages/HomePage';
 import { SectionPage } from './pages/SectionPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { AboutPage } from './pages/AboutPage';
 import { NewPasswordScreen } from './screens/NewPasswordScreen';
 import { RecoveryKeyScreen } from './screens/RecoveryKeyScreen';
 import { SetupScreen } from './screens/SetupScreen';
 import { UnlockScreen } from './screens/UnlockScreen';
 import { UpdatePrompt } from './UpdatePrompt';
+import './stores';
 import { Shell } from './Shell';
 
+// Cada pantalla se carga recién al abrirla (el Shell la envuelve en Suspense): la app arranca
+// más rápido en celulares lentos. Apenas la app queda libre se bajan las demás en segundo
+// plano (preloadPages), para que estén aunque se corte la conexión antes de que el service
+// worker termine de guardar todo.
+const loaders: (() => Promise<unknown>)[] = [];
+function page<T extends ComponentType>(load: () => Promise<{ default: T }>) {
+  loaders.push(load);
+  return lazy(load);
+}
+let preloaded = false;
+function preloadPages() {
+  if (preloaded) return;
+  preloaded = true;
+  const run = () => loaders.forEach((load) => void load().catch(() => undefined));
+  if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 4000 });
+  else setTimeout(run, 1500);
+}
+const AstronomyPage = page(() => import('@/modules/astronomy/AstronomyPage').then((m) => ({ default: m.AstronomyPage })));
+const BackupPage = page(() => import('@/modules/backup/BackupPage').then((m) => ({ default: m.BackupPage })));
+const SharePage = page(() => import('@/modules/share/SharePage').then((m) => ({ default: m.SharePage })));
+const DocumentEditPage = page(() => import('@/modules/documents/DocumentEditPage').then((m) => ({ default: m.DocumentEditPage })));
+const DocumentsPage = page(() => import('@/modules/documents/DocumentsPage').then((m) => ({ default: m.DocumentsPage })));
+const KitPage = page(() => import('@/modules/firstAid/KitPage').then((m) => ({ default: m.KitPage })));
+const KitsPage = page(() => import('@/modules/firstAid/KitsPage').then((m) => ({ default: m.KitsPage })));
+const MedicalEditPage = page(() => import('@/modules/firstAid/MedicalEditPage').then((m) => ({ default: m.MedicalEditPage })));
+const MedicalPage = page(() => import('@/modules/firstAid/MedicalPage').then((m) => ({ default: m.MedicalPage })));
+const ContactEditPage = page(() => import('@/modules/emergency/ContactEditPage').then((m) => ({ default: m.ContactEditPage })));
+const ContactsPage = page(() => import('@/modules/emergency/ContactsPage').then((m) => ({ default: m.ContactsPage })));
+const FrequencyEditPage = page(() => import('@/modules/emergency/FrequencyEditPage').then((m) => ({ default: m.FrequencyEditPage })));
+const MyLocationPage = page(() => import('@/modules/emergency/MyLocationPage').then((m) => ({ default: m.MyLocationPage })));
+const NearbyPage = page(() => import('@/modules/emergency/NearbyPage').then((m) => ({ default: m.NearbyPage })));
+const RadioPage = page(() => import('@/modules/emergency/RadioPage').then((m) => ({ default: m.RadioPage })));
+const GuidesPage = page(() => import('@/modules/firstAid/guides/GuidesPage').then((m) => ({ default: m.GuidesPage })));
+const GuideTopicPage = page(() => import('@/modules/firstAid/guides/GuideTopicPage').then((m) => ({ default: m.GuideTopicPage })));
+const AlertsPage = page(() => import('@/modules/inventory/pages/AlertsPage').then((m) => ({ default: m.AlertsPage })));
+const CategoriesPage = page(() => import('@/modules/inventory/pages/CategoriesPage').then((m) => ({ default: m.CategoriesPage })));
+const ItemEditPage = page(() => import('@/modules/inventory/pages/ItemEditPage').then((m) => ({ default: m.ItemEditPage })));
+const ItemsPage = page(() => import('@/modules/inventory/pages/ItemsPage').then((m) => ({ default: m.ItemsPage })));
+const LocationsPage = page(() => import('@/modules/inventory/pages/LocationsPage').then((m) => ({ default: m.LocationsPage })));
+const CompassPage = page(() => import('@/modules/compass/CompassPage').then((m) => ({ default: m.CompassPage })));
+const DeclinationPage = page(() => import('@/modules/declination/DeclinationPage').then((m) => ({ default: m.DeclinationPage })));
+const RecommendationsPage = page(() => import('@/modules/recommendations/RecommendationsPage').then((m) => ({ default: m.RecommendationsPage })));
+const StarMapPage = page(() => import('@/modules/starmap/StarMapPage').then((m) => ({ default: m.StarMapPage })));
+const InclinometerPage = page(() => import('@/modules/inclinometer/InclinometerPage').then((m) => ({ default: m.InclinometerPage })));
+const GoToPage = page(() => import('@/modules/waypoints/GoToPage').then((m) => ({ default: m.GoToPage })));
+const RouteEditPage = page(() => import('@/modules/waypoints/RouteEditPage').then((m) => ({ default: m.RouteEditPage })));
+const RouteGoPage = page(() => import('@/modules/waypoints/RouteGoPage').then((m) => ({ default: m.RouteGoPage })));
+const TrackFollowPage = page(() => import('@/modules/tracks/TrackFollowPage').then((m) => ({ default: m.TrackFollowPage })));
+const TrackPage = page(() => import('@/modules/tracks/TrackPage').then((m) => ({ default: m.TrackPage })));
+const TracksPage = page(() => import('@/modules/tracks/TracksPage').then((m) => ({ default: m.TracksPage })));
+const WeatherPage = page(() => import('@/modules/weather/WeatherPage').then((m) => ({ default: m.WeatherPage })));
+const WeatherMapPage = page(() => import('@/modules/weathermap/WeatherMapPage').then((m) => ({ default: m.WeatherMapPage })));
+const WaypointEditPage = page(() => import('@/modules/waypoints/WaypointEditPage').then((m) => ({ default: m.WaypointEditPage })));
+const WaypointsPage = page(() => import('@/modules/waypoints/WaypointsPage').then((m) => ({ default: m.WaypointsPage })));
+const BedPage = page(() => import('@/modules/garden/BedPage').then((m) => ({ default: m.BedPage })));
+const LibraryPage = page(() => import('@/modules/library/LibraryPage').then((m) => ({ default: m.LibraryPage })));
+const LibrarySearchPage = page(() => import('@/modules/library/LibrarySearchPage').then((m) => ({ default: m.LibrarySearchPage })));
+const ReaderPage = page(() => import('@/modules/library/ReaderPage').then((m) => ({ default: m.ReaderPage })));
+const AnchorPage = page(() => import('@/modules/knots/AnchorPages').then((m) => ({ default: m.AnchorPage })));
+const AnchorsPage = page(() => import('@/modules/knots/AnchorPages').then((m) => ({ default: m.AnchorsPage })));
+const GlossaryPage = page(() => import('@/modules/knots/InfoPages').then((m) => ({ default: m.GlossaryPage })));
+const RopesPage = page(() => import('@/modules/knots/InfoPages').then((m) => ({ default: m.RopesPage })));
+const KnotGuidePage = page(() => import('@/modules/knots/KnotGuidePage').then((m) => ({ default: m.KnotGuidePage })));
+const KnotPage = page(() => import('@/modules/knots/KnotPage').then((m) => ({ default: m.KnotPage })));
+const CropPage = page(() => import('@/modules/garden/CropPage').then((m) => ({ default: m.CropPage })));
+const GardenCalendarPage = page(() => import('@/modules/garden/GardenCalendarPage').then((m) => ({ default: m.GardenCalendarPage })));
+const GardenPage = page(() => import('@/modules/garden/GardenPage').then((m) => ({ default: m.GardenPage })));
+const SettingsPage = page(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const AboutPage = page(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+
 // MapLibre pesa ~1 MB: se carga recién al abrir los mapas (igual queda guardado para usarlo sin conexión).
-const MapsPage = lazy(() => import('@/modules/maps/MapsPage').then((m) => ({ default: m.MapsPage })));
+const MapsPage = page(() => import('@/modules/maps/MapsPage').then((m) => ({ default: m.MapsPage })));
 
 // Hash router: funciona en GitHub Pages y offline sin configurar el servidor.
 const router = createHashRouter([
@@ -171,6 +192,7 @@ export function App() {
 
   useApplyTheme(theme, useBatterySaver());
   useAutoLock(autoLockMinutes);
+  useEffect(preloadPages, []);
 
   return (
     <>

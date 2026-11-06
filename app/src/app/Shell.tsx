@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
@@ -104,7 +105,9 @@ export function Shell() {
         <RecordingBar />
         <PocketScreen />
         <main className="content">
-          <Outlet />
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
