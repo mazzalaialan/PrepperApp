@@ -2081,6 +2081,7 @@
     "gpsError": "Couldn't read the GPS. Choose a waypoint from the list."
   },
   "knots": {
+    "library": {"title": "In your library", "none": "Download the knot books (Cabuyería) to see where this knot appears in them, with their figures, offline.", "go": "Go to the Library", "searching_one": "Searching {{count}} knot book…", "searching_other": "Searching {{count}} knot books…", "notFound_one": "It does not appear in your downloaded knot book.", "notFound_other": "It does not appear in your {{count}} downloaded knot books."},
     "wizard": "What do I need to do?",
     "search": "Search a knot",
     "searchHint": "Name, other name or what it is for",

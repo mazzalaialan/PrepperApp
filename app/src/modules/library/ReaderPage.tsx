@@ -26,6 +26,7 @@ function readerCss(fontPct: number): string {
     td, th { border: 1px solid ${v('--border', '#ccc')}; padding: 4px 6px; }
     nav { display: none; }
     pre { white-space: pre-wrap; }
+    .reader-hit { background: ${v('--warn', '#d0a03c')}33; outline: 2px solid ${v('--warn', '#d0a03c')}; border-radius: 4px; }
   `;
 }
 
@@ -52,6 +53,16 @@ export function ReaderPage() {
     el.id = 'vikarg-reader';
     el.textContent = readerCss(fontPct);
     doc.head.appendChild(el);
+    // Desde una referencia (ej.: la ficha de un nudo): se resalta y se muestra lo buscado.
+    const q = params.get('q');
+    if (q) {
+      const fold = (x: string) => x.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+      const target = [...doc.body.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, figcaption, td')].find((n) => fold(n.textContent ?? '').includes(fold(q)));
+      if (target && !target.classList.contains('reader-hit')) {
+        target.classList.add('reader-hit');
+        target.scrollIntoView({ block: 'center' });
+      }
+    }
     // Los enlaces del índice del libro abren el capítulo en el visor (y quedan en el historial de la app).
     doc.querySelectorAll('a[href]').forEach((a) => {
       const href = a.getAttribute('href')!;

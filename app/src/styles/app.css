@@ -3724,3 +3724,24 @@ a.module-card:hover {
 .draw-arrow-head {
   fill: var(--text-muted);
 }
+
+/* Ficha del nudo: dónde aparece en los libros bajados. */
+.knot-ref {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.knot-ref-img {
+  width: 96px;
+  height: 72px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  flex: none;
+}
+.knot-ref-snippet {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

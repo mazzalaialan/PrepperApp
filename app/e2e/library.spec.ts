@@ -69,5 +69,18 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await expect(page.getByTestId('library-hits')).toContainText('Manual de montañismo del Ejército');
   await page.getByTestId('library-hits').getByRole('link').first().click();
   await expect(frame.locator('h1')).toHaveText('Nudos');
+
+  // La ficha del nudo muestra dónde aparece en los libros bajados, con la figura de la copia del usuario.
+  await page.goto('/#/knots/guide/prusik');
+  const refs = page.getByTestId('knot-library');
+  await expect(refs).toContainText('Manual de montañismo del Ejército');
+  await expect(refs).toContainText('El nudo Prusik sirve para subir por una cuerda');
+  await expect(refs.locator('img')).toHaveAttribute('src', /library\/books\/montanismo\/img\/prusik\.webp$/);
+  await expect.poll(() => refs.locator('img').evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  await refs.getByRole('link').first().click();
+  await expect(frame.locator('.reader-hit')).toContainText('Prusik');
+  // Un nudo que no está en esos libros.
+  await page.goto('/#/knots/guide/cornamusa');
+  await expect(page.getByTestId('knot-library')).toContainText('No aparece en los 2 libros de nudos');
   await context.setOffline(false);
 });

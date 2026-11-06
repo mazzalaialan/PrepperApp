@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, CircleCheck, Circle, Dumbbell, Volume2, VolumeX, X } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, CircleCheck, Circle, Dumbbell, Volume2, VolumeX, X } from 'lucide-react';
 import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { useSettings } from '@/core/settings/settings';
+import { useLibrary } from '@/modules/library/store';
 import { anchorsUsing } from './anchors';
+import { findKnotRefs, isKnotBook, type KnotRef } from './libraryRefs';
 import { creditFor, KNOT_BY_ID, knotImages, RISKY_USES, type Knot } from './knots';
 import { tl } from './KnotGuidePage';
 
@@ -73,6 +75,62 @@ function Practice({ knot, onClose }: { knot: Knot; onClose: () => void }) {
 }
 
 /** Ficha de un nudo (ARQUITECTURA §10.2). */
+/** Dónde aparece el nudo en los libros de nudos bajados (sin conexión). */
+function LibraryRefs({ knot }: { knot: Knot }) {
+  const { t } = useTranslation();
+  const installed = useLibrary((s) => s.installed);
+  const ready = useLibrary((s) => s.ready);
+  const books = [...installed.values()].filter(isKnotBook);
+  const [refs, setRefs] = useState<KnotRef[] | null>(null);
+  const key = books.map((b) => b.id + b.sha256).join(',');
+  useEffect(() => {
+    if (!ready || books.length === 0) return;
+    let cancelled = false;
+    setRefs(null);
+    void findKnotRefs(knot, books).then((r) => !cancelled && setRefs(r));
+    return () => {
+      cancelled = true;
+    };
+  }, [knot.id, key, ready]);
+  if (!ready) return null;
+
+  return (
+    <section className="card stack" aria-labelledby="knot-library" data-testid="knot-library">
+      <h2 id="knot-library" className="section-title" style={{ margin: 0 }}>
+        {t('knots.library.title')}
+      </h2>
+      {books.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>
+          {t('knots.library.none')} <Link to="/library/books">{t('knots.library.go')}</Link>
+        </p>
+      ) : refs === null ? (
+        <p className="hint" style={{ margin: 0 }}>
+          {t('knots.library.searching', { count: books.length })}
+        </p>
+      ) : refs.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>
+          {t('knots.library.notFound', { count: books.length })}
+        </p>
+      ) : (
+        <ul className="list knot-refs">
+          {refs.map((r) => (
+            <li key={`${r.bookId}-${r.file}`} className="knot-ref">
+              {r.image && <img src={r.image} alt="" loading="lazy" className="knot-ref-img" />}
+              <Link className="list-main" to={`/library/read/${r.bookId}?${new URLSearchParams({ cap: r.file, q: r.term }).toString()}`}>
+                <span className="list-title">
+                  <BookOpen size={16} aria-hidden /> {r.bookTitle}
+                </span>
+                {r.chapter && r.chapter !== r.bookTitle && <span className="list-sub">{r.chapter}</span>}
+                <span className="list-sub knot-ref-snippet">{r.snippet}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export function KnotPage() {
   const { id = '' } = useParams();
   const { t, i18n } = useTranslation();
@@ -192,6 +250,8 @@ export function KnotPage() {
           </div>
         </section>
       )}
+
+      <LibraryRefs knot={knot} />
 
       {anchorsUsing(knot.id).length > 0 && (
         <section className="card stack">
