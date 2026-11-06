@@ -1,7 +1,8 @@
 /**
- * Contorno de Argentina y Chile (tools/emergency-data/borders.mjs, Natural
- * Earth 1:50 m): en qué país se está y a qué distancia del otro, para mostrar
- * las frecuencias de montaña de cada país solo cerca de su territorio.
+ * Contorno de Argentina, Chile y Uruguay (tools/emergency-data/borders.mjs,
+ * Natural Earth 1:50 m): en qué país se está y a qué distancia del otro, para
+ * mostrar las frecuencias de montaña de cada país solo cerca de su territorio
+ * y los números de emergencia del país donde uno está.
  */
 
 type Ring = [number, number][];
@@ -10,9 +11,10 @@ export interface BordersData {
   source: string;
   AR: Ring[];
   CL: Ring[];
+  UY: Ring[];
 }
 
-export type BorderCountry = 'AR' | 'CL';
+export type BorderCountry = 'AR' | 'CL' | 'UY';
 
 let pending: Promise<BordersData> | null = null;
 
@@ -55,4 +57,21 @@ export function distanceToCountry(data: BordersData, country: BorderCountry, lat
     for (let i = 0; i < ring.length - 1; i++) best = Math.min(best, segmentDistance(lat, lon, ring[i]!, ring[i + 1]!));
   }
   return best;
+}
+
+/**
+ * País en el que cae el punto (Argentina, Chile o Uruguay); si no cae en
+ * ninguno (por ejemplo en el mar, por la simplificación del borde), el más
+ * cercano a menos de 20 km; si no, null.
+ */
+export function countryAt(data: BordersData, lat: number, lon: number): 'AR' | 'CL' | 'UY' | null {
+  const all = ['AR', 'CL', 'UY'] as const;
+  const inside = all.find((c) => data[c].some((r) => inRing(r, lon, lat)));
+  if (inside) return inside;
+  let best: { c: (typeof all)[number]; d: number } | null = null;
+  for (const c of all) {
+    const d = distanceToCountry(data, c as BorderCountry, lat, lon);
+    if (!best || d < best.d) best = { c, d };
+  }
+  return best && best.d <= 20_000 ? best.c : null;
 }

@@ -502,6 +502,10 @@
     "sms": "SMS",
     "whatsapp": "WhatsApp",
     "shareTitle": "Mi ubicación",
+    "callHealth": "Salud (ambulancia): {{number}}",
+    "callFire": "Bomberos: {{number}}",
+    "callsHere": "Números de {{country}}, según tu ubicación.",
+    "callsSettings": "Números de {{country}} (el país elegido en Ajustes; sin ubicación todavía).",
     "call911": "Llamar al {{number}}",
     "msg": {
       "intro": "Necesito ayuda. Mi ubicación:",

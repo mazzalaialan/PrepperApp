@@ -502,6 +502,10 @@
     "sms": "SMS",
     "whatsapp": "WhatsApp",
     "shareTitle": "My location",
+    "callHealth": "Health (ambulance): {{number}}",
+    "callFire": "Fire department: {{number}}",
+    "callsHere": "{{country}} numbers, based on your location.",
+    "callsSettings": "{{country}} numbers (the country chosen in Settings; no location yet).",
     "call911": "Call {{number}}",
     "msg": {
       "intro": "I need help. My location:",

@@ -129,6 +129,10 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await setup(page);
   await page.goto('/#/first-aid/location');
   await expect(page.getByTestId('location-decimal')).toHaveText('-41.13350, -71.31030');
+  // Abajo de todo, además del 911: salud (107) y bomberos (100) de Argentina.
+  await expect(page.getByRole('link', { name: 'Salud (ambulancia): 107' })).toHaveAttribute('href', 'tel:107');
+  await expect(page.getByRole('link', { name: 'Bomberos: 100' })).toHaveAttribute('href', 'tel:100');
+  await expect(page.getByTestId('calls-country')).toHaveText('Números de Argentina, según tu ubicación.');
   await expect(page.getByTestId('location-dms')).toHaveText(/41°08′00(\.\d)?″ S 71°18′37(\.\d)?″ O/);
   const refs = page.getByTestId('location-refs');
   await expect(refs).toContainText('Mitre 250, San Carlos de Bariloche, Río Negro');
@@ -163,6 +167,15 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { name: 'Casa' })).toBeVisible();
   await page.goto('/#/first-aid/location');
   await expect(page.getByTestId('location-waypoint')).toContainText('Casa');
+
+  // Los números son los del país donde uno está, no los del país elegido: en Santiago, los de Chile.
+  await page.context().setGeolocation({ latitude: -33.45, longitude: -70.66 });
+  await page.goto('/#/');
+  await page.goto('/#/first-aid/location');
+  await expect(page.getByTestId('calls-country')).toHaveText('Números de Chile, según tu ubicación.');
+  await expect(page.getByRole('link', { name: 'Llamar al 133' })).toHaveAttribute('href', 'tel:133');
+  await expect(page.getByRole('link', { name: 'Salud (ambulancia): 131' })).toHaveAttribute('href', 'tel:131');
+  await page.context().setGeolocation({ latitude: -41.1335, longitude: -71.3103 });
 
   await page.goto('/#/first-aid/radio');
   const stations = page.getByTestId('radio-stations');

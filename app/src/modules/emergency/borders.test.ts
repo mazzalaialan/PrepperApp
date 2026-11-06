@@ -19,3 +19,14 @@ describe('fronteras Argentina–Chile', () => {
     expect(km('CL', -34.6, -58.38)).toBeGreaterThan(1000); // Buenos Aires
   });
 });
+
+describe('país según la ubicación', () => {
+  it('Argentina, Chile y Uruguay; en el medio del océano, ninguno', async () => {
+    const { countryAt, loadBorders } = await import('./borders');
+    const d = await loadBorders();
+    expect(countryAt(d, -41.1335, -71.3103)).toBe('AR'); // Bariloche
+    expect(countryAt(d, -33.45, -70.66)).toBe('CL'); // Santiago
+    expect(countryAt(d, -34.9, -56.16)).toBe('UY'); // Montevideo
+    expect(countryAt(d, -45, -40)).toBeNull(); // Atlántico
+  });
+});

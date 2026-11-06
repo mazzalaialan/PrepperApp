@@ -158,6 +158,9 @@ test('paquete de Chile: se baja al elegir el país, queda guardado y da radio, c
   // Mi ubicación: el número de emergencias de Chile.
   await page.goto('/#/first-aid/location');
   await expect(page.getByRole('link', { name: 'Llamar al 133' })).toHaveAttribute('href', 'tel:133');
+  // Abajo, salud y bomberos de Chile.
+  await expect(page.getByRole('link', { name: 'Salud (ambulancia): 131' })).toHaveAttribute('href', 'tel:131');
+  await expect(page.getByRole('link', { name: 'Bomberos: 132' })).toHaveAttribute('href', 'tel:132');
 
   // Sin conexión: cercanos con los datos guardados de Chile y detección de zona.
   await context.setOffline(true);

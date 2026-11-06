@@ -3865,3 +3865,14 @@ a.module-card:hover {
   display: inline-grid;
   vertical-align: middle;
 }
+
+/* Mi ubicación: salud y bomberos debajo del botón de emergencias. */
+.other-calls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.other-calls .call-other {
+  flex: 1 1 14rem;
+  justify-content: center;
+}

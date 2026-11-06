@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { MapPinPlus, MessageSquare, Phone, RefreshCw, Share2, Square, Volume2 } from 'lucide-react';
+import { Ambulance, Flame, MapPinPlus, MessageSquare, Phone, RefreshCw, Share2, Square, Volume2 } from 'lucide-react';
 import { bearingDeg, cardinalOf, distanceMeters, formatDms } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
-import { useSettings } from '@/core/settings/settings';
+import { countryAt, loadBorders } from './borders';
+import { useSettings, type Country } from '@/core/settings/settings';
 import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { CALLS } from '@/modules/firstAid/guides/types';
 import type { NewWaypointDraft } from '@/modules/waypoints/WaypointEditPage';
@@ -18,8 +19,21 @@ const RELOOKUP_M = 150;
 export function MyLocationPage() {
   const { t, i18n } = useTranslation();
   const { fix, error } = useGeolocation();
+  useEffect(() => {
+    if (!fix) return;
+    let live = true;
+    void loadBorders().then((d) => live && setHere(countryAt(d, fix.lat, fix.lon)));
+    return () => {
+      live = false;
+    };
+  }, [fix?.lat, fix?.lon]);
   // El número general de emergencias del país (en Chile, Carabineros).
-  const emergencyNumber = CALLS[useSettings((s) => s.settings.country)].emergency ?? '911';
+  const settingsCountry = useSettings((s) => s.settings.country);
+  // Los números son los del país donde uno está (por la ubicación); sin ubicación, los del país elegido.
+  const [here, setHere] = useState<Country | null>(null);
+  const callCountry = here ?? settingsCountry;
+  const calls = CALLS[callCountry];
+  const emergencyNumber = calls.emergency ?? '911';
   const waypoints = useWaypoints((s) => s.waypoints);
   const [info, setInfo] = useState<LocationInfo | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
@@ -257,6 +271,24 @@ export function MyLocationPage() {
       >
         <Phone size={20} /> {t('location.call911', { number: emergencyNumber })}
       </a>
+      {/* Salud (ambulancia) y bomberos del país, si tienen número propio. */}
+      {(calls.same || calls.fire) && (
+        <div className="other-calls" data-testid="other-emergency-calls">
+          {calls.same && calls.same !== emergencyNumber && (
+            <a className="btn call-other" href={`tel:${calls.same}`} onClick={() => stopSpeaking()}>
+              <Ambulance size={20} /> {t('location.callHealth', { number: calls.same })}
+            </a>
+          )}
+          {calls.fire && (
+            <a className="btn call-other" href={`tel:${calls.fire}`} onClick={() => stopSpeaking()}>
+              <Flame size={20} /> {t('location.callFire', { number: calls.fire })}
+            </a>
+          )}
+        </div>
+      )}
+      <p className="hint" style={{ margin: 0 }} data-testid="calls-country">
+        {t(here ? 'location.callsHere' : 'location.callsSettings', { country: t(`country.${callCountry}`) })}
+      </p>
       <p className="hint">{t('location.sources')}</p>
     </div>
   );
