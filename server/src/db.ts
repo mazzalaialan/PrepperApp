@@ -109,9 +109,6 @@ const MIGRATIONS = [
      notified_at INTEGER NOT NULL,
      PRIMARY KEY (device_id, family)
    );`,
-  // Episodio de lluvia: nivel avisado y desde cuándo está seco (para no repetir el aviso, ver rain/episode.ts).
-  `ALTER TABLE rain_places ADD COLUMN rain_level INTEGER NOT NULL DEFAULT 0;`,
-  `ALTER TABLE rain_places ADD COLUMN dry_since INTEGER;`,
   // Fuentes externas que están fallando (para avisar al administrador una sola vez por caída).
   `CREATE TABLE source_status (
      source TEXT PRIMARY KEY,
@@ -120,6 +117,15 @@ const MIGRATIONS = [
      last_error TEXT,
      notified INTEGER NOT NULL DEFAULT 0
    );`,
+  // Episodio de lluvia: nivel avisado y desde cuándo está seco (para no repetir el aviso, ver rain/episode.ts).
+  // Solo si faltan: en un servidor la 0.41.0 llegó a agregar dry_since con las migraciones en otro orden.
+  (db: Db) => addColumnIfMissing(db, 'rain_places', 'rain_level', 'INTEGER NOT NULL DEFAULT 0'),
+  (db: Db) => addColumnIfMissing(db, 'rain_places', 'dry_since', 'INTEGER'),
+  // Y las dos de nuevo, por si una base quedó en la versión 10 con solo dry_since (despliegue fallido de la 0.41.0).
+  (db: Db) => {
+    addColumnIfMissing(db, 'rain_places', 'rain_level', 'INTEGER NOT NULL DEFAULT 0');
+    addColumnIfMissing(db, 'rain_places', 'dry_since', 'INTEGER');
+  },
 ];
 
 export type Db = DatabaseSync;
@@ -136,12 +142,19 @@ export function openDb(dataDir: string | ':memory:'): Db {
   return db;
 }
 
+function addColumnIfMissing(db: Db, table: string, column: string, type: string): void {
+  const cols = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
+  if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type};`);
+}
+
 function migrate(db: Db): void {
   const { user_version: current } = db.prepare('PRAGMA user_version').get() as { user_version: number };
   for (let v = current; v < MIGRATIONS.length; v++) {
     db.exec('BEGIN');
     try {
-      db.exec(MIGRATIONS[v]!);
+      const m = MIGRATIONS[v]!;
+      if (typeof m === 'string') db.exec(m);
+      else m(db);
       db.exec(`PRAGMA user_version = ${v + 1}`);
       db.exec('COMMIT');
     } catch (err) {
