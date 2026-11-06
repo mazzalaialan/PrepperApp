@@ -13,7 +13,8 @@ export const tl = (x: L, lang: string) => (lang.startsWith('en') ? x.en : x.es);
 /** Una fila de la lista: imagen chica, nombre, para qué sirve y si ya lo aprendí. */
 export function KnotRow({ knot, learned }: { knot: Knot; learned: boolean }) {
   const { t, i18n } = useTranslation();
-  const thumb = knotImages(knot)[0];
+  // El diagrama del último paso (el nudo terminado), con el mismo estilo en toda la lista.
+  const thumb = knot.steps[knot.steps.length - 1]?.img ?? knotImages(knot)[0];
   return (
     <li>
       <Link className="list-row knot-row" to={`/knots/guide/${knot.id}`}>

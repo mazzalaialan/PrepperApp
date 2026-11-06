@@ -1,8 +1,12 @@
+import DIAGRAMS from './diagrams.json';
+
 /**
- * Guía de nudos (ARQUITECTURA §10.2). Textos propios. Imágenes en
- * public/knots/: figuras de los manuales del Ejército de EE. UU. FM 3-97.61
- * "Military Mountaineering" (2002) y FM 3-05.70 "Survival" (2002), de dominio
- * público, y diagramas de Wikimedia Commons con licencia libre (ver IMAGE_CREDITS).
+ * Guía de nudos (ARQUITECTURA §10.2). Textos propios. Cada paso tiene un
+ * diagrama propio (public/knots/pasos/, los arma tools/knot-diagrams), todos
+ * con el mismo estilo. La galería de cada nudo tiene además figuras de los
+ * manuales del Ejército de EE. UU. FM 3-97.61 "Military Mountaineering"
+ * (2002) y FM 3-05.70 "Survival" (2002), de dominio público, y diagramas de
+ * Wikimedia Commons con licencia libre (ver IMAGE_CREDITS).
  */
 
 export interface L {
@@ -1232,6 +1236,16 @@ export const KNOTS: Knot[] = [
   },
 ];
 
+// Diagramas propios por paso; las imágenes que tenía cada paso pasan a la galería.
+for (const k of KNOTS) {
+  const figs = (DIAGRAMS as Record<string, number[]>)[k.id];
+  if (!figs) continue;
+  k.images = [...new Set([...k.images, ...k.steps.map((s) => s.img).filter((x): x is string => !!x)])];
+  k.steps.forEach((s, n) => {
+    if (figs[n]) s.img = `pasos/${k.id}-${figs[n]}.svg`;
+  });
+}
+
 export const KNOT_BY_ID = new Map(KNOTS.map((k) => [k.id, k]));
 
 /** Las imágenes: de dónde salieron y con qué licencia (se muestran en cada ficha). */
@@ -1254,6 +1268,7 @@ const wm = (match: string, author: string, license: string, file: string): Image
 });
 
 export const IMAGE_CREDITS: ImageCredit[] = [
+  { match: 'pasos/', source: 'Diagramas propios de VikArg', license: 'GPL-3.0' },
   ...['rizo', 'pescador-', 'pescador-doble', 'ocho-union', 'nudo-cinta', 'as-de-guia-2', 'vuelta-redonda', 'ocho-doble-1', 'ballestrinque-2', 'mariposa', 'ocho-direccional', 'as-de-guia-doble', 'ocho-dos-gazas', 'ocho-gaza', 'prusik', 'bachmann', 'klemheist', 'alondra', 'dinamico', 'guarda', 'asiento-rappel'].map(
     (match) => ({ match, ...FM97 }),
   ),

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { NEEDS } from './content';
 import { creditFor, KNOT_BY_ID, KNOTS, knotImages } from './knots';
 import { searchKnots } from './search';
+import DIAGRAMS from './diagrams.json';
 
 const all = { query: '', use: null, type: null, props: [] };
 
@@ -20,6 +21,16 @@ describe('guía de nudos: datos', () => {
     }
     for (const n of NEEDS) for (const o of n.options) for (const id of o.knots) expect(KNOT_BY_ID.has(id), `${n.id} → ${id}`).toBe(true);
     expect(new Set(KNOTS.map((k) => k.id)).size).toBe(KNOTS.length);
+  });
+
+  it('cada paso de cada nudo tiene su diagrama propio, con el mismo estilo', () => {
+    for (const k of KNOTS) {
+      expect((DIAGRAMS as Record<string, number[]>)[k.id]?.length, `${k.id}: figuras ≠ pasos`).toBe(k.steps.length);
+      for (const s of k.steps) {
+        expect(s.img, k.id).toMatch(/^pasos\/.+\.svg$/);
+        expect(creditFor(s.img!)?.source).toBe('Diagramas propios de VikArg');
+      }
+    }
   });
 
   it('crédito correcto: el más específico gana', () => {

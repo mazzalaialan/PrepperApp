@@ -32,6 +32,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await expect(page.getByRole('heading', { name: /Machard/ })).toBeVisible();
   await expect(page.getByTestId('knot-safety')).toBeVisible();
   await expect(page.getByTestId('knot-credits')).toContainText('CC BY-SA');
+  await expect(page.getByTestId('knot-credits')).toContainText('Diagramas propios de VikArg');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-51-knot.png`, fullPage: true });
 
   // Práctica paso a paso.
@@ -40,6 +41,11 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await expect(practice).toContainText('Paso 1 de 4');
   await page.getByTestId('practice-next').click();
   await expect(practice).toContainText('Paso 2 de 4');
+  // Cada paso con su diagrama propio, que carga sin conexión desde el paquete de la app.
+  const fig = practice.locator('img.knot-practice-img');
+  await expect(fig).toHaveAttribute('src', /pasos\/machard-2\.svg$/);
+  await expect.poll(() => fig.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-52-knot-practice.png` });
   await practice.getByRole('button', { name: 'Cerrar' }).click();
   await expect(practice).toHaveCount(0);
 
