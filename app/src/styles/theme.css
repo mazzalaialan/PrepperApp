@@ -5,6 +5,10 @@
 
 :root,
 :root[data-theme='dark'] {
+  /* Diagramas de nudos: fondo, borde de la cuerda y flechas. */
+  --kd-bg: #243243;
+  --kd-edge: #0b1118;
+  --kd-arrow: #ff6b5e;
   color-scheme: dark;
   --bg: #121a24;
   --surface: #1b2633;
@@ -35,6 +39,9 @@
 }
 
 :root[data-theme='light'] {
+  --kd-bg: #ffffff;
+  --kd-edge: #5f5a52;
+  --kd-arrow: #d42a2a;
   color-scheme: light;
   --bg: #f3efe7;
   --surface: #ffffff;
@@ -69,6 +76,9 @@
  * colores apagados para no encender subpíxeles de más.
  */
 :root[data-theme='saver'] {
+  --kd-bg: #000000;
+  --kd-edge: #3a3a3a;
+  --kd-arrow: #c0392b;
   color-scheme: dark;
   --bg: #000000;
   --surface: #000000;
@@ -99,6 +109,9 @@
 
 /* Rojo nocturno: solo tonos rojos y poco brillo para preservar la visión nocturna. */
 :root[data-theme='red'] {
+  --kd-bg: #120202;
+  --kd-edge: #000000;
+  --kd-arrow: #ff2a2a;
   color-scheme: dark;
   --bg: #000000;
   --surface: #120202;

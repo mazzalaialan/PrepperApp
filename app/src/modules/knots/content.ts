@@ -99,6 +99,7 @@ export const NEEDS: Need[] = [
     options: [
       { label: l('Asiento con gazas para torso y piernas', 'Seat with chest and leg loops'), knots: ['silla-bombero', 'as-de-guia-doble'] },
       { label: l('Armar una camilla con palos', 'Build a stretcher with poles'), knots: ['atadura-cuadrada', 'ballestrinque'] },
+      { label: l('Armar una escalera para subir o bajar un desnivel', 'Make a ladder to climb or get down a drop'), knots: ['escalera', 'mariposa'] },
     ],
   },
   {
@@ -126,6 +127,7 @@ export const NEEDS: Need[] = [
       { label: l('Una "A" o bípode', 'An A-frame or bipod'), knots: ['atadura-tijera'] },
       { label: l('Un trípode', 'A tripod'), knots: ['atadura-tripode'] },
       { label: l('Refuerzos en cruz (palos que tienden a separarse)', 'Cross braces (poles that spring apart)'), knots: ['atadura-diagonal'] },
+      { label: l('Una escalera de cuerda con travesaños', 'A rope ladder with rungs'), knots: ['escalera', 'ballestrinque'] },
     ],
   },
   {

@@ -9,9 +9,11 @@
  *   avanza pasa por encima); `under` da los cruces (posición aproximada) donde
  *   es al revés.
  */
-const BG = '#ffffff';
-const EDGE = '#5f5a52';
-const ARROW = '#d42a2a';
+// Fondo, borde y flechas toman los colores del tema de la app cuando el SVG va dentro de la página
+// (variables --kd-*); como imagen suelta quedan los colores claros de respaldo.
+const BG = 'var(--kd-bg, #ffffff)';
+const EDGE = 'var(--kd-edge, #5f5a52)';
+const ARROW = 'var(--kd-arrow, #d42a2a)';
 
 function catmull(pts, step = 5) {
   const out = [];
@@ -99,7 +101,9 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
   });
   const defs = [];
   const body = [];
-  const use = (id, stroke, w) => `<use href="#${id}" stroke="${stroke}" stroke-width="${w}"/>`;
+  // Fondo y borde con clase (colores del tema); el resto, color fijo.
+  const use = (id, stroke, w) =>
+    stroke === BG ? `<use href="#${id}" class="kdb" stroke-width="${w}"/>` : stroke === EDGE ? `<use href="#${id}" class="kde" stroke-width="${w}"/>` : `<use href="#${id}" stroke="${stroke}" stroke-width="${w}"/>`;
   const draw = (r, pts, casing = pts) => {
     if (pts.length < 2) return;
     const id = `${P}p${defs.length}`;
@@ -117,7 +121,7 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
     if (r.end === false) return;
     const p = r.pts[r.pts.length - 1];
     const c = `cx="${r1(p.x)}" cy="${r1(p.y)}"`;
-    body.push(`<circle ${c} r="${W / 2 + 3}" fill="${BG}"/><circle ${c} r="${W / 2}" fill="${EDGE}"/><circle ${c} r="${W / 2 - 2.5}" fill="${r.color}"/>`);
+    body.push(`<circle ${c} r="${W / 2 + 3}" class="kdbf"/><circle ${c} r="${W / 2}" class="kdef"/><circle ${c} r="${W / 2 - 2.5}" fill="${r.color}"/>`);
   };
   const pass = (filter) => {
     for (const r of strands) {
@@ -157,12 +161,12 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
   }
   if (layered) pass((r, p) => p.z >= 0);
   for (const a of arrows) {
-    body.push(`<path d="${pathD(catmull(a, 4))}" fill="none" stroke="${ARROW}" stroke-width="4" stroke-dasharray="10 7" marker-end="url(#${P}ah)"/>`);
+    body.push(`<path d="${pathD(catmull(a, 4))}" fill="none" class="kda" stroke-width="4" stroke-dasharray="10 7" marker-end="url(#${P}ah)"/>`);
   }
   if (debug) {
     for (const r of strands) r.path.forEach(([x, y], i) => body.push(`<circle cx="${x}" cy="${y}" r="3" fill="blue"/><text x="${x + 4}" y="${y - 4}" font-size="11" fill="blue">${r.k}.${i}</text>`));
     for (const c of xs) body.push(`<text x="${r1(c.x)}" y="${r1(c.y + 5)}" font-size="15" font-weight="bold" fill="red" text-anchor="middle">${Math.round(c.x)},${Math.round(c.y)}</text>`);
   }
-  const marker = arrows.length ? `<marker id="${P}ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${ARROW}"/></marker>` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><defs>${marker}${defs.join('')}</defs><rect width="100%" height="100%" fill="${BG}"/><g fill="none" stroke-linejoin="round"${spec.zoom ? ` transform="translate(${spec.zoom[1]} ${spec.zoom[2]}) scale(${spec.zoom[0]}) translate(${-spec.zoom[1]} ${-spec.zoom[2]})"` : ''}>${body.join('')}</g></svg>`;
+  const marker = arrows.length ? `<marker id="${P}ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" class="kdaf"/></marker>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><defs>${marker}${defs.join('')}</defs><style>.kdb{stroke:${BG}}.kde{stroke:${EDGE}}.kdbf{fill:${BG}}.kdef{fill:${EDGE}}.kda{stroke:${ARROW}}.kdaf{fill:${ARROW}}</style><rect width="100%" height="100%" class="kdbf"/><g fill="none" stroke-linejoin="round"${spec.zoom ? ` transform="translate(${spec.zoom[1]} ${spec.zoom[2]}) scale(${spec.zoom[0]}) translate(${-spec.zoom[1]} ${-spec.zoom[2]})"` : ''}>${body.join('')}</g></svg>`;
 }

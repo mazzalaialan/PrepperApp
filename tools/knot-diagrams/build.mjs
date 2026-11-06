@@ -18,12 +18,15 @@ for (const f of readdirSync(new URL('./specs/', import.meta.url)).filter((f) => 
 }
 mkdirSync(OUT, { recursive: true });
 const ids = only.length ? only : Object.keys(all);
+// Prefijo corto y único por nudo (los ids se repiten en cada trazo).
+const code = new Map(Object.keys(all).map((id, i) => [id, i.toString(36)]));
 let total = 0;
 for (const id of ids) {
   if (!all[id]) throw new Error(`sin figuras: ${id}`);
   all[id].forEach((fig, n) => {
     if (!fig) return;
-    writeFileSync(new URL(`${id}-${n + 1}.svg`, OUT), render(fig));
+    // Ids propios por archivo: la app inserta varios diagramas en la misma página.
+    writeFileSync(new URL(`${id}-${n + 1}.svg`, OUT), render(fig, { id: `${code.get(id)}${n + 1}_` }));
     total++;
   });
 }

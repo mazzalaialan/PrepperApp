@@ -42,9 +42,11 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await page.getByTestId('practice-next').click();
   await expect(practice).toContainText('Paso 2 de 4');
   // Cada paso con su diagrama propio, que carga sin conexión desde el paquete de la app.
-  const fig = practice.locator('img.knot-practice-img');
-  await expect(fig).toHaveAttribute('src', /pasos\/machard-2\.svg$/);
-  await expect.poll(() => fig.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  const fig = practice.getByTestId('practice-figure');
+  await expect(fig).toHaveAttribute('data-src', 'pasos/machard-2.svg');
+  // El SVG va dentro de la página, con el fondo del tema (oscuro por defecto).
+  await expect(fig.locator('svg')).toBeVisible();
+  await expect.poll(() => fig.evaluate((el) => getComputedStyle(el).getPropertyValue('--kd-bg').trim())).toBe('#243243');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-52-knot-practice.png` });
   await practice.getByRole('button', { name: 'Cerrar' }).click();
   await expect(practice).toHaveCount(0);

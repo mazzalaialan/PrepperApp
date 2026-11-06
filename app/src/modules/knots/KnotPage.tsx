@@ -9,6 +9,7 @@ import { anchorsUsing } from './anchors';
 import { findKnotRefs, isKnotBook, type KnotRef } from './libraryRefs';
 import { creditFor, KNOT_BY_ID, knotImages, RISKY_USES, type Knot } from './knots';
 import { tl } from './KnotGuidePage';
+import { KnotFigure } from './KnotFigure';
 
 const src = (file: string) => `${import.meta.env.BASE_URL}knots/${file}`;
 
@@ -51,7 +52,7 @@ function Practice({ knot, onClose }: { knot: Knot; onClose: () => void }) {
           <X size={24} />
         </button>
       </header>
-      {picture && <img className="knot-practice-img" src={src(picture)} alt="" />}
+      {picture && <KnotFigure className="knot-practice-img" file={picture} alt={t('knots.stepAlt', { n: i + 1 })} testId="practice-figure" />}
       <p className="knot-practice-count">{t('knots.stepOf', { n: i + 1, total: knot.steps.length })}</p>
       <p className="knot-practice-text" data-testid="practice-step">
         {tl(step.text, lang)}
@@ -202,7 +203,7 @@ export function KnotPage() {
           {knot.steps.map((s, n) => (
             <li key={n}>
               <p style={{ margin: 0 }}>{tl(s.text, lang)}</p>
-              {s.img && <img src={src(s.img)} alt={t('knots.stepAlt', { n: n + 1 })} loading="lazy" />}
+              {s.img && <KnotFigure className="knot-step-img" file={s.img} alt={t('knots.stepAlt', { n: n + 1 })} />}
             </li>
           ))}
         </ol>

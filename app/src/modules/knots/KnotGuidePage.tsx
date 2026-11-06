@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CircleCheck, Search, Sparkles } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
+import { KnotFigure } from './KnotFigure';
 import { KNOT_BY_ID, KNOT_TYPES, KNOT_USES, knotImages, type Knot, type KnotType, type KnotUse, type L } from './knots';
 import { ANCHOR_BY_ID } from './anchors';
 import { NEEDS } from './content';
@@ -18,7 +19,7 @@ export function KnotRow({ knot, learned }: { knot: Knot; learned: boolean }) {
   return (
     <li>
       <Link className="list-row knot-row" to={`/knots/guide/${knot.id}`}>
-        {thumb ? <img className="knot-thumb" src={`${import.meta.env.BASE_URL}knots/${thumb}`} alt="" loading="lazy" /> : <span className="knot-thumb" />}
+        {thumb ? <KnotFigure className="knot-thumb" file={thumb} alt="" /> : <span className="knot-thumb" />}
         <span className="list-main">
           <span className="list-title">{tl(knot.name, i18n.language)}</span>
           <span className="list-sub">{tl(knot.purpose, i18n.language)}</span>
