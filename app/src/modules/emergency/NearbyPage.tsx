@@ -40,10 +40,9 @@ export function NearbyPage() {
   const country = useSettings((s) => s.settings.country);
   const [packageMissing, setPackageMissing] = useState(false);
   const [parks, setParks] = useState<ParksData | null>(null);
-  // Parques nacionales (intendencias y frecuencias): solo Argentina.
+  // Parques nacionales y áreas de CONAF (intendencias, oficinas y frecuencias): Argentina y Chile.
   useEffect(() => {
-    if (country !== 'AR') return setParks(null);
-    void loadParks().then(setParks);
+    void loadParks(country).then(setParks);
   }, [country]);
   useEffect(() => {
     setPackageMissing(false);

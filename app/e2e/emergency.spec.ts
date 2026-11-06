@@ -188,9 +188,16 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   const park = page.getByTestId('park-section');
   await expect(park).toContainText('Parque Nacional Nahuel Huapi');
   await expect(park).toContainText('del límite');
-  await expect(park.getByTestId('park-radio')).toContainText('VHF 155,675 MHz');
-  await expect(park.getByTestId('park-radio')).toContainText('Club Andino Bariloche');
-  await expect(park.getByRole('link', { name: '105' })).toHaveAttribute('href', 'tel:105');
+  const here = park.getByTestId('park-here');
+  await expect(here.getByTestId('park-radio')).toContainText('VHF 155,675 MHz');
+  await expect(here.getByTestId('park-radio')).toContainText('Club Andino Bariloche');
+  await expect(here.getByRole('link', { name: '105' })).toHaveAttribute('href', 'tel:105');
+  // Los otros parques que publican frecuencia, de los dos países (Chile: Torres del Paine, CONAF 143,800).
+  const others = park.getByTestId('park-others');
+  await expect(others).toContainText('Parque Nacional Lanín');
+  await expect(others).toContainText('Parque Nacional Torres del Paine');
+  await expect(others).toContainText('VHF 143,800 MHz');
+  await expect(mountain).toContainText('CONAF publica la 143,800 MHz');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-20-radio-park.png`, fullPage: true });
 
   // Una frecuencia que me dieron en el refugio, con el lugar donde estoy.

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSettings, type Country } from '@/core/settings/settings';
-import { loadEmergencyData, type EmergencyData } from './data';
+import { loadEmergencyData, loadParksCL, type EmergencyData } from './data';
 import { DATA_CACHE as CACHE, loadDataFile } from './dataFile';
 export { CountryDataError } from './dataFile';
 import { loadOfficialRepeaters } from './officialRepeaters';
@@ -57,6 +57,8 @@ export function useCountryPrefetch(): void {
       if (country !== 'AR') void loadCountryData(country).catch(() => undefined);
       // Repetidoras oficiales de Chile: también con Argentina (en la cordillera se está cerca).
       void loadOfficialRepeaters(country).catch(() => undefined);
+      // Áreas protegidas de Chile (CONAF): también con Argentina, por la cordillera.
+      if (country === 'AR' || country === 'CL') void loadParksCL().catch(() => undefined);
     };
     if (navigator.onLine) fetchIt();
     window.addEventListener('online', fetchIt);

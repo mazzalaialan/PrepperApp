@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import parksJson from './parks-data.json';
 import emergencyJson from './emergency-data.json';
+import parksCL from '../../../public/data/parks-CL.json';
 import { inPark, mergeNearby, officialNearby, parksNear, withParks, type EmergencyData, type ParksData } from './data';
 
 const P = parksJson as unknown as ParksData;
@@ -46,5 +47,37 @@ describe('parques nacionales', () => {
     const rows = all.filter((p) => p.phone === park('Parque Nacional Nahuel Huapi').phone || p.name.includes('Arrayanes'));
     expect(rows).toHaveLength(1);
     expect(rows[0]!.extraPhones?.map((e) => e.phone)).toContain('105');
+  });
+});
+
+describe('áreas protegidas de Chile (CONAF)', () => {
+  const CL = parksCL as unknown as ParksData;
+  const both: ParksData = { source: '', parks: [...P.parks, ...CL.parks] };
+
+  it('todas las áreas de CONAF, con página y ubicación', () => {
+    expect(CL.parks.length).toBeGreaterThan(100);
+    for (const p of CL.parks) expect(p.url, p.name).toMatch(/^https:\/\/www\.conaf\.cl\//);
+    expect(CL.parks.filter((p) => p.area.length).length).toBeGreaterThan(95);
+  });
+
+  it('Torres del Paine publica la 143,800 para emergencias; la oficina es CONAF Magallanes', () => {
+    const [here] = parksNear(both, -50.94, -72.97, 5000); // Lago Pehoé
+    expect(here!.park.name).toBe('Parque Nacional Torres del Paine');
+    expect(here!.park.radio?.[0]?.freq).toBe('143,800 MHz');
+    expect(here!.park.office).toBe('CONAF Magallanes');
+    expect(here!.park.emergency?.some((e) => e.phone === '130')).toBe(true);
+  });
+
+  it('en Buscar cercanos, una sola fila por oficina regional, con las frecuencias de sus áreas', () => {
+    const rows = withParks([], both, -53.16, -70.91).filter((p) => p.name === 'CONAF Magallanes');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.radio?.map((r) => r.label)).toContain('VHF de emergencia de CONAF en Torres del Paine');
+  });
+
+  it('del lado argentino de la cordillera, el parque chileno vecino aparece cerca', () => {
+    // Paso Mamuil Malal: límite entre el PN Lanín y el PN Villarrica.
+    const near = parksNear(both, -39.585, -71.44, 5000).map((p) => p.park.name);
+    expect(near).toContain('Parque Nacional Lanín');
+    expect(near).toContain('Parque Nacional Villarrica');
   });
 });

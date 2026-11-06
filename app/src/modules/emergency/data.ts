@@ -1,5 +1,7 @@
 import type { ContactKind } from '@/core/model/types';
 import { distanceMeters } from '@/core/geo/geo';
+import type { Country } from '@/core/settings/settings';
+import { loadDataFile } from './dataFile';
 
 /**
  * Datos de emergencia incluidos en la app (tools/emergency-data/build.mjs):
@@ -80,8 +82,10 @@ export interface ParkRadio {
 
 export interface Park {
   name: string;
-  /** Página del área en argentina.gob.ar. */
+  /** Página del área (argentina.gob.ar o conaf.cl). */
   url: string;
+  /** Quién atiende el teléfono principal, si no es la intendencia (Chile: "CONAF Magallanes"). */
+  office?: string;
   address: string;
   /** Número para llamar a la intendencia ('' si la página no publica uno). */
   phone: string;
@@ -101,12 +105,27 @@ export interface ParksData {
   parks: Park[];
 }
 
-let parksPending: Promise<ParksData> | null = null;
+let parksAR: Promise<ParksData> | null = null;
+let parksCL: Promise<ParksData> | null = null;
 
-/** Solo Argentina: los parques nacionales vienen con la app. */
-export function loadParks(): Promise<ParksData> {
-  parksPending ??= import('./parks-data.json').then((m) => m.default as unknown as ParksData);
-  return parksPending;
+const loadParksAR = () => (parksAR ??= import('./parks-data.json').then((m) => m.default as unknown as ParksData));
+/** Chile (CONAF): archivo aparte, se baja una vez y queda guardado como los paquetes por país. */
+export function loadParksCL(): Promise<ParksData> {
+  parksCL ??= loadDataFile<ParksData>('parks-CL.json');
+  // Si falla (sin conexión y sin bajar), se reintenta la próxima vez.
+  parksCL.catch(() => (parksCL = null));
+  return parksCL;
+}
+
+/**
+ * Parques de Argentina y Chile juntos (en la cordillera se está a pocos km
+ * del otro país); Uruguay, ninguno. Si el archivo de Chile no está bajado y
+ * no hay conexión, solo los de Argentina.
+ */
+export async function loadParks(country: Country): Promise<ParksData> {
+  if (country !== 'AR' && country !== 'CL') return { source: '', parks: [] };
+  const [ar, cl] = await Promise.all([loadParksAR(), loadParksCL().catch(() => null)]);
+  return { source: [ar.source, cl?.source].filter(Boolean).join(' '), parks: [...ar.parks, ...(cl?.parks ?? [])] };
 }
 
 function inRing(ring: [number, number][], lon: number, lat: number): boolean {
@@ -140,7 +159,7 @@ export function parksNear(data: ParksData, lat: number, lon: number, maxM: numbe
 }
 
 /** Lugares de Parques Nacionales en los datos oficiales (seccionales, destacamentos, guardaparques). */
-const isParkOffice = (p: NearbyPlace) => /parques nacionales|guardaparque/i.test(`${p.detail} ${p.name}`);
+const isParkOffice = (p: NearbyPlace) => /parques nacionales|guardaparque|conaf|ranger/i.test(`${p.detail} ${p.name}`);
 
 /**
  * Suma las intendencias de los parques (con teléfono o dirección) y les pasa
@@ -153,32 +172,35 @@ export function withParks(places: NearbyPlace[], parks: ParksData, lat: number, 
     const park = withRadio.find((k) => inPark(k, p.lat, p.lon));
     return park ? { ...p, radio: park.radio } : p;
   });
-  const seen = new Set<string>();
+  // Dos áreas con la misma intendencia u oficina (Nahuel Huapi y Los Arrayanes; en Chile, una oficina regional de CONAF para varias áreas): una sola fila, con las frecuencias de todas.
+  const rows = new Map<string, NearbyPlace>();
   parks.parks.forEach((park, i) => {
     if (!park.phone && !park.address) return;
-    // Dos áreas con la misma intendencia (Nahuel Huapi y Los Arrayanes, Baritú y El Nogalar): una sola fila, con las frecuencias de las dos.
-    const key = `${park.lat},${park.lon}`;
-    const twin = seen.has(key) ? out.find((p) => p.key.startsWith('park-') && `${p.lat},${p.lon}` === key) : undefined;
+    const key = `${park.lat},${park.lon},${park.office ?? ''}`;
+    const twin = rows.get(key);
     if (twin) {
-      for (const r of park.radio ?? []) if (!twin.radio?.some((x) => x.freq === r.freq)) twin.radio = [...(twin.radio ?? []), r];
+      // La fila lleva el nombre de la oficina, no el de una de las áreas.
+      if (park.office) twin.name = park.office;
+      for (const r of park.radio ?? []) if (!twin.radio?.some((x) => x.freq === r.freq && x.label === r.label)) twin.radio = [...(twin.radio ?? []), r];
       return;
     }
-    seen.add(key);
-    out.push({
+    const row: NearbyPlace = {
       key: `park-${i}`,
       kind: 'police',
-      name: `Intendencia · ${park.name}`,
+      name: `${park.office ?? 'Intendencia'} · ${park.name}`,
       phone: park.phone,
       address: park.address,
       lat: park.lat,
       lon: park.lon,
       distance: distanceMeters({ lat, lon }, park),
       source: 'official',
-      detail: 'Administración de Parques Nacionales',
+      detail: park.url.includes('conaf.cl') ? 'CONAF' : 'Administración de Parques Nacionales',
       ...(park.phones && park.phones.replace(/\D/g, '') !== park.phone.replace(/\D/g, '') && { note: park.phones }),
       ...(park.emergency && { extraPhones: park.emergency }),
       ...(park.radio && { radio: park.radio }),
-    });
+    };
+    rows.set(key, row);
+    out.push(row);
   });
   return out;
 }

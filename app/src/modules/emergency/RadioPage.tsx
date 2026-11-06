@@ -6,7 +6,7 @@ import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
-import { loadParks, nearestRadio, parksNear, type EmergencyData, type ParksData } from './data';
+import { distanceToPark, loadParks, nearestRadio, type EmergencyData, type ParksData } from './data';
 import { CopyButton, formatDistance, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRepeaterList } from './officialRepeaters';
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
@@ -166,7 +166,7 @@ export function RadioPage() {
         <p className="hint" style={{ margin: 0 }}>{t('radio.distressNote')}</p>
       </section>
 
-      {country === 'AR' && <ParkSection place={place} />}
+      {(country === 'AR' || country === 'CL') && <ParkSection place={place} />}
 
       {(country === 'AR' || country === 'CL') && (
         <section className="card stack" aria-labelledby="mountain-title" data-testid="mountain-frequencies">
@@ -211,29 +211,46 @@ export function RadioPage() {
   );
 }
 
-/** El parque nacional donde se está (o a menos de 5 km): intendencia, teléfonos de emergencia y frecuencias que publica. */
+/** Cuántos otros parques con frecuencia se listan. */
+const OTHER_PARKS_SHOWN = 10;
+
+/**
+ * Frecuencias de parques (Argentina y Chile): primero el parque donde se está
+ * (o a menos de 5 km), con todos sus teléfonos; después los otros parques que
+ * publican una frecuencia, del más cercano al más lejano, para tenerlas antes
+ * de salir.
+ */
 function ParkSection({ place }: { place: { lat: number; lon: number } | null }) {
   const { t, i18n } = useTranslation();
+  const country = useSettings((s) => s.settings.country);
   const [parks, setParks] = useState<ParksData | null>(null);
   useEffect(() => {
-    void loadParks().then(setParks);
-  }, []);
-  const near = useMemo(() => (parks && place ? parksNear(parks, place.lat, place.lon, PARK_NEAR_M) : []), [parks, place?.lat, place?.lon]);
-  if (near.length === 0) return null;
+    void loadParks(country).then(setParks);
+  }, [country]);
+  const { here, others } = useMemo(() => {
+    if (!parks) return { here: [], others: [] };
+    const all = place
+      ? parks.parks.map((park) => ({ park, distance: distanceToPark(park, place.lat, place.lon) })).sort((a, b) => a.distance - b.distance)
+      : parks.parks.map((park) => ({ park, distance: null as number | null })).sort((a, b) => a.park.name.localeCompare(b.park.name, i18n.language));
+    const here = all.filter((p) => p.distance !== null && p.distance <= PARK_NEAR_M);
+    return { here, others: all.filter((p) => !here.includes(p) && p.park.radio?.length).slice(0, OTHER_PARKS_SHOWN) };
+  }, [parks, place?.lat, place?.lon, i18n.language]);
+  if (!parks || (here.length === 0 && others.length === 0)) return null;
+  const where = (distance: number | null) =>
+    distance === null ? '' : distance === 0 ? t('radio.park.inside') : t('radio.park.near', { distance: formatDistance(distance, i18n.language) });
   return (
     <section className="card stack" aria-labelledby="park-title" data-testid="park-section">
       <h2 id="park-title" className="section-title" style={{ margin: 0 }}>{t('radio.park.title')}</h2>
-      {near.map(({ park, distance }) => (
-        <div key={park.name} className="stack park-block">
+      <p className="hint" style={{ margin: 0 }}>{t('radio.park.intro')}</p>
+      {here.map(({ park, distance }) => (
+        <div key={park.url} className="stack park-block" data-testid="park-here">
           <p style={{ margin: 0 }}>
-            <strong>{park.name}</strong>
-            {' · '}
-            {distance === 0 ? t('radio.park.inside') : t('radio.park.near', { distance: formatDistance(distance, i18n.language) })}
+            <strong>{park.name}</strong> · {where(distance)}
           </p>
           {park.radio?.length ? (
             <ParkRadioList radio={park.radio} />
           ) : (
-            <p className="hint" style={{ margin: 0 }}>{t('radio.park.noRadio')}</p>
+            <p className="hint" style={{ margin: 0 }}>{t(park.url.includes('conaf.cl') ? 'radio.park.noRadioCL' : 'radio.park.noRadio')}</p>
           )}
           {park.emergency?.map((e) => (
             <span key={e.phone} className="list-sub park-phone">
@@ -242,13 +259,34 @@ function ParkSection({ place }: { place: { lat: number; lon: number } | null }) 
           ))}
           {park.phone && (
             <span className="list-sub park-phone">
-              {t('radio.park.office')}: <PhoneActions phone={park.phone} />
+              {park.office ?? t('radio.park.office')}: <PhoneActions phone={park.phone} />
             </span>
           )}
           {park.phones && park.phones.replace(/\D/g, '') !== park.phone.replace(/\D/g, '') && <span className="list-sub">{park.phones}</span>}
           {park.address && <MapLink address={park.address} lat={park.lat} lon={park.lon} />}
         </div>
       ))}
+      {others.length > 0 && (
+        <>
+          <h3 className="list-title" style={{ margin: 0 }}>{t(here.length ? 'radio.park.othersTitle' : 'radio.park.allTitle')}</h3>
+          <ul className="list" data-testid="park-others">
+            {others.map(({ park, distance }) => (
+              <li key={park.url} className="contact-row">
+                <span className="list-main">
+                  <span className="list-title">{park.name}</span>
+                  {distance !== null && <span className="list-sub">{where(distance)}</span>}
+                  {park.radio && <ParkRadioList radio={park.radio} />}
+                  {park.phone && (
+                    <span className="list-sub park-phone">
+                      {park.office ?? t('radio.park.office')}: <PhoneActions phone={park.phone} />
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       <p className="hint" style={{ margin: 0 }}>{t('radio.park.note')}</p>
       <p className="hint" style={{ margin: 0 }}>{t('radio.park.sources')}</p>
     </section>
