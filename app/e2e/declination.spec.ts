@@ -30,10 +30,10 @@ test('declinómetro: lugar, cambio anual, convertir rumbos, mapa viejo y machete
   // Convertir: de la brújula al mapa (Oeste se resta) y del mapa a la brújula (Oeste se suma).
   await page.getByLabel('Rumbo magnético (el que marca la brújula), en grados').fill('120');
   const toTrue = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(120 + expected);
-  await expect(page.getByTestId('decl-converted')).toHaveText(`120° magnético − ${value}° = ${toTrue}° verdadero`);
+  await expect(page.getByTestId('decl-converted')).toHaveText(`120° magnético − ${value}° = ${toTrue}° geográfico`);
   await page.getByRole('button', { name: 'Mapa → brújula' }).click();
-  await page.getByLabel('Rumbo verdadero (medido en el mapa), en grados').fill('45');
-  await expect(page.getByTestId('decl-converted')).toContainText(`45° verdadero + ${value}° =`);
+  await page.getByLabel('Rumbo geográfico (medido en el mapa), en grados').fill('45');
+  await expect(page.getByTestId('decl-converted')).toContainText(`45° geográfico + ${value}° =`);
 
   // Mapa viejo: 1990, 5° Oeste, 8′ por año al Oeste → unos 9,8° Oeste hoy, y lo compara con el modelo.
   await page.getByLabel('Año de la declinación del mapa').fill('1990');
@@ -53,8 +53,8 @@ test('declinómetro: lugar, cambio anual, convertir rumbos, mapa viejo y machete
 
   // Machete.
   const cheat = page.getByTestId('decl-cheat');
-  await expect(cheat).toContainText('Verdadero = Magnético + Declinación');
-  await expect(cheat).toContainText('De la brújula al mapa (magnético → verdadero): Este se suma, Oeste se resta.');
+  await expect(cheat).toContainText('Geográfico = Magnético + Declinación');
+  await expect(cheat).toContainText('De la brújula al mapa (magnético → geográfico): Este se suma, Oeste se resta.');
   await expect(page.getByTestId('decl-gmer')).toContainText('De Geográfico a Magnético, el Este Resta');
 
   // Desde la brújula se llega al declinómetro.

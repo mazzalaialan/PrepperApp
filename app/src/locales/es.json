@@ -1133,7 +1133,7 @@
     "disclaimer": "Es el riesgo por la pendiente del terreno: el peligro real depende también del estado de la nieve y del clima. Medida orientativa; no reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
   },
   "declination": {
-    "intro": "La declinación es el ángulo entre el norte verdadero (el de los mapas y el GPS) y el norte magnético (al que apunta la aguja). Cambia según el lugar y con los años. Se calcula sin conexión con el modelo magnético mundial (WMM).",
+    "intro": "La declinación es el ángulo entre el norte geográfico (el de los mapas y el GPS) y el norte magnético (al que apunta la aguja). Cambia según el lugar y con los años. Se calcula sin conexión con el modelo magnético mundial (WMM).",
     "hereTitle": "Declinación en el lugar",
     "choosePlace": "Elegí un lugar arriba (tu ubicación, un waypoint o coordenadas).",
     "angle": "{{value}}° {{side}} ({{dm}})",
@@ -1141,11 +1141,11 @@
       "E": "Este",
       "W": "Oeste"
     },
-    "dialLabel": "Norte verdadero arriba y norte magnético girado por la declinación",
+    "dialLabel": "Norte geográfico arriba y norte magnético girado por la declinación",
     "trueShort": "NV",
     "magShort": "NM",
-    "meaningW": "La aguja apunta {{value}}° a la izquierda (al oeste) del norte verdadero.",
-    "meaningE": "La aguja apunta {{value}}° a la derecha (al este) del norte verdadero.",
+    "meaningW": "La aguja apunta {{value}}° a la izquierda (al oeste) del norte geográfico.",
+    "meaningE": "La aguja apunta {{value}}° a la derecha (al este) del norte geográfico.",
     "annual": "Cambia unos {{minutes}}′ por año hacia el {{side}}.",
     "error": "Si no la corregís, te desviás unos {{meters}} m por cada km que caminás.",
     "model": "Modelo WMM 2025, válido hasta {{until}}.",
@@ -1155,9 +1155,9 @@
     "m2t": "Brújula → mapa",
     "t2m": "Mapa → brújula",
     "bearingMag": "Rumbo magnético (el que marca la brújula), en grados",
-    "bearingTrue": "Rumbo verdadero (medido en el mapa), en grados",
-    "resultM2t": "{{from}}° magnético {{op}} {{decl}}° = {{to}}° verdadero",
-    "resultT2m": "{{from}}° verdadero {{op}} {{decl}}° = {{to}}° magnético",
+    "bearingTrue": "Rumbo geográfico (medido en el mapa), en grados",
+    "resultM2t": "{{from}}° magnético {{op}} {{decl}}° = {{to}}° geográfico",
+    "resultT2m": "{{from}}° geográfico {{op}} {{decl}}° = {{to}}° magnético",
     "mapTitle": "Mapa de papel viejo",
     "mapIntro": "El margen del mapa trae la declinación del año en que se hizo y cuánto cambia por año. Cargalos y te dice cuánto es hoy. Si el mapa trae solo el signo: + es Este y − es Oeste (podés escribirlo con el número).",
     "mapYear": "Año de la declinación del mapa",
@@ -1166,22 +1166,22 @@
     "towards": "Hacia el",
     "mapToday": "Hoy sería unos {{value}}.",
     "mapCompare": "El modelo da {{value}} en {{place}}.",
-    "cheatTitle": "Machete: magnético ↔ verdadero",
+    "cheatTitle": "Machete: magnético ↔ geográfico",
     "cheat": {
       "what": {
         "term": "Los nortes",
-        "text": "Verdadero (geográfico): hacia el polo, el de los mapas y el GPS. Magnético: hacia donde apunta la aguja. Declinación Este = la aguja queda a la derecha del verdadero; Oeste = a la izquierda."
+        "text": "Geográfico (en manuales en inglés, \"true north\"): hacia el polo, el de los mapas y el GPS. Magnético: hacia donde apunta la aguja. Declinación Este = la aguja queda a la derecha del geográfico; Oeste = a la izquierda."
       },
       "formula": {
         "term": "Las fórmulas",
-        "m2t": "Verdadero = Magnético + Declinación",
-        "t2m": "Magnético = Verdadero − Declinación",
+        "m2t": "Geográfico = Magnético + Declinación",
+        "t2m": "Magnético = Geográfico − Declinación",
         "sign": "La declinación Este va con signo +, la Oeste con signo −."
       },
       "rule": {
         "term": "La regla sin signos",
-        "m2t": "De la brújula al mapa (magnético → verdadero): Este se suma, Oeste se resta.",
-        "t2m": "Del mapa a la brújula (verdadero → magnético): Este se resta, Oeste se suma."
+        "m2t": "De la brújula al mapa (magnético → geográfico): Este se suma, Oeste se resta.",
+        "t2m": "Del mapa a la brújula (geográfico → magnético): Este se resta, Oeste se suma."
       },
       "gmer": {"term": "Regla nemotécnica: GMER (\"gamer\")", "text": "De Geográfico a Magnético, el Este Resta (y el Oeste suma). Para el otro lado se invierte: de Magnético a Geográfico, el Este suma y el Oeste resta."},
       "example": {
@@ -1194,7 +1194,7 @@
       "mapToCompass": {
         "term": "Del mapa al terreno (brújula de placa)",
         "s1": "En el mapa, uní dónde estás con adonde vas con el borde de la placa (la flecha de dirección hacia el destino).",
-        "s2": "Girá el limbo hasta que sus líneas queden paralelas a los meridianos (norte del mapa arriba) y leé el rumbo verdadero.",
+        "s2": "Girá el limbo hasta que sus líneas queden paralelas a los meridianos (norte del mapa arriba) y leé el rumbo geográfico.",
         "s3": "Convertilo a magnético con la regla de arriba y girá el limbo a ese valor.",
         "s4": "Con la brújula horizontal, girá vos (no el limbo) hasta que la aguja roja quede dentro de la flecha de orientación.",
         "s5": "Caminá hacia donde apunta la flecha de dirección, eligiendo puntos de referencia en esa línea."
@@ -1203,16 +1203,16 @@
         "term": "Del terreno al mapa",
         "s1": "Apuntá la flecha de dirección a lo que ves (un cerro, un refugio).",
         "s2": "Girá el limbo hasta que la aguja roja quede en la flecha de orientación y leé el rumbo magnético.",
-        "s3": "Convertilo a verdadero y poné ese valor en el limbo.",
+        "s3": "Convertilo a geográfico y poné ese valor en el limbo.",
         "s4": "Apoyá la placa en el mapa con las líneas del limbo paralelas a los meridianos y el borde tocando el punto: tu posición está sobre esa línea."
       },
       "adjust": {
         "term": "Brújula con ajuste de declinación",
-        "text": "Si tu brújula se puede ajustar, poné la declinación una vez y ya marca rumbos verdaderos: no hagas además la cuenta, porque la corregirías dos veces. Revisá el ajuste cada pocos años o al cambiar de región."
+        "text": "Si tu brújula se puede ajustar, poné la declinación una vez y ya marca rumbos geográficos: no hagas además la cuenta, porque la corregirías dos veces. Revisá el ajuste cada pocos años o al cambiar de región."
       },
       "grid": {
         "term": "Norte de cuadrícula",
-        "text": "Los mapas con cuadrícula (UTM o Gauss-Krüger del IGN) tienen un tercer norte, el de las líneas de la cuadrícula. La diferencia con el verdadero (convergencia) suele ser de pocos grados y está en el margen. Si medís contra la cuadrícula, usá el ángulo cuadrícula–magnético del mapa, actualizado con la variación anual."
+        "text": "Los mapas con cuadrícula (UTM o Gauss-Krüger del IGN) tienen un tercer norte, el de las líneas de la cuadrícula. La diferencia con el geográfico (convergencia) suele ser de pocos grados y está en el margen. Si medís contra la cuadrícula, usá el ángulo cuadrícula–magnético del mapa, actualizado con la variación anual."
       },
       "region": {
         "term": "En nuestra región",
