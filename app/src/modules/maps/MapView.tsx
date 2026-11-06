@@ -250,11 +250,13 @@ export function MapView(props: Props) {
   function syncTerrain(m: MlMap) {
     const on = latest.current.layers.terrain3d;
     m.setTerrain(on ? TERRAIN : null);
+    // El relieve ya está puesto (o sacado): no depende de que termine la animación de inclinación,
+    // que el seguimiento de posición puede cortar.
+    container.current?.setAttribute('data-terrain', on ? 'on' : 'off');
     if (on) m.setMaxPitch(MAX_PITCH_3D);
     const target = on ? (m.getPitch() > 0 ? m.getPitch() : PITCH_3D) : 0;
     if (m.getPitch() === target) {
       if (!on) m.setMaxPitch(0);
-      container.current?.setAttribute('data-terrain', on ? 'on' : 'off');
       return;
     }
     pendingPitch.current = target;
