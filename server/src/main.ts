@@ -18,7 +18,10 @@ import { openMeteoGarden, runGardenWatch } from './garden/watch.ts';
 import { createOfficialStore } from './official/store.ts';
 import { createOfficialCache, FEEDS, fetchOfficial } from './official/sources.ts';
 import { OFFICIAL_DEFAULTS, runOfficialWatch } from './official/watch.ts';
-import type { OfficialAlert, OfficialSource } from './official/cap.ts';
+import type { CapSource, OfficialAlert } from './official/cap.ts';
+import { fetchAshSigmets } from './official/sigmet.ts';
+import { fetchVolcanoAlerts } from './volcanoes/oavv.ts';
+import { runVolcanoWatch } from './volcanoes/watch.ts';
 
 const config = loadConfig();
 const db = openDb(config.dataDir);
@@ -155,13 +158,14 @@ const hazardTimer = setInterval(() => void hazardTick(), 5 * 60_000);
 
 // Alertas oficiales (SMN, DMC, INUMET): cada 10 minutos, para el mapa y para avisar. Se bajan solo los CAP nuevos.
 let officialBusy = false;
+let volcanoesAt = 0;
 async function officialTick() {
   if (!config.hazardsEnabled || officialBusy) return;
   officialBusy = true;
   try {
     const all: OfficialAlert[] = [];
     const failed: string[] = [];
-    for (const source of Object.keys(FEEDS) as OfficialSource[]) {
+    for (const source of Object.keys(FEEDS) as CapSource[]) {
       try {
         all.push(...(await fetchOfficial(source, officialCache)));
       } catch (err) {
@@ -169,6 +173,26 @@ async function officialTick() {
         // Si falla una fuente, quedan sus alertas de la vuelta anterior (todavía vigentes).
         all.push(...officialStore.alerts.filter((a) => a.source === source && Date.parse(a.expires) > Date.now()));
         app.log.warn({ err: String(err), source }, 'no se pudieron leer las alertas oficiales');
+      }
+    }
+    // Ceniza volcánica (SIGMET de aviación, vía NOAA).
+    try {
+      all.push(...(await fetchAshSigmets()));
+    } catch (err) {
+      failed.push('SIGMET');
+      all.push(...officialStore.alerts.filter((a) => a.source === 'SIGMET' && Date.parse(a.expires) > Date.now()));
+      app.log.warn({ err: String(err) }, 'no se pudieron leer los SIGMET de ceniza');
+    }
+    // Nivel de alerta de los volcanes (OAVV): cambia despacio, cada media hora.
+    if (Date.now() - volcanoesAt > 30 * 60_000) {
+      try {
+        officialStore.volcanoes = await fetchVolcanoAlerts();
+        volcanoesAt = Date.now();
+        const v = await runVolcanoWatch(db, push, officialStore.volcanoes, new Date(), config.rainHereMaxAgeMs);
+        if (v.sent || v.removed) app.log.info(v, 'avisos de volcanes enviados');
+      } catch (err) {
+        failed.push('OAVV');
+        app.log.warn({ err: String(err) }, 'no se pudo leer el nivel de alerta de los volcanes (OAVV)');
       }
     }
     officialStore.alerts = all;

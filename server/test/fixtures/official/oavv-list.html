@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Roboto, Helvetica, Arial, sans-serif;
+            padding: 10px;
+        }
+
+        .volcano-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .volcano-card {
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .volcano-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .volcano-image {
+            width: 100%;
+            height: 255px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .volcano-info {
+            background-color: #7795B9;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .volcano-name {
+            font-size: 18px;
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .volcano-country {
+            font-size: 16px;
+            color: white;
+            font-weight: 400;
+        }
+
+        .volcano-alert {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .volcano-link {
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.3s ease;
+        }
+
+        .volcano-link:hover {
+            opacity: 0.9;
+        }
+
+        .no-alerts {
+            text-align: center;
+            font-size: 24px;
+            color: #666;
+            padding: 40px 20px;
+            grid-column: 1 / -1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .volcano-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 15px;
+            }
+
+            .volcano-name {
+                font-size: 16px;
+            }
+
+            .volcano-country {
+                font-size: 14px;
+            }
+
+            .volcano-image {
+                height: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .volcano-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 0 5px;
+            }
+
+            .volcano-image {
+                height: 200px;
+            }
+
+            .volcano-info {
+                padding: 12px;
+            }
+
+            .no-alerts {
+                font-size: 20px;
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="volcano-grid">
+                                    <div class="volcano-card">
+                    <a href="/scripts/show_reporte.php?id_volcan=10" target="_top">
+                        <img
+                            src="/scripts/show_foto.php?id=10"
+                            alt="CV. NEVADOS DE CHILLÁN"
+                            class="volcano-image"
+                        >
+                    </a>
+                    <div class="volcano-info">
+                        <h2 class="volcano-name">
+                            <a href="/scripts/show_reporte.php?id_volcan=10"
+                               target="_top"
+                               class="volcano-link">
+                                CV. NEVADOS DE CHILLÁN                            </a>
+                        </h2>
+                        <div class="volcano-country">
+                            <a href="/scripts/show_reporte.php?id_volcan=10"
+                               target="_top"
+                               class="volcano-link">
+                                Chile                            </a>
+                        </div>
+                    </div>
+                    <img
+                        src="/scripts/show_alerta.php?id=10&h=0"
+                        alt="Alert level"
+                        class="volcano-alert"
+                    >
+                </div>
+                            <div class="volcano-card">
+                    <a href="/scripts/show_reporte.php?id_volcan=11" target="_top">
+                        <img
+                            src="/scripts/show_foto.php?id=11"
+                            alt="VOLCÁN VILLARRICA"
+                            class="volcano-image"
+                        >
+                    </a>
+                    <div class="volcano-info">
+                        <h2 class="volcano-name">
+                            <a href="/scripts/show_reporte.php?id_volcan=11"
+                               target="_top"
+                               class="volcano-link">
+                                VOLCÁN VILLARRICA                            </a>
+                        </h2>
+                        <div class="volcano-country">
+                            <a href="/scripts/show_reporte.php?id_volcan=11"
+                               target="_top"
+                               class="volcano-link">
+                                Chile                            </a>
+                        </div>
+                    </div>
+                    <img
+                        src="/scripts/show_alerta.php?id=11&h=0"
+                        alt="Alert level"
+                        class="volcano-alert"
+                    >
+                </div>
+                        </div>
+</body>
+</html>

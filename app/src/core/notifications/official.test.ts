@@ -34,3 +34,13 @@ describe('notificación de alerta oficial', () => {
     expect(body).not.toContain('supplies');
   });
 });
+
+import { volcanoNotification } from './format';
+
+describe('notificación de volcán', () => {
+  it('nombre, nivel, distancia y rumbo; de dónde sale', () => {
+    const { title, body } = volcanoNotification({ placeId: 'w1', label: 'Pucón', fixAt: null, name: 'VOLCÁN VILLARRICA', level: 'orange', distanceKm: 17, bearing: 180, url: 'https://oavv' }, 'es');
+    expect(title).toBe('Volcán Villarrica: alerta técnica naranja · a 17 km al sur de Pucón');
+    expect(body).toContain('OAVV, SEGEMAR');
+  });
+});

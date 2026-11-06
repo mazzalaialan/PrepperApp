@@ -773,7 +773,7 @@
       "earthquakes": "Earthquakes",
       "hazards": "Disaster alerts",
       "fires": "Hotspots",
-      "volcanoes": "Volcanoes",
+      "volcanoes": "Volcanoes. With official alerts on, those with an OAVV technical alert are larger, in yellow, orange or red",
       "waypoints": "My waypoints",
       "lightning": "Lightning",
       "official": "Official alerts"
@@ -795,7 +795,7 @@
     "radarAt": "Radar {{time}}",
     "satRainAt": "Estimated rain {{time}}",
     "legend": {
-      "official": "Current official alerts from SMN (Argentina), the Chilean Meteorological Directorate and INUMET (Uruguay), with their original text: areas in yellow (minor or moderate), orange (severe) or red (extreme). Tap an area for details",
+      "official": "Current official alerts from SMN (Argentina), the Chilean Meteorological Directorate and INUMET (Uruguay), with their original text: areas in yellow (minor or moderate), orange (severe) or red (extreme). Tap an area for details. Also volcanic ash clouds (aviation SIGMETs, via NOAA)",
       "lightning": "⚡ Lightning from the last few minutes (GOES-19 satellite, from your server): yellow circles, with one bolt per group. Rings at 10, 20 and 30 km around you: the alert fires within 30 km.",
       "satellite": "GOES‑19 infrared satellite: colors mark very high, cold clouds — storm clouds (NASA, every 10 min, ~45 min delay)",
       "satRain": "Rain estimated from GOES-19 infrared every 10 min by your server: light blue (1 mm/h) to red (over 40 mm/h). Approximate: it uses cloud-top temperature, so very cold high clouds can show rain that is not falling and rain from low clouds is missed. Where there is radar, radar is more accurate",
@@ -807,6 +807,8 @@
       "wind": "Wind by area in {{unit}}; the arrow shows where it blows to"
     },
     "severity": {"Extreme": "extreme", "Severe": "severe", "Moderate": "moderate", "Minor": "minor", "Unknown": "no level"},
+    "volcanoAlert": "{{level}} technical alert (OAVV, SEGEMAR): tap \"More information\" for the latest report",
+    "volcanoLevel": {"yellow": "Yellow", "orange": "Orange", "red": "Red"},
     "alertValid": "In effect from {{from}} to {{to}}",
     "alertUntil": "until {{time}}",
     "alertVerbatim": "Official text from {{sender}}, unchanged. If in doubt, follow their instructions.",

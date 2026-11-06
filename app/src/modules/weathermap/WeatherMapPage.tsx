@@ -18,6 +18,7 @@ import {
   fetchHazards,
   fetchOfficialAlerts,
   liveAlerts,
+  volcanoAlertAt,
   fetchLightning,
   fetchRainMap,
   fetchQuakes,
@@ -38,6 +39,7 @@ import {
   type Hazard,
   type LightningBatch,
   type OfficialAlert,
+  type VolcanoAlert,
   type RainMap,
   type Quake,
   type RadarFrames,
@@ -84,7 +86,7 @@ export function WeatherMapPage() {
 
   const [quakes, setQuakes] = useState<{ fetchedAt: string; items: Quake[] } | null>(null);
   const [hazards, setHazards] = useState<{ fetchedAt: string; items: Hazard[] } | null>(null);
-  const [official, setOfficial] = useState<{ fetchedAt: string; items: OfficialAlert[] } | null>(null);
+  const [official, setOfficial] = useState<{ fetchedAt: string; items: OfficialAlert[]; volcanoes?: VolcanoAlert[] } | null>(null);
   const showOfficial = layers.official && !!serverUrl;
   const [zones, setZones] = useState<{ fetchedAt: string; items: ZoneWeather[] } | null>(null);
   const [satTimes, setSatTimes] = useState<Date[] | null>(null);
@@ -198,8 +200,8 @@ export function WeatherMapPage() {
       if (showOfficial && stale(official?.fetchedAt)) {
         jobs.push(
           fetchOfficialAlerts(serverUrl).then(
-            async (items) => {
-              const entry = { fetchedAt: new Date().toISOString(), items };
+            async ({ items, volcanoes }) => {
+              const entry = { fetchedAt: new Date().toISOString(), items, volcanoes };
               setOfficial(entry);
               fail('official', false);
               await writeMapCache({ official: entry });
@@ -448,6 +450,7 @@ export function WeatherMapPage() {
             hazards={layers.hazards ? (hazards?.items ?? null) : null}
             official={showOfficial ? activeAlerts : null}
             volcanoes={layers.volcanoes ? geo.volcanoes : null}
+            volcanoAlerts={showOfficial ? (official?.volcanoes ?? null) : null}
             waypoints={waypoints}
             here={here}
             lightning={showLightning ? (lightning?.flashes ?? null) : null}
@@ -511,7 +514,7 @@ export function WeatherMapPage() {
 
       <MapTimes sat={layers.satellite ? satTime : undefined} rain={satRainTime} radar={layers.radar ? radarTime : undefined} fmt={timeFmt} />
 
-      {selected && <FeatureCard feature={selected} u={u} now={now} onClose={() => setSelected(null)} />}
+      {selected && <FeatureCard feature={selected} u={u} now={now} volcanoAlerts={showOfficial ? official?.volcanoes : undefined} onClose={() => setSelected(null)} />}
       {showOfficial && official && <AlertsHere alerts={activeAlerts} here={here} waypoints={waypointMap} onSelect={(a) => setSelected({ kind: 'official', item: a })} />}
 
       <section className="card stack" aria-labelledby="wmap-layers">
@@ -603,7 +606,19 @@ function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zon
   );
 }
 
-function FeatureCard({ feature, u, now, onClose }: { feature: MapFeature; u: ReturnType<typeof useUnits>; now: number; onClose: () => void }) {
+function FeatureCard({
+  feature,
+  u,
+  now,
+  volcanoAlerts,
+  onClose,
+}: {
+  feature: MapFeature;
+  u: ReturnType<typeof useUnits>;
+  now: number;
+  volcanoAlerts?: VolcanoAlert[];
+  onClose: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const n1 = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
   const when = new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -647,15 +662,17 @@ function FeatureCard({ feature, u, now, onClose }: { feature: MapFeature; u: Ret
     }
     case 'volcano': {
       const v = feature.item;
+      const alert = volcanoAlertAt(volcanoAlerts, v.lat, v.lon);
       title = v.name;
       lines = [
+        alert ? t('weatherMap.volcanoAlert', { level: t(`weatherMap.volcanoLevel.${alert.level}`) }) : '',
         [v.type, v.country].filter(Boolean).join(' · '),
         v.elevation !== null ? t('weatherMap.elevation', { value: u.altitude(v.elevation) }) : '',
         v.lastEruption === null
           ? t('weatherMap.eruptionUnknown')
           : t('weatherMap.lastEruption', { year: v.lastEruption < 0 ? t('weatherMap.bce', { year: -v.lastEruption }) : v.lastEruption }),
       ].filter(Boolean);
-      link = `https://volcano.si.edu/volcano.cfm?vn=${v.id}`;
+      link = alert?.report ?? `https://volcano.si.edu/volcano.cfm?vn=${v.id}`;
       break;
     }
     case 'zone': {

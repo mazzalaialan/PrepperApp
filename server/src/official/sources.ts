@@ -1,4 +1,4 @@
-import { decode, parseCap, type OfficialAlert, type OfficialSource } from './cap.ts';
+import { decode, parseCap, type CapSource, type OfficialAlert } from './cap.ts';
 
 /**
  * Alertas oficiales de los servicios meteorológicos, en CAP (las fuentes que
@@ -10,14 +10,14 @@ import { decode, parseCap, type OfficialAlert, type OfficialSource } from './cap
  * alertas propias (ver docs/ARQUITECTURA.md, "Aclaración del SMN").
  */
 
-export const FEEDS: Record<OfficialSource, { url: string; web: string }> = {
+export const FEEDS: Record<CapSource, { url: string; web: string }> = {
   SMN: { url: 'https://ssl.smn.gob.ar/CAP/AR.php', web: 'https://www.smn.gob.ar/alertas' },
   DMC: { url: 'https://archivos.meteochile.gob.cl/portaldmc/rss/rss.php', web: 'https://www.meteochile.gob.cl' },
   INUMET: { url: 'https://www.inumet.gub.uy/reportes/riesgo/rss.xml', web: 'https://www.inumet.gub.uy/alerta' },
 };
 
 /** Enlaces a los CAP de cada fuente: el SMN publica un RSS (o una página con "Ver XML CAP"); DMC e INUMET, un RSS. */
-export function capLinks(source: OfficialSource, body: string): string[] {
+export function capLinks(source: CapSource, body: string): string[] {
   const links =
     source === 'SMN'
       ? // Al navegador le devuelve una página HTML; a un programa, el RSS: se toman los enlaces a los CAP de cualquiera de los dos.
@@ -45,7 +45,7 @@ async function text(url: string, fetchImpl: typeof fetch): Promise<string> {
  * Alertas vigentes de una fuente. Baja solo los CAP nuevos (de a uno, sin
  * apuro) y olvida los que ya no figuran en el listado.
  */
-export async function fetchOfficial(source: OfficialSource, cache: OfficialCache, now = Date.now(), fetchImpl: typeof fetch = fetch): Promise<OfficialAlert[]> {
+export async function fetchOfficial(source: CapSource, cache: OfficialCache, now = Date.now(), fetchImpl: typeof fetch = fetch): Promise<OfficialAlert[]> {
   const feed = FEEDS[source];
   const links = capLinks(source, await text(feed.url, fetchImpl));
   const prefix = `${source}|`;

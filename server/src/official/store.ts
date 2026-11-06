@@ -1,15 +1,18 @@
 import type { FastifyInstance } from 'fastify';
 import type { OfficialAlert } from './cap.ts';
+import type { VolcanoAlert } from '../volcanoes/oavv.ts';
 
 /** Alertas oficiales vigentes que leyó el servidor (para el mapa de la app). */
 export interface OfficialStore {
   alerts: OfficialAlert[];
+  /** Volcanes con alerta técnica distinta de verde (OAVV). */
+  volcanoes: VolcanoAlert[];
   updatedAt: number;
   /** Fuentes que fallaron en la última vuelta (la app avisa que puede faltar alguna). */
   failed: string[];
 }
 
-export const createOfficialStore = (): OfficialStore => ({ alerts: [], updatedAt: 0, failed: [] });
+export const createOfficialStore = (): OfficialStore => ({ alerts: [], volcanoes: [], updatedAt: 0, failed: [] });
 
 /** Douglas-Peucker sobre un anillo [lat, lon]; tolerancia en grados (~500 m). */
 export function simplifyRing(ring: [number, number][], tol = 0.005): [number, number][] {
@@ -49,8 +52,8 @@ export function simplifyRing(ring: [number, number][], tol = 0.005): [number, nu
 }
 
 /**
- * GET /api/alerts: alertas oficiales vigentes (SMN, DMC, INUMET) con sus
- * zonas simplificadas. Sin token: son datos públicos de los organismos.
+ * GET /api/alerts: alertas oficiales vigentes (SMN, DMC, INUMET y SIGMET de
+ * ceniza) con sus zonas simplificadas, y el nivel de los volcanes (OAVV). Sin token: son datos públicos de los organismos.
  */
 export function officialRoutes(app: FastifyInstance, store: OfficialStore): void {
   app.get('/api/alerts', async (_req, reply) => {
@@ -59,6 +62,7 @@ export function officialRoutes(app: FastifyInstance, store: OfficialStore): void
     return {
       updatedAt: store.updatedAt ? new Date(store.updatedAt).toISOString() : null,
       failed: store.failed,
+      volcanoes: store.volcanoes,
       alerts: store.alerts
         .filter((a) => Date.parse(a.expires) > now)
         .map((a) => ({ ...a, areas: a.areas.map((area) => ({ desc: area.desc, polygons: area.polygons.map((p) => simplifyRing(p)) })) })),

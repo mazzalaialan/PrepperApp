@@ -87,6 +87,7 @@ async function mockSources(page: Page) {
           { key: 'DMC:1:0', source: 'DMC', senderName: 'Dirección Meteorológica de Chile', event: 'Viento', headline: 'Viento fuerte en la Araucanía', description: 'Rachas de 70 km/h.', instruction: '', severity: 'Minor', onset: hours(-2), expires: hours(10), web: 'https://www.meteochile.gob.cl', areas: [{ desc: 'Araucanía: Cordillera', polygons: [square(-39.5, -71.6, 0.6)] }] },
           { key: 'SMN:viejo:0', source: 'SMN', senderName: 'Servicio Meteorologico Nacional', event: 'Viento', headline: 'Vencida', description: '', instruction: '', severity: 'Severe', onset: hours(-30), expires: hours(-2), web: '', areas: [{ desc: '', polygons: [square(-34.6, -58.4, 0.5)] }] },
         ],
+        volcanoes: [{ name: 'VOLCÁN VILLARRICA', country: 'Chile', level: 'orange', lat: -39.42, lon: -71.93, report: 'https://oavv.segemar.gob.ar/scripts/show_reporte.php?id_volcan=11', source: 'OAVV' }],
       },
       headers: { 'Access-Control-Allow-Origin': '*' },
     }),
@@ -246,10 +247,16 @@ test('alertas oficiales: zonas en el mapa, las de donde estoy y el texto del org
   await expect(card).toContainText('1- Evitá salir.');
   await expect(card).toContainText('Texto oficial de Servicio Meteorologico Nacional, sin cambios');
   await expect(card.getByRole('link', { name: 'Más información' })).toHaveAttribute('href', 'https://www.smn.gob.ar/alertas');
-  // Tocar la zona de Chile en el mapa (sin volcanes ni clima por zona: lo puntual tiene prioridad sobre las zonas).
+  // Un volcán con alerta técnica del OAVV: el nivel y el enlace al reporte.
   await page.getByRole('button', { name: 'Satélite (nubes)' }).click();
-  await page.getByRole('button', { name: 'Volcanes' }).click();
   await page.getByRole('button', { name: 'Clima por zona' }).click();
+  await page.waitForTimeout(700);
+  await tap(page, -71.93, -39.42);
+  await expect(card).toContainText('Villarrica');
+  await expect(card).toContainText('Alerta técnica naranja (OAVV, SEGEMAR)');
+  await expect(card.getByRole('link', { name: 'Más información' })).toHaveAttribute('href', /show_reporte\.php\?id_volcan=11/);
+  // Tocar la zona de Chile en el mapa (sin volcanes: lo puntual tiene prioridad sobre las zonas).
+  await page.getByRole('button', { name: 'Volcanes' }).click();
   await page.waitForTimeout(700);
   await tap(page, -71.6, -39.5);
   await expect(card).toContainText('Viento fuerte en la Araucanía');

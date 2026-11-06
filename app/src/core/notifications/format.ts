@@ -43,6 +43,9 @@ const TEXT = {
     levels: { Green: 'verde', Orange: 'naranja', Red: 'roja' },
     hazardInformative: 'Aviso informativo, no oficial: seguí las indicaciones de los organismos oficiales (INPRES, SMN, Protección Civil).',
     hazardStock: (places: string) => `Tenés reserva cerca: ${places}. Si podés, ponela a resguardo.`,
+    volcano: (name: string, level: string, km: number, dir: string, place: string) => `Volcán ${name}: alerta técnica ${level} · a ${km} km al ${dir} de ${place}`,
+    volcanoBody: 'Según el Observatorio Argentino de Vigilancia Volcánica (OAVV, SEGEMAR). Tocá para ver el reporte. Seguí las indicaciones de Protección Civil.',
+    volcanoLevels: { yellow: 'amarilla', orange: 'naranja', red: 'roja' },
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Incluye ${places}.`,
     officialHere: 'tu ubicación',
@@ -87,6 +90,9 @@ const TEXT = {
     levels: { Green: 'green', Orange: 'orange', Red: 'red' },
     hazardInformative: 'Informational, not official: follow the instructions of the official agencies.',
     hazardStock: (places: string) => `You have supplies nearby: ${places}. If you can, move them to safety.`,
+    volcano: (name: string, level: string, km: number, dir: string, place: string) => `${name} volcano: ${level} technical alert · ${km} km ${dir} of ${place}`,
+    volcanoBody: 'According to the Argentine Volcano Observatory (OAVV, SEGEMAR). Tap to see the report. Follow civil protection instructions.',
+    volcanoLevels: { yellow: 'yellow', orange: 'orange', red: 'red' },
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Includes ${places}.`,
     officialHere: 'your location',
@@ -239,6 +245,34 @@ export function officialNotification(o: OfficialPush, lang: Lang, now = Date.now
     .filter(Boolean)
     .join('\n');
   return { title, body: body + (o.here ? lastFixNote(o.fixAt, lang, now) : '') };
+}
+
+/** Volcán que subió su alerta técnica cerca (ver server/src/volcanoes/watch.ts). ⚠ Mismo tipo que `volcano` en server/src/push.ts. */
+export interface VolcanoPush {
+  placeId: string;
+  label: string | null;
+  fixAt: string | null;
+  name: string;
+  level: 'yellow' | 'orange' | 'red';
+  distanceKm: number;
+  bearing: number;
+  stock?: string[];
+  url: string;
+}
+
+/** "VOLCÁN VILLARRICA" → "Villarrica"; "CV. NEVADOS DE CHILLÁN" → "Nevados De Chillán". */
+const volcanoTitle = (name: string) =>
+  name
+    .replace(/^(CV\.?|C\.V\.|COMPLEJO VOLC[AÁ]NICO|VOLC[AÁ]N)\s+/i, '')
+    .toLowerCase()
+    .replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase());
+
+export function volcanoNotification(v: VolcanoPush, lang: Lang, now = Date.now()): { title: string; body: string } {
+  const tx = TEXT[lang];
+  const dir = tx.dirs[Math.round((((v.bearing % 360) + 360) % 360) / 45) % 8]!;
+  const title = tx.volcano(volcanoTitle(v.name), tx.volcanoLevels[v.level], Math.max(1, v.distanceKm), dir, v.label ?? tx.officialHere);
+  const extra = (v.stock?.length ? `\n${tx.hazardStock(v.stock.join(', '))}` : '') + lastFixNote(v.fixAt, lang, now);
+  return { title, body: tx.volcanoBody + extra };
 }
 
 export function lightningNotification(l: LightningPush, lang: Lang, now = Date.now()): { title: string; body: string } {

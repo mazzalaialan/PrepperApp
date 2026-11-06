@@ -38,7 +38,8 @@ const family = (a: OfficialAlert) => `${a.source}:${a.event.toLowerCase()}`;
 export async function runOfficialWatch(db: Db, push: PushSender, alerts: OfficialAlert[], now = new Date(), options: OfficialWatchOptions = OFFICIAL_DEFAULTS): Promise<{ sent: number; removed: number }> {
   const result = { sent: 0, removed: 0 };
   db.prepare('DELETE FROM official_notices WHERE notified_at < ?').run(now.getTime() - options.keepMs);
-  const live = alerts.filter((a) => Date.parse(a.expires) > now.getTime());
+  // La ceniza en altura es para la aviación: solo se avisa la que llega al suelo.
+  const live = alerts.filter((a) => Date.parse(a.expires) > now.getTime() && (a.source !== 'SIGMET' || a.severity === 'Severe'));
   if (!live.length) return result;
 
   const places = withoutDuplicateHere(

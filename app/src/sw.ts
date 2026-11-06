@@ -12,6 +12,8 @@ import {
   hazardNotification,
   officialNotification,
   type OfficialPush,
+  volcanoNotification,
+  type VolcanoPush,
   type AlertSummary,
   type GardenPush,
   type HazardPush,
@@ -72,7 +74,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush; volcano?: VolcanoPush };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -115,6 +117,19 @@ self.addEventListener('push', (event) => {
           // Una por alerta: una renovación con otro identificador reemplaza la anterior del mismo fenómeno.
           tag: `official-${o.source}-${o.event}`,
           renotify: urgent,
+          ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
+          data: { url: '#/weather/map' },
+        } as NotificationOptions);
+      } else if (payload.type === 'volcano' && payload.volcano) {
+        const v = payload.volcano;
+        const { title, body } = volcanoNotification(v, lang);
+        const urgent = v.level !== 'yellow';
+        await self.registration.showNotification(title, {
+          body,
+          icon: ICON,
+          badge: ICON,
+          tag: `volcano-${v.name}`,
+          renotify: true,
           ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
           data: { url: '#/weather/map' },
         } as NotificationOptions);

@@ -217,7 +217,7 @@ export type OfficialSeverity = 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Un
 /** Alerta de un servicio meteorológico, tal como la publica (CAP). Ver server/src/official/. */
 export interface OfficialAlert {
   key: string;
-  source: 'SMN' | 'DMC' | 'INUMET';
+  source: 'SMN' | 'DMC' | 'INUMET' | 'SIGMET';
   senderName: string;
   event: string;
   headline: string;
@@ -231,9 +231,27 @@ export interface OfficialAlert {
   areas: { desc: string; polygons: [number, number][][] }[];
 }
 
-export async function fetchOfficialAlerts(serverUrl: string): Promise<OfficialAlert[]> {
-  const data = await getJson<{ alerts?: OfficialAlert[] }>(`${serverUrl.replace(/\/+$/, '')}/api/alerts`, 'official');
-  return (data.alerts ?? []).filter((a) => a && typeof a.key === 'string' && Array.isArray(a.areas));
+/** Volcán con alerta técnica distinta de verde (OAVV, SEGEMAR), con la ubicación del Smithsonian. */
+export interface VolcanoAlert {
+  name: string;
+  country: string;
+  level: 'yellow' | 'orange' | 'red';
+  lat: number;
+  lon: number;
+  report: string;
+}
+
+export async function fetchOfficialAlerts(serverUrl: string): Promise<{ items: OfficialAlert[]; volcanoes: VolcanoAlert[] }> {
+  const data = await getJson<{ alerts?: OfficialAlert[]; volcanoes?: VolcanoAlert[] }>(`${serverUrl.replace(/\/+$/, '')}/api/alerts`, 'official');
+  return {
+    items: (data.alerts ?? []).filter((a) => a && typeof a.key === 'string' && Array.isArray(a.areas)),
+    volcanoes: (data.volcanoes ?? []).filter((v) => v && typeof v.lat === 'number' && ['yellow', 'orange', 'red'].includes(v.level)),
+  };
+}
+
+/** Nivel de alerta del volcán del mapa (por ubicación: el servidor usa la misma lista del Smithsonian). */
+export function volcanoAlertAt(alerts: VolcanoAlert[] | undefined, lat: number, lon: number): VolcanoAlert | null {
+  return alerts?.find((a) => Math.abs(a.lat - lat) < 0.01 && Math.abs(a.lon - lon) < 0.01) ?? null;
 }
 
 function inRing(ring: [number, number][], lat: number, lon: number): boolean {
@@ -394,7 +412,7 @@ export async function fetchZoneWeather(base: string, points: ZonePoint[]): Promi
 
 export interface MapCache {
   quakes?: { fetchedAt: string; items: Quake[] };
-  official?: { fetchedAt: string; items: OfficialAlert[] };
+  official?: { fetchedAt: string; items: OfficialAlert[]; volcanoes?: VolcanoAlert[] };
   hazards?: { fetchedAt: string; items: Hazard[] };
   zones?: { fetchedAt: string; items: ZoneWeather[] };
 }

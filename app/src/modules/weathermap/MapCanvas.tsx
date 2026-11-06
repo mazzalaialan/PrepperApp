@@ -4,7 +4,7 @@ import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels'
 import type { GeoData, Volcano } from './geo';
 import { fitBounds, pan, project, REGION_BOUNDS, unproject, zoomAt, type Size, type View } from './projection';
 import { readyImage } from './images';
-import { alertCovers, type Flash, type Hazard, type HazardLevel, type OfficialAlert, type OfficialSeverity, type Quake, type ZoneWeather } from './sources';
+import { alertCovers, type Flash, type Hazard, type HazardLevel, type OfficialAlert, type OfficialSeverity, type VolcanoAlert, volcanoAlertAt, type Quake, type ZoneWeather } from './sources';
 
 /** Imagen georreferenciada (satélite, tesela de radar, focos de calor), en metros Mercator. */
 export interface Overlay {
@@ -42,6 +42,8 @@ interface Props {
   /** Alertas oficiales vigentes (SMN, DMC, INUMET): zonas pintadas por severidad. */
   official: OfficialAlert[] | null;
   volcanoes: Volcano[] | null;
+  /** Nivel de alerta técnica (OAVV): el volcán se pinta de amarillo, naranja o rojo, más grande. */
+  volcanoAlerts?: VolcanoAlert[] | null;
   waypoints: MapWaypoint[] | null;
   here: { lon: number; lat: number } | null;
   /** Rayos de los últimos minutos: círculos amarillos y un ⚡ que titila por grupo. */
@@ -425,16 +427,21 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
   }
 
   // Volcanes: triángulo; los que tuvieron erupciones desde 1900, más visibles.
-  for (const v of p.volcanoes ?? []) {
+  // Con alerta técnica (OAVV): más grande, del color del nivel y con borde claro; se dibujan al final, encima.
+  const alerted = (v: Volcano) => volcanoAlertAt(p.volcanoAlerts ?? undefined, v.lat, v.lon);
+  const LEVEL_COLOR = { yellow: c.s4!, orange: c.s5!, red: c.s6! };
+  for (const v of [...(p.volcanoes ?? [])].sort((a, b) => Number(!!alerted(a)) - Number(!!alerted(b)))) {
     const s = proj(v.lon, v.lat);
+    const alert = alerted(v);
     const recent = v.lastEruption !== null && v.lastEruption >= 1900;
-    ctx.fillStyle = recent ? c.s5! : c.muted!;
-    ctx.strokeStyle = c.bg!;
-    ctx.lineWidth = 1;
+    const k = alert ? 1.7 : 1;
+    ctx.fillStyle = alert ? LEVEL_COLOR[alert.level] : recent ? c.s5! : c.muted!;
+    ctx.strokeStyle = alert ? c.text! : c.bg!;
+    ctx.lineWidth = alert ? 1.5 : 1;
     ctx.beginPath();
-    ctx.moveTo(s.x, s.y - 6);
-    ctx.lineTo(s.x + 5, s.y + 4);
-    ctx.lineTo(s.x - 5, s.y + 4);
+    ctx.moveTo(s.x, s.y - 6 * k);
+    ctx.lineTo(s.x + 5 * k, s.y + 4 * k);
+    ctx.lineTo(s.x - 5 * k, s.y + 4 * k);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();

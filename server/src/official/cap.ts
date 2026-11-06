@@ -32,7 +32,9 @@ export interface OfficialAlert {
   areas: OfficialArea[];
 }
 
-export type OfficialSource = 'SMN' | 'DMC' | 'INUMET';
+/** Servicios meteorológicos (CAP) y SIGMET de ceniza volcánica (aviación). */
+export type OfficialSource = 'SMN' | 'DMC' | 'INUMET' | 'SIGMET';
+export type CapSource = Exclude<OfficialSource, 'SIGMET'>;
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 

@@ -152,3 +152,55 @@ describe('avisos de alertas oficiales', () => {
     assert.deepEqual(push.sent[0]!.official!.places, ['Huerta']);
   });
 });
+
+import { levelOf, locate, parseList, pngPixel, volcanoRadiusKm } from '../src/volcanoes/oavv.ts';
+import { parseSigmets } from '../src/official/sigmet.ts';
+import { runVolcanoWatch } from '../src/volcanoes/watch.ts';
+
+describe('volcanes (OAVV) y ceniza (SIGMET)', () => {
+  it('lista de volcanes con alerta y su ubicación', () => {
+    const list = parseList(fixture('oavv-list.html'));
+    assert.deepEqual(list.map((v) => v.name), ['CV. NEVADOS DE CHILLÁN', 'VOLCÁN VILLARRICA']);
+    assert.equal(list[0]!.country, 'Chile');
+    assert.equal(locate('CV. NEVADOS DE CHILLÁN')?.name, 'Chillan, Nevados de'); // así lo escribe el Smithsonian
+    assert.equal(locate('VOLCÁN VILLARRICA')?.name, 'Villarrica');
+    assert.equal(locate('VOLCÁN QUE NO EXISTE'), null);
+  });
+
+  it('el color del semáforo da el nivel', () => {
+    const png = readFileSync(new URL('./fixtures/official/oavv-alert-yellow.png', import.meta.url));
+    assert.equal(levelOf(pngPixel(png, 20, 20)!), 'yellow');
+    assert.equal(levelOf([245, 40, 45]), 'red');
+    assert.equal(levelOf([255, 150, 60]), 'orange');
+    assert.equal(levelOf([136, 200, 110]), 'green');
+  });
+
+  it('SIGMET: solo la región; con polígono, alturas y quien lo emite', () => {
+    const list = JSON.parse(fixture('sigmets.json')) as Parameters<typeof parseSigmets>[0];
+    assert.equal(parseSigmets(list).length, 0); // ese día no había en la región
+    const ours = { firId: 'SAVF', firName: 'SAVF COMODORO RIVADAVIA', hazard: 'VA', qualifier: 'ERUPTION MT HUDSON', validTimeFrom: 1793921580, validTimeTo: 1793943180, base: 0, top: 22000, dir: 'E', spd: '20', coords: [{ lat: -45.9, lon: -72.97 }, { lat: -45.9, lon: -70 }, { lat: -46.5, lon: -70 }, { lat: -45.9, lon: -72.97 }] };
+    const [a] = parseSigmets([ours]);
+    assert.equal(a!.headline, 'Ceniza volcánica del Hudson');
+    assert.equal(a!.severity, 'Severe');
+    assert.match(a!.description, /desde el suelo hasta unos 6700 m de altura\. Se mueve hacia el este a 20 nudos/);
+    const [high] = parseSigmets([{ ...ours, base: 10000 }]);
+    assert.equal(high!.severity, 'Moderate');
+  });
+
+  it('avisa un volcán cerca según su nivel, y otra vez solo si sube', async () => {
+    const db = setup();
+    // Pucón, a ~17 km del Villarrica.
+    db.prepare(`UPDATE rain_places SET lat = -39.27, lon = -71.98`).run();
+    db.prepare(`DELETE FROM stock_places`).run();
+    const push = new FakePush();
+    const v = { name: 'VOLCÁN VILLARRICA', country: 'Chile', level: 'yellow' as const, lat: -39.42, lon: -71.93, report: 'https://oavv/r', source: 'OAVV' as const };
+    assert.equal(volcanoRadiusKm('yellow'), 30);
+    assert.equal((await runVolcanoWatch(db, push, [v])).sent, 1);
+    assert.equal(push.sent[0]!.volcano!.level, 'yellow');
+    assert.equal((await runVolcanoWatch(db, push, [v])).sent, 0);
+    assert.equal((await runVolcanoWatch(db, push, [{ ...v, level: 'orange' }])).sent, 1);
+    // Lejos (Buenos Aires), nada aunque esté en rojo.
+    db.prepare(`UPDATE rain_places SET lat = -34.6, lon = -58.4`).run();
+    assert.equal((await runVolcanoWatch(db, push, [{ ...v, name: 'otro', level: 'red' }])).sent, 0);
+  });
+});
