@@ -5,7 +5,10 @@
 # el servidor (GET /api/data/:file). La app usa la copia del servidor si es más
 # nueva que la que trae. Pensado para cron, igual que los mapas:
 #
-#   0 5 3 * * sh ~/vikarg/server/src/data/update-data.sh ~/vikarg/deploy/data-packs
+#   0 5 3,17 * * sh ~/vikarg/server/src/data/update-data.sh ~/vikarg/deploy/data-packs
+#
+# Dos veces por mes: si una fuente (por ejemplo Overpass) está caída o lenta, queda el
+# paquete anterior y se reintenta en la otra corrida.
 #
 # Cada archivo nuevo reemplaza al anterior solo si es JSON válido, trae fecha
 # (generatedAt) y no es mucho más chico que el anterior (si una fuente cambió

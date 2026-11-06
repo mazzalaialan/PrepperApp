@@ -199,12 +199,12 @@ API: `GET /api/library` (catálogo), `POST /api/library/key` (comprobar la clave
 
 ## Datos que se actualizan solos (cada mes)
 
-Los parques nacionales de Argentina (APN e IGN) y las áreas de CONAF en Chile, y las comisarías, bomberos y centros de salud de Chile y Uruguay cambian de vez en cuando. El servidor los vuelve a generar una vez por mes con las mismas herramientas del repositorio (`tools/`), dentro de un contenedor de Node, y los ofrece en `GET /api/data/:file` (`parks-AR.json`, `parks-CL.json`, `CL.json`, `UY.json`). La app compara la fecha (`generatedAt`) y se queda con la copia más nueva, la suya o la del servidor; queda guardada para usarla sin conexión. No hace falta publicar una versión nueva de la app.
+Los parques nacionales de Argentina (APN e IGN) y las áreas de CONAF en Chile, y las comisarías, bomberos y centros de salud de Chile y Uruguay cambian de vez en cuando. El servidor los vuelve a generar dos veces por mes (si una fuente falla, queda el anterior y se reintenta en la otra corrida) con las mismas herramientas del repositorio (`tools/`), dentro de un contenedor de Node, y los ofrece en `GET /api/data/:file` (`parks-AR.json`, `parks-CL.json`, `CL.json`, `UY.json`). La app compara la fecha (`generatedAt`) y se queda con la copia más nueva, la suya o la del servidor; queda guardada para usarla sin conexión. No hace falta publicar una versión nueva de la app.
 
 Un archivo nuevo reemplaza al anterior solo si es JSON válido, trae fecha y no es mucho más chico (si una fuente cambió de formato o falló, queda el que estaba). Registro en `deploy/data-packs/update.log`. En el crontab del usuario:
 
 ```
-0 5 3 * * sh ~/vikarg/server/src/data/update-data.sh ~/vikarg/deploy/data-packs
+0 5 3,17 * * sh ~/vikarg/server/src/data/update-data.sh ~/vikarg/deploy/data-packs
 ```
 
 ## Aviso de fuentes caídas
