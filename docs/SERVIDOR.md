@@ -197,6 +197,16 @@ En `deploy/.env`: `LIBRARY_PATH=/home/usuario/vikarg-library/packages` y `LIBRAR
 
 API: `GET /api/library` (catálogo), `POST /api/library/key` (comprobar la clave; 10 intentos por IP cada 10 minutos) y `GET /api/library/books/:id` (los con derechos piden la clave en `x-library-key`).
 
+## Datos que se actualizan solos (cada mes)
+
+Los parques nacionales de Argentina (APN e IGN) y las áreas de CONAF en Chile, y las comisarías, bomberos y centros de salud de Chile y Uruguay cambian de vez en cuando. El servidor los vuelve a generar una vez por mes con las mismas herramientas del repositorio (`tools/`), dentro de un contenedor de Node, y los ofrece en `GET /api/data/:file` (`parks-AR.json`, `parks-CL.json`, `CL.json`, `UY.json`). La app compara la fecha (`generatedAt`) y se queda con la copia más nueva, la suya o la del servidor; queda guardada para usarla sin conexión. No hace falta publicar una versión nueva de la app.
+
+Un archivo nuevo reemplaza al anterior solo si es JSON válido, trae fecha y no es mucho más chico (si una fuente cambió de formato o falló, queda el que estaba). Registro en `deploy/data-packs/update.log`. En el crontab del usuario:
+
+```
+0 5 3 * * sh ~/vikarg/server/src/data/update-data.sh ~/vikarg/deploy/data-packs
+```
+
 ## Aviso de fuentes caídas
 
 Si una fuente externa (SMN, Dirección Meteorológica de Chile, INUMET, SIGMET de ceniza, OAVV, USGS, GDACS, Open-Meteo o los rayos del GOES-19) falla 3 veces seguidas durante al menos 30 minutos, el servidor manda **un** mail a `ADMIN_EMAIL`, y otro cuando vuelve a responder. El estado se guarda en la base (`source_status`), así que reiniciar no repite el aviso. Mientras tanto la app sigue mostrando lo último que se pudo leer. Para Gmail hace falta la verificación en 2 pasos y una contraseña de aplicación (Cuenta de Google → Seguridad → Contraseñas de aplicaciones).

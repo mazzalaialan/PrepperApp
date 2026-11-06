@@ -143,6 +143,13 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await expect(legend).toContainText('30° a 45°');
   await page.getByLabel('Marcar las laderas cargadas por viento').check();
   await expect(page.getByTestId('wind-recent')).toBeVisible();
+  // Posibles cornisas en violeta: prendidas de entrada, se apagan aparte.
+  await expect(page.getByTestId('cornice-legend')).toContainText('Posibles cornisas');
+  await page.getByTestId('cornice-toggle').uncheck();
+  await expect(page.getByTestId('cornice-legend')).toHaveCount(0);
+  await expect(legend).toContainText('30° a 45°');
+  await page.getByTestId('cornice-toggle').check();
+  await expect(page.getByTestId('cornice-legend')).toBeVisible();
   await expect(page.getByTestId('snowline-status')).toHaveText(/^Se pinta desde los 1100 m: la isoterma de 0 °C más baja de los últimos días en esta zona \(1380 m, Open-Meteo/);
   await page.getByLabel('Poner la línea de nieve a mano').check();
   await page.getByLabel('Hay nieve desde (m)').fill('2500');

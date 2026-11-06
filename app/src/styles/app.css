@@ -1430,6 +1430,11 @@ a.module-card:hover {
   background: repeating-linear-gradient(45deg, #2f7de1 0 2px, var(--danger) 2px 6px);
 }
 
+/* Posibles cornisas: violeta (CORNICE en maps/slope.ts). */
+.incl-swatch.cornice {
+  background: #a24bff;
+}
+
 /* ---------- Sol y luna ---------- */
 
 .sr-only {

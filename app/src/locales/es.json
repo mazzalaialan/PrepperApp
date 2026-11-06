@@ -668,6 +668,8 @@
     "windLegend": "Cargada por viento en los últimos 7 días",
     "windLoading": "Buscando el viento de los últimos días en esta zona…",
     "windLegendUsual": "Sotavento habitual (puede haber placas viejas)",
+    "corniceLegend": "Posibles cornisas: filo con caída fuerte a sotavento (no te acerques al borde ni pases por abajo)",
+    "corniceToggle": "Marcar posibles cornisas (violeta)",
     "windToggle": "Marcar las laderas cargadas por viento",
     "windRecent": "Últimos 7 días: el viento del {{from}} cargó nieve en las laderas que miran al {{lee}} (Open-Meteo, {{ago}}).",
     "windZone": "Últimos 7 días, según el pronóstico guardado con “{{zone}}” ({{ago}}): el viento del {{from}} cargó nieve en las laderas que miran al {{lee}}.",

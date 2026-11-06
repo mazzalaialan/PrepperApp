@@ -19,7 +19,8 @@
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const OUT = fileURLToPath(new URL('../../app/src/modules/emergency/parks-data.json', import.meta.url));
+// Con VIKARG_DATA_OUT escribe en la carpeta que sirve el servidor (actualización mensual).
+const OUT = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/parks-AR.json` : fileURLToPath(new URL('../../app/src/modules/emergency/parks-data.json', import.meta.url));
 const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
 const IGN = 'https://wms.ign.gob.ar/geoserver/ows?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&count=20000&typeNames=ign:area_protegida';
 const APN = 'https://www.argentina.gob.ar/parquesnacionales/';
@@ -198,8 +199,10 @@ for (const p of PARKS) {
   });
 }
 
+const MONTH = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 const data = {
-  source: 'Límites: IGN, capa "Área protegida" (CC BY 4.0). Intendencias y teléfonos: Administración de Parques Nacionales, argentina.gob.ar/parquesnacionales (CC BY 4.0), noviembre de 2026. Frecuencias: las publicadas por cada parque, con su fuente.',
+  generatedAt: new Date().toISOString().slice(0, 10),
+  source: `Límites: IGN, capa "Área protegida" (CC BY 4.0). Intendencias y teléfonos: Administración de Parques Nacionales, argentina.gob.ar/parquesnacionales (CC BY 4.0), ${MONTH}. Frecuencias: las publicadas por cada parque, con su fuente.`,
   parks,
 };
 await writeFile(OUT, JSON.stringify(data));

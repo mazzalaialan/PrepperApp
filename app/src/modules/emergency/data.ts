@@ -1,7 +1,7 @@
 import type { ContactKind } from '@/core/model/types';
 import { distanceMeters } from '@/core/geo/geo';
 import type { Country } from '@/core/settings/settings';
-import { loadDataFile } from './dataFile';
+import { loadDataFile, preferNewer } from './dataFile';
 
 /**
  * Datos de emergencia incluidos en la app (tools/emergency-data/build.mjs):
@@ -110,7 +110,8 @@ export interface ParksData {
 let parksAR: Promise<ParksData> | null = null;
 let parksCL: Promise<ParksData> | null = null;
 
-const loadParksAR = () => (parksAR ??= import('./parks-data.json').then((m) => m.default as unknown as ParksData));
+// Argentina viene con la app; si el servidor propio la regeneró (cada mes), se usa la copia más nueva.
+const loadParksAR = () => (parksAR ??= import('./parks-data.json').then((m) => preferNewer('parks-AR.json', m.default as unknown as ParksData)));
 /** Chile (CONAF): archivo aparte, se baja una vez y queda guardado como los paquetes por país. */
 export function loadParksCL(): Promise<ParksData> {
   parksCL ??= loadDataFile<ParksData>('parks-CL.json');

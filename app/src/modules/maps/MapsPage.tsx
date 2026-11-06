@@ -131,9 +131,11 @@ export function MapsPage() {
   const slopeMin = snowlineManual ?? (choice.source === 'none' ? snowlineFallback : choice.meters);
   // Carga por viento (subopción del riesgo de avalancha): la de los últimos 7 días y el sotavento habitual, rayados juntos.
   const windOn = layers.slope && layers.windLoad;
+  // Posibles cornisas (también subopción): usan el mismo viento, aunque el rayado esté apagado.
+  const corniceOn = layers.slope && layers.cornices;
   // Sin zona descargada cerca con el suyo: el viento habitual del lugar, una vez por lugar (~50 KB).
   const [prevailingFailed, setPrevailingFailed] = useState(false);
-  const wantPrevailing = windOn && online && !!snowline && needsLivePrevailing({ lat: view.lat, lon: view.lon }, snowline, zones);
+  const wantPrevailing = (windOn || corniceOn) && online && !!snowline && needsLivePrevailing({ lat: view.lat, lon: view.lon }, snowline, zones);
   useEffect(() => {
     if (!wantPrevailing || !snowline) return;
     let cancelled = false;
@@ -158,6 +160,9 @@ export function MapsPage() {
   const usualPending = online && wind.usual.source === 'default' && (livePending || (wantPrevailing && !prevailingFailed));
   const slopeLee = windOn && !recentPending && wind.recent ? leeAspects(wind.recent.from) : [];
   const slopeLeeUsual = windOn && !usualPending ? leeAspects(wind.usual.from) : [];
+  const slopeCornice = corniceOn
+    ? [...new Set([...(!recentPending && wind.recent ? leeAspects(wind.recent.from) : []), ...(!usualPending ? leeAspects(wind.usual.from) : [])])]
+    : [];
   const recentText = () => {
     const r = wind.recent;
     if (recentPending) return t('maps.windLoading');
@@ -311,7 +316,7 @@ export function MapsPage() {
       <FullscreenStage className="maps-stage" overlay={tools.overlay}>
         <MapView
           initial={initial}
-          layers={{ ...layers, slopeMin, slopeLee, slopeLeeUsual }}
+          layers={{ ...layers, slopeMin, slopeLee, slopeLeeUsual, slopeCornice }}
           showMine={layers.mine}
           waypoints={waypoints}
           routes={routes}
@@ -400,6 +405,12 @@ export function MapsPage() {
                   </li>
                 </>
               )}
+              {layers.cornices && (
+                <li data-testid="cornice-legend">
+                  <span className="incl-swatch cornice" aria-hidden />
+                  {t('maps.corniceLegend')}
+                </li>
+              )}
             </ul>
             <p className="hint" style={{ margin: 0 }} data-testid="snowline-status">
               {snowlineManual !== null
@@ -415,6 +426,10 @@ export function MapsPage() {
             <label className="check">
               <input type="checkbox" checked={layers.windLoad} onChange={(e) => setLayer('windLoad', e.target.checked)} />
               {t('maps.windToggle')}
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={layers.cornices} onChange={(e) => setLayer('cornices', e.target.checked)} data-testid="cornice-toggle" />
+              {t('maps.corniceToggle')}
             </label>
             {layers.windLoad && (
               <>

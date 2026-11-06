@@ -668,6 +668,8 @@
     "windLegend": "Wind-loaded in the last 7 days",
     "windLoading": "Looking up the wind of the last few days in this area…",
     "windLegendUsual": "Usual lee side (old slabs possible)",
+    "corniceLegend": "Possible cornices: ridge with a steep drop on the lee side (stay back from the edge and do not pass below)",
+    "corniceToggle": "Mark possible cornices (purple)",
     "windToggle": "Mark wind-loaded slopes",
     "windRecent": "Last 7 days: {{from}} wind loaded snow on slopes facing {{lee}} (Open-Meteo, {{ago}}).",
     "windZone": "Last 7 days, from the forecast saved with “{{zone}}” ({{ago}}): {{from}} wind loaded snow on slopes facing {{lee}}.",

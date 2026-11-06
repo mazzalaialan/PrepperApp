@@ -15,6 +15,7 @@ import { lightningRoutes } from './routes/lightning.ts';
 import { createOfficialStore, officialRoutes, type OfficialStore } from './official/store.ts';
 import { mapRoutes } from './routes/maps.ts';
 import { libraryRoutes } from './routes/library.ts';
+import { dataRoutes } from './routes/data.ts';
 import { rainMapRoutes } from './routes/rainMap.ts';
 import { transferRoutes } from './routes/transfers.ts';
 
@@ -51,6 +52,7 @@ export async function buildApp(
   rainMapRoutes(app, rainMap.store, rainMap.wake);
   mapRoutes(app, maps, config);
   libraryRoutes(app, config);
+  dataRoutes(app, config);
   officialRoutes(app, official);
   app.addHook('onClose', () => maps.close());
 

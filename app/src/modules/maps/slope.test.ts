@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { metersPerPixel, overzoomElevation, paintSlope, slopeDegrees, SLOPE_TILE, terrarium, upsampleElevation } from './slope';
+import { corniceMask, cornicePad, metersPerPixel, overzoomElevation, paintSlope, slopeDegrees, SLOPE_TILE, terrarium, upsampleElevation } from './slope';
 
 /** Plano que sube hacia el este con una pendiente dada (grados), en una tesela de `size`. */
 function plane(deg: number, z: number, y: number, size: number): Float32Array {
@@ -141,5 +141,31 @@ describe('pendiente con zoom mayor que el de la elevación', () => {
 
   it('sin la tesela que la contiene no hay pendiente', async () => {
     expect(await overzoomElevation(z, 1234 * 8, ty * 8, demZoom, async () => null)).toBeNull();
+  });
+});
+
+describe('posibles cornisas', () => {
+  // Meseta a 2000 m que cae a pique hacia el este (x ≥ 140) hasta 1800 m; zoom 15 (~4 m por píxel a 41° S).
+  const z = 15;
+  const ty = 20_257; // fila de teselas a unos 41° S
+  const pad = cornicePad(z, ty);
+  const n = SLOPE_TILE + 2 * pad;
+  const elev = new Float32Array(n * n);
+  for (let gy = 0; gy < n; gy++) for (let gx = 0; gx < n; gx++) elev[gy * n + gx] = gx - pad < 140 ? 2000 : Math.max(1800, 2000 - (gx - pad - 139) * 20);
+  const cols = (m: Uint8Array) => [...new Set([...m.keys()].filter((i) => m[i]).map((i) => i % SLOPE_TILE))].sort((a, b) => a - b);
+
+  it('con viento del oeste marca el borde de arriba de la caída (sotavento al este)', () => {
+    const m = corniceMask(elev, z, ty, [90], pad, 0);
+    const c = cols(m);
+    expect(c.length).toBeGreaterThan(0);
+    expect(Math.max(...c)).toBeLessThanOrEqual(140);
+    // El borde de arriba, hasta unos 90 m antes de la caída (~3,6 m por píxel en zoom 15).
+    expect(Math.min(...c)).toBeGreaterThan(105);
+  });
+  it('con viento del este no marca nada (ese borde queda a barlovento)', () => {
+    expect(cols(corniceMask(elev, z, ty, [270], pad, 0))).toEqual([]);
+  });
+  it('por debajo de la línea de nieve no hay cornisas', () => {
+    expect(cols(corniceMask(elev, z, ty, [90], pad, 2100))).toEqual([]);
   });
 });

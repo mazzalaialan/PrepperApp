@@ -20,7 +20,8 @@
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const OUT = fileURLToPath(new URL('../../app/public/data/parks-CL.json', import.meta.url));
+// Con VIKARG_DATA_OUT escribe en la carpeta que sirve el servidor (actualización mensual).
+const OUT = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/parks-CL.json` : fileURLToPath(new URL('../../app/public/data/parks-CL.json', import.meta.url));
 const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
 const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const SITEMAP = 'https://www.conaf.cl/parque_nacionales-sitemap.xml';
@@ -305,8 +306,10 @@ for (const a of areas) {
   });
 }
 
+const MONTH = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 const data = {
-  source: 'Contactos y frecuencias: CONAF (conaf.cl, página de cada área), noviembre de 2026. Límites: © colaboradores de OpenStreetMap (ODbL).',
+  generatedAt: new Date().toISOString().slice(0, 10),
+  source: `Contactos y frecuencias: CONAF (conaf.cl, página de cada área), ${MONTH}. Límites: © colaboradores de OpenStreetMap (ODbL).`,
   parks,
 };
 await writeFile(OUT, JSON.stringify(data));

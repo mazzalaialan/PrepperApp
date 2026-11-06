@@ -48,6 +48,8 @@ export interface Config {
   mailFrom: string | null;
   /** Dirección pública del servidor (para enlaces en los mails). */
   publicUrl: string | null;
+  /** Paquetes de datos que se regeneran cada mes (parques, Chile, Uruguay); null = no se ofrecen. */
+  dataPacksDir: string | null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -78,6 +80,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     smtpUrl: env.SMTP_URL?.trim() || null,
     mailFrom: env.MAIL_FROM?.trim() || null,
     publicUrl: env.PUBLIC_URL?.trim() || null,
+    dataPacksDir: env.DATA_PACKS_DIR === '' ? null : (env.DATA_PACKS_DIR ?? `${env.DATA_DIR ?? './data'}/packs`),
     mapsMaxZoneTiles: Number(env.MAPS_MAX_ZONE_TILES ?? 60_000),
     mapsMaxZoneMb: Number(env.MAPS_MAX_ZONE_MB ?? 1_500),
     libraryDir: env.LIBRARY_DIR?.trim() || null,

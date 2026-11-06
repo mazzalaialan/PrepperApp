@@ -16,6 +16,7 @@ services:
       TRANSFER_MAX_MB: ${TRANSFER_MAX_MB:-50}
       MAPS_DIR: /maps
       LIBRARY_DIR: /library
+      DATA_PACKS_DIR: /packs
       # Clave de la biblioteca: la misma con la que se cifraron los libros con derechos (tools/library-builder).
       LIBRARY_KEY: ${LIBRARY_KEY:-}
       # Aviso por mail cuando una fuente externa no responde (ver docs/SERVIDOR.md).
@@ -29,6 +30,8 @@ services:
       - ${MAPS_PATH:-./maps}:/maps:ro
       # Paquetes de la biblioteca (catalog.json y books/), los que arma tools/library-builder (run.sh package).
       - ${LIBRARY_PATH:-./library}:/library:ro
+      # Paquetes de datos que se regeneran cada mes (server/src/data/update-data.sh, por cron).
+      - ${DATA_PACKS_PATH:-./data-packs}:/packs:ro
 
   caddy:
     image: caddy:2-alpine

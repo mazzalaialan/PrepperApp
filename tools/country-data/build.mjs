@@ -20,13 +20,38 @@
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
+import { inflateRawSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
-const require = createRequire(new URL('../../app/package.json', import.meta.url));
-const { unzipSync, strFromU8 } = require('fflate');
+// Salida: los paquetes de la app (por defecto) o, con VIKARG_DATA_OUT, la carpeta que sirve el servidor
+// (actualización mensual, server/src/data/update-data.sh).
+const OUT_DIR = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/` : fileURLToPath(new URL('../../app/public/data/', import.meta.url));
 
-const OUT_DIR = fileURLToPath(new URL('../../app/public/data/', import.meta.url));
+/** Lector de ZIP mínimo (sin dependencias, para correr con Node solo): nombre → contenido. */
+function unzipSync(buf) {
+  const b = Buffer.from(buf);
+  let eocd = b.length - 22;
+  while (eocd >= 0 && b.readUInt32LE(eocd) !== 0x06054b50) eocd--;
+  if (eocd < 0) throw new Error('ZIP sin directorio central');
+  const count = b.readUInt16LE(eocd + 10);
+  let off = b.readUInt32LE(eocd + 16);
+  const out = {};
+  for (let i = 0; i < count; i++) {
+    const method = b.readUInt16LE(off + 10);
+    const size = b.readUInt32LE(off + 20);
+    const nameLen = b.readUInt16LE(off + 28);
+    const extra = b.readUInt16LE(off + 30);
+    const comment = b.readUInt16LE(off + 32);
+    const local = b.readUInt32LE(off + 42);
+    const name = b.toString('utf8', off + 46, off + 46 + nameLen);
+    const start = local + 30 + b.readUInt16LE(local + 26) + b.readUInt16LE(local + 28);
+    const data = b.subarray(start, start + size);
+    out[name] = method === 8 ? inflateRawSync(data) : data;
+    off += 46 + nameLen + extra + comment;
+  }
+  return out;
+}
+const strFromU8 = (u8) => Buffer.from(u8).toString('utf8');
 const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
 const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 

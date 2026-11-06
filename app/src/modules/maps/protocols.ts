@@ -3,7 +3,7 @@ import mlcontour from 'maplibre-contour';
 // MapLibre 6 dibuja con un worker aparte: con Vite hay que indicarle dónde queda el archivo.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import './appSources';
-import { decodeTerrarium, HATCH_RECENT, HATCH_USUAL, overzoomElevation, paintSlopeTile, slopeTile, type SlopeStyle } from './slope';
+import { decodeTerrarium, HATCH_RECENT, HATCH_USUAL, overzoomElevation, paintSlopeTile, slopeTile, type SlopeStyle, cornicePad, CORNICE_MIN_ZOOM } from './slope';
 import { themeColors } from './style';
 import { cachedOr, DEM_MAX_ZOOM, DEM_URL, GLYPHS_URL, mapTile, networkUrl } from './tiles';
 
@@ -73,10 +73,13 @@ export function setupProtocols(): { contoursUrl: string } {
     if (z > DEM_MAX_ZOOM) {
       // Más cerca que la elevación: la altura se interpola suave y la pendiente se calcula a la escala de la pantalla,
       // así los bordes entre colores no salen en escalones y las rayas mantienen su ancho.
-      const elev = await overzoomElevation(z, x, y, DEM_MAX_ZOOM, (tx, ty) => demHeights(DEM_MAX_ZOOM, tx, ty), 1);
+      // Con cornisas, más margen: se mira 90 m más allá del borde de la tesela.
+      const corniceLee = z >= CORNICE_MIN_ZOOM ? list('cor') : [];
+      const pad = corniceLee.length ? cornicePad(z, y) : 1;
+      const elev = await overzoomElevation(z, x, y, DEM_MAX_ZOOM, (tx, ty) => demHeights(DEM_MAX_ZOOM, tx, ty), pad);
       if (!elev) throw new Error('sin elevación');
-      const style: SlopeStyle = { colors, minElevation, lee: list('lee'), leeUsual: list('usual') };
-      return { data: await paintSlopeTile(elev, z, x, y, style, 1) };
+      const style: SlopeStyle = { colors, minElevation, lee: list('lee'), leeUsual: list('usual'), corniceLee };
+      return { data: await paintSlopeTile(elev, z, x, y, style, pad) };
     }
     const dem = await mapTile('dem', z, x, y);
     if (!dem) throw new Error('sin elevación');

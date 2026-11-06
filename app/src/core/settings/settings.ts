@@ -123,6 +123,8 @@ export interface MapLayers {
   slope: boolean;
   /** Dentro del riesgo de avalancha: rayar las laderas cargadas por viento (recientes y habituales). */
   windLoad: boolean;
+  /** Dentro del riesgo de avalancha: marcar en violeta los filos donde se pueden formar cornisas. */
+  cornices: boolean;
   /** Relieve en 3D (el mapa se puede inclinar); apagado es el mapa plano. */
   terrain3d: boolean;
 }
@@ -197,7 +199,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weatherMapLayers: { satellite: true, radar: false, regionWeather: true, official: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true },
   weatherMapValue: 'temp',
   mapSource: 'auto',
-  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, windLoad: true, terrain3d: false },
+  mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, windLoad: true, cornices: true, terrain3d: false },
   snowlineManual: null,
   snowlineFallback: 1500,
   trackFollowView: 'drawing',

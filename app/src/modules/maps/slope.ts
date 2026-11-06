@@ -69,6 +69,8 @@ export interface PaintOptions {
   minElevation?: number;
   /** Orientación de cada píxel y orientaciones de sotavento a rayar: de los últimos días y el habitual. */
   aspect?: Float32Array;
+  /** Píxeles con posible cornisa (1), ver corniceMask. */
+  cornice?: Uint8Array;
   lee?: number[];
   leeUsual?: number[];
   /** Posición de la tesela en píxeles, para que las rayas sigan de una tesela a otra. */
@@ -80,6 +82,58 @@ export interface PaintOptions {
 /** Rayas en colores de nieve, iguales en todos los temas: blanca la carga reciente, azul la habitual. */
 export const HATCH_RECENT = '#ffffff';
 export const HATCH_USUAL = '#2f7de1';
+
+/** Posibles cornisas: violeta, igual en todos los temas (no se confunde con los colores de la pendiente). */
+export const CORNICE = '#a24bff';
+/**
+ * Una cornisa se forma en un filo con caída fuerte del lado de sotavento: al
+ * menos 30° de pendiente media en 90 m hacia donde sopla el viento, y nada más
+ * alto en los 30 m del lado del viento. Medido en metros (no en píxeles) para
+ * que dé lo mismo en cualquier zoom: la elevación (~38 m por píxel) redondea
+ * los filos y una caída más corta casi no se ve.
+ */
+const CORNICE_DROP_DEG = 30;
+const CORNICE_RUN_M = 90;
+const CORNICE_UP_M = 30;
+/** Margen (px) que necesita cada tesela para mirar 90 m más allá de su borde (hasta 128). */
+export const cornicePad = (z: number, y: number, size = SLOPE_TILE) => Math.min(128, Math.ceil(CORNICE_RUN_M / metersPerPixel(z, y, 0, size)) + 1);
+/** Las cornisas se calculan desde este zoom (antes, la tesela es más gruesa que un filo). */
+export const CORNICE_MIN_ZOOM = 13;
+
+/**
+ * Filos donde se pueden formar cornisas: siguiendo el viento (hacia `lee`,
+ * los rumbos a los que miran las laderas de sotavento), el terreno cae al
+ * menos 30° en 90 m, y del lado del viento no hay nada más alto (es el borde
+ * de arriba, no la ladera). Solo por encima de la línea de nieve.
+ * `elev` trae `pad` píxeles de margen alrededor de la tesela.
+ */
+export function corniceMask(elev: Float32Array, z: number, y: number, lee: number[], pad: number, minElevation = 0, size = SLOPE_TILE): Uint8Array {
+  const n = size + 2 * pad;
+  const out = new Uint8Array(size * size);
+  if (!lee.length || pad < 1) return out;
+  const dirs = lee.map((deg) => [Math.sin((deg * Math.PI) / 180), -Math.cos((deg * Math.PI) / 180)] as const);
+  const tan = Math.tan((CORNICE_DROP_DEG * Math.PI) / 180);
+  const at = (x: number, yy: number) => elev[Math.min(n - 1, Math.max(0, Math.round(yy))) * n + Math.min(n - 1, Math.max(0, Math.round(x)))]!;
+  for (let py = 0; py < size; py++) {
+    const mpp = metersPerPixel(z, y, py, size);
+    const k = Math.min(pad, Math.max(1, Math.round(CORNICE_RUN_M / mpp)));
+    const ku = Math.min(pad, Math.max(1, Math.round(CORNICE_UP_M / mpp)));
+    const need = k * mpp * tan;
+    for (let px = 0; px < size; px++) {
+      const gx = px + pad;
+      const gy = py + pad;
+      const e = elev[gy * n + gx]!;
+      if (e < minElevation) continue;
+      for (const [dx, dy] of dirs) {
+        if (e - at(gx + dx * k, gy + dy * k) >= need && at(gx - dx * ku, gy - dy * ku) <= e + 1) {
+          out[py * size + px] = 1;
+          break;
+        }
+      }
+    }
+  }
+  return out;
+}
 
 /** Cada cuántos píxeles una raya, y su ancho. */
 export const HATCH_EVERY = 6;
@@ -101,7 +155,8 @@ const rgb = (hex: string): [number, number, number] => {
  * que miran a sotavento (`lee`, con `aspect`) llevan rayas diagonales.
  */
 export function paintSlope(slope: Float32Array, colors: SlopeColors, options: PaintOptions = {}): Uint8ClampedArray {
-  const { alpha = 190, elev, minElevation = 0, aspect, lee = [], leeUsual = [], originX = 0, originY = 0, size = Math.round(Math.sqrt(slope.length)) } = options;
+  const { alpha = 190, elev, minElevation = 0, aspect, lee = [], leeUsual = [], cornice, originX = 0, originY = 0, size = Math.round(Math.sqrt(slope.length)) } = options;
+  const corniceRgb = cornice ? rgb(CORNICE) : null;
   const hatch = colors.hatch && aspect && lee.length > 0 ? rgb(colors.hatch) : null;
   const hatchUsual = colors.hatchUsual && aspect && leeUsual.length > 0 ? rgb(colors.hatchUsual) : null;
   const table: Record<SlopeZone, [number, number, number] | null> = {
@@ -117,6 +172,14 @@ export function paintSlope(slope: Float32Array, colors: SlopeColors, options: Pa
     let c = table[slopeZone(slope[p]!)];
     if (!c) continue;
     let a = alpha;
+    // Posible cornisa: violeta lleno, encima de todo.
+    if (corniceRgb && cornice![p]) {
+      out[p * 4] = corniceRgb[0];
+      out[p * 4 + 1] = corniceRgb[1];
+      out[p * 4 + 2] = corniceRgb[2];
+      out[p * 4 + 3] = 255;
+      continue;
+    }
     if ((hatch || hatchUsual) && slope[p]! >= HATCH_MIN_DEG) {
       const gx = originX + (p % size);
       const gy = originY + Math.floor(p / size);
@@ -202,11 +265,13 @@ export interface SlopeStyle {
   minElevation?: number;
   lee?: number[];
   leeUsual?: number[];
+  /** Sotavento para las cornisas (reciente y habitual juntos); vacío = sin cornisas. */
+  corniceLee?: number[];
 }
 
 /** Pinta una tesela a partir de su altura (con `pad` de margen) y la devuelve como PNG. */
 export async function paintSlopeTile(elev: Float32Array, z: number, x: number, y: number, style: SlopeStyle, pad = 0): Promise<ArrayBuffer> {
-  const { colors, minElevation = 0, lee = [], leeUsual = [] } = style;
+  const { colors, minElevation = 0, lee = [], leeUsual = [], corniceLee = [] } = style;
   const size = SLOPE_TILE;
   const aspect = lee.length > 0 || leeUsual.length > 0 ? new Float32Array(size * size) : undefined;
   const slope = slopeDegrees(elev, z, y, size, aspect, pad);
@@ -216,7 +281,8 @@ export async function paintSlopeTile(elev: Float32Array, z: number, x: number, y
     inner = new Float32Array(size * size);
     for (let py = 0; py < size; py++) inner.set(elev.subarray((py + pad) * n + pad, (py + pad) * n + pad + size), py * size);
   }
-  const painted = paintSlope(slope, colors, { elev: inner, minElevation, aspect, lee, leeUsual, originX: x * size, originY: y * size, size });
+  const cornice = corniceLee.length && pad > 0 ? corniceMask(elev, z, y, corniceLee, pad, minElevation, size) : undefined;
+  const painted = paintSlope(slope, colors, { elev: inner, minElevation, aspect, lee, leeUsual, cornice, originX: x * size, originY: y * size, size });
   const canvas = new OffscreenCanvas(size, size);
   canvas.getContext('2d')!.putImageData(new ImageData(painted as Uint8ClampedArray<ArrayBuffer>, size, size), 0, 0);
   return (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
