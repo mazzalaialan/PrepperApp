@@ -8,6 +8,7 @@ import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
 import { distanceToPark, loadParks, nearestRadio, type EmergencyData, type ParksData } from './data';
 import { CopyButton, formatDistance, MapLink, ParkRadioList, PhoneActions } from './parts';
+import { distanceToCountry, loadBorders, type BordersData } from './borders';
 import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRepeaterList } from './officialRepeaters';
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
@@ -47,8 +48,14 @@ const MOUNTAIN: { id: string; country: 'AR' | 'CL'; freq: string; emergencyOnly?
   { id: 'carabineros', country: 'CL', freq: '146,910 MHz', emergencyOnly: true },
 ];
 
-/** Hasta qué distancia del borde de un parque nacional se muestran sus datos. */
+/** Hasta qué distancia del borde de un parque se lo considera "donde estás", con todos sus datos. */
 const PARK_NEAR_M = 5000;
+/**
+ * Más allá de esto, las frecuencias de un parque o las de montaña del otro
+ * país no sirven: ni se muestran. Se mide desde el lugar elegido arriba (GPS o
+ * a mano).
+ */
+const FAR_M = 50_000;
 
 export function RadioPage() {
   const { t, i18n } = useTranslation();
@@ -168,35 +175,7 @@ export function RadioPage() {
 
       {(country === 'AR' || country === 'CL') && <ParkSection place={place} />}
 
-      {(country === 'AR' || country === 'CL') && (
-        <section className="card stack" aria-labelledby="mountain-title" data-testid="mountain-frequencies">
-          <h2 id="mountain-title" className="section-title" style={{ margin: 0 }}>{t('radio.mountainTitle')}</h2>
-          <p className="hint" style={{ margin: 0 }}>{t('radio.mountainIntro')}</p>
-          <ul className="list">
-            {MOUNTAIN.map((m) => (
-              <li key={m.id} className="contact-row">
-                <span className="list-main">
-                  <span className="list-title">
-                    {t(`country.${m.country}`)} · {t(`radio.mountain.${m.id}.name`)}
-                  </span>
-                  {m.emergencyOnly && (
-                    <span className="list-sub emergency-only" data-testid="emergency-only">
-                      {t('radio.emergencyOnly')}
-                    </span>
-                  )}
-                  <span className="list-sub">{t(`radio.mountain.${m.id}.desc`)}</span>
-                </span>
-                <span className="contact-actions">
-                  <strong className="radio-freqs">{m.freq}</strong>
-                  <CopyButton text={m.freq} label={t('radio.copyFrequency', { name: t(`radio.mountain.${m.id}.name`) })} />
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="hint" style={{ margin: 0 }}>{t('radio.mountainNote')}</p>
-          <p className="hint" style={{ margin: 0 }}>{t('radio.mountainSources')}</p>
-        </section>
-      )}
+      {(country === 'AR' || country === 'CL') && <MountainSection place={place} />}
 
       <RepeatersSection place={place} />
 
@@ -208,6 +187,56 @@ export function RadioPage() {
 
       <p className="hint">{t('radio.securityNote')}</p>
     </div>
+  );
+}
+
+/**
+ * Frecuencias de montaña: las de cada país, solo si el lugar elegido arriba
+ * (GPS o a mano) está en ese país o a menos de 50 km de su frontera: en la
+ * cordillera sirven las de los dos lados; en Mendoza capital, las de Chile no.
+ * Sin lugar, todas.
+ */
+function MountainSection({ place }: { place: { lat: number; lon: number } | null }) {
+  const { t } = useTranslation();
+  const [borders, setBorders] = useState<BordersData | null>(null);
+  useEffect(() => {
+    void loadBorders().then(setBorders);
+  }, []);
+  const shown = useMemo(() => {
+    if (!place || !borders) return MOUNTAIN;
+    const near = { AR: distanceToCountry(borders, 'AR', place.lat, place.lon) <= FAR_M, CL: distanceToCountry(borders, 'CL', place.lat, place.lon) <= FAR_M };
+    return MOUNTAIN.filter((m) => near[m.country]);
+  }, [borders, place?.lat, place?.lon]);
+  if (shown.length === 0) return null;
+  const both = shown.some((m) => m.country === 'AR') && shown.some((m) => m.country === 'CL');
+  return (
+    <section className="card stack" aria-labelledby="mountain-title" data-testid="mountain-frequencies">
+      <h2 id="mountain-title" className="section-title" style={{ margin: 0 }}>{t(both ? 'radio.mountainTitle' : 'radio.mountainTitleOne')}</h2>
+      <p className="hint" style={{ margin: 0 }}>{both ? `${t('radio.mountainIntroBoth')} ${t('radio.mountainIntro')}` : t('radio.mountainIntro')}</p>
+      <ul className="list">
+        {shown.map((m) => (
+          <li key={m.id} className="contact-row">
+            <span className="list-main">
+              <span className="list-title">
+                {t(`country.${m.country}`)} · {t(`radio.mountain.${m.id}.name`)}
+              </span>
+              {m.emergencyOnly && (
+                <span className="list-sub emergency-only" data-testid="emergency-only">
+                  {t('radio.emergencyOnly')}
+                </span>
+              )}
+              <span className="list-sub">{t(`radio.mountain.${m.id}.desc`)}</span>
+            </span>
+            <span className="contact-actions">
+              <strong className="radio-freqs">{m.freq}</strong>
+              <CopyButton text={m.freq} label={t('radio.copyFrequency', { name: t(`radio.mountain.${m.id}.name`) })} />
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.mountainNote')}</p>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.mountainSources')}</p>
+    </section>
   );
 }
 
@@ -233,7 +262,9 @@ function ParkSection({ place }: { place: { lat: number; lon: number } | null }) 
       ? parks.parks.map((park) => ({ park, distance: distanceToPark(park, place.lat, place.lon) })).sort((a, b) => a.distance - b.distance)
       : parks.parks.map((park) => ({ park, distance: null as number | null })).sort((a, b) => a.park.name.localeCompare(b.park.name, i18n.language));
     const here = all.filter((p) => p.distance !== null && p.distance <= PARK_NEAR_M);
-    return { here, others: all.filter((p) => !here.includes(p) && p.park.radio?.length).slice(0, OTHER_PARKS_SHOWN) };
+    // Los otros, solo a menos de 50 km del límite (sin lugar no se sabe: ninguno).
+    const others = all.filter((p) => !here.includes(p) && p.park.radio?.length && p.distance !== null && p.distance <= FAR_M);
+    return { here, others: others.slice(0, OTHER_PARKS_SHOWN) };
   }, [parks, place?.lat, place?.lon, i18n.language]);
   if (!parks || (here.length === 0 && others.length === 0)) return null;
   const where = (distance: number | null) =>

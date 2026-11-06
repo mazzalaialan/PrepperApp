@@ -193,11 +193,36 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(here.getByTestId('park-radio')).toContainText('Club Andino Bariloche');
   await expect(here.getByRole('link', { name: '105' })).toHaveAttribute('href', 'tel:105');
   // Los otros parques que publican frecuencia, de los dos países (Chile: Torres del Paine, CONAF 143,800).
+  // Los otros parques con frecuencia, solo a menos de 50 km del límite: Los Arrayanes (39 km) sí; Lanín (54 km) y Torres del Paine, no.
   const others = park.getByTestId('park-others');
-  await expect(others).toContainText('Parque Nacional Lanín');
-  await expect(others).toContainText('Parque Nacional Torres del Paine');
-  await expect(others).toContainText('VHF 143,800 MHz');
+  await expect(others).toContainText('Parque Nacional Los Arrayanes');
+  await expect(others).not.toContainText('Parque Nacional Lanín');
+  await expect(others).not.toContainText('Torres del Paine');
   await expect(mountain).toContainText('CONAF publica la 143,800 MHz');
+
+  // Con el lugar cambiado a mano, se recalcula con esa coordenada.
+  // Mendoza capital: a 101 km de Chile, solo las argentinas; ningún parque con frecuencia cerca.
+  await page.getByLabel('Lugar', { exact: true }).selectOption({ label: 'Escribir coordenadas…' });
+  await page.getByLabel('Coordenadas', { exact: true }).fill('-32.89, -68.84');
+  await expect(mountain).toContainText('Argentina · FEM · emergencias en montaña');
+  await expect(mountain).not.toContainText('Chile ·');
+  await expect(page.getByRole('heading', { name: 'Frecuencias de montaña', exact: true })).toBeVisible();
+  await expect(page.getByTestId('park-section')).toHaveCount(0);
+  // Puerto Natales (Chile, a 17 km de Argentina): las de los dos países; Torres del Paine (62 km) no, Kawésqar (28 km) sí.
+  await page.getByLabel('Coordenadas', { exact: true }).fill('-51.73, -72.51');
+  await expect(mountain).toContainText('Chile · CONAF (guardaparques de Chile)');
+  await expect(mountain).toContainText('Argentina · FEM');
+  await expect(page.getByTestId('park-others')).toContainText('Parque Nacional Kawésqar');
+  await expect(page.getByTestId('park-section')).not.toContainText('Torres del Paine');
+  // Lago Pehoé, adentro de Torres del Paine: el parque con la 143,800 de CONAF.
+  await page.getByLabel('Coordenadas', { exact: true }).fill('-50.94, -72.97');
+  await expect(page.getByTestId('park-here')).toContainText('Parque Nacional Torres del Paine · estás adentro');
+  await expect(page.getByTestId('park-here')).toContainText('VHF 143,800 MHz');
+  // Santiago: a 60 km de Argentina, solo las chilenas.
+  await page.getByLabel('Coordenadas', { exact: true }).fill('-33.45, -70.66');
+  await expect(mountain).toContainText('Chile · Cuerpo de Socorro Andino');
+  await expect(mountain).not.toContainText('Argentina ·');
+  await page.getByLabel('Lugar', { exact: true }).selectOption({ label: 'Mi ubicación (GPS)' });
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-20-radio-park.png`, fullPage: true });
 
   // Una frecuencia que me dieron en el refugio, con el lugar donde estoy.
