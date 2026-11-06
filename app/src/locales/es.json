@@ -64,7 +64,7 @@
     "kits": { "title": "Botiquines", "desc": "Trauma, sangrado, anafilaxia: contenido y vencimientos" },
     "medical": { "title": "Ficha médica", "desc": "Grupo sanguíneo, alergias y medicación de cada persona" },
     "firstAidGuides": { "title": "Guías de primeros auxilios", "desc": "Qué hacer ante cada emergencia, sin conexión" },
-    "compass": { "title": "Brújula", "desc": "Rumbo magnético y verdadero" },
+    "compass": { "title": "Brújula", "desc": "Rumbo magnético y geográfico" },
     "declination": { "title": "Declinómetro", "desc": "Declinación, rumbos y machete" },
     "inclinometer": { "title": "Inclinómetro", "desc": "Pendiente y riesgo de avalancha" },
     "waypoints": { "title": "Waypoints y Rutas", "desc": "Puntos guardados, cómo volver y rutas que los unen" },
@@ -1220,7 +1220,7 @@
       },
       "app": {
         "term": "En la app",
-        "text": "La brújula ya corrige la declinación si elegís \"Norte: Verdadero\"; con \"Magnético\" muestra lo mismo que una brújula de aguja."
+        "text": "La brújula ya corrige la declinación si elegís \"Norte: Geográfico\"; con \"Magnético\" muestra lo mismo que una brújula de aguja."
       }
     }
   },
@@ -1230,7 +1230,7 @@
     "flat": "Rumbo hacia donde apunta la parte de arriba del celular.",
     "upright": "Rumbo hacia donde mira la cámara.",
     "reference": "Norte",
-    "trueNorth": "Verdadero",
+    "trueNorth": "Geográfico",
     "magneticNorth": "Magnético",
     "declination": "Declinación en tu ubicación: {{value}}° {{dir}} (modelo WMM 2025).",
     "noDeclination": "Sin ubicación no se puede corregir la declinación: la brújula muestra el norte magnético.",

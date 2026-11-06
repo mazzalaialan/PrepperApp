@@ -43,12 +43,13 @@ async function setup(page: Page) {
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 }
 
-test('brújula: norte verdadero con declinación y magnético', async ({ page }) => {
+test('brújula: norte geográfico con declinación y magnético', async ({ page }) => {
   await setup(page);
   await page.getByRole('link', { name: 'Orientación', exact: true }).click();
   await page.getByRole('link', { name: /Brújula/ }).click();
 
-  // Celular acostado apuntando al norte magnético: el norte verdadero está ~9,5° al este.
+  // Celular acostado apuntando al norte magnético: el norte geográfico está ~9,5° al este.
+  await expect(page.getByRole('button', { name: 'Geográfico' })).toBeVisible();
   await setOrientation(page, 0, 0);
   await expect(page.getByTestId('declination')).toHaveText(/Declinación en tu ubicación: \d+,\d° O/);
   await expect(page.getByTestId('compass-heading')).toHaveText(/^35\d° N$/);
