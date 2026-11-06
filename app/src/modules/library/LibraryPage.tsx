@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { BadgeCheck, BookOpen, CircleCheck, Download, Lock, RefreshCw, Search, Trash2, Unlock, X } from 'lucide-react';
+import { BookOpen, CircleCheck, LockOpen, Download, Lock, RefreshCw, Search, Trash2, Unlock, X } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { Dialog } from '@/ui/Dialog';
 import type { LibraryBook } from './books';
@@ -73,7 +73,7 @@ function LicenseBadge({ book, canPrivate }: { book: LibraryBook; canPrivate: boo
         title={label}
         data-testid="license-icon"
       >
-        {free ? <BadgeCheck size={18} aria-hidden /> : <Lock size={16} aria-hidden />}
+        {free ? <LockOpen size={16} aria-hidden /> : <Lock size={16} aria-hidden />}
       </button>
       {open && (
         <Dialog title={label} onClose={() => setOpen(false)}>
@@ -215,9 +215,14 @@ export function LibraryPage() {
       {catalog && (
         <>
           <p className="hint library-legend" style={{ margin: 0 }}>
-            <span className="pill pill-free">{t('library.free')}</span> {t('library.freeHint')} <span className="pill pill-rights">
-              <Lock size={12} aria-hidden /> {t('library.rights')}
+            <span className="license-icon is-free" aria-hidden>
+              <LockOpen size={16} />
             </span>{' '}
+            <strong>{t('library.free')}</strong>: {t('library.freeHint')}{' '}
+            <span className="license-icon is-rights" aria-hidden>
+              <Lock size={16} />
+            </span>{' '}
+            <strong>{t('library.rights')}</strong>:{' '}
             {canPrivate ? t('library.rightsHint') : t('library.rightsUnavailable')}
           </p>
           {key && (

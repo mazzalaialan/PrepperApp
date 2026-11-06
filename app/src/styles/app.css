@@ -3859,3 +3859,9 @@ a.module-card:hover {
 .license-icon.is-rights {
   color: var(--warn);
 }
+.library-legend .license-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  vertical-align: middle;
+}
