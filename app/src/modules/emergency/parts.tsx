@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, Copy, Flame, HeartPulse, Hospital, LifeBuoy, MapPinned, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { dialable, mapsUrl } from './national';
+import type { ParkRadio } from './data';
 
 const KIND_ICON: Record<ContactKind, LucideIcon> = {
   police: Shield,
@@ -76,4 +77,21 @@ export function formatDistance(m: number, locale: string): string {
   return m < 1000
     ? `${Math.round(m / 10) * 10} m`
     : `${new Intl.NumberFormat(locale, { maximumFractionDigits: m < 10_000 ? 1 : 0 }).format(m / 1000)} km`;
+}
+
+/** Frecuencias VHF que publica un parque, con su fuente y el aviso de uso. */
+export function ParkRadioList({ radio }: { radio: ParkRadio[] }) {
+  const { t } = useTranslation();
+  return (
+    <span className="park-radio" data-testid="park-radio">
+      {radio.map((r) => (
+        <span key={r.freq} className="list-sub">
+          <Radio size={14} aria-hidden /> <strong>{t('radio.vhf')} {r.freq}</strong> · {r.label}
+          <CopyButton text={r.freq} label={t('radio.copyFrequency', { name: r.label })} />
+          <br />
+          <small>{t('radio.park.source', { source: r.source })}</small>
+        </span>
+      ))}
+    </span>
+  );
 }

@@ -6,8 +6,8 @@ import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
-import { nearestRadio, type EmergencyData } from './data';
-import { CopyButton, formatDistance, MapLink } from './parts';
+import { loadParks, nearestRadio, parksNear, type EmergencyData, type ParksData } from './data';
+import { CopyButton, formatDistance, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRepeaterList } from './officialRepeaters';
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
@@ -15,8 +15,10 @@ import { useContacts } from './store';
 /**
  * Radio en una emergencia: la emisora de Radio Nacional más cercana (para
  * informarse con una radio a pilas) y las frecuencias internacionales de
- * socorro. No incluye frecuencias de fuerzas de seguridad: no son públicas,
- * muchas están cifradas y captarlas sin autorización puede ser delito.
+ * socorro, las de montaña y, dentro de un parque nacional, las que ese parque
+ * publica. Las de guardaparques, CONAF y un radioclub van marcadas "solo si
+ * tu vida depende de eso". No incluye las de Gendarmería ni policía: no son
+ * públicas y muchas están cifradas.
  */
 const DISTRESS = [
   { id: 'marine', freq: '156,800 MHz' },
@@ -30,12 +32,23 @@ const DISTRESS = [
  * 2021). Chile no tiene una frecuencia oficial de montaña: la del Cuerpo de
  * Socorro Andino sale de guías de montaña, sin confirmación oficial.
  */
-const MOUNTAIN = [
+const MOUNTAIN: { id: string; country: 'AR' | 'CL'; freq: string; emergencyOnly?: boolean }[] = [
   { id: 'fem', country: 'AR', freq: '140,970 MHz' },
   { id: 'free1', country: 'AR', freq: '139,970 MHz' },
   { id: 'free2', country: 'AR', freq: '138,510 MHz' },
   { id: 'csa', country: 'CL', freq: '150,625 MHz' },
-] as const;
+  /*
+   * De servicios (guardaparques, CONAF) y de un radioclub: no son de uso
+   * libre. Se incluyen porque, con la vida en peligro, se puede pedir auxilio
+   * por cualquier medio; con aviso de que fuera de eso no se transmite ahí.
+   */
+  { id: 'rangers', country: 'AR', freq: '142,800 MHz', emergencyOnly: true },
+  { id: 'conaf', country: 'CL', freq: '143,950 MHz', emergencyOnly: true },
+  { id: 'carabineros', country: 'CL', freq: '146,910 MHz', emergencyOnly: true },
+];
+
+/** Hasta qué distancia del borde de un parque nacional se muestran sus datos. */
+const PARK_NEAR_M = 5000;
 
 export function RadioPage() {
   const { t, i18n } = useTranslation();
@@ -153,6 +166,8 @@ export function RadioPage() {
         <p className="hint" style={{ margin: 0 }}>{t('radio.distressNote')}</p>
       </section>
 
+      {country === 'AR' && <ParkSection place={place} />}
+
       {(country === 'AR' || country === 'CL') && (
         <section className="card stack" aria-labelledby="mountain-title" data-testid="mountain-frequencies">
           <h2 id="mountain-title" className="section-title" style={{ margin: 0 }}>{t('radio.mountainTitle')}</h2>
@@ -164,6 +179,11 @@ export function RadioPage() {
                   <span className="list-title">
                     {t(`country.${m.country}`)} · {t(`radio.mountain.${m.id}.name`)}
                   </span>
+                  {m.emergencyOnly && (
+                    <span className="list-sub emergency-only" data-testid="emergency-only">
+                      {t('radio.emergencyOnly')}
+                    </span>
+                  )}
                   <span className="list-sub">{t(`radio.mountain.${m.id}.desc`)}</span>
                 </span>
                 <span className="contact-actions">
@@ -188,6 +208,50 @@ export function RadioPage() {
 
       <p className="hint">{t('radio.securityNote')}</p>
     </div>
+  );
+}
+
+/** El parque nacional donde se está (o a menos de 5 km): intendencia, teléfonos de emergencia y frecuencias que publica. */
+function ParkSection({ place }: { place: { lat: number; lon: number } | null }) {
+  const { t, i18n } = useTranslation();
+  const [parks, setParks] = useState<ParksData | null>(null);
+  useEffect(() => {
+    void loadParks().then(setParks);
+  }, []);
+  const near = useMemo(() => (parks && place ? parksNear(parks, place.lat, place.lon, PARK_NEAR_M) : []), [parks, place?.lat, place?.lon]);
+  if (near.length === 0) return null;
+  return (
+    <section className="card stack" aria-labelledby="park-title" data-testid="park-section">
+      <h2 id="park-title" className="section-title" style={{ margin: 0 }}>{t('radio.park.title')}</h2>
+      {near.map(({ park, distance }) => (
+        <div key={park.name} className="stack park-block">
+          <p style={{ margin: 0 }}>
+            <strong>{park.name}</strong>
+            {' · '}
+            {distance === 0 ? t('radio.park.inside') : t('radio.park.near', { distance: formatDistance(distance, i18n.language) })}
+          </p>
+          {park.radio?.length ? (
+            <ParkRadioList radio={park.radio} />
+          ) : (
+            <p className="hint" style={{ margin: 0 }}>{t('radio.park.noRadio')}</p>
+          )}
+          {park.emergency?.map((e) => (
+            <span key={e.phone} className="list-sub park-phone">
+              {e.label}: <PhoneActions phone={e.phone} />
+            </span>
+          ))}
+          {park.phone && (
+            <span className="list-sub park-phone">
+              {t('radio.park.office')}: <PhoneActions phone={park.phone} />
+            </span>
+          )}
+          {park.phones && park.phones.replace(/\D/g, '') !== park.phone.replace(/\D/g, '') && <span className="list-sub">{park.phones}</span>}
+          {park.address && <MapLink address={park.address} lat={park.lat} lon={park.lon} />}
+        </div>
+      ))}
+      <p className="hint" style={{ margin: 0 }}>{t('radio.park.note')}</p>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.park.sources')}</p>
+    </section>
   );
 }
 

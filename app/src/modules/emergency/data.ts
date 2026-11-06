@@ -56,6 +56,131 @@ export interface NearbyPlace {
   source: 'official' | 'osm';
   /** Tipo según la fuente (p. ej. "Hospital", "C.A.P.S"). */
   detail: string;
+  /** Otros teléfonos (emergencias del parque, radioestación). */
+  extraPhones?: ParkPhone[];
+  /** Aclaración (p. ej. internos y otros números de la intendencia). */
+  note?: string;
+  /** Frecuencias VHF que publica el parque donde está el lugar. */
+  radio?: ParkRadio[];
+}
+
+// ---------- Parques nacionales (tools/emergency-data/parks.mjs) ----------
+
+export interface ParkPhone {
+  label: string;
+  phone: string;
+}
+
+export interface ParkRadio {
+  freq: string;
+  label: string;
+  /** Dónde la publica el parque (mapa, folleto, cartel). */
+  source: string;
+}
+
+export interface Park {
+  name: string;
+  /** Página del área en argentina.gob.ar. */
+  url: string;
+  address: string;
+  /** Número para llamar a la intendencia ('' si la página no publica uno). */
+  phone: string;
+  /** Texto completo de los teléfonos según la página (internos, otros números). */
+  phones: string;
+  emergency?: ParkPhone[];
+  radio?: ParkRadio[];
+  /** Intendencia (ubicada por localidad). */
+  lat: number;
+  lon: number;
+  /** Polígonos: anillos de [lon, lat]; el primero es el borde, los demás, huecos. */
+  area: [number, number][][][];
+}
+
+export interface ParksData {
+  source: string;
+  parks: Park[];
+}
+
+let parksPending: Promise<ParksData> | null = null;
+
+/** Solo Argentina: los parques nacionales vienen con la app. */
+export function loadParks(): Promise<ParksData> {
+  parksPending ??= import('./parks-data.json').then((m) => m.default as unknown as ParksData);
+  return parksPending;
+}
+
+function inRing(ring: [number, number][], lon: number, lat: number): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]!;
+    const [xj, yj] = ring[j]!;
+    if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+export function inPark(park: Park, lat: number, lon: number): boolean {
+  return park.area.some(([outer, ...holes]) => !!outer && inRing(outer, lon, lat) && !holes.some((h) => inRing(h, lon, lat)));
+}
+
+/** Distancia aproximada al borde del parque (a sus vértices): 0 si se está adentro. */
+export function distanceToPark(park: Park, lat: number, lon: number): number {
+  if (inPark(park, lat, lon)) return 0;
+  let best = Infinity;
+  for (const poly of park.area) for (const [x, y] of poly[0] ?? []) best = Math.min(best, distanceMeters({ lat, lon }, { lat: y, lon: x }));
+  return best;
+}
+
+/** Parques donde se está o a menos de `maxM` del borde, del más cercano al más lejano. */
+export function parksNear(data: ParksData, lat: number, lon: number, maxM: number): { park: Park; distance: number }[] {
+  return data.parks
+    .map((park) => ({ park, distance: distanceToPark(park, lat, lon) }))
+    .filter((p) => p.distance <= maxM)
+    .sort((a, b) => a.distance - b.distance);
+}
+
+/** Lugares de Parques Nacionales en los datos oficiales (seccionales, destacamentos, guardaparques). */
+const isParkOffice = (p: NearbyPlace) => /parques nacionales|guardaparque/i.test(`${p.detail} ${p.name}`);
+
+/**
+ * Suma las intendencias de los parques (con teléfono o dirección) y les pasa
+ * las frecuencias del parque a las seccionales que están adentro.
+ */
+export function withParks(places: NearbyPlace[], parks: ParksData, lat: number, lon: number): NearbyPlace[] {
+  const withRadio = parks.parks.filter((p) => p.radio?.length);
+  const out = places.map((p) => {
+    if (!isParkOffice(p)) return p;
+    const park = withRadio.find((k) => inPark(k, p.lat, p.lon));
+    return park ? { ...p, radio: park.radio } : p;
+  });
+  const seen = new Set<string>();
+  parks.parks.forEach((park, i) => {
+    if (!park.phone && !park.address) return;
+    // Dos áreas con la misma intendencia (Nahuel Huapi y Los Arrayanes, Baritú y El Nogalar): una sola fila, con las frecuencias de las dos.
+    const key = `${park.lat},${park.lon}`;
+    const twin = seen.has(key) ? out.find((p) => p.key.startsWith('park-') && `${p.lat},${p.lon}` === key) : undefined;
+    if (twin) {
+      for (const r of park.radio ?? []) if (!twin.radio?.some((x) => x.freq === r.freq)) twin.radio = [...(twin.radio ?? []), r];
+      return;
+    }
+    seen.add(key);
+    out.push({
+      key: `park-${i}`,
+      kind: 'police',
+      name: `Intendencia · ${park.name}`,
+      phone: park.phone,
+      address: park.address,
+      lat: park.lat,
+      lon: park.lon,
+      distance: distanceMeters({ lat, lon }, park),
+      source: 'official',
+      detail: 'Administración de Parques Nacionales',
+      ...(park.phones && park.phones.replace(/\D/g, '') !== park.phone.replace(/\D/g, '') && { note: park.phones }),
+      ...(park.emergency && { extraPhones: park.emergency }),
+      ...(park.radio && { radio: park.radio }),
+    });
+  });
+  return out;
 }
 
 /** Del dataset de salud: hospitales y guardias, por un lado; centros de atención primaria, por otro. */

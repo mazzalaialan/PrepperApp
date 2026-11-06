@@ -6,11 +6,11 @@ import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { emptyContact } from './ContactEditPage';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
-import { mergeNearby, nearestPerKind, officialNearby, type EmergencyData, type NearbyPlace } from './data';
+import { loadParks, mergeNearby, nearestPerKind, officialNearby, withParks, type EmergencyData, type NearbyPlace, type ParksData } from './data';
 
 const EMPTY_DATA: EmergencyData = { sources: { fire: '', police: '', health: '', radio: '' }, fire: [], police: [], health: [], radio: [] };
 import { fetchOsmNearby } from './osm';
-import { formatDistance, KindIcon, MapLink, PhoneActions } from './parts';
+import { formatDistance, KindIcon, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { useContacts } from './store';
 
 /** 0 = lo más cercano de cada tipo, sin límite (zonas agrestes, donde no hay nada cerca). */
@@ -39,6 +39,12 @@ export function NearbyPage() {
 
   const country = useSettings((s) => s.settings.country);
   const [packageMissing, setPackageMissing] = useState(false);
+  const [parks, setParks] = useState<ParksData | null>(null);
+  // Parques nacionales (intendencias y frecuencias): solo Argentina.
+  useEffect(() => {
+    if (country !== 'AR') return setParks(null);
+    void loadParks().then(setParks);
+  }, [country]);
   useEffect(() => {
     setPackageMissing(false);
     loadCountryData(country).then(
@@ -79,8 +85,9 @@ export function NearbyPage() {
   // Todo lo conocido, sin límite de distancia (los datos oficiales vienen en la app).
   const everything = useMemo(() => {
     if (!data || !place) return [];
-    return mergeNearby(officialNearby(data, place.lat, place.lon, Infinity), osm?.key === searchKey ? osm.items : []);
-  }, [data, place?.lat, place?.lon, osm, searchKey]);
+    const merged = mergeNearby(officialNearby(data, place.lat, place.lon, Infinity), osm?.key === searchKey ? osm.items : []);
+    return parks ? withParks(merged, parks, place.lat, place.lon).sort((a, b) => a.distance - b.distance) : merged;
+  }, [data, parks, place?.lat, place?.lon, osm, searchKey]);
   const results = radiusKm === 0 ? nearestPerKind(everything, NEAREST_PER_KIND) : everything.filter((p) => p.distance <= radiusKm * 1000);
   const shown = results.filter((r) => matches(filter, r.kind));
   // Nada en el rango: igual se muestra lo más cercano de cada tipo, aunque esté lejos.
@@ -97,7 +104,14 @@ export function NearbyPage() {
       address: p.address,
       lat: p.lat,
       lon: p.lon,
-      notes: p.detail && p.source === 'official' ? p.detail : '',
+      notes: [
+        p.detail && p.source === 'official' ? p.detail : '',
+        p.note ?? '',
+        ...(p.extraPhones ?? []).map((e) => `${e.label}: ${e.phone}`),
+        ...(p.radio ?? []).map((r) => `${t('radio.vhf')} ${r.freq} (${r.label})`),
+      ]
+        .filter(Boolean)
+        .join('\n'),
       source: t(`emergency.source.${p.source}`),
     });
   }
@@ -167,7 +181,14 @@ export function NearbyPage() {
                   {formatDistance(p.distance, i18n.language)} · {p.detail && p.source === 'official' ? p.detail : t(`emergency.kind.${p.kind}`)} ·{' '}
                   <span className={`source-badge source-${p.source}`}>{t(`emergency.source.${p.source}`)}</span>
                 </span>
+                {p.note && <span className="list-sub">{p.note}</span>}
                 <MapLink address={p.address} lat={p.lat} lon={p.lon} />
+                {p.extraPhones?.map((e) => (
+                  <span key={e.phone} className="list-sub park-phone">
+                    {e.label}: <PhoneActions phone={e.phone} />
+                  </span>
+                ))}
+                {p.radio && <ParkRadioList radio={p.radio} />}
               </span>
               <span className="contact-actions">
                 <PhoneActions phone={p.phone} />

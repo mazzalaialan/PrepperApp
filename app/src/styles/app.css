@@ -2584,7 +2584,7 @@ a.module-card:hover {
 /* ---------- Guía de primeros auxilios ---------- */
 
 .guide-first {
-  border-left: 4px solid var(--danger, #c0392b);
+  border-left: 4px solid var(--danger);
 }
 
 .guide-first-list {
@@ -2610,7 +2610,7 @@ a.module-card:hover {
 }
 
 .guide-dont {
-  color: var(--danger, #c0392b);
+  color: var(--danger);
   font-weight: 600;
 }
 
@@ -3744,4 +3744,28 @@ a.module-card:hover {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Parques nacionales: frecuencias y teléfonos de emergencia. */
+.park-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.park-radio .icon-btn {
+  vertical-align: middle;
+}
+.park-phone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.park-block + .park-block {
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+.emergency-only {
+  color: var(--danger);
+  font-weight: 600;
 }

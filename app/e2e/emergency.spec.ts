@@ -71,6 +71,11 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await expect(police.getByRole('link', { name: /Mitre 100/ })).toHaveAttribute('href', /google\.com\/maps\/search\/\?api=1&query=Mitre%20100/);
   await police.getByRole('button', { name: 'Guardar Comisaría 28 en mis contactos' }).click();
   await expect(police.getByLabel('Guardado en mis contactos')).toBeVisible();
+  // La intendencia del Nahuel Huapi, con su teléfono, el 105 y las frecuencias que publica el parque.
+  const office = list.locator('li').filter({ hasText: 'Intendencia · Parque Nacional Nahuel Huapi' });
+  await expect(office.getByRole('link', { name: '0294 442-3111' })).toHaveAttribute('href', 'tel:02944423111');
+  await expect(office.getByRole('link', { name: '105' })).toHaveAttribute('href', 'tel:105');
+  await expect(office.getByTestId('park-radio')).toContainText('VHF 155,675 MHz');
 
   // Sin conexión: igual aparecen los datos oficiales.
   await context.setOffline(true);
@@ -171,8 +176,22 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(mountain).toContainText('140,970 MHz');
   await expect(mountain).toContainText('139,970 MHz');
   await expect(mountain).toContainText('Chile · Cuerpo de Socorro Andino');
-  await expect(mountain).not.toContainText('142,800');
-  await expect(page.getByText(/No se incluyen frecuencias de Gendarmería/)).toBeVisible();
+  // Guardaparques, CONAF y Radio Club de Carabineros: solo con la vida en peligro.
+  await expect(mountain).toContainText('Argentina · Guardaparques');
+  await expect(mountain).toContainText('142,800 MHz');
+  await expect(mountain).toContainText('Chile · CONAF (guardaparques de Chile)');
+  await expect(mountain).toContainText('146,910 MHz');
+  await expect(mountain.getByTestId('emergency-only')).toHaveCount(3);
+  await expect(mountain.getByTestId('emergency-only').first()).toContainText('Solo si tu vida depende de eso');
+  await expect(page.getByText(/No se incluyen las de Gendarmería ni policía/)).toBeVisible();
+  // Bariloche está a 1,5 km del Parque Nacional Nahuel Huapi: sus frecuencias y teléfonos de emergencia.
+  const park = page.getByTestId('park-section');
+  await expect(park).toContainText('Parque Nacional Nahuel Huapi');
+  await expect(park).toContainText('del límite');
+  await expect(park.getByTestId('park-radio')).toContainText('VHF 155,675 MHz');
+  await expect(park.getByTestId('park-radio')).toContainText('Club Andino Bariloche');
+  await expect(park.getByRole('link', { name: '105' })).toHaveAttribute('href', 'tel:105');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-20-radio-park.png`, fullPage: true });
 
   // Una frecuencia que me dieron en el refugio, con el lugar donde estoy.
   await page.getByRole('link', { name: 'Agregar frecuencia' }).click();
