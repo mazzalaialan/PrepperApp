@@ -14,6 +14,11 @@
  *   En la Provincia de Buenos Aires mandan los listados provinciales (traen
  *   teléfono y dirección): un punto del IGN a menos de 150 m de uno de ellos
  *   se descarta.
+ * - Teléfonos de OpenStreetMap (ODbL): a cada punto del IGN sin teléfono se le
+ *   pasa el de un lugar de OSM del mismo tipo, a menos de 400 m y con nombre
+ *   equivalente (la mitad o más de las palabras importantes en común); y los
+ *   lugares de OSM con teléfono que el IGN no tiene se suman (si no hay otro
+ *   del mismo tipo a 150 m).
  * - Emisoras de Radio Nacional (AM/FM): tabla de Wikipedia (CC BY-SA),
  *   ubicadas con Nominatim (OpenStreetMap) una sola vez, al generar.
  *
@@ -195,6 +200,107 @@ const healthIgn = (await ign(IGN_HEALTH)).map((f) => ({ name: clean(f.p.fna || f
 const policeAll = addNational(police, securityIgn);
 const healthAll = addNational(health, healthIgn);
 
+// ---------- Teléfonos de OpenStreetMap ----------
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+const OSM_QUERY = `[out:json][timeout:300];area["ISO3166-1"="AR"][admin_level=2]->.ar;(
+nwr["amenity"~"^(police|hospital|clinic|ranger_station|doctors)$"]["phone"](area.ar);
+nwr["amenity"~"^(police|hospital|clinic|ranger_station|doctors)$"]["contact:phone"](area.ar);
+nwr["healthcare"~"^(centre|hospital|clinic)$"]["phone"](area.ar);
+nwr["healthcare"~"^(centre|hospital|clinic)$"]["contact:phone"](area.ar););out center tags;`;
+
+async function overpass(query) {
+  for (const url of OVERPASS) {
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: `data=${encodeURIComponent(query)}` });
+      if (res.ok) {
+        const body = await res.json();
+        // Overpass responde 200 con "remark" cuando corta por tiempo o memoria: probar el espejo.
+        if (body.remark) {
+          console.warn(`${url}: ${body.remark}`);
+          continue;
+        }
+        return body.elements;
+      }
+    } catch {
+      // probar el espejo
+    }
+  }
+  throw new Error('Overpass no respondió');
+}
+
+const fold = (s) => (s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+/** Palabras que no distinguen un lugar de otro. */
+const STOP = new Set('de del la el los las y n no nro centro salud hospital comisaria subcomisaria policia puesto sanitario sanitaria posta municipal provincial dr doctor dra san santa caps sala primeros auxilios atencion primaria unidad seccional distrito regional destacamento clinica sanatorio general zonal integral'.split(' '));
+const tokens = (s) => new Set((fold(s).match(/[a-z0-9]+/g) ?? []).filter((t) => !STOP.has(t) && (t.length > 2 || /^\d+$/.test(t))));
+/** Nombres equivalentes: la mitad o más de las palabras importantes en común, mirado desde los dos lados. */
+function sameName(a, b) {
+  const A = tokens(a);
+  const B = tokens(b);
+  if (!A.size || !B.size) return false;
+  const common = [...A].filter((t) => B.has(t)).length;
+  return common / Math.min(A.size, B.size) >= 0.5 && common / Math.max(A.size, B.size) >= 0.5;
+}
+/** Primer teléfono, sin aclaraciones ("3775 498146 (fijo). 3794…" → "3775 498146"). */
+function osmPhone(tags) {
+  const raw = (tags.phone || tags['contact:phone'] || '').split(/[;,/(]|\. /)[0].replace(/[.\s]+$/, '').trim();
+  return raw.replace(/\D/g, '').length >= 6 ? raw : '';
+}
+const osmAddress = (t) => [[t['addr:street'], t['addr:housenumber']].filter(Boolean).join(' '), t['addr:city']].filter(Boolean).join(', ');
+
+const OSM_KIND = {
+  police: (t) => t.amenity === 'police' || t.amenity === 'ranger_station',
+  health: (t) => ['hospital', 'clinic', 'doctors'].includes(t.amenity) || ['centre', 'hospital', 'clinic'].includes(t.healthcare),
+};
+
+const osmAll = (await overpass(OSM_QUERY))
+  .map((e) => ({ tags: e.tags ?? {}, lat: r5(e.lat ?? e.center?.lat), lon: r5(e.lon ?? e.center?.lon) }))
+  .filter((e) => valid(e.lat, e.lon) && osmPhone(e.tags));
+
+/** Teléfonos de OSM para los que no tienen, y los lugares de OSM que faltan. */
+function withOsmPhones(list, kind) {
+  const cands = osmAll.filter((e) => OSM_KIND[kind](e.tags));
+  const grid = new Map();
+  const cell = (p) => `${Math.round(p.lat * 100)},${Math.round(p.lon * 100)}`;
+  const around = (g, p) => {
+    const [la, lo] = cell(p).split(',').map(Number);
+    const out = [];
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) out.push(...(g.get(`${la + i},${lo + j}`) ?? []));
+    return out;
+  };
+  for (const c of cands) grid.set(cell(c), [...(grid.get(cell(c)) ?? []), c]);
+  const used = new Set();
+  let phones = 0;
+  const out = list.map((p) => {
+    if (p.phone) return p;
+    let best = null;
+    for (const c of around(grid, p)) {
+      const d = meters(p, c);
+      if (d < 400 && sameName(p.name, c.tags.name) && (!best || d < best.d)) best = { d, c };
+    }
+    if (!best) return p;
+    used.add(best.c);
+    phones++;
+    const address = p.address || osmAddress(best.c.tags);
+    return { ...p, phone: osmPhone(best.c.tags), ...(address && { address }) };
+  });
+  const existing = new Map();
+  for (const p of out) existing.set(cell(p), [...(existing.get(cell(p)) ?? []), p]);
+  const added = cands
+    .filter((c) => !used.has(c) && c.tags.name && !around(existing, c).some((q) => meters(c, q) < 150))
+    .map((c) => {
+      const address = osmAddress(c.tags);
+      const type = c.tags.amenity === 'ranger_station' ? 'Guardaparques' : c.tags.amenity === 'police' ? 'Policía' : c.tags.amenity === 'hospital' || c.tags.healthcare === 'hospital' ? 'Hospital' : 'Centro de salud';
+      return { name: clean(c.tags.name), type, phone: osmPhone(c.tags), ...(address && { address }), lat: c.lat, lon: c.lon };
+    });
+  return { list: [...out, ...added], phones, added: added.length };
+}
+
+console.log(`OpenStreetMap: ${osmAll.length} lugares con teléfono`);
+// Si Overpass devolvió una respuesta cortada, mejor no generar con datos de menos.
+if (osmAll.length < 4000) throw new Error(`OpenStreetMap devolvió muy pocos lugares (${osmAll.length}); probá de nuevo más tarde`);
+const policeOsm = withOsmPhones(policeAll.list, 'police');
+const healthOsm = withOsmPhones(healthAll.list, 'health');
+
 const radio = [];
 for (const [call, city, province, am, fm] of RADIO_NACIONAL) {
   if (RADIO_COORDS[call]) {
@@ -217,15 +323,15 @@ for (const [call, city, province, am, fm] of RADIO_NACIONAL) {
 const data = {
   sources: {
     fire: 'IGN / Consejo Nacional de Bomberos Voluntarios (catalogo.datos.gba.gob.ar, CC BY 4.0)',
-    police: 'Edificios de seguridad de todo el país: IGN (CC BY 4.0); en la Provincia de Buenos Aires, Ministerio de Seguridad provincial (catalogo.datos.gba.gob.ar, CC BY 4.0)',
-    health: 'Establecimientos de salud de todo el país: IGN / SISA (CC BY 4.0); en la Provincia de Buenos Aires, Ministerio de Salud provincial (catalogo.datos.gba.gob.ar, CC BY 4.0)',
+    police: 'Edificios de seguridad de todo el país: IGN (CC BY 4.0); en la Provincia de Buenos Aires, Ministerio de Seguridad provincial (catalogo.datos.gba.gob.ar, CC BY 4.0); teléfonos y lugares faltantes: © colaboradores de OpenStreetMap (ODbL)',
+    health: 'Establecimientos de salud de todo el país: IGN / SISA (CC BY 4.0); en la Provincia de Buenos Aires, Ministerio de Salud provincial (catalogo.datos.gba.gob.ar, CC BY 4.0); teléfonos y lugares faltantes: © colaboradores de OpenStreetMap (ODbL)',
     radio: 'Radio Nacional (es.wikipedia.org, CC BY-SA); ubicación: OpenStreetMap',
   },
   fire,
-  police: policeAll.list,
-  health: healthAll.list,
+  police: policeOsm.list,
+  health: healthOsm.list,
   radio,
 };
 await mkdir(dirname(OUT), { recursive: true });
 await writeFile(OUT, JSON.stringify(data));
-console.log(`bomberos ${fire.length}, seguridad ${police.length} PBA + ${policeAll.added} IGN, salud ${health.length} PBA + ${healthAll.added} IGN, radios ${radio.length} → ${OUT} (${JSON.stringify(data).length} bytes)`);
+console.log(`bomberos ${fire.length}, seguridad ${police.length} PBA + ${policeAll.added} IGN (+${policeOsm.phones} teléfonos y ${policeOsm.added} lugares de OSM), salud ${health.length} PBA + ${healthAll.added} IGN (+${healthOsm.phones} teléfonos y ${healthOsm.added} lugares de OSM), radios ${radio.length} → ${OUT} (${JSON.stringify(data).length} bytes)`);
