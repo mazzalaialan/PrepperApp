@@ -225,6 +225,8 @@ const ACCENTS = { Comisaria: 'Comisaría', Subcomisaria: 'Subcomisaría', Policl
 const title = (s) =>
   (s ?? '')
     .trim()
+    // Algunos listados perdieron la eñe al exportarse ("MARO?AS").
+    .replace(/(\p{L})\?(\p{L})/gu, '$1ñ$2')
     .toLowerCase()
     .replace(/(^|[\s(./-])\p{L}/gu, (c) => c.toUpperCase())
     // Artículos y preposiciones en minúscula, salvo al principio.
