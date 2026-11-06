@@ -5,7 +5,8 @@ const PASSWORD = 'prueba-segura-123';
 const HOME = { latitude: -34.92, longitude: -57.95 };
 test.use({ geolocation: HOME, permissions: ['geolocation'] });
 
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+// Fecha local, como la usa la app (en UTC, de 21 a 24 h en Argentina ya es el día siguiente).
+const iso = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 const day = (offset: number) => iso(new Date(Date.now() + offset * 86_400_000));
 
 /** Clima de la huerta: 10 días sin lluvia y helada fuerte mañana. */
