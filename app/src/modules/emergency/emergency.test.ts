@@ -119,3 +119,23 @@ describe('lo más cercano de cada tipo', () => {
     expect(out.map((x) => x.key)).toEqual(['fire10', 'medical40', 'police300']);
   });
 });
+
+describe('datos oficiales de todo el país (IGN)', async () => {
+  const { default: data } = await import('./emergency-data.json');
+  const near = (list: { lat: number; lon: number }[], lat: number, lon: number, km: number) =>
+    list.filter((p) => Math.hypot((p.lat - lat) * 111, (p.lon - lon) * 111 * Math.cos((lat * Math.PI) / 180)) < km).length;
+
+  it('hay policía y salud fuera de la Provincia de Buenos Aires', () => {
+    expect(data.police.length).toBeGreaterThan(3000);
+    expect(data.health.length).toBeGreaterThan(8000);
+    // Córdoba, Rosario y Bariloche.
+    for (const [lat, lon] of [
+      [-31.42, -64.19],
+      [-32.95, -60.65],
+      [-41.13, -71.31],
+    ] as const) {
+      expect(near(data.police, lat, lon, 10)).toBeGreaterThan(3);
+      expect(near(data.health, lat, lon, 10)).toBeGreaterThan(3);
+    }
+  });
+});

@@ -451,7 +451,7 @@
     "filter": "Mostrar",
     "filters": { "all": "Todo", "police": "Policía", "fire": "Bomberos", "health": "Salud", "civilDefense": "Defensa Civil" },
     "osmLoading": "Buscando también en OpenStreetMap…",
-    "osmOffline": "Sin conexión: se muestran los datos oficiales incluidos en la app (bomberos de todo el país; comisarías y salud de la Provincia de Buenos Aires).",
+    "osmOffline": "Sin conexión: se muestran los datos oficiales incluidos en la app (bomberos, policía, Gendarmería, Prefectura, guardaparques y establecimientos de salud de todo el país).",
     "osmOfflinePackage": "Sin conexión: se muestran los datos de {{country}} guardados en el dispositivo (bomberos, policía y centros de salud de OpenStreetMap).",
     "packageMissing": "Los datos sin conexión de {{country}} todavía no se descargaron: se bajan solos la primera vez que haya conexión.",
     "osmError": "No se pudo consultar OpenStreetMap (sus servidores públicos a veces están saturados): se muestran los datos oficiales incluidos en la app.",
@@ -465,7 +465,7 @@
     "source": { "official": "Oficial", "osm": "OpenStreetMap" },
     "save": "Guardar {{name}} en mis contactos",
     "saved": "Guardado en mis contactos",
-    "nearbySources": "Fuentes: cuarteles de bomberos del IGN y el Consejo Nacional de Bomberos Voluntarios; comisarías y establecimientos de salud de la Provincia de Buenos Aires (datos abiertos, CC BY 4.0); y OpenStreetMap con conexión. Los teléfonos pueden estar desactualizados: confirmalos cuando puedas."
+    "nearbySources": "Fuentes: cuarteles de bomberos del IGN y el Consejo Nacional de Bomberos Voluntarios; edificios de seguridad y de salud de todo el país del IGN (con SISA); en la Provincia de Buenos Aires, los listados provinciales de comisarías y salud, con teléfono y dirección (datos abiertos, CC BY 4.0); y OpenStreetMap con conexión, que suma teléfonos. Los teléfonos pueden estar desactualizados: confirmalos cuando puedas."
   },
   "location": {
     "readAloud": "Leer en voz alta",

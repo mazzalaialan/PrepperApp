@@ -6,10 +6,11 @@ import type { PlaceFinder } from '@/modules/emergency/places';
 
 /**
  * ¿Ciudad o zona agreste? Se estima sin conexión con lo incluido en la app: el
- * centro de salud (Provincia de Buenos Aires), cuartel de bomberos (todo el
- * país; en muchos pueblos tienen la ambulancia) o localidad urbana más cercanos
- * (los caseríos no cuentan: no tienen ambulancia ni hospital). Si lo más
- * cercano está a más de una hora en auto, la ayuda tarda: zona agreste.
+ * hospital o guardia (todo el país), cuartel de bomberos (en muchos pueblos
+ * tienen la ambulancia) o localidad urbana más cercanos. No cuentan los
+ * caseríos ni las postas y centros de salud chicos: muchos no tienen médico
+ * todos los días ni ambulancia. Si lo más cercano está a más de una hora en
+ * auto, la ayuda tarda: zona agreste.
  */
 
 /** Más de esto hasta la ayuda más cercana: zona agreste. */
@@ -19,6 +20,10 @@ const ROAD_FACTOR = 1.3;
 const AVERAGE_KMH = 60;
 /** Parte de una ciudad (aglomerado) o con población conocida (tools/places-data). */
 const URBAN_RANK = 3000;
+
+/** Establecimientos con guardia o internación (tipos del IGN y de la Provincia de Buenos Aires). */
+const EMERGENCY_CARE = /hospital|u\.?\s?p\.?\s?a\b|emergencia|sanatorio|cl[ií]nica/i;
+export const isEmergencyCare = (p: { name: string; type?: string }) => EMERGENCY_CARE.test(`${p.type ?? ''} ${p.name}`);
 
 export interface HelpEstimate {
   kind: 'health' | 'fire' | 'town';
@@ -36,7 +41,7 @@ export function minutesByCar(straightKm: number): number {
 export function nearestHelp(lat: number, lon: number, data: EmergencyData, places: PlaceFinder): HelpEstimate | null {
   const here = { lat, lon };
   const candidates: { kind: HelpEstimate['kind']; name: string; lat: number; lon: number }[] = [
-    ...data.health.map((p) => ({ kind: 'health' as const, name: p.name, lat: p.lat, lon: p.lon })),
+    ...data.health.filter(isEmergencyCare).map((p) => ({ kind: 'health' as const, name: p.name, lat: p.lat, lon: p.lon })),
     ...data.fire.map((p) => ({ kind: 'fire' as const, name: p.name, lat: p.lat, lon: p.lon })),
   ];
   // Solo localidades urbanas: un caserío de pocas casas no tiene ambulancia ni hospital.

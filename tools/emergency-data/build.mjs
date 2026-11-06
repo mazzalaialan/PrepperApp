@@ -9,6 +9,11 @@
  * - Comisarías de la Provincia de Buenos Aires (CC BY 4.0, mismo catálogo).
  * - Establecimientos de salud públicos de la Provincia de Buenos Aires
  *   (CC BY 4.0, mismo catálogo).
+ * - Edificios de seguridad (comisarías, destacamentos, Gendarmería, Prefectura,
+ *   guardaparques…) y de salud de todo el país: capas del IGN (WFS, CC BY 4.0).
+ *   En la Provincia de Buenos Aires mandan los listados provinciales (traen
+ *   teléfono y dirección): un punto del IGN a menos de 150 m de uno de ellos
+ *   se descarta.
  * - Emisoras de Radio Nacional (AM/FM): tabla de Wikipedia (CC BY-SA),
  *   ubicadas con Nominatim (OpenStreetMap) una sola vez, al generar.
  *
@@ -25,6 +30,11 @@ const FIRE_CSV = `${GBA}/f3cf1025-b253-4627-b546-9c83457618f9/resource/9d601310-
 const POLICE_CSV = `${GBA}/bf79faeb-cb8a-4444-bbbe-5dc39479aa4a/resource/8d31bb16-3489-4ede-9e63-072f7f17383d/download/comisarias-pba-2026.csv`;
 const HEALTH_CSV = `${GBA}/91743f68-bc82-4475-baca-7d5d6908eee8/resource/c2d51824-c61d-4374-a014-cca5b76b082a/download/establecimientos-salud-publicos.csv`;
 const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+const IGN_WFS = 'https://wms.ign.gob.ar/geoserver/ows?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&count=20000&typeNames=';
+const IGN_HEALTH = 'ign:salud_020801';
+const IGN_SECURITY = 'ign:estructuras_operativas_y_defensivas_FA517';
+/** Edificios de seguridad que sirven ante una emergencia (por tipo del IGN): policía, Gendarmería, Prefectura, guardaparques. */
+const SECURITY_TYPES = /comisar|destacamento|polic|gendarmer|prefectura|puesto caminero|cuadrante|comando radioel|unidad regional|jefatura|parques nacionales|guardaparque|seguridad vial|brigada/i;
 
 /** Radio Nacional: indicativo, ciudad, provincia, AM (kHz), FM (MHz). Fuente: es.wikipedia.org/wiki/Radio_Nacional_(Argentina). */
 const RADIO_NACIONAL = [
@@ -150,6 +160,41 @@ const health = (await csv(HEALTH_CSV, ';'))
   }))
   .filter((r) => r.name && HEALTH_TYPES.has(r.type) && valid(r.lat, r.lon));
 
+/** Capa de puntos del IGN. */
+async function ign(layer) {
+  const res = await fetch(IGN_WFS + layer, { headers: { 'User-Agent': UA } });
+  if (!res.ok) throw new Error(`${layer}: ${res.status}`);
+  return (await res.json()).features
+    .filter((f) => f.geometry?.type === 'Point')
+    .map((f) => ({ p: f.properties, lat: r5(f.geometry.coordinates[1]), lon: r5(f.geometry.coordinates[0]) }))
+    .filter((f) => valid(f.lat, f.lon));
+}
+
+/** Distancia aproximada en metros (alcanza para descartar duplicados cercanos). */
+const meters = (a, b) => Math.hypot((a.lat - b.lat) * 111_320, (a.lon - b.lon) * 111_320 * Math.cos((a.lat * Math.PI) / 180));
+
+/** Suma los del IGN que no repiten uno provincial (a menos de 150 m). */
+function addNational(provincial, national) {
+  const grid = new Map();
+  const cell = (p) => `${Math.round(p.lat * 100)},${Math.round(p.lon * 100)}`;
+  for (const p of provincial) grid.set(cell(p), [...(grid.get(cell(p)) ?? []), p]);
+  const near = (p) => {
+    const [la, lo] = cell(p).split(',').map(Number);
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const q of grid.get(`${la + i},${lo + j}`) ?? []) if (meters(p, q) < 150) return true;
+    return false;
+  };
+  const extra = national.filter((p) => !near(p));
+  return { list: [...provincial, ...extra], added: extra.length };
+}
+
+const securityIgn = (await ign(IGN_SECURITY))
+  .filter((f) => SECURITY_TYPES.test(`${f.p.gna ?? ''} ${f.p.fna ?? ''}`))
+  .map((f) => ({ name: clean(f.p.fna || f.p.gna), type: clean(f.p.gna), lat: f.lat, lon: f.lon }))
+  .filter((r) => r.name);
+const healthIgn = (await ign(IGN_HEALTH)).map((f) => ({ name: clean(f.p.fna || f.p.gna), type: clean(f.p.gna), lat: f.lat, lon: f.lon })).filter((r) => r.name);
+const policeAll = addNational(police, securityIgn);
+const healthAll = addNational(health, healthIgn);
+
 const radio = [];
 for (const [call, city, province, am, fm] of RADIO_NACIONAL) {
   if (RADIO_COORDS[call]) {
@@ -172,15 +217,15 @@ for (const [call, city, province, am, fm] of RADIO_NACIONAL) {
 const data = {
   sources: {
     fire: 'IGN / Consejo Nacional de Bomberos Voluntarios (catalogo.datos.gba.gob.ar, CC BY 4.0)',
-    police: 'Ministerio de Seguridad de la Provincia de Buenos Aires (catalogo.datos.gba.gob.ar, CC BY 4.0)',
-    health: 'Ministerio de Salud de la Provincia de Buenos Aires (catalogo.datos.gba.gob.ar, CC BY 4.0)',
+    police: 'Edificios de seguridad de todo el país: IGN (CC BY 4.0); en la Provincia de Buenos Aires, Ministerio de Seguridad provincial (catalogo.datos.gba.gob.ar, CC BY 4.0)',
+    health: 'Establecimientos de salud de todo el país: IGN / SISA (CC BY 4.0); en la Provincia de Buenos Aires, Ministerio de Salud provincial (catalogo.datos.gba.gob.ar, CC BY 4.0)',
     radio: 'Radio Nacional (es.wikipedia.org, CC BY-SA); ubicación: OpenStreetMap',
   },
   fire,
-  police,
-  health,
+  police: policeAll.list,
+  health: healthAll.list,
   radio,
 };
 await mkdir(dirname(OUT), { recursive: true });
 await writeFile(OUT, JSON.stringify(data));
-console.log(`bomberos ${fire.length}, comisarías ${police.length}, salud ${health.length}, radios ${radio.length} → ${OUT} (${JSON.stringify(data).length} bytes)`);
+console.log(`bomberos ${fire.length}, seguridad ${police.length} PBA + ${policeAll.added} IGN, salud ${health.length} PBA + ${healthAll.added} IGN, radios ${radio.length} → ${OUT} (${JSON.stringify(data).length} bytes)`);

@@ -451,7 +451,7 @@
     "filter": "Show",
     "filters": { "all": "All", "police": "Police", "fire": "Fire", "health": "Health", "civilDefense": "Civil Defense" },
     "osmLoading": "Also searching OpenStreetMap…",
-    "osmOffline": "Offline: showing the official data included in the app (fire stations nationwide; police and health in Buenos Aires Province).",
+    "osmOffline": "Offline: showing the official data included in the app (fire, police, Gendarmerie, Coast Guard, park rangers and health facilities nationwide).",
     "osmOfflinePackage": "Offline: showing the {{country}} data saved on the device (fire stations, police and health centers from OpenStreetMap).",
     "packageMissing": "The offline data for {{country}} has not been downloaded yet: it downloads automatically the first time there is a connection.",
     "osmError": "Couldn't reach OpenStreetMap (its public servers are sometimes overloaded): showing the official data included in the app.",
@@ -465,7 +465,7 @@
     "source": { "official": "Official", "osm": "OpenStreetMap" },
     "save": "Save {{name}} to my contacts",
     "saved": "Saved to my contacts",
-    "nearbySources": "Sources: fire stations from IGN and the National Council of Volunteer Firefighters; police stations and health facilities of Buenos Aires Province (open data, CC BY 4.0); and OpenStreetMap when online. Phones may be outdated: confirm them when you can."
+    "nearbySources": "Sources: fire stations from IGN and the National Council of Volunteer Firefighters; security and health buildings nationwide from IGN (with SISA); in Buenos Aires Province, the provincial police and health lists with phone and address (open data, CC BY 4.0); and OpenStreetMap when online, which adds phones. Phones may be outdated: confirm them when you can."
   },
   "location": {
     "readAloud": "Read aloud",
