@@ -29,7 +29,9 @@ def _run(cmd: list[str], timeout: int = 600, cwd: str | None = None) -> subproce
 
 def _pandoc_html(path: str, images: ImageStore, workdir: str) -> str:
     media = os.path.join(workdir, "media")
-    r = _run(["pandoc", path, "-t", "html5", "--wrap=none", f"--extract-media={media}"], timeout=900)
+    # Pandoc deduce el formato por la extensión; un Word con macros (.docm) es un .docx.
+    src_fmt = ["-f", "docx"] if path.lower().endswith(".docm") else []
+    r = _run(["pandoc", *src_fmt, path, "-t", "html5", "--wrap=none", f"--extract-media={media}"], timeout=900)
     if r.returncode != 0:
         raise RuntimeError(r.stderr.decode("utf-8", "ignore")[:300])
     raw = r.stdout.decode("utf-8", "ignore")
