@@ -1889,6 +1889,8 @@
   "pwa": {
     "updateAvailable": "A new version is available.",
     "update": "Update",
+    "downloading": "Downloading the new version…",
+    "later": "Later",
     "offlineReady": "Ready to use offline."
   },
   "garden": {
@@ -2223,6 +2225,8 @@
     "free": "Free",
     "freeHint": "public domain or free license; download freely.",
     "rights": "Copyrighted",
+    "freeInfo": "Public domain or free license: downloads without a key and can be shared.",
+    "rightsInfo": "Personal use: downloads with the VikArg key and is not shared. It is decrypted only on this device so you can read it offline.",
     "rightsHint": "personal use: download with the VikArg key and do not share.",
     "rightsUnavailable": "this server does not offer the copyrighted books.",
     "search": "Search by title, author or topic",

@@ -1889,6 +1889,8 @@
   "pwa": {
     "updateAvailable": "Hay una versión nueva disponible.",
     "update": "Actualizar",
+    "downloading": "Bajando la versión nueva…",
+    "later": "Más tarde",
     "offlineReady": "Lista para usar sin conexión."
   },
   "garden": {
@@ -2223,6 +2225,8 @@
     "free": "Libre",
     "freeHint": "dominio público o licencia libre; se bajan sin más.",
     "rights": "Con derechos",
+    "freeInfo": "Dominio público o licencia libre: se baja sin clave y se puede compartir.",
+    "rightsInfo": "Uso personal: se baja con la clave VikArg y no se comparte. Para leerlo sin conexión queda descifrado solo en este dispositivo.",
     "rightsHint": "uso personal: se bajan con la clave VikArg y no se comparten.",
     "rightsUnavailable": "este servidor no ofrece los libros con derechos.",
     "search": "Buscar por título, autor o tema",

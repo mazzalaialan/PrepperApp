@@ -21,8 +21,12 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await page.goto('/#/library/books');
   const cat = page.getByTestId('library-cat-cabuyeria');
   await expect(cat).toContainText('Cabuyería');
-  await expect(page.getByTestId('book-montanismo')).toContainText('Libre');
-  await expect(page.getByTestId('book-enciclopedia')).toContainText('Con derechos');
+  await expect(page.getByTestId('book-montanismo').getByRole('button', { name: 'Libre' })).toBeVisible();
+  await expect(page.getByTestId('book-enciclopedia').getByRole('button', { name: 'Con derechos' })).toBeVisible();
+  // El candado es solo un ícono: al tocarlo explica qué significa.
+  await page.getByTestId('book-enciclopedia').getByRole('button', { name: 'Con derechos' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Uso personal');
+  await page.getByRole('dialog').getByRole('button', { name: 'Cerrar' }).click();
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-60-library.png`, fullPage: true });
 
   // En bloque: con el filtro "Libres", "elegir los que se ven" toma solo el libre; después, toda la categoría.
@@ -44,6 +48,12 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await expect(page.getByTestId('book-montanismo').getByLabel('En el dispositivo')).toBeVisible();
   await expect(page.getByTestId('book-enciclopedia').getByLabel('En el dispositivo')).toBeVisible();
   await expect(page.getByText('Libros con derechos desbloqueados.')).toBeVisible();
+
+  // En un celular, con los botones de un libro bajado, el título no se aprieta (antes quedaba de 1 o 2 letras por línea).
+  await page.setViewportSize({ width: 412, height: 900 });
+  await expect.poll(async () => (await page.getByTestId('book-montanismo').locator('.list-title').boundingBox())?.width ?? 0).toBeGreaterThan(150);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-60b-library-phone.png`, fullPage: true });
+  await page.setViewportSize({ width: 1280, height: 800 });
 
   // Leer: capítulos y siguiente.
   await page.getByRole('link', { name: 'Leer «Manual de montañismo del Ejército»' }).click();
@@ -76,6 +86,8 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
   await expect(refs).toContainText('Manual de montañismo del Ejército');
   await expect(refs).toContainText('El nudo Prusik sirve para subir por una cuerda');
   await expect(refs.locator('img')).toHaveAttribute('src', /library\/books\/montanismo\/img\/prusik\.webp$/);
+  // La imagen carga en diferido: la sección queda abajo de los pasos.
+  await refs.locator('img').scrollIntoViewIfNeeded();
   await expect.poll(() => refs.locator('img').evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
   await refs.getByRole('link').first().click();
   await expect(frame.locator('.reader-hit')).toContainText('Prusik');

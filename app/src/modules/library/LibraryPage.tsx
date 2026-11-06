@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { BookOpen, CircleCheck, Download, Lock, RefreshCw, Search, Trash2, Unlock, X } from 'lucide-react';
+import { BadgeCheck, BookOpen, CircleCheck, Download, Lock, RefreshCw, Search, Trash2, Unlock, X } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { Dialog } from '@/ui/Dialog';
 import type { LibraryBook } from './books';
@@ -57,16 +57,32 @@ function KeyDialog({ onClose, onOk }: { onClose: () => void; onOk: () => void })
   );
 }
 
-function LicenseBadge({ book }: { book: LibraryBook }) {
+/** Licencia del libro: solo un ícono (no le come lugar al título); al tocarlo, qué significa. */
+function LicenseBadge({ book, canPrivate }: { book: LibraryBook; canPrivate: boolean }) {
   const { t } = useTranslation();
-  return book.license === 'public' ? (
-    <span className="pill pill-free" title={book.licenseReason}>
-      {t('library.free')}
-    </span>
-  ) : (
-    <span className="pill pill-rights" title={t('library.rightsHint')}>
-      <Lock size={12} aria-hidden /> {t('library.rights')}
-    </span>
+  const [open, setOpen] = useState(false);
+  const free = book.license === 'public';
+  const label = t(free ? 'library.free' : 'library.rights');
+  return (
+    <>
+      <button
+        type="button"
+        className={`license-icon ${free ? 'is-free' : 'is-rights'}`}
+        onClick={() => setOpen(true)}
+        aria-label={label}
+        title={label}
+        data-testid="license-icon"
+      >
+        {free ? <BadgeCheck size={18} aria-hidden /> : <Lock size={16} aria-hidden />}
+      </button>
+      {open && (
+        <Dialog title={label} onClose={() => setOpen(false)}>
+          <p style={{ margin: 0 }}>{t(free ? 'library.freeInfo' : 'library.rightsInfo')}</p>
+          {free && book.licenseReason && <p className="hint">{book.licenseReason}</p>}
+          {!free && !canPrivate && <p className="hint">{t('library.rightsUnavailable')}</p>}
+        </Dialog>
+      )}
+    </>
   );
 }
 
@@ -286,23 +302,26 @@ export function LibraryPage() {
                             {fail && <span className="error"> · {t(`library.errors.${fail}`)}</span>}
                           </span>
                         </span>
-                        <LicenseBadge book={b} />
-                        {inst && (
-                          <>
-                            <Link className="icon-btn" to={`/library/read/${b.id}`} aria-label={t('library.read', { title: b.title })}>
-                              <BookOpen size={20} />
-                            </Link>
-                            <button
-                              className="icon-btn"
-                              type="button"
-                              onClick={() => window.confirm(t('library.confirmRemove', { title: b.title })) && void remove(b.id)}
-                              aria-label={t('library.remove', { title: b.title })}
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </>
-                        )}
-                        {inst && upToDate(b) && <CircleCheck size={18} style={{ color: 'var(--ok)', flexShrink: 0 }} aria-label={t('library.installed')} />}
+                        {/* Licencia y acciones juntas: en el celular, si no entran al lado del título, bajan a otra línea. */}
+                        <span className="library-actions">
+                          <LicenseBadge book={b} canPrivate={canPrivate} />
+                          {inst && (
+                            <>
+                              <Link className="icon-btn" to={`/library/read/${b.id}`} aria-label={t('library.read', { title: b.title })}>
+                                <BookOpen size={20} />
+                              </Link>
+                              <button
+                                className="icon-btn"
+                                type="button"
+                                onClick={() => window.confirm(t('library.confirmRemove', { title: b.title })) && void remove(b.id)}
+                                aria-label={t('library.remove', { title: b.title })}
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </>
+                          )}
+                          {inst && upToDate(b) && <CircleCheck size={18} style={{ color: 'var(--ok)', flexShrink: 0 }} aria-label={t('library.installed')} />}
+                        </span>
                       </li>
                     );
                   })}
