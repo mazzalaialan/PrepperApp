@@ -3876,3 +3876,9 @@ a.module-card:hover {
   flex: 1 1 14rem;
   justify-content: center;
 }
+
+/* Aviso de beta en la práctica de nudos. */
+.knot-practice-beta {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+}

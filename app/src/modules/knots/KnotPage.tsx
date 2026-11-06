@@ -52,6 +52,17 @@ function Practice({ knot, onClose }: { knot: Knot; onClose: () => void }) {
           <X size={24} />
         </button>
       </header>
+      {/* Los dibujos paso a paso son nuevos: se avisa que están en prueba y se puede reportar uno mal. */}
+      <p className="hint knot-practice-beta" data-testid="practice-beta">
+        <span className="pill">{t('knots.betaPill')}</span> {t('knots.beta')}{' '}
+        <Link
+          className="btn-link"
+          to={`/about?${new URLSearchParams({ tipo: 'bug', texto: t('knots.betaReport', { name: tl(knot.name, lang), n: i + 1 }) }).toString()}`}
+          onClick={onClose}
+        >
+          {t('knots.betaLink')}
+        </Link>
+      </p>
       {picture && <KnotFigure className="knot-practice-img" file={picture} alt={t('knots.stepAlt', { n: i + 1 })} testId="practice-figure" />}
       <p className="knot-practice-count">{t('knots.stepOf', { n: i + 1, total: knot.steps.length })}</p>
       <p className="knot-practice-text" data-testid="practice-step">

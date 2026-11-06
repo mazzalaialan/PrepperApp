@@ -942,6 +942,7 @@
     "statusRaining": "Raining now",
     "statusSoon": "Rain in about {{minutes}} min",
     "soonTitle": "Rain in about {{minutes}} min · {{place}}",
+    "strongerTitle": "The rain is getting heavier · {{place}}",
     "rainingTitle": "It's raining · {{place}}",
     "body": "{{mm}} mm expected in the next 2 hours."
   },
@@ -2124,6 +2125,10 @@
     "gpsError": "Couldn't read the GPS. Choose a waypoint from the list."
   },
   "knots": {
+    "betaPill": "Beta",
+    "beta": "The step-by-step drawings are new and we are improving them.",
+    "betaLink": "Report a problem",
+    "betaReport": "Knot “{{name}}”, step {{n}}: the drawing is wrong because ",
     "library": {"title": "In your library", "none": "Download the knot books (Cabuyería) to see where this knot appears in them, with their figures, offline.", "go": "Go to the Library", "searching_one": "Searching {{count}} knot book…", "searching_other": "Searching {{count}} knot books…", "notFound_one": "It does not appear in your downloaded knot book.", "notFound_other": "It does not appear in your {{count}} downloaded knot books."},
     "wizard": "What do I need to do?",
     "search": "Search a knot",

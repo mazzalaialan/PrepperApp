@@ -39,6 +39,7 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await page.getByTestId('knot-practice-start').click();
   const practice = page.getByTestId('knot-practice');
   await expect(practice).toContainText('Paso 1 de 4');
+  await expect(practice.getByTestId('practice-beta')).toContainText('Los dibujos paso a paso son nuevos');
   await page.getByTestId('practice-next').click();
   await expect(practice).toContainText('Paso 2 de 4');
   // Cada paso con su diagrama propio, que carga sin conexión desde el paquete de la app.
