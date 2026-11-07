@@ -157,7 +157,19 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
   for (const [id, fc] of Object.entries(d)) if (!map.getSource(id)) map.addSource(id, { type: 'geojson', data: fc });
   const mine = p.showMine ? 'visible' : 'none';
   // El contorno va debajo de todo lo dibujado del mapa, pero arriba del fondo.
-  map.addLayer({ id: 'outline', type: 'line', source: 'outline', paint: { 'line-color': c.muted, 'line-width': 0.8 } }, 'landcover-wood');
+  // Contorno de referencia (sin teselas): provincias de un color y países de otro, más marcados.
+  map.addLayer(
+    {
+      id: 'outline',
+      type: 'line',
+      source: 'outline',
+      paint: {
+        'line-color': ['match', ['get', 'kind'], 'country', c.country, c.province],
+        'line-width': ['match', ['get', 'kind'], 'country', 1.6, 0.8],
+      },
+    },
+    'landcover-wood',
+  );
   map.addLayer({ id: 'zones', type: 'line', source: 'zones', paint: { 'line-color': c.info, 'line-width': 1.5, 'line-dasharray': [3, 2] } });
   map.addLayer({ id: 'preview-fill', type: 'fill', source: 'preview', paint: { 'fill-color': c.accent, 'fill-opacity': 0.12 } });
   map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': c.accent, 'line-width': 2 } });

@@ -23,6 +23,9 @@ export interface MapColors {
   slopeAvalanche: string;
   steep: string;
   extreme: string;
+  /** Límites: países de un color y provincias de otro. */
+  country: string;
+  province: string;
 }
 
 export function themeColors(): MapColors {
@@ -43,6 +46,8 @@ export function themeColors(): MapColors {
     slopeAvalanche: v('--slope-avalanche'),
     steep: v('--slope-steep'),
     extreme: v('--slope-extreme'),
+    country: v('--map-country'),
+    province: v('--map-province'),
   };
 }
 
@@ -198,8 +203,18 @@ export function buildStyle(c: MapColors, contoursUrl: string, layers: MapLayersO
         type: 'line',
         source: 'osm',
         'source-layer': 'boundary',
-        filter: ['<=', ['coalesce', ['get', 'admin_level'], 99], 4],
-        paint: { 'line-color': c.text, 'line-opacity': 0.5, 'line-width': ['match', ['get', 'admin_level'], 2, 1.5, 0.8], 'line-dasharray': [4, 2] },
+        // Países (nivel 2) en línea llena de un color; provincias en guiones de otro.
+        filter: ['all', ['>', ['coalesce', ['get', 'admin_level'], 99], 2], ['<=', ['coalesce', ['get', 'admin_level'], 99], 4]],
+        paint: { 'line-color': c.province, 'line-opacity': 0.8, 'line-width': 0.9, 'line-dasharray': [4, 2] },
+      },
+      {
+        id: 'boundary-country',
+        type: 'line',
+        source: 'osm',
+        'source-layer': 'boundary',
+        // Sin los límites marítimos (aguas territoriales), que no son una frontera en tierra.
+        filter: ['all', ['==', ['get', 'admin_level'], 2], ['!=', ['coalesce', ['get', 'maritime'], 0], 1]],
+        paint: { 'line-color': c.country, 'line-opacity': 0.9, 'line-width': 1.8 },
       },
       {
         id: 'water-name',

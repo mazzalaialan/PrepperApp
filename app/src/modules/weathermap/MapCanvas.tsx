@@ -1,3 +1,4 @@
+import { i18n } from '@/core/i18n/i18n';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { WeatherMapValue } from '@/core/settings/settings';
 import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels';
@@ -73,6 +74,8 @@ function cssVars(): Record<string, string> {
     border: v('--border'),
     text: v('--text'),
     muted: v('--text-muted'),
+    mapCountry: v('--map-country'),
+    mapProvince: v('--map-province'),
     accent: v('--accent'),
     info: v('--info'),
     ...Object.fromEntries([1, 2, 3, 4, 5, 6].map((n) => [`s${n}`, v(`--scale-${n}`)])),
@@ -344,29 +347,22 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
   }
   ctx.globalAlpha = 1;
 
-  // Límites encima de las imágenes, para no perder la referencia.
+  // Límites encima de las imágenes, para no perder la referencia: provincias de un
+  // color y, encima, fronteras y costas de los países de otro, más marcadas.
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = c.muted!;
-  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = c.mapProvince!;
+  ctx.globalAlpha = 0.7;
   ctx.lineWidth = 0.7;
-  for (const n of p.geo.neighbors) {
-    path(n.rings);
-    ctx.stroke();
-  }
   for (const r of p.geo.regions) {
     path(r.rings);
     ctx.stroke();
   }
-  ctx.globalAlpha = 1;
-  // Contorno de cada país, más marcado.
-  ctx.strokeStyle = c.text!;
-  ctx.lineWidth = 1.2;
-  ctx.globalAlpha = 0.55;
-  for (const country of ['AR', 'CL', 'UY'] as const) {
-    for (const r of p.geo.regions.filter((g) => g.country === country)) {
-      path(r.rings);
-      ctx.stroke();
-    }
+  ctx.strokeStyle = c.mapCountry!;
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = 1.3;
+  for (const b of [...p.geo.borders, ...p.geo.neighbors]) {
+    path(b.rings);
+    ctx.stroke();
   }
   ctx.globalAlpha = 1;
 
@@ -594,6 +590,15 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
     ctx.fill();
     ctx.stroke();
   }
+
+  // Nombre de cada país, al final: si se pisa con algo más importante, no se escribe.
+  const lang = i18n.language.startsWith('en') ? 'en' : 'es';
+  ctx.globalAlpha = 0.85;
+  for (const country of p.geo.countries) {
+    const s = proj(country.label[0], country.label[1]);
+    text(country.name[lang].toLocaleUpperCase(i18n.language), s.x, s.y, c.mapCountry!, true);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function isNational(z: ZoneWeather, geo: GeoData): boolean {

@@ -39,6 +39,8 @@ export interface Size {
 
 /** Argentina, Chile y Uruguay con las Malvinas (con margen abajo para la barra de tiempo). */
 export const REGION_BOUNDS = { west: -76, east: -52, south: -58, north: -21 };
+/** Toda América del Sur: hasta donde se puede alejar el mapa. */
+export const CONTINENT_BOUNDS = { west: -82, east: -34, south: -56, north: 13 };
 
 export function fitBounds(b: typeof REGION_BOUNDS, size: Size, padding = 8): View {
   const sw = toMercator(b.west, b.south);
@@ -77,7 +79,7 @@ export function pan(view: View, dx: number, dy: number): View {
 
 /** De todo el mapa a una ciudad (unos 30 km de ancho), no más. */
 export function scaleLimits(size: Size): { min: number; max: number } {
-  const whole = fitBounds(REGION_BOUNDS, size).scale;
+  const whole = fitBounds(CONTINENT_BOUNDS, size).scale;
   return { min: whole * 0.8, max: size.width / 30_000 };
 }
 

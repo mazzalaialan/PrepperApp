@@ -1,8 +1,12 @@
 /** Mapa base incluido en la app (tools/geo-data/build.mjs). Se carga aparte para no pesar en el inicio. */
 
+/** Países con provincias (o regiones, departamentos) en el mapa base. */
+export type GeoCountry = 'AR' | 'CL' | 'UY' | 'BO' | 'PE';
+export const GEO_COUNTRIES: GeoCountry[] = ['AR', 'CL', 'UY', 'BO', 'PE'];
+
 export interface GeoRegion {
   id: string;
-  country: 'AR' | 'CL' | 'UY';
+  country: GeoCountry;
   name: string;
   label: [number, number];
   /** Anillos como [lon, lat, lon, lat, …]. */
@@ -11,7 +15,7 @@ export interface GeoRegion {
 
 export interface Capital {
   name: string;
-  country: 'AR' | 'CL' | 'UY';
+  country: GeoCountry;
   national: boolean;
   lon: number;
   lat: number;
@@ -32,7 +36,12 @@ export interface Volcano {
 export interface GeoData {
   source: string;
   regions: GeoRegion[];
+  /** El resto de América del Sur, solo el contorno. */
   neighbors: { code: string; rings: number[][] }[];
+  /** Frontera y costa de nuestros países (para dibujarlas distinto de los límites internos). */
+  borders: { code: GeoCountry; rings: number[][] }[];
+  /** Nombre de cada país de América del Sur y dónde escribirlo ([lon, lat]). */
+  countries: { code: string; name: { es: string; en: string }; label: [number, number] }[];
   capitals: Capital[];
   volcanoes: Volcano[];
 }
