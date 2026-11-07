@@ -5,7 +5,7 @@ import { nearestRadio, officialNearby, type EmergencyData } from './data';
 import { placeFinder, type PlacesData } from './places';
 
 /** Paquetes de Chile y Uruguay (tools/country-data), tal como los baja la app. */
-const pkg = (cc: 'CL' | 'UY') => JSON.parse(readFileSync(new URL(`../../../public/data/${cc}.json`, import.meta.url), 'utf8')) as EmergencyData & PlacesData;
+const pkg = (cc: 'CL' | 'UY' | 'BO' | 'PE') => JSON.parse(readFileSync(new URL(`../../../public/data/${cc}.json`, import.meta.url), 'utf8')) as EmergencyData & PlacesData;
 
 describe('paquetes de Chile y Uruguay', () => {
   const cl = pkg('CL');
@@ -58,5 +58,34 @@ describe('paquetes de Chile y Uruguay', () => {
   it('ubica localidades por nombre', () => {
     expect(clPlaces.find('Valparaíso')?.label).toMatch(/^Valpara/);
     expect(uyPlaces.find('Salto')?.label).toMatch(/^Salto/);
+  });
+});
+
+describe('paquetes de Bolivia y Perú', () => {
+  const bo = pkg('BO');
+  const pe = pkg('PE');
+
+  it('traen bomberos, policía, salud y localidades', () => {
+    for (const p of [bo, pe]) {
+      expect(p.fire.length).toBeGreaterThan(20);
+      expect(p.police.length).toBeGreaterThan(100);
+      expect(p.health.length).toBeGreaterThan(500);
+      expect(p.places.length).toBeGreaterThan(100);
+    }
+    expect(bo.osm).toBe(true);
+  });
+
+  it('Perú: salud oficial del RENIPRESS; policía y bomberos de OpenStreetMap', () => {
+    expect(pe.osm).toBeUndefined();
+    expect(pe.health.filter((p) => !p.osm && p.type === 'Hospital').length).toBeGreaterThan(300);
+    expect(pe.police.every((p) => p.osm)).toBe(true);
+    // Huaraz: un establecimiento oficial con teléfono cerca.
+    const near = officialNearby(pe, -9.53, -77.53, 5000);
+    expect(near.some((p) => (p.kind === 'medical' || p.kind === 'hospital') && p.source === 'official' && p.phone)).toBe(true);
+  });
+
+  it('radio: Patria Nueva en La Paz; Perú todavía sin lista', () => {
+    expect(nearestRadio(bo, -16.5, -68.15, 1)[0]).toMatchObject({ city: 'La Paz', fm: 94.3, am: 1020 });
+    expect(pe.radio).toHaveLength(0);
   });
 });

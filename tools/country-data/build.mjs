@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Genera los paquetes de datos sin conexión de Chile y Uruguay:
- * app/public/data/CL.json y UY.json. No van en la descarga inicial de la app:
+ * Genera los paquetes de datos sin conexión de Chile, Uruguay, Bolivia y Perú:
+ * app/public/data/CL.json, UY.json, BO.json y PE.json. No van en la descarga inicial de la app:
  * se bajan una vez al elegir el país (ver app/src/modules/emergency/country.ts).
  *
  * - Localidades: GeoNames (CC BY 4.0), con población, para la detección de
@@ -12,11 +12,15 @@
  *   bomberos del Ministerio del Interior y unidades asistenciales de ASSE, con
  *   teléfono y dirección. De OpenStreetMap se suman los que no están (mutualistas,
  *   emergencias móviles…) y el teléfono que le falte a uno oficial.
+ *   Perú: los centros de salud salen del RENIPRESS (SUSALUD, datosabiertos.gob.pe,
+ *   Open Data Commons Attribution), completados con OpenStreetMap.
  * - Radios: Radiodifusión Nacional del Uruguay (Radio Uruguay y su red del
  *   interior) y la red de Radio Bío-Bío en Chile (privada, de cobertura nacional:
- *   Chile no tiene radio pública), ubicadas con GeoNames.
+ *   Chile no tiene radio pública) y la Red Patria Nueva de Bolivia (solo las
+ *   frecuencias confirmadas), ubicadas con GeoNames. De Radio Nacional del Perú
+ *   no hay lista de frecuencias por ciudad publicada.
  *
- * Uso: node tools/country-data/build.mjs [UY|CL]   (necesita conexión; el resultado se versiona; sin país, los dos)
+ * Uso: node tools/country-data/build.mjs [UY|CL|BO|PE]   (necesita conexión; el resultado se versiona; sin país, todos)
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -126,6 +130,12 @@ const RADIO_CL = [
   ['Punta Arenas', null, 105.1],
 ].map(([city, am, fm]) => ['Radio Bío-Bío', city, am, fm]);
 
+/** Red Patria Nueva (Radio Illimani), radio del Estado de Bolivia: solo las confirmadas (State Media Monitor, 2026). */
+const RADIO_BO = [
+  ['Red Patria Nueva (Radio Illimani)', 'La Paz', 1020, 94.3],
+  ['Red Patria Nueva', 'Cochabamba', null, 93.7],
+];
+
 const norm = (s) =>
   s
     .normalize('NFD')
@@ -134,8 +144,11 @@ const norm = (s) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 
+/** El portal de datos abiertos de Perú rechaza (418) los clientes que ponen una dirección web en el User-Agent. */
+const uaFor = (url) => (url.includes('datosabiertos.gob.pe') ? 'VikArg-Prepping-Tools/1.0' : UA);
+
 async function getBytes(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': UA } });
+  const res = await fetch(url, { headers: { 'User-Agent': uaFor(url) } });
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
   return new Uint8Array(await res.arrayBuffer());
 }
@@ -294,6 +307,57 @@ async function uyOfficial() {
   return { police, fire, health };
 }
 
+// ---------- Perú: RENIPRESS (registro oficial de establecimientos de salud) ----------
+const PE_RENIPRESS_PAGE = 'https://www.datosabiertos.gob.pe/dataset/registro-nacional-de-entidades-prestadoras-de-servicios-de-salud-renipress';
+/** De RENIPRESS, lo que sirve ante una emergencia (no consultorios, laboratorios, ópticas…), con el tipo a mostrar. */
+const PE_HEALTH = [
+  [/HOSPITALES|INSTITUTOS DE SALUD/, 'Hospital'],
+  [/CENTROS DE SALUD CON CAMAS/, 'Centro de salud con internación'],
+  [/ATENCION PRE HOSPITALARIA/, 'Ambulancias'],
+  [/CENTROS DE SALUD O CENTROS MEDICOS/, 'Centro de salud'],
+  [/POLICLINICOS/, 'Policlínico'],
+  [/PUESTOS DE SALUD/, 'Puesto de salud'],
+];
+
+async function peOfficial() {
+  // El archivo cambia de nombre cada mes (RENIPRESS_dd-mm-aaaa.csv): el más nuevo de la página del conjunto de datos.
+  const page = new TextDecoder().decode(await getBytes(PE_RENIPRESS_PAGE));
+  const files = [...new Set(page.match(/https:\/\/www\.datosabiertos\.gob\.pe\/sites\/default\/files\/RENIPRESS_\d\d-\d\d-\d{4}\.csv/g) ?? [])];
+  const dated = files.map((url) => {
+    const [d, m, y] = url.match(/(\d\d)-(\d\d)-(\d{4})\.csv$/).slice(1);
+    return { url, at: `${y}-${m}-${d}` };
+  });
+  const latest = dated.sort((a, b) => b.at.localeCompare(a.at))[0];
+  if (!latest) throw new Error('RENIPRESS: no se encontró el CSV');
+  const lines = new TextDecoder().decode(await getBytes(latest.url)).replace(/^\uFEFF/, '').split(/\r?\n/);
+  const head = lines[0].split(';');
+  const col = (name) => head.indexOf(name);
+  const [cName, cClass, cCat, cPhone, cAddr, cDist, cProv, cDep, cState, cLat, cLon] = ['NOMBRE', 'CLASIFICACION', 'CATEGORIA', 'TELEFONO', 'DIRECCION', 'DISTRITO', 'PROVINCIA', 'DEPARTAMENTO', 'ESTADO', 'NORTE', 'ESTE'].map(col);
+  const health = [];
+  for (const line of lines.slice(1)) {
+    const f = line.split(';');
+    if (f[cState] !== 'ACTIVO') continue;
+    const lat = Number(f[cLat]);
+    const lon = Number(f[cLon]);
+    // Coordenadas que caen en Perú (hay registros sin ubicar o con lat/lon cambiadas).
+    if (!(lat < 0.5 && lat > -18.6 && lon > -81.5 && lon < -68.5)) continue;
+    const match = PE_HEALTH.find(([re]) => re.test(f[cClass] ?? ''));
+    if (!match) continue;
+    // Las categorías II y III (hospitales de referencia) cuentan como hospital aunque el registro diga "centro de salud".
+    const type = /^(II|III)/.test(f[cCat] ?? '') ? 'Hospital' : match[1];
+    health.push({
+      name: title(f[cName]),
+      type,
+      phone: digits(f[cPhone]),
+      address: [title(f[cAddr]), title(f[cDist]), title(f[cProv]), title(f[cDep])].filter(Boolean).join(', '),
+      lat: r5(lat),
+      lon: r5(lon),
+    });
+  }
+  console.log(`RENIPRESS ${latest.at}: ${health.length} establecimientos`);
+  return { health, at: latest.at };
+}
+
 /** Distancia aproximada en metros (para no duplicar un lugar oficial con el de OpenStreetMap). */
 const meters = (a, b) => Math.hypot((a.lat - b.lat) * 111_320, (a.lon - b.lon) * 111_320 * Math.cos((a.lat * Math.PI) / 180));
 
@@ -328,14 +392,16 @@ async function build(cc, radioList, labels) {
       health.push(place);
     }
   }
-  // Uruguay: los listados oficiales, completados con OpenStreetMap; Chile: solo OpenStreetMap.
+  // Uruguay: los listados oficiales, completados con OpenStreetMap; Perú: salud oficial (RENIPRESS);
+  // Chile y Bolivia: solo OpenStreetMap.
   const official = cc === 'UY' ? await uyOfficial() : null;
+  const pe = cc === 'PE' ? await peOfficial() : null;
   const UY_SRC = 'Ministerio del Interior (catalogodatos.gub.uy, Licencia de Datos Abiertos de Uruguay)';
   const data = {
     country: cc,
     generatedAt: new Date().toISOString().slice(0, 10),
     // Sin listados oficiales, todos los lugares vienen de OpenStreetMap.
-    ...(official ? {} : { osm: true }),
+    ...(official || pe ? {} : { osm: true }),
     sources: official
       ? {
           fire: `Destacamentos de bomberos: ${UY_SRC}; los que faltan: OpenStreetMap (ODbL)`,
@@ -347,13 +413,16 @@ async function build(cc, radioList, labels) {
       : {
           fire: 'OpenStreetMap (ODbL)',
           police: 'OpenStreetMap (ODbL)',
-          health: 'OpenStreetMap (ODbL)',
+          health: pe
+            ? `Establecimientos de salud: RENIPRESS de SUSALUD (${pe.at}, datosabiertos.gob.pe, Open Data Commons Attribution); los que faltan: OpenStreetMap (ODbL)`
+            : 'OpenStreetMap (ODbL)',
           radio: labels.radioSource,
           places: 'GeoNames (CC BY 4.0)',
         },
-    fire: official ? withOsm(official.fire, fire) : fire.filter(Boolean),
-    police: official ? withOsm(official.police, police) : police.filter(Boolean),
-    health: official ? withOsm(official.health, health) : health.filter(Boolean),
+    // En Perú solo la salud es oficial: policía y bomberos van marcados como de OpenStreetMap uno por uno.
+    fire: official ? withOsm(official.fire, fire) : fire.filter(Boolean).map((p) => (pe ? { ...p, osm: true } : p)),
+    police: official ? withOsm(official.police, police) : police.filter(Boolean).map((p) => (pe ? { ...p, osm: true } : p)),
+    health: official ? withOsm(official.health, health) : pe ? withOsm(pe.health, health) : health.filter(Boolean),
     radio: radios(radioList, all),
     provinces,
     places,
@@ -368,3 +437,5 @@ async function build(cc, radioList, labels) {
 const only = process.argv[2];
 if (!only || only === 'UY') await build('UY', RADIO_UY, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Radiodifusión Nacional del Uruguay (Wikipedia)' });
 if (!only || only === 'CL') await build('CL', RADIO_CL, { fire: 'Bomberos', police: 'Carabineros', health: 'Centro de salud', radioSource: 'Radio Bío-Bío (Wikipedia)' });
+if (!only || only === 'BO') await build('BO', RADIO_BO, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Red Patria Nueva (State Media Monitor)' });
+if (!only || only === 'PE') await build('PE', [], { fire: 'Bomberos', police: 'Comisaría', health: 'Centro de salud', radioSource: '' });

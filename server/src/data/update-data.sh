@@ -1,6 +1,6 @@
 #!/bin/sh
 # Vuelve a generar cada mes los paquetes de datos que cambian (parques de
-# Argentina y de Chile, comisarías, bomberos y salud de Chile y Uruguay) con
+# Argentina y de Chile, comisarías, bomberos y salud de Chile, Uruguay, Bolivia y Perú) con
 # las mismas herramientas del repositorio (tools/), y los deja donde los sirve
 # el servidor (GET /api/data/:file). La app usa la copia del servidor si es más
 # nueva que la que trae. Pensado para cron, igual que los mapas:
@@ -69,4 +69,6 @@ step parks-AR.json /repo/tools/emergency-data/parks.mjs
 step parks-CL.json /repo/tools/emergency-data/parks-cl.mjs
 step CL.json /repo/tools/country-data/build.mjs CL
 step UY.json /repo/tools/country-data/build.mjs UY
+step BO.json /repo/tools/country-data/build.mjs BO
+step PE.json /repo/tools/country-data/build.mjs PE
 echo "== $(date '+%F %T') terminado"
