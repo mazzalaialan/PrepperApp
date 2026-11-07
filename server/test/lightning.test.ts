@@ -53,7 +53,7 @@ describe('avisos de rayos', () => {
   it('lee un archivo real del GLM: solo rayos de buena calidad en la región', async () => {
     const flashes = await parseGlm(new Uint8Array(await readFile(new URL('./fixtures/glm-sample.nc', import.meta.url))), 123);
     assert.ok(flashes.length > 50);
-    assert.ok(flashes.every((f) => f.lat >= -60 && f.lat <= -15 && f.lon >= -82 && f.lon <= -45 && f.at === 123));
+    assert.ok(flashes.every((f) => f.lat >= -60 && f.lat <= 2 && f.lon >= -84 && f.lon <= -45 && f.at === 123));
     assert.equal(new Date(startOfKey('OR_GLM-L2-LCFA_G19_s20263080211400_e2026_c.nc')!).toISOString(), '2026-11-04T02:11:40.000Z');
   });
 

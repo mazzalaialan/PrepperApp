@@ -1,9 +1,10 @@
 import { i18n } from '@/core/i18n/i18n';
+import { useSettings } from '@/core/settings/settings';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { WeatherMapValue } from '@/core/settings/settings';
 import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels';
 import type { GeoData, Volcano } from './geo';
-import { fitBounds, pan, project, REGION_BOUNDS, unproject, zoomAt, type Size, type View } from './projection';
+import { fitBounds, homeBounds, pan, project, unproject, zoomAt, type Size, type View } from './projection';
 import { readyImage } from './images';
 import { alertCovers, type Flash, type Hazard, type HazardLevel, type OfficialAlert, type OfficialSeverity, type VolcanoAlert, volcanoAlertAt, type Quake, type ZoneWeather } from './sources';
 
@@ -173,6 +174,7 @@ export function quakeAge(time: number, now: number): ScaleColor {
 }
 
 export function MapCanvas(props: Props) {
+  const country = useSettings((st) => st.settings.country);
   const { view, onView, onSelect } = props;
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -189,9 +191,9 @@ export function MapCanvas(props: Props) {
     return () => observer.disconnect();
   }, []);
 
-  // Primera vista (o al cambiar mucho el tamaño): los tres países completos.
+  // Primera vista (o al cambiar mucho el tamaño): el país elegido (Argentina, Chile y Uruguay, los tres juntos).
   useEffect(() => {
-    if (size && !view) onView(fitBounds(REGION_BOUNDS, size), size);
+    if (size && !view) onView(fitBounds(homeBounds(country), size), size);
     else if (size && view) onView(view, size);
     // Solo cuando cambia el tamaño.
   }, [size]);

@@ -39,6 +39,12 @@ export interface Size {
 
 /** Argentina, Chile y Uruguay con las Malvinas (con margen abajo para la barra de tiempo). */
 export const REGION_BOUNDS = { west: -76, east: -52, south: -58, north: -21 };
+/** Vista inicial según el país elegido: Argentina, Chile y Uruguay comparten la del Cono Sur. */
+export const COUNTRY_BOUNDS: Record<string, typeof REGION_BOUNDS> = {
+  BO: { west: -70, east: -57.4, south: -23, north: -9.6 },
+  PE: { west: -81.5, east: -68.5, south: -18.5, north: 0 },
+};
+export const homeBounds = (country: string) => COUNTRY_BOUNDS[country] ?? REGION_BOUNDS;
 /** Toda América del Sur: hasta donde se puede alejar el mapa. */
 export const CONTINENT_BOUNDS = { west: -82, east: -34, south: -56, north: 13 };
 

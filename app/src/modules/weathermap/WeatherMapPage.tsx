@@ -12,7 +12,7 @@ import { FullscreenStage } from '@/ui/FullscreenStage';
 import { loadGeoData, type GeoData } from './geo';
 import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
-import { fitBounds, REGION_BOUNDS, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
+import { fitBounds, homeBounds, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
 import {
   alertCovers,
   fetchHazards,
@@ -70,6 +70,7 @@ export function WeatherMapPage() {
   const serverUrl = useSettings((s) => s.settings.serverUrl);
   const system = useSettings((s) => s.settings.units);
   const update = useSettings((s) => s.update);
+  const country = useSettings((s) => s.settings.country);
   const saver = useBatterySaver();
   const u = useUnits(system, i18n.language);
   const waypointMap = useWaypoints((s) => s.waypoints);
@@ -472,7 +473,7 @@ export function WeatherMapPage() {
           <button className="icon-btn" type="button" onClick={() => zoom(1 / 1.5)} aria-label={t('weatherMap.zoomOut')}>
             <Minus size={20} />
           </button>
-          <button className="icon-btn" type="button" onClick={() => size && setView(fitBounds(REGION_BOUNDS, size))} aria-label={t('weatherMap.reset')}>
+          <button className="icon-btn" type="button" onClick={() => size && setView(fitBounds(homeBounds(country), size))} aria-label={t('weatherMap.reset')}>
             <Scan size={20} />
           </button>
           {here && (

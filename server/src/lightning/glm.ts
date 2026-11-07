@@ -18,7 +18,7 @@ export interface Flash {
 }
 
 /** Solo se guardan los rayos de esta zona: Argentina, Chile, Uruguay y alrededores. */
-export const REGION = { south: -60, north: -15, west: -82, east: -45 };
+export const REGION = { south: -60, north: 2, west: -84, east: -45 };
 
 const BUCKET = 'https://noaa-goes19.s3.amazonaws.com';
 const PREFIX = 'GLM-L2-LCFA';
