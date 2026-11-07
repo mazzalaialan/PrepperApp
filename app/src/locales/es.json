@@ -408,6 +408,7 @@
       "peInfosalud": {"name": "Infosalud", "desc": "113: orientación de salud del Ministerio de Salud, también salud mental"},
       "peRoadPolice": {"name": "Policía de Carreteras", "desc": "110: accidentes y emergencias en rutas"},
       "peRedCross": {"name": "Cruz Roja Peruana", "desc": "Central de Lima"},
+      "pePoison": {"name": "Intoxicaciones (CICOTOX)", "desc": "Centro de Información, Control Toxicológico de la Universidad de San Marcos (Jr. Puno 1002, piso 3, Lima): también mordeduras y picaduras. Celular y WhatsApp: +51 956 740 869"},
       "peMountain": {"name": "Rescate de alta montaña (Policía, USAM)", "desc": "Unidad de Salvamento de Alta Montaña, Yungay (Áncash): Cordillera Blanca y Huayhuash. Si no atiende el primero, probá el segundo"},
       "peGender": {"name": "Violencia familiar y sexual", "desc": "100: Ministerio de la Mujer, gratuita, las 24 horas"}
     },

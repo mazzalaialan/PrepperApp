@@ -48,8 +48,8 @@ export const CALLS: Record<Country, Partial<Record<CallKey, string>>> = {
   UY: { emergency: '911', fire: '104', poison: '1722' },
   // Bolivia: sin lista oficial (ver emergency/national.ts); sin centro toxicológico nacional.
   BO: { emergency: '110', same: '118', fire: '119' },
-  // Perú: el SAMU (106) no llega a todas las regiones; sin teléfono confirmado del CICOTOX.
-  PE: { emergency: '105', same: '106', fire: '116' },
+  // Perú: el SAMU (106) no llega a todas las regiones.
+  PE: { emergency: '105', same: '106', fire: '116', poison: '+51 1 328 7700' },
 };
 
 /** Nombre del centro toxicológico de cada país, para el texto de la guía. */

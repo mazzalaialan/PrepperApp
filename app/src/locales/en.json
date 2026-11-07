@@ -408,6 +408,7 @@
       "peInfosalud": {"name": "Infosalud", "desc": "113: Ministry of Health advice line, including mental health"},
       "peRoadPolice": {"name": "Highway police", "desc": "110: road accidents and emergencies"},
       "peRedCross": {"name": "Peruvian Red Cross", "desc": "Lima headquarters"},
+      "pePoison": {"name": "Poisoning (CICOTOX)", "desc": "San Marcos University poison information and control center (Jr. Puno 1002, 3rd floor, Lima): also bites and stings. Mobile and WhatsApp: +51 956 740 869"},
       "peMountain": {"name": "High-mountain rescue (Police, USAM)", "desc": "High Mountain Rescue Unit, Yungay (Áncash): Cordillera Blanca and Huayhuash. If the first doesn’t answer, try the second"},
       "peGender": {"name": "Family and sexual violence", "desc": "100: Ministry of Women, free, 24 hours"}
     },

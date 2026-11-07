@@ -74,6 +74,7 @@ export const NATIONAL_NUMBERS: Record<Country, NationalNumber[]> = {
     { id: 'peInfosalud', number: '113', kind: 'medical' },
     { id: 'peRoadPolice', number: '110', kind: 'police' },
     { id: 'peRedCross', number: '01 266 0481', kind: 'medical' },
+    { id: 'pePoison', number: '+51 1 328 7700', kind: 'medical' },
     { id: 'peMountain', number: '043 393333 / 043 493333', kind: 'other', unconfirmed: true },
     { id: 'peGender', number: '100', kind: 'other' },
   ],
