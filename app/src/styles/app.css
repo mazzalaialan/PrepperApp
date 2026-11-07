@@ -3882,3 +3882,40 @@ a.module-card:hover {
   margin: 0 0 6px;
   font-size: 0.85rem;
 }
+
+/* Altímetro. */
+.alt-value {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}
+.alt-chart-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.alt-chart {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+}
+.alt-chart figcaption {
+  grid-column: 2;
+  margin: 0;
+}
+.alt-ringing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.alt-about {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 6px;
+}

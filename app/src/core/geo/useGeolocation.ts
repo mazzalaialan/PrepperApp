@@ -5,6 +5,8 @@ import type { LatLon } from './geo';
 export interface GeoFix extends LatLon {
   /** Altitud sobre el nivel del mar, si el GPS la informa. */
   alt: number | null;
+  /** Error de la altura, en metros (si el GPS lo informa). */
+  altAccuracy: number | null;
   /** Radio de incertidumbre, en metros. */
   accuracy: number;
   timestamp: number;
@@ -17,6 +19,7 @@ function toFix(p: GeolocationPosition): GeoFix {
     lat: p.coords.latitude,
     lon: p.coords.longitude,
     alt: p.coords.altitude,
+    altAccuracy: p.coords.altitudeAccuracy,
     accuracy: p.coords.accuracy,
     timestamp: p.timestamp,
   };

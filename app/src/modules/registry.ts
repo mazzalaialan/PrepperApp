@@ -19,6 +19,7 @@ import {
   Map as MapIcon,
   MapPin,
   Moon,
+  Mountain,
   Package,
   Phone,
   Radio,
@@ -66,6 +67,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'compass', section: 'orientation', icon: Compass, implemented: true, path: '/orientation/compass', requires: ['orientation'] },
   { id: 'declination', section: 'orientation', icon: Magnet, implemented: true, path: '/orientation/declination' },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, implemented: true, path: '/orientation/inclinometer', requires: ['motion'] },
+  { id: 'altimeter', section: 'orientation', icon: Mountain, implemented: true, path: '/orientation/altimeter', requires: ['geolocation'] },
   { id: 'maps', section: 'orientation', icon: MapIcon, implemented: true, path: '/orientation/maps', degradesWithout: ['geolocation'] },
   // Las rutas van dentro de Waypoints (abajo), no como módulo aparte.
   { id: 'waypoints', section: 'orientation', icon: MapPin, implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },
