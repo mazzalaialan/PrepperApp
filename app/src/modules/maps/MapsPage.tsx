@@ -12,6 +12,7 @@ import { RecordButton, useRecordedLines } from '@/modules/tracks/Recording';
 import { useTracks } from '@/modules/tracks/store';
 import { routePoints, useWaypoints } from '@/modules/waypoints/store';
 import { loadGeoData } from '@/modules/weathermap/geo';
+import { outlineFeatures } from './outline';
 import { FullscreenStage } from '@/ui/FullscreenStage';
 import './appSources';
 import { CameraButtons } from './CameraButtons';
@@ -190,19 +191,8 @@ export function MapsPage() {
     const onLine = () => setOnline(navigator.onLine);
     window.addEventListener('online', onLine);
     window.addEventListener('offline', onLine);
-    // Contorno de referencia sin teselas (el del mapa de tiempo): provincias y, aparte, las
-    // fronteras y costas de todos los países de América del Sur, para dibujarlas de otro color.
-    void loadGeoData().then((geo) => {
-      const line = (kind: 'country' | 'province', rings: number[][]) => ({
-        type: 'Feature' as const,
-        properties: { kind },
-        geometry: { type: 'MultiLineString' as const, coordinates: rings.map((ring) => Array.from({ length: ring.length / 2 }, (_, i) => [ring[i * 2]!, ring[i * 2 + 1]!])) },
-      });
-      setOutline({
-        type: 'FeatureCollection',
-        features: [...geo.regions.map((r) => line('province', r.rings)), ...[...geo.borders, ...geo.neighbors].map((b) => line('country', b.rings))],
-      });
-    });
+    // Contorno de referencia sin teselas (el del mapa de tiempo).
+    void loadGeoData().then((geo) => setOutline(outlineFeatures(geo)));
     return () => {
       window.removeEventListener('online', onLine);
       window.removeEventListener('offline', onLine);

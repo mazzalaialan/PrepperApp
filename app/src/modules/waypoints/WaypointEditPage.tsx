@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Copy, Crosshair, Navigation, Trash2 } from 'lucide-react';
 import { useCapability } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, formatDecimal, formatDms, parseCoordinates } from '@/core/geo/geo';
+import { MapPickButton } from '@/modules/maps/MapPickButton';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
 import type { Waypoint } from '@/core/model/types';
@@ -149,6 +150,13 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
                 <Crosshair size={20} />
               </button>
             )}
+            <MapPickButton
+              initial={parsed}
+              onPick={(p) => {
+                setCoords(formatDecimal(p));
+                dirty();
+              }}
+            />
           </div>
           {coords.trim() === '' ? (
             <p className="hint">{t('waypoints.coordinatesHint')}</p>

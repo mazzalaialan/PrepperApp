@@ -1395,6 +1395,12 @@
     "done": "Done: the server deleted your account and all its data. Notifications are now off.",
     "byMail": "If you no longer have the app, you can request deletion by writing to {{email}} with the device code (or the approximate date you turned on notifications)."
   },
+  "mapPick": {
+    "title": "Pick on the map",
+    "open": "Pick on the map",
+    "use": "Use this point",
+    "hint": "Tap the map at the place you want."
+  },
   "gps": {
     "searching": "Searching for GPS signal…",
     "accuracy": "GPS accurate to ±{{value}}",

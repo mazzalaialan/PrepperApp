@@ -3952,3 +3952,10 @@ a.module-card:hover {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* Elegir un punto en el mapa. */
+.map-pick {
+  height: min(60dvh, 480px);
+  border-radius: 10px;
+  overflow: hidden;
+}

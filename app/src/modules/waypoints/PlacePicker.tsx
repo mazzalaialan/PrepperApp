@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCapability } from '@/core/capabilities/capabilities';
-import { formatDms, parseCoordinates, type LatLon } from '@/core/geo/geo';
+import { formatDecimal, formatDms, parseCoordinates, type LatLon } from '@/core/geo/geo';
+import { MapPickButton } from '@/modules/maps/MapPickButton';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useSettings } from '@/core/settings/settings';
 import { GpsStatus } from './components';
@@ -67,15 +68,18 @@ export function usePlacePicker(): { place: PickedPlace | null; picker: ReactNode
       {choice === MANUAL && (
         <div className="field">
           <label htmlFor="place-coords">{t('waypoints.coordinates')}</label>
-          <input
-            id="place-coords"
-            className="input"
-            value={manual ?? ''}
-            onChange={(e) => setManual(e.target.value)}
-            placeholder="-34.603722, -58.381592"
-            aria-invalid={!!manual && !parsed}
-            autoComplete="off"
-          />
+          <div className="input-group">
+            <input
+              id="place-coords"
+              className="input"
+              value={manual ?? ''}
+              onChange={(e) => setManual(e.target.value)}
+              placeholder="-34.603722, -58.381592"
+              aria-invalid={!!manual && !parsed}
+              autoComplete="off"
+            />
+            <MapPickButton initial={parsed} onPick={(p) => setManual(formatDecimal(p))} />
+          </div>
           {manual && !parsed && <p className="error">{t('waypoints.coordinatesInvalid')}</p>}
           {!manual && <p className="hint">{t('place.manualHint')}</p>}
         </div>
