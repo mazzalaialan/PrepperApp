@@ -612,7 +612,7 @@
     "nacionalTitleBO": "Radio Patria Nueva (radio del Estado) más cercana",
     "nacionalNoteBO": "Radio del Estado: Red Patria Nueva (Radio Illimani), FM 94.3 y AM 1020 en La Paz, FM 93.7 en Cochabamba y repetidoras en las capitales. Solo están confirmadas La Paz y Cochabamba: si en tu ciudad sintonizás otra, avisanos.",
     "nacionalTitlePE": "Radio Nacional del Perú más cercana",
-    "nacionalNotePE": "Radio pública: Radio Nacional del Perú (IRTP), con estaciones AM y FM en todo el país. Todavía no tenemos la lista de frecuencias por ciudad: si sintonizás la de tu ciudad, avisanos.",
+    "nacionalNotePE": "Radio pública: Radio Nacional del Perú (IRTP), FM 103.9 y AM 850 en Lima y estaciones en las principales ciudades. AM llega más lejos de noche; FM, solo cerca. Las frecuencias del interior no están confirmadas por el IRTP: si en tu ciudad es otra, avisanos.",
     "nacionalTitleCL": "Radio con cobertura nacional más cercana",
     "nacionalNoteCL": "Chile no tiene radio pública nacional: se muestra la red de Radio Bío-Bío (privada, con emisoras en todas las regiones), que informa las emergencias. Las alertas oficiales de SENAPRED llegan además al celular por el Sistema de Alerta de Emergencia (SAE). Frecuencias vía Wikipedia; confirmalas con tu radio.",
     "packageMissing": "Las emisoras de {{country}} vienen en los datos sin conexión del país: se bajan solos la primera vez que haya conexión.",

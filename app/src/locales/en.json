@@ -612,7 +612,7 @@
     "nacionalTitleBO": "Nearest Radio Patria Nueva (state radio) station",
     "nacionalNoteBO": "State radio: Red Patria Nueva (Radio Illimani), FM 94.3 and AM 1020 in La Paz, FM 93.7 in Cochabamba and repeaters in the capitals. Only La Paz and Cochabamba are confirmed: if you tune in another one in your city, let us know.",
     "nacionalTitlePE": "Nearest Radio Nacional del Perú station",
-    "nacionalNotePE": "Public radio: Radio Nacional del Perú (IRTP), with AM and FM stations across the country. We don’t have the per-city frequency list yet: if you tune in yours, let us know.",
+    "nacionalNotePE": "Public radio: Radio Nacional del Perú (IRTP), FM 103.9 and AM 850 in Lima and stations in the main cities. AM reaches farther at night; FM only nearby. Frequencies outside Lima are not confirmed by IRTP: if yours differs, let us know.",
     "nacionalTitleCL": "Nearest nationwide radio station",
     "nacionalNoteCL": "Chile has no national public radio: this shows the Radio Bío-Bío network (private, with stations in every region), which reports emergencies. SENAPRED official alerts also reach phones through the Emergency Alert System (SAE). Frequencies via Wikipedia; check them with your radio.",
     "packageMissing": "The {{country}} stations come with the country's offline data: it downloads automatically the first time there is a connection.",

@@ -84,8 +84,8 @@ describe('paquetes de Bolivia y Perú', () => {
     expect(near.some((p) => (p.kind === 'medical' || p.kind === 'hospital') && p.source === 'official' && p.phone)).toBe(true);
   });
 
-  it('radio: Patria Nueva en La Paz; Perú todavía sin lista', () => {
+  it('radio: Patria Nueva en La Paz; Radio Nacional en Lima', () => {
     expect(nearestRadio(bo, -16.5, -68.15, 1)[0]).toMatchObject({ city: 'La Paz', fm: 94.3, am: 1020 });
-    expect(pe.radio).toHaveLength(0);
+    expect(nearestRadio(pe, -12.05, -77.04, 1)[0]).toMatchObject({ city: 'Lima', fm: 103.9, am: 850 });
   });
 });
