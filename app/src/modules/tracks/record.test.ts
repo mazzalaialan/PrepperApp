@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Track } from '@/core/model/types';
-import { addPoint, finishedTrack, firstPoints, shouldAdd } from './record';
+import { addPoint, finishedTrack, firstPoints, joinLastSegments, shouldAdd } from './record';
+import { trackStats } from './gpx';
 
 const track = (segments: Track['segments']): Track =>
   ({ id: 'r', name: 'R', desc: '', source: '', link: null, segments, waypoints: [], distanceM: 0, ascentM: 0, descentM: 0, minEle: null, maxEle: null, notes: '', recorded: true, recording: true }) as unknown as Track;
@@ -55,5 +56,15 @@ describe('grabación del recorrido', () => {
     ]);
     expect(firstPoints(t, 3).segments).toEqual([[[1, 1, null], [2, 2, null]], [[3, 3, null]]]);
     expect(firstPoints(t, 99).segments).toEqual(t.segments);
+  });
+
+  it('un corte con la pantalla apagada: separado no suma distancia; unido con una recta, sí', () => {
+    const before: Track['segments'][number] = [[-41, -71, null], [-41.001, -71, null]];
+    const after: Track['segments'][number] = [[-41.01, -71, null], [-41.011, -71, null]];
+    const apart = trackStats([before, after]).distanceM;
+    const joined = joinLastSegments([before, after]);
+    expect(joined).toHaveLength(1);
+    expect(trackStats(joined).distanceM).toBeGreaterThan(apart + 900);
+    expect(joinLastSegments([before])).toEqual([before]);
   });
 });

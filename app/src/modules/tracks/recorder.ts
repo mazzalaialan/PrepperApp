@@ -5,7 +5,7 @@ import type { Id, Track } from '@/core/model/types';
 import { isUnlocked } from '@/core/security/session';
 import { trackStats, type TrackPoint } from './gpx';
 import { addLocked, clearLocked, newRecKey, prepareLocked, readLocked } from './lockedBuffer';
-import { addPoint, finishedTrack, shouldAdd } from './record';
+import { addPoint, finishedTrack, joinLastSegments, shouldAdd } from './record';
 import { useTracks } from './store';
 
 /**
@@ -32,6 +32,9 @@ interface RecorderState {
   warned: boolean;
   /** Segundos que estuvo con la pantalla apagada (sin grabar), para avisarlo al volver. */
   gapS: number | null;
+  /** Desde y hasta cuándo (ms) fue ese corte. */
+  gapFrom: number | null;
+  gapTo: number | null;
   /** Precisión de la última posición del GPS (para mostrar por qué todavía no graba). */
   accuracy: number | null;
   start: (name: string) => Promise<void>;
@@ -39,9 +42,11 @@ interface RecorderState {
   resume: () => void;
   /** Termina y guarda (con ese nombre, si se da); devuelve el track, o null si no llegó a grabar nada. */
   finish: (name?: string) => Promise<Id | null>;
+  /** Después de un corte: unir con una recta el tramo de antes y el de después (por defecto quedan separados). */
+  joinGap: () => void;
 }
 
-const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, accuracy: null } as const;
+const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, gapFrom: null, gapTo: null, accuracy: null } as const;
 
 /** Más que esto con la pantalla apagada, se avisa que no se grabó. */
 const GAP_NOTICE_MS = 20_000;
@@ -142,6 +147,18 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     startWatch();
   },
 
+  joinGap() {
+    const s = get();
+    if (!s.track) return;
+    const segs = s.track.segments;
+    // El tramo nuevo es el último; se pega al anterior.
+    if (segs.length >= 2) {
+      const joined = joinLastSegments(segs);
+      set({ track: { ...s.track, segments: joined, ...trackStats(joined) } });
+    }
+    set({ gapS: null, gapFrom: null, gapTo: null });
+  },
+
   async finish(name) {
     const s = get();
     if (!s.track) return null;
@@ -169,7 +186,17 @@ document.addEventListener('visibilitychange', () => {
     if (recording) void persist();
     return;
   }
-  if (recording && hiddenAt !== null && Date.now() - hiddenAt >= GAP_NOTICE_MS) useRecorder.setState({ gapS: Math.round((Date.now() - hiddenAt) / 1000) });
+  if (recording && hiddenAt !== null && Date.now() - hiddenAt >= GAP_NOTICE_MS) {
+    // Lo recorrido sin GPS no se une con una recta (no se sabe por dónde fue ni cuánto): arranca un tramo nuevo.
+    const s = useRecorder.getState();
+    const segments = s.track && s.track.segments.at(-1)?.length ? [...s.track.segments, []] : s.track?.segments;
+    useRecorder.setState({
+      gapS: Math.round((Date.now() - hiddenAt) / 1000),
+      gapFrom: hiddenAt,
+      gapTo: Date.now(),
+      ...(s.track && segments ? { track: { ...s.track, segments } } : {}),
+    });
+  }
   hiddenAt = null;
 });
 

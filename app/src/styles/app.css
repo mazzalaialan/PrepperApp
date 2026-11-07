@@ -3945,3 +3945,10 @@ a.module-card:hover {
 .national-unconfirmed {
   color: var(--warn);
 }
+
+/* Aviso de corte al grabar: dos opciones. */
+.rec-warn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

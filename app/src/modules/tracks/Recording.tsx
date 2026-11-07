@@ -129,7 +129,8 @@ export function RecordingBar() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const units = useSettings((s) => s.settings.units);
-  const { status, track, error, elapsedMs, since, warned, gapS, accuracy, pause, resume, finish } = useRecorder();
+  const { status, track, error, elapsedMs, since, warned, gapS, gapFrom, gapTo, accuracy, pause, resume, finish } = useRecorder();
+  const hhmm = (ms: number | null) => (ms === null ? '' : new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(ms)));
   const [, tick] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   /** Nombre que se está poniendo al terminar (null: sin el diálogo). */
@@ -211,10 +212,22 @@ export function RecordingBar() {
       {status === 'recording' && (gapS !== null || !warned) && (
         <p className="rec-warn" role="alert" data-testid="rec-warn">
           <TriangleAlert size={16} aria-hidden className="rec-warn-icon" />
-          <span>{gapS !== null ? t('tracks.rec.gap', { time: formatDuration(gapS) }) : t('tracks.rec.screenOff')}</span>
-          <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true, gapS: null })}>
-            {t('tracks.rec.understood')}
-          </button>
+          <span>{gapS !== null ? t('tracks.rec.gap', { time: formatDuration(gapS), from: hhmm(gapFrom), to: hhmm(gapTo) }) : t('tracks.rec.screenOff')}</span>
+          {gapS !== null ? (
+            // Se pregunta: dejar el hueco (no suma distancia) o unir con una recta.
+            <span className="rec-warn-actions">
+              <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true, gapS: null, gapFrom: null, gapTo: null })}>
+                {t('tracks.rec.gapKeep')}
+              </button>
+              <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.getState().joinGap()}>
+                {t('tracks.rec.gapJoin')}
+              </button>
+            </span>
+          ) : (
+            <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true })}>
+              {t('tracks.rec.understood')}
+            </button>
+          )}
         </p>
       )}
       {/* Al terminar se le pone nombre (mientras tanto sigue grabando); después se cambia en el track. */}

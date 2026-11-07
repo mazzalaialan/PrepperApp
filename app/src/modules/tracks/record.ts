@@ -21,6 +21,12 @@ export function addPoint(segments: TrackPoint[][], p: TrackPoint): TrackPoint[][
   return out;
 }
 
+/** Une el último tramo con el anterior (un corte que el usuario prefiere cerrar con una recta). */
+export function joinLastSegments(segments: TrackPoint[][]): TrackPoint[][] {
+  if (segments.length < 2) return segments;
+  return [...segments.slice(0, -2), [...segments.at(-2)!, ...segments.at(-1)!]];
+}
+
 /** Lo grabado, ya terminado: tramos de al menos dos puntos, datos con todo y el recorrido simplificado. */
 export function finishedTrack(track: Track, durationS: number): Track | null {
   const segments = track.segments.filter((s) => s.length > 1);
