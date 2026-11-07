@@ -1352,7 +1352,7 @@
       "subscription": "The browser's notification subscription and a device code.",
       "prefs": "Language, time zone, alert time and which alerts you want.",
       "alerts": "Inventory expirations and shortages (product name and dates).",
-      "places": "The alert locations, rounded: your last known location, waypoints with alerts, the garden and storage places.",
+      "places": "The alert locations, rounded to 1 km: your last known location, waypoints with alerts, the garden and storage places.",
       "notices": "Which alerts it already sent you, so they aren't repeated."
     },
     "notStored": "The rest of your data (full inventory, documents, medical records, tracks) never leaves the device and isn't deleted by this. Anything you send to move to another device is deleted on its own after 24 hours.",
@@ -1678,7 +1678,14 @@
     "link": "About, report a problem and contact",
     "footer": "VikArg {{version}} · About, report a problem and contact",
     "description": "Tools to be prepared: inventory, emergencies, navigation, weather and more. Works offline.",
-    "privacy": "Your data stays encrypted on your device: it is not sent anywhere unless you decide to (backup, sharing with a family member or a report).",
+    "privacy": {
+      "title": "Privacy",
+      "device": "Your data (inventory, documents, medical records, waypoints, tracks, garden) stays encrypted on your device and never leaves it.",
+      "server": "If you turn on notifications, the VikArg server keeps just what it needs to alert you with the app closed: inventory expirations and shortages, and the alert locations rounded to 1 km (your waypoints with alerts, the garden, storage places and your last known location, which you can turn off in Settings → Notifications).",
+      "services": "For weather, maps, nearby services and satellite images, the app queries public services (Open-Meteo, your server or OpenFreeMap, OpenStreetMap, NASA) with the coordinates of the area you're looking at, like any website. It doesn't send them your data.",
+      "choice": "Anything else leaves only if you decide: a backup, moving your data to another device (encrypted with your password and deleted from the server after 24 hours), sharing with a family member or sending a report.",
+      "delete": "To delete everything the server has about you: Settings → Delete my account."
+    },
     "source": "Source code",
     "feedbackTitle": "Report a problem or suggest an improvement",
     "feedbackHint": "Tell what happened (or what you would like) in as much detail as possible: what you were doing, what you expected and what happened.",

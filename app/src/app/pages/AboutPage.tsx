@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare } from 'lucide-react';
 import { CAFECITO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
@@ -60,7 +60,17 @@ export function AboutPage() {
         </p>
         <PortableUpdateCheck />
         <p className="hint" style={{ margin: 0 }}>{t('about.description')}</p>
-        <p className="hint" style={{ margin: 0 }}>{t('about.privacy')}</p>
+        <div className="stack" style={{ gap: 4 }} data-testid="about-privacy">
+          <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('about.privacy.title')}</h3>
+          <ul className="about-privacy hint">
+            {(['device', 'server', 'services', 'choice'] as const).map((k) => (
+              <li key={k}>{t(`about.privacy.${k}`)}</li>
+            ))}
+            <li>
+              <Link to="/settings">{t('about.privacy.delete')}</Link>
+            </li>
+          </ul>
+        </div>
         <OfficialWeatherNotice />
         <p className="hint" style={{ margin: 0, fontStyle: 'italic' }}>{t('app.motto')}</p>
         <a className="btn" href={REPO_URL} target="_blank" rel="noreferrer">

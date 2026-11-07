@@ -15,7 +15,7 @@ Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y func
 
 - **Offline-first:** todo lo que puede funcionar sin conexión, funciona sin conexión.
 - **Autosuficiencia:** nada depende obligatoriamente de servicios de terceros. El servidor es opcional y autoalojable.
-- **Privacidad:** los datos del usuario se cifran en el dispositivo (AES-256-GCM).
+- **Privacidad:** los datos del usuario se cifran en el dispositivo (AES-256-GCM). Con las notificaciones activadas, el servidor guarda solo lo necesario para los avisos (vencimientos y lugares redondeados a 1 km), y se borra desde Ajustes → Eliminar mi cuenta.
 
 La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 

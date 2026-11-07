@@ -3932,3 +3932,11 @@ a.module-card:hover {
   font-weight: 600;
   color: var(--ok);
 }
+
+/* Privacidad en Acerca de. */
+.about-privacy {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 4px;
+}

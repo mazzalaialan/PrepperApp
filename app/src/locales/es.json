@@ -1352,7 +1352,7 @@
       "subscription": "La suscripción de notificaciones del navegador y un código de dispositivo.",
       "prefs": "Idioma, zona horaria, hora de los avisos y qué avisos querés recibir.",
       "alerts": "Los vencimientos y faltantes del inventario (nombre del producto y fechas).",
-      "places": "Los lugares de los avisos, redondeados: tu última ubicación conocida, los waypoints con avisos, la huerta y los depósitos.",
+      "places": "Los lugares de los avisos, redondeados a 1 km: tu última ubicación conocida, los waypoints con avisos, la huerta y los depósitos.",
       "notices": "Qué avisos ya te mandó, para no repetirlos."
     },
     "notStored": "El resto de tus datos (inventario completo, documentos, fichas médicas, tracks) nunca sale del dispositivo y no se borra con esto. Lo que mandes para pasar a otro dispositivo se borra solo a las 24 horas.",
@@ -1678,7 +1678,14 @@
     "link": "Acerca de, reportar un problema y contacto",
     "footer": "VikArg {{version}} · Acerca de, reportar un problema y contacto",
     "description": "Herramientas para estar preparado: inventario, emergencias, orientación, clima y más. Funciona sin conexión.",
-    "privacy": "Tus datos quedan cifrados en tu dispositivo: no se envían a ningún lado salvo que vos lo decidas (backup, compartir con un familiar o un reporte).",
+    "privacy": {
+      "title": "Privacidad",
+      "device": "Tus datos (inventario, documentos, fichas médicas, waypoints, tracks, huerta) quedan cifrados en tu dispositivo y no salen de ahí.",
+      "server": "Si activás las notificaciones, el servidor VikArg guarda lo justo para avisarte con la app cerrada: los vencimientos y faltantes del inventario, y los lugares de los avisos redondeados a 1 km (tus waypoints con avisos, la huerta, los depósitos y tu última ubicación conocida, que se puede apagar en Ajustes → Notificaciones).",
+      "services": "Para el clima, los mapas, los servicios cercanos y las imágenes de satélite, la app consulta servicios públicos (Open-Meteo, tu servidor o OpenFreeMap, OpenStreetMap, NASA) con las coordenadas de la zona que estás mirando, como cualquier página web. No les manda tus datos.",
+      "choice": "Lo demás sale solo si vos lo decidís: un backup, pasar tus datos a otro dispositivo (cifrado con tu contraseña y borrado del servidor a las 24 horas), compartir con un familiar o mandar un reporte.",
+      "delete": "Para borrar todo lo que el servidor tiene de vos: Ajustes → Eliminar mi cuenta."
+    },
     "source": "Código fuente",
     "feedbackTitle": "Reportar un problema o sugerir una mejora",
     "feedbackHint": "Contá qué pasó (o qué te gustaría) con el mayor detalle posible: qué estabas haciendo, qué esperabas y qué pasó.",

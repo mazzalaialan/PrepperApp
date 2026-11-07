@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const PASSWORD = 'prueba-segura-123';
 
-test('acerca de: versión, reportar un problema o sugerencia y cafecito', async ({ page }) => {
+test('acerca de: versión, reportar un problema o sugerencia y cafecito', async ({ page }, testInfo) => {
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Repetir contraseña').fill(PASSWORD);
@@ -15,6 +15,12 @@ test('acerca de: versión, reportar un problema o sugerencia y cafecito', async 
   await page.getByRole('link', { name: /Acerca de, reportar un problema y contacto/ }).click();
   await expect(page.getByRole('heading', { name: 'Acerca de' })).toBeVisible();
   await expect(page.getByTestId('about-version')).toHaveText(/^Versión \d+\.\d+\.\d+/);
+  // Privacidad: dice qué guarda el servidor y cómo borrarlo.
+  const privacy = page.getByTestId('about-privacy');
+  await expect(privacy).toContainText('quedan cifrados en tu dispositivo');
+  await expect(privacy).toContainText('redondeados a 1 km');
+  await expect(privacy.getByRole('link', { name: 'Para borrar todo lo que el servidor tiene de vos: Ajustes → Eliminar mi cuenta.' })).toHaveAttribute('href', '#/settings');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-81-about-privacy.png`, fullPage: true });
 
   // Reportar: sin mensaje no se puede enviar; con mensaje arma el issue con la versión.
   const github = page.getByTestId('about-github');
