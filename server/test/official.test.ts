@@ -177,7 +177,10 @@ describe('volcanes (OAVV) y ceniza (SIGMET)', () => {
 
   it('SIGMET: solo la región; con polígono, alturas y quien lo emite', () => {
     const list = JSON.parse(fixture('sigmets.json')) as Parameters<typeof parseSigmets>[0];
-    assert.equal(parseSigmets(list).length, 0); // ese día no había en la región
+    // Ese día solo había en la región los del Sangay y el Reventador (Ecuador, cerca del norte de Perú).
+    const inRegion = parseSigmets(list);
+    assert.equal(inRegion.length, 4);
+    assert.ok(inRegion.every((a) => /Sangay|Reventador/.test(a.headline)));
     const ours = { firId: 'SAVF', firName: 'SAVF COMODORO RIVADAVIA', hazard: 'VA', qualifier: 'ERUPTION MT HUDSON', validTimeFrom: 1793921580, validTimeTo: 1793943180, base: 0, top: 22000, dir: 'E', spd: '20', coords: [{ lat: -45.9, lon: -72.97 }, { lat: -45.9, lon: -70 }, { lat: -46.5, lon: -70 }, { lat: -45.9, lon: -72.97 }] };
     const [a] = parseSigmets([ours]);
     assert.equal(a!.headline, 'Ceniza volcánica del Hudson');

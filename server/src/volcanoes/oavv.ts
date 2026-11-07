@@ -20,9 +20,10 @@ export interface VolcanoAlert {
   level: VolcanoLevel;
   lat: number;
   lon: number;
-  /** Último reporte (PDF del OAVV). */
+  /** Último reporte (PDF del OAVV) o la página del organismo. */
   report: string;
-  source: 'OAVV';
+  /** OAVV (Argentina y frontera con Chile) o CENVUL (Perú). */
+  source: 'OAVV' | 'CENVUL';
 }
 
 const BASE = 'https://oavv.segemar.gob.ar';

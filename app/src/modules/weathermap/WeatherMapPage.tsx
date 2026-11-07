@@ -665,7 +665,7 @@ function FeatureCard({
       const alert = volcanoAlertAt(volcanoAlerts, v.lat, v.lon);
       title = v.name;
       lines = [
-        alert ? t('weatherMap.volcanoAlert', { level: t(`weatherMap.volcanoLevel.${alert.level}`) }) : '',
+        alert ? t('weatherMap.volcanoAlert', { level: t(`weatherMap.volcanoLevel.${alert.level}`), agency: alert.source === 'CENVUL' ? 'CENVUL, IGP' : 'OAVV, SEGEMAR' }) : '',
         [v.type, v.country].filter(Boolean).join(' · '),
         v.elevation !== null ? t('weatherMap.elevation', { value: u.altitude(v.elevation) }) : '',
         v.lastEruption === null

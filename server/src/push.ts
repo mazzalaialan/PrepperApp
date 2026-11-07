@@ -41,7 +41,7 @@ export interface PushPayload {
    */
   official?: {
     key: string;
-    source: 'SMN' | 'DMC' | 'INUMET' | 'SIGMET';
+    source: 'SMN' | 'DMC' | 'INUMET' | 'SENAMHI_BO' | 'SENAMHI_PE' | 'SIGMET';
     senderName: string;
     event: string;
     headline: string;
@@ -67,6 +67,8 @@ export interface PushPayload {
     bearing: number;
     stock?: string[];
     url: string;
+    /** Organismo que da el nivel: OAVV (Argentina) o CENVUL (Perú). Sin él, OAVV. */
+    source?: 'OAVV' | 'CENVUL';
   };
   /** Huerta: helada (por lugar), riego (por lugar) o las tareas del día juntas (ver garden/watch.ts). */
   garden?: GardenPush;

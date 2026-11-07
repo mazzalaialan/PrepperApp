@@ -210,14 +210,14 @@ export async function fetchRainMap(serverUrl: string): Promise<RainMap> {
   return { at: data.at ?? null, bounds: data.bounds, image: data.image ? `${base}${data.image}` : null };
 }
 
-// ---------- Alertas oficiales (SMN, DMC, INUMET; desde el servidor propio) ----------
+// ---------- Alertas oficiales (SMN, DMC, INUMET, SENAMHI de Bolivia y Perú; desde el servidor propio) ----------
 
 export type OfficialSeverity = 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
 
 /** Alerta de un servicio meteorológico, tal como la publica (CAP). Ver server/src/official/. */
 export interface OfficialAlert {
   key: string;
-  source: 'SMN' | 'DMC' | 'INUMET' | 'SIGMET';
+  source: 'SMN' | 'DMC' | 'INUMET' | 'SENAMHI_BO' | 'SENAMHI_PE' | 'SIGMET';
   senderName: string;
   event: string;
   headline: string;
@@ -231,7 +231,7 @@ export interface OfficialAlert {
   areas: { desc: string; polygons: [number, number][][] }[];
 }
 
-/** Volcán con alerta técnica distinta de verde (OAVV, SEGEMAR), con la ubicación del Smithsonian. */
+/** Volcán con alerta técnica distinta de verde (OAVV de Argentina o CENVUL de Perú), con la ubicación del Smithsonian. */
 export interface VolcanoAlert {
   name: string;
   country: string;
@@ -239,6 +239,8 @@ export interface VolcanoAlert {
   lat: number;
   lon: number;
   report: string;
+  /** Sin él (servidores viejos), OAVV. */
+  source?: 'OAVV' | 'CENVUL';
 }
 
 export async function fetchOfficialAlerts(serverUrl: string): Promise<{ items: OfficialAlert[]; volcanoes: VolcanoAlert[] }> {

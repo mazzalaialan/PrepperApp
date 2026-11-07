@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alertsNotification, lightningNotification, rainNotification } from './format';
+import { alertsNotification, lightningNotification, officialNotification, rainNotification, volcanoNotification } from './format';
 
 describe('texto de notificaciones', () => {
   it('lista lo más urgente primero y resume el resto', () => {
@@ -92,3 +92,19 @@ describe('aviso de peligro natural', () => {
   });
 });
 
+describe('Bolivia y Perú', () => {
+  it('alerta del SENAMHI de Perú: el nombre del organismo en el título', () => {
+    const n = officialNotification(
+      { key: 'SENAMHI_PE:458:1:4', source: 'SENAMHI_PE', senderName: 'Servicio Nacional de Meteorología e Hidrología del Perú (SENAMHI)', event: 'Calor', headline: 'Aviso N.° 458, nivel rojo · Incremento de temperatura diurna', severity: 'Extreme', onset: '2026-11-09T05:00:00Z', expires: '2026-11-10T04:59:59Z', here: true, fixAt: null, places: [], stock: [], url: '' },
+      'es',
+    );
+    expect(n.title).toBe('SENAMHI Perú: Aviso N.° 458, nivel rojo · Incremento de temperatura diurna (extrema)');
+    expect(n.body).toMatch(/SENAMHI\)/);
+  });
+
+  it('volcán de Perú: según el CENVUL', () => {
+    const v = { placeId: 'here', label: null, fixAt: null, name: 'VOLCÁN SABANCAYA', level: 'orange' as const, distanceKm: 70, bearing: 315, url: 'https://cenvul.igp.gob.pe/', source: 'CENVUL' as const };
+    expect(volcanoNotification(v, 'es').body).toMatch(/^Según el Centro Vulcanológico Nacional del Instituto Geofísico del Perú/);
+    expect(volcanoNotification({ ...v, source: undefined }, 'es').body).toMatch(/OAVV/);
+  });
+});

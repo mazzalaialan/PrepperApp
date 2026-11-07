@@ -46,6 +46,8 @@ const TEXT = {
     hazardStock: (places: string) => `Tenés reserva cerca: ${places}. Si podés, ponela a resguardo.`,
     volcano: (name: string, level: string, km: number, dir: string, place: string) => `Volcán ${name}: alerta técnica ${level} · a ${km} km al ${dir} de ${place}`,
     volcanoBody: 'Según el Observatorio Argentino de Vigilancia Volcánica (OAVV, SEGEMAR). Tocá para ver el reporte. Seguí las indicaciones de Protección Civil.',
+    volcanoBodyCENVUL: 'Según el Centro Vulcanológico Nacional del Instituto Geofísico del Perú (CENVUL). Tocá para ver el reporte. Seguí las indicaciones de Defensa Civil (INDECI).',
+    sources: { SENAMHI_BO: 'SENAMHI Bolivia', SENAMHI_PE: 'SENAMHI Perú', SIGMET: 'SIGMET' } as Record<string, string>,
     volcanoLevels: { yellow: 'amarilla', orange: 'naranja', red: 'roja' },
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Incluye ${places}.`,
@@ -94,6 +96,8 @@ const TEXT = {
     hazardStock: (places: string) => `You have supplies nearby: ${places}. If you can, move them to safety.`,
     volcano: (name: string, level: string, km: number, dir: string, place: string) => `${name} volcano: ${level} technical alert · ${km} km ${dir} of ${place}`,
     volcanoBody: 'According to the Argentine Volcano Observatory (OAVV, SEGEMAR). Tap to see the report. Follow civil protection instructions.',
+    volcanoBodyCENVUL: 'According to the National Volcano Center of the Geophysical Institute of Peru (CENVUL). Tap to see the report. Follow civil defense (INDECI) instructions.',
+    sources: { SENAMHI_BO: 'SENAMHI Bolivia', SENAMHI_PE: 'SENAMHI Peru', SIGMET: 'SIGMET' } as Record<string, string>,
     volcanoLevels: { yellow: 'yellow', orange: 'orange', red: 'red' },
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Includes ${places}.`,
@@ -217,10 +221,10 @@ export function hazardNotification(h: HazardPush, lang: Lang, now = Date.now()):
   };
 }
 
-/** Alerta oficial (SMN, DMC, INUMET) que manda el servidor. ⚠ Mismo tipo que `official` en server/src/push.ts. */
+/** Alerta oficial (SMN, DMC, INUMET, SENAMHI de Bolivia y Perú) que manda el servidor. ⚠ Mismo tipo que `official` en server/src/push.ts. */
 export interface OfficialPush {
   key: string;
-  source: 'SMN' | 'DMC' | 'INUMET';
+  source: 'SMN' | 'DMC' | 'INUMET' | 'SENAMHI_BO' | 'SENAMHI_PE' | 'SIGMET';
   senderName: string;
   event: string;
   headline: string;
@@ -239,7 +243,7 @@ export function officialNotification(o: OfficialPush, lang: Lang, now = Date.now
   const when = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const where = [...(o.here ? [tx.officialHere] : []), ...o.places];
   const sev = tx.severities[o.severity];
-  const title = tx.official(o.source, o.headline) + (sev ? ` (${sev})` : '');
+  const title = tx.official(tx.sources[o.source] ?? o.source, o.headline) + (sev ? ` (${sev})` : '');
   const body = [
     where.length ? tx.officialWhere(where.join(', ')) : '',
     tx.officialValid(when.format(new Date(o.onset)), when.format(new Date(o.expires))),
@@ -262,6 +266,8 @@ export interface VolcanoPush {
   bearing: number;
   stock?: string[];
   url: string;
+  /** Organismo: OAVV (Argentina) o CENVUL (Perú); sin él, OAVV. */
+  source?: 'OAVV' | 'CENVUL';
 }
 
 /** "VOLCÁN VILLARRICA" → "Villarrica"; "CV. NEVADOS DE CHILLÁN" → "Nevados De Chillán". */
@@ -276,7 +282,7 @@ export function volcanoNotification(v: VolcanoPush, lang: Lang, now = Date.now()
   const dir = tx.dirs[Math.round((((v.bearing % 360) + 360) % 360) / 45) % 8]!;
   const title = tx.volcano(volcanoTitle(v.name), tx.volcanoLevels[v.level], Math.max(1, v.distanceKm), dir, v.label ?? tx.officialHere);
   const extra = (v.stock?.length ? `\n${tx.hazardStock(v.stock.join(', '))}` : '') + lastFixNote(v.fixAt, lang, now);
-  return { title, body: tx.volcanoBody + extra };
+  return { title, body: (v.source === 'CENVUL' ? tx.volcanoBodyCENVUL : tx.volcanoBody) + extra };
 }
 
 export function lightningNotification(l: LightningPush, lang: Lang, now = Date.now()): { title: string; body: string } {

@@ -10,8 +10,8 @@ import type { OfficialAlert } from './cap.ts';
  */
 
 export const SIGMET_URL = 'https://aviationweather.gov/api/data/isigmet?format=json&hazard=va';
-/** Argentina, Chile, Uruguay y alrededores. */
-const REGION = { west: -82, east: -48, south: -60, north: -14 };
+/** Argentina, Chile, Uruguay, Bolivia, Perú y alrededores. */
+const REGION = { west: -84, east: -48, south: -60, north: 2 };
 
 interface Sigmet {
   firId?: string;

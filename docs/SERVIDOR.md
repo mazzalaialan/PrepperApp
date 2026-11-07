@@ -209,7 +209,7 @@ Un archivo nuevo reemplaza al anterior solo si es JSON válido, trae fecha y no 
 
 ## Aviso de fuentes caídas
 
-Si una fuente externa (SMN, Dirección Meteorológica de Chile, INUMET, SIGMET de ceniza, OAVV, USGS, GDACS, Open-Meteo o los rayos del GOES-19) falla 3 veces seguidas durante al menos 30 minutos, el servidor manda **un** mail a `ADMIN_EMAIL`, y otro cuando vuelve a responder. El estado se guarda en la base (`source_status`), así que reiniciar no repite el aviso. Mientras tanto la app sigue mostrando lo último que se pudo leer. Para Gmail hace falta la verificación en 2 pasos y una contraseña de aplicación (Cuenta de Google → Seguridad → Contraseñas de aplicaciones).
+Si una fuente externa (SMN, Dirección Meteorológica de Chile, INUMET, los SENAMHI de Bolivia y Perú, SIGMET de ceniza, OAVV, CENVUL, USGS, GDACS, Open-Meteo o los rayos del GOES-19) falla 3 veces seguidas durante al menos 30 minutos, el servidor manda **un** mail a `ADMIN_EMAIL`, y otro cuando vuelve a responder. El estado se guarda en la base (`source_status`), así que reiniciar no repite el aviso. Mientras tanto la app sigue mostrando lo último que se pudo leer. Para Gmail hace falta la verificación en 2 pasos y una contraseña de aplicación (Cuenta de Google → Seguridad → Contraseñas de aplicaciones).
 
 ## Avisos de actualizaciones importantes
 

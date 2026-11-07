@@ -20,7 +20,9 @@ import { createOfficialCache, FEEDS, fetchOfficial } from './official/sources.ts
 import { OFFICIAL_DEFAULTS, runOfficialWatch } from './official/watch.ts';
 import type { CapSource, OfficialAlert } from './official/cap.ts';
 import { fetchAshSigmets } from './official/sigmet.ts';
-import { fetchVolcanoAlerts } from './volcanoes/oavv.ts';
+import { createPeCache, fetchSenamhiBo, fetchSenamhiPe } from './official/senamhi.ts';
+import { fetchCenvul } from './volcanoes/cenvul.ts';
+import { fetchVolcanoAlerts, type VolcanoAlert } from './volcanoes/oavv.ts';
 import { runVolcanoWatch } from './volcanoes/watch.ts';
 import { createMailNotifier, createSourceMonitor } from './monitor/sources.ts';
 
@@ -40,6 +42,7 @@ const observedRain = createObservedRainStatus();
 const rainMapStore = createRainMapStore();
 const officialStore = createOfficialStore();
 const officialCache = createOfficialCache();
+const senamhiPeCache = createPeCache();
 const app = await buildApp(
   config,
   db,
@@ -204,6 +207,22 @@ async function officialTick() {
         app.log.warn({ err: String(err), source }, 'no se pudieron leer las alertas oficiales');
       }
     }
+    // Bolivia y Perú: sus SENAMHI no publican CAP; se leen sus datos abiertos.
+    const extra: { source: 'SENAMHI_BO' | 'SENAMHI_PE'; label: string; read: () => Promise<OfficialAlert[]> }[] = [
+      { source: 'SENAMHI_BO', label: 'Las alertas del SENAMHI de Bolivia', read: () => fetchSenamhiBo() },
+      { source: 'SENAMHI_PE', label: 'Los avisos del SENAMHI de Perú', read: () => fetchSenamhiPe(senamhiPeCache) },
+    ];
+    for (const { source, label, read } of extra) {
+      try {
+        all.push(...(await read()));
+        await monitor.ok(source, label);
+      } catch (err) {
+        await monitor.fail(source, label, err);
+        failed.push(source);
+        all.push(...officialStore.alerts.filter((a) => a.source === source && Date.parse(a.expires) > Date.now()));
+        app.log.warn({ err: String(err), source }, 'no se pudieron leer las alertas oficiales');
+      }
+    }
     // Ceniza volcánica (SIGMET de aviación, vía NOAA).
     try {
       all.push(...(await fetchAshSigmets()));
@@ -214,19 +233,29 @@ async function officialTick() {
       all.push(...officialStore.alerts.filter((a) => a.source === 'SIGMET' && Date.parse(a.expires) > Date.now()));
       app.log.warn({ err: String(err) }, 'no se pudieron leer los SIGMET de ceniza');
     }
-    // Nivel de alerta de los volcanes (OAVV): cambia despacio, cada media hora.
+    // Nivel de alerta de los volcanes (OAVV de Argentina y CENVUL de Perú): cambia despacio, cada media hora.
     if (Date.now() - volcanoesAt > 30 * 60_000) {
-      try {
-        officialStore.volcanoes = await fetchVolcanoAlerts();
-        volcanoesAt = Date.now();
-        await monitor.ok('OAVV', 'El nivel de alerta de los volcanes (OAVV, SEGEMAR)');
-        const v = await runVolcanoWatch(db, push, officialStore.volcanoes, new Date(), config.rainHereMaxAgeMs);
-        if (v.sent || v.removed) app.log.info(v, 'avisos de volcanes enviados');
-      } catch (err) {
-        await monitor.fail('OAVV', 'El nivel de alerta de los volcanes (OAVV, SEGEMAR)', err);
-        failed.push('OAVV');
-        app.log.warn({ err: String(err) }, 'no se pudo leer el nivel de alerta de los volcanes (OAVV)');
+      const sources = [
+        { id: 'OAVV', label: 'El nivel de alerta de los volcanes (OAVV, SEGEMAR)', read: () => fetchVolcanoAlerts() },
+        { id: 'CENVUL', label: 'El nivel de alerta de los volcanes de Perú (CENVUL, IGP)', read: () => fetchCenvul() },
+      ] as const;
+      const volcanoes: VolcanoAlert[] = [];
+      for (const { id, label, read } of sources) {
+        try {
+          volcanoes.push(...(await read()));
+          await monitor.ok(id, label);
+        } catch (err) {
+          await monitor.fail(id, label, err);
+          failed.push(id);
+          // Si falla, quedan los de esa fuente de la vuelta anterior.
+          volcanoes.push(...officialStore.volcanoes.filter((v) => v.source === id));
+          app.log.warn({ err: String(err), source: id }, 'no se pudo leer el nivel de alerta de los volcanes');
+        }
       }
+      officialStore.volcanoes = volcanoes;
+      volcanoesAt = Date.now();
+      const v = await runVolcanoWatch(db, push, volcanoes, new Date(), config.rainHereMaxAgeMs);
+      if (v.sent || v.removed) app.log.info(v, 'avisos de volcanes enviados');
     }
     officialStore.alerts = all;
     officialStore.failed = failed;

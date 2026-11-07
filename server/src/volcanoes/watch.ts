@@ -70,6 +70,7 @@ export async function runVolcanoWatch(db: Db, push: PushSender, volcanoes: Volca
           bearing: Math.round(bearingDeg(row, v)) % 360,
           ...(stock.length ? { stock } : {}),
           url: v.report,
+          source: v.source,
         },
       });
       if (!delivered) {
