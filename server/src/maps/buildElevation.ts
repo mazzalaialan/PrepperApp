@@ -6,7 +6,7 @@
  *   node src/maps/buildElevation.ts --out /ruta/maps/elevation.pmtiles
  *   (opcional: --bounds oeste,sur,este,norte  --maxzoom 12  --parallel 8)
  *
- * Por defecto: Argentina, Chile y Uruguay hasta zoom 12 (~160.000 teselas).
+ * Por defecto: Argentina, Chile, Uruguay, Bolivia y Perú hasta zoom 12 (~265.000 teselas).
  * Se puede cortar y volver a correr: lo bajado queda en `<out>.parts.sqlite`
  * y solo se pide lo que falta. Al terminar ese archivo se borra.
  */
@@ -17,8 +17,8 @@ import { zxyToTileId } from 'pmtiles';
 import { PmtilesWriter } from './pmtiles.ts';
 
 export const TERRARIUM_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
-/** Argentina, Chile (continental) y Uruguay. */
-export const DEFAULT_BOUNDS = { west: -76, south: -56, east: -53, north: -17.4 };
+/** Argentina, Chile (continental), Uruguay, Bolivia y Perú. */
+export const DEFAULT_BOUNDS = { west: -81.5, south: -56, east: -53, north: 0 };
 
 const lonToX = (lon: number, z: number) => Math.floor(((lon + 180) / 360) * 2 ** z);
 const latToY = (lat: number, z: number) => {

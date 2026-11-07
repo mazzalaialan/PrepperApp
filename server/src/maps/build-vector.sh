@@ -5,7 +5,7 @@
 #   sh server/src/maps/build-vector.sh /ruta/maps
 #
 # Baja el extracto de Sudamérica de Geofabrik (~3,5 GB) y recorta Argentina,
-# Chile y Uruguay. Necesita Docker, ~10 GB de RAM libres y unos 30 GB de disco
+# Chile, Uruguay, Bolivia y Perú. Necesita Docker, ~10 GB de RAM libres y unos 30 GB de disco
 # temporal; tarda de una a varias horas según la máquina. Para otra zona:
 #   AREA=south-america BOUNDS=oeste,sur,este,norte sh build-vector.sh /ruta/maps
 # Si osmdata.openstreetmap.de (polígonos de agua) no responde, se puede usar
@@ -15,7 +15,7 @@ set -eu
 
 OUT_DIR=${1:?Uso: build-vector.sh /ruta/maps}
 AREA=${AREA:-south-america}
-BOUNDS=${BOUNDS:--76,-56,-53,-17.4}
+BOUNDS=${BOUNDS:--81.5,-56,-53,0}
 MEMORY=${MEMORY:-10g}
 WATER_URL=${WATER_URL:-}
 mkdir -p "$OUT_DIR/planetiler"
