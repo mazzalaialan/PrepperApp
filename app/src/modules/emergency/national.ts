@@ -12,11 +12,20 @@ import type { Country } from '@/core/settings/settings';
  *   Información Toxicológica UC); *4141 del Ministerio de Salud.
  * - Uruguay: 911 (todas las emergencias), Bomberos, Prefectura; CIAT (Hospital
  *   de Clínicas); Línea Vida (ASSE) y la línea de violencia doméstica (Inmujeres).
+ * - Perú: lista oficial de gob.pe/547 (Presidencia del Consejo de Ministros).
+ *   La Policía de Alta Montaña (USAM, Yungay) sale de guías de montaña: sin confirmar.
+ * - Bolivia: no hay una lista oficial publicada; 110, 118 y 119 salen de
+ *   guías de viaje de otros gobiernos (Canadá, República Checa): sin confirmar.
+ *   Familia Segura: línea de apoyo psicológico de UNICEF Bolivia.
+ *
+ * Los `unconfirmed` se muestran con esa aclaración y un enlace para avisar si no andan.
  */
 export interface NationalNumber {
   id: string;
   number: string;
   kind: ContactKind;
+  /** Sin fuente oficial: se muestra con una aclaración y un enlace para reportarlo. */
+  unconfirmed?: boolean;
 }
 
 export const NATIONAL_NUMBERS: Record<Country, NationalNumber[]> = {
@@ -49,6 +58,24 @@ export const NATIONAL_NUMBERS: Record<Country, NationalNumber[]> = {
     { id: 'uyPoison', number: '1722', kind: 'medical' },
     { id: 'uyMentalHealth', number: '0800 0767', kind: 'medical' },
     { id: 'uyGender', number: '0800 4141', kind: 'other' },
+  ],
+  BO: [
+    { id: 'boPolice', number: '110', kind: 'police', unconfirmed: true },
+    { id: 'boAmbulance', number: '118', kind: 'medical', unconfirmed: true },
+    { id: 'boFire', number: '119', kind: 'fire', unconfirmed: true },
+    { id: 'boMentalHealth', number: '800 11 3040', kind: 'medical' },
+    { id: 'boGender', number: '800 14 0348', kind: 'other', unconfirmed: true },
+  ],
+  PE: [
+    { id: 'pePolice', number: '105', kind: 'police' },
+    { id: 'peSamu', number: '106', kind: 'medical' },
+    { id: 'peFire', number: '116', kind: 'fire' },
+    { id: 'peCivilDefense', number: '115', kind: 'civilDefense' },
+    { id: 'peInfosalud', number: '113', kind: 'medical' },
+    { id: 'peRoadPolice', number: '110', kind: 'police' },
+    { id: 'peRedCross', number: '01 266 0481', kind: 'medical' },
+    { id: 'peMountain', number: '043 393333 / 043 493333', kind: 'other', unconfirmed: true },
+    { id: 'peGender', number: '100', kind: 'other' },
   ],
 };
 

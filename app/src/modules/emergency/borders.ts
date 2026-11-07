@@ -1,20 +1,17 @@
 /**
- * Contorno de Argentina, Chile y Uruguay (tools/emergency-data/borders.mjs,
+ * Contorno de Argentina, Chile, Uruguay, Bolivia y Perú (tools/emergency-data/borders.mjs,
  * Natural Earth 1:50 m): en qué país se está y a qué distancia del otro, para
  * mostrar las frecuencias de montaña de cada país solo cerca de su territorio
  * y los números de emergencia del país donde uno está.
  */
 
+import { COUNTRIES, type Country } from '@/core/settings/settings';
+
 type Ring = [number, number][];
 
-export interface BordersData {
-  source: string;
-  AR: Ring[];
-  CL: Ring[];
-  UY: Ring[];
-}
+export type BorderCountry = Country;
 
-export type BorderCountry = 'AR' | 'CL' | 'UY';
+export type BordersData = { source: string } & Record<BorderCountry, Ring[]>;
 
 let pending: Promise<BordersData> | null = null;
 
@@ -60,17 +57,17 @@ export function distanceToCountry(data: BordersData, country: BorderCountry, lat
 }
 
 /**
- * País en el que cae el punto (Argentina, Chile o Uruguay); si no cae en
+ * País en el que cae el punto (de los que tiene la app); si no cae en
  * ninguno (por ejemplo en el mar, por la simplificación del borde), el más
  * cercano a menos de 20 km; si no, null.
  */
-export function countryAt(data: BordersData, lat: number, lon: number): 'AR' | 'CL' | 'UY' | null {
-  const all = ['AR', 'CL', 'UY'] as const;
-  const inside = all.find((c) => data[c].some((r) => inRing(r, lon, lat)));
+export function countryAt(data: BordersData, lat: number, lon: number): Country | null {
+  const inside = COUNTRIES.find((c) => data[c]?.some((r) => inRing(r, lon, lat)));
   if (inside) return inside;
-  let best: { c: (typeof all)[number]; d: number } | null = null;
-  for (const c of all) {
-    const d = distanceToCountry(data, c as BorderCountry, lat, lon);
+  let best: { c: Country; d: number } | null = null;
+  for (const c of COUNTRIES) {
+    if (!data[c]) continue;
+    const d = distanceToCountry(data, c, lat, lon);
     if (!best || d < best.d) best = { c, d };
   }
   return best && best.d <= 20_000 ? best.c : null;

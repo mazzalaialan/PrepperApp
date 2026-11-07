@@ -395,11 +395,30 @@
       "uyPrefectura": { "name": "Prefectura (rescate en el agua)", "desc": "106" },
       "uyPoison": { "name": "Intoxicaciones (CIAT)", "desc": "Centro de Información y Asesoramiento Toxicológico del Hospital de Clínicas, las 24 horas: también mordeduras y picaduras" },
       "uyMentalHealth": { "name": "Línea Vida", "desc": "Prevención del suicidio (ASSE), gratuita, las 24 horas. Desde el celular: *0767" },
-      "uyGender": { "name": "Violencia doméstica", "desc": "Orientación de Inmujeres. Desde el celular: *4141" }
+      "uyGender": { "name": "Violencia doméstica", "desc": "Orientación de Inmujeres. Desde el celular: *4141" },
+      "boPolice": {"name": "Policía (Radio Patrullas)", "desc": "110: policía y emergencias"},
+      "boAmbulance": {"name": "Ambulancia", "desc": "118: urgencias médicas. En La Paz también el 165"},
+      "boFire": {"name": "Bomberos", "desc": "119: incendios y rescate"},
+      "boMentalHealth": {"name": "Familia Segura (apoyo psicológico)", "desc": "Línea gratuita de UNICEF Bolivia, de 6 a 24 h: contención emocional y prevención del suicidio. WhatsApp 77797667"},
+      "boGender": {"name": "Violencia contra la mujer", "desc": "Línea gratuita de denuncia y orientación"},
+      "pePolice": {"name": "Policía Nacional", "desc": "105: policía y emergencias en general"},
+      "peSamu": {"name": "Ambulancia (SAMU)", "desc": "106: urgencias médicas en Lima y en las regiones con SAMU; en el resto, el 105 o el 116"},
+      "peFire": {"name": "Bomberos", "desc": "116: incendios, rescates y emergencias médicas (Cuerpo General de Bomberos Voluntarios)"},
+      "peCivilDefense": {"name": "Defensa Civil (INDECI)", "desc": "115: sismos, huaicos, inundaciones y otros desastres"},
+      "peInfosalud": {"name": "Infosalud", "desc": "113: orientación de salud del Ministerio de Salud, también salud mental"},
+      "peRoadPolice": {"name": "Policía de Carreteras", "desc": "110: accidentes y emergencias en rutas"},
+      "peRedCross": {"name": "Cruz Roja Peruana", "desc": "Central de Lima"},
+      "peMountain": {"name": "Rescate de alta montaña (Policía, USAM)", "desc": "Unidad de Salvamento de Alta Montaña, Yungay (Áncash): Cordillera Blanca y Huayhuash. Si no atiende el primero, probá el segundo"},
+      "peGender": {"name": "Violencia familiar y sexual", "desc": "100: Ministerio de la Mujer, gratuita, las 24 horas"}
     },
     "localNoteAR": "Algunos números cambian según la provincia o el municipio: guardá también los de tu zona en \"Mis contactos\".",
     "localNoteCL": "En Chile no hay un número único: 131 ambulancia, 132 bomberos, 133 Carabineros. Guardá también los de tu comuna en \"Mis contactos\".",
     "localNoteUY": "En Uruguay el 911 atiende todas las emergencias. Guardá también la emergencia móvil de tu mutualista en \"Mis contactos\".",
+    "localNoteBO": "En Bolivia no hay un número único: 110 policía, 118 ambulancia, 119 bomberos. Guardá también los de tu ciudad en \"Mis contactos\".",
+    "localNotePE": "En Perú no hay un número único: 105 policía, 116 bomberos, 106 ambulancia (donde hay SAMU). Guardá también el serenazgo de tu distrito en \"Mis contactos\".",
+    "unconfirmed": "Sin confirmar en una fuente oficial.",
+    "unconfirmedLink": "Avisanos si no funciona",
+    "unconfirmedReport": "El número de \"{{name}}\" ({{number}}) no funciona o no es correcto. El que funciona es: ",
     "servicesTitle": "Servicios de emergencia cercanos",
     "servicesEmpty": "Buscá los bomberos, comisarías, hospitales y ambulancias más cercanos y guardalos: quedan acá, con su teléfono y dirección, también sin conexión.",
     "mineTitle": "Mis contactos",
@@ -589,6 +608,10 @@
     "nacionalNote": "AM llega más lejos (de noche, cientos de km); FM se escucha mejor pero solo cerca de la emisora. Frecuencias: Radio Nacional (vía Wikipedia); confirmalas con tu radio.",
     "nacionalTitleUY": "Radio Uruguay (SODRE) más cercana",
     "nacionalNoteUY": "Radio pública: Radio Uruguay (AM 1050 en Montevideo) y su red de repetidoras FM en el interior. AM llega más lejos de noche; FM, solo cerca. Frecuencias: Radiodifusión Nacional del Uruguay (vía Wikipedia); confirmalas con tu radio.",
+    "nacionalTitleBO": "Radio Patria Nueva (radio del Estado) más cercana",
+    "nacionalNoteBO": "Radio del Estado: Red Patria Nueva (Radio Illimani), FM 94.3 y AM 1020 en La Paz, FM 93.7 en Cochabamba y repetidoras en las capitales. Solo están confirmadas La Paz y Cochabamba: si en tu ciudad sintonizás otra, avisanos.",
+    "nacionalTitlePE": "Radio Nacional del Perú más cercana",
+    "nacionalNotePE": "Radio pública: Radio Nacional del Perú (IRTP), con estaciones AM y FM en todo el país. Todavía no tenemos la lista de frecuencias por ciudad: si sintonizás la de tu ciudad, avisanos.",
     "nacionalTitleCL": "Radio con cobertura nacional más cercana",
     "nacionalNoteCL": "Chile no tiene radio pública nacional: se muestra la red de Radio Bío-Bío (privada, con emisoras en todas las regiones), que informa las emergencias. Las alertas oficiales de SENAPRED llegan además al celular por el Sistema de Alerta de Emergencia (SAE). Frecuencias vía Wikipedia; confirmalas con tu radio.",
     "packageMissing": "Las emisoras de {{country}} vienen en los datos sin conexión del país: se bajan solos la primera vez que haya conexión.",
@@ -613,7 +636,9 @@
     "hamLicense": {
       "AR": "En Argentina la licencia la da ENACOM; el Radio Club Argentino y los radioclubes locales dan los cursos (en las inundaciones de La Plata de 2013 sostuvieron las comunicaciones).",
       "CL": "En Chile la licencia la da SUBTEL después de un examen; los radioclubes preparan para rendirlo y muchos tienen redes de emergencia.",
-      "UY": "En Uruguay el permiso lo da URSEC; el Radio Club Uruguayo (CX1AA) y los radioclubes del interior dan los cursos."
+      "UY": "En Uruguay el permiso lo da URSEC; el Radio Club Uruguayo (CX1AA) y los radioclubes del interior dan los cursos.",
+      "BO": "En Bolivia la licencia la da la ATT (Autoridad de Regulación y Fiscalización de Telecomunicaciones y Transportes); el Radio Club de Bolivia y los radioclubes departamentales dan los cursos.",
+      "PE": "En Perú la licencia la da el MTC; el Radio Club Peruano (OA4O) da los cursos. Su red de emergencias (RENER) usa 146.520 MHz en simplex."
     },
     "securityNote": "Las frecuencias de guardaparques, CONAF y el Radio Club de Carabineros están solo para pedir auxilio con la vida en peligro: ante un peligro de vida se puede pedir ayuda por cualquier medio. No se incluyen las de Gendarmería ni policía: no son públicas y muchas están cifradas. Escuchar comunicaciones de fuerzas o servicios sin autorización puede ser delito (en Argentina, Código Penal, art. 153)."
   },
@@ -1667,6 +1692,8 @@
     "AR": "Argentina",
     "CL": "Chile",
     "UY": "Uruguay",
+    "BO": "Bolivia",
+    "PE": "Perú",
     "hint": "Define los números de emergencia, el centro toxicológico y la guía de primeros auxilios. También se cambia en Contactos de emergencia y en la guía."
   },
   "legal": {
@@ -1993,7 +2020,9 @@
     "zoneNoPlace": "Para sugerir la zona hace falta un lugar: el waypoint de un cantero o el lugar del clima. Mientras tanto se usa la Pampeana.",
     "zoneCountry": {
       "CL": "Chile no tiene un calendario oficial de huerta familiar: se usa el de la zona argentina de clima parecido ({{zone}}).",
-      "UY": "Uruguay no tiene un calendario oficial de huerta familiar: se usa el de la zona argentina de clima parecido ({{zone}})."
+      "UY": "Uruguay no tiene un calendario oficial de huerta familiar: se usa el de la zona argentina de clima parecido ({{zone}}).",
+      "BO": "Bolivia todavía no tiene calendario en la app: el clima del altiplano, los valles y el trópico no se parece a ninguna zona argentina. Estamos preparando uno con datos del INIAF; mientras tanto podés elegir a mano la zona más parecida.",
+      "PE": "Perú todavía no tiene calendario en la app: el clima de la costa, la sierra y la selva no se parece a ninguna zona argentina. Estamos preparando uno con datos del INIA; mientras tanto podés elegir a mano la zona más parecida."
     },
     "zoneEstimated": "Para esta zona no hay cartilla del INTA: el calendario es una estimación (heladas suaves, verano muy caluroso y húmedo). Tomalo como orientación.",
     "zones": {

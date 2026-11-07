@@ -3940,3 +3940,8 @@ a.module-card:hover {
   display: grid;
   gap: 4px;
 }
+
+/* Números de emergencia sin fuente oficial. */
+.national-unconfirmed {
+  color: var(--warn);
+}

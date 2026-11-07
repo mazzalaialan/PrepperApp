@@ -395,11 +395,30 @@
       "uyPrefectura": { "name": "Coast guard (water rescue)", "desc": "106" },
       "uyPoison": { "name": "Poisoning (CIAT)", "desc": "Toxicology Information and Advice Center at Hospital de Clínicas, 24 hours: also bites and stings" },
       "uyMentalHealth": { "name": "Línea Vida", "desc": "Suicide prevention (ASSE), free, 24 hours. From a mobile: *0767" },
-      "uyGender": { "name": "Domestic violence", "desc": "Inmujeres helpline. From a mobile: *4141" }
+      "uyGender": { "name": "Domestic violence", "desc": "Inmujeres helpline. From a mobile: *4141" },
+      "boPolice": {"name": "Police (Radio Patrullas)", "desc": "110: police and emergencies"},
+      "boAmbulance": {"name": "Ambulance", "desc": "118: medical emergencies. In La Paz also 165"},
+      "boFire": {"name": "Fire department", "desc": "119: fires and rescue"},
+      "boMentalHealth": {"name": "Familia Segura (psychological support)", "desc": "Free UNICEF Bolivia line, 6 am to midnight: emotional support and suicide prevention. WhatsApp 77797667"},
+      "boGender": {"name": "Violence against women", "desc": "Free reporting and guidance line"},
+      "pePolice": {"name": "National Police", "desc": "105: police and general emergencies"},
+      "peSamu": {"name": "Ambulance (SAMU)", "desc": "106: medical emergencies in Lima and regions with SAMU; elsewhere, 105 or 116"},
+      "peFire": {"name": "Fire department", "desc": "116: fires, rescues and medical emergencies (volunteer fire service)"},
+      "peCivilDefense": {"name": "Civil Defense (INDECI)", "desc": "115: earthquakes, mudslides, floods and other disasters"},
+      "peInfosalud": {"name": "Infosalud", "desc": "113: Ministry of Health advice line, including mental health"},
+      "peRoadPolice": {"name": "Highway police", "desc": "110: road accidents and emergencies"},
+      "peRedCross": {"name": "Peruvian Red Cross", "desc": "Lima headquarters"},
+      "peMountain": {"name": "High-mountain rescue (Police, USAM)", "desc": "High Mountain Rescue Unit, Yungay (Áncash): Cordillera Blanca and Huayhuash. If the first doesn’t answer, try the second"},
+      "peGender": {"name": "Family and sexual violence", "desc": "100: Ministry of Women, free, 24 hours"}
     },
     "localNoteAR": "Some numbers change by province or municipality: save your local ones in \"My contacts\" too.",
     "localNoteCL": "Chile has no single number: 131 ambulance, 132 fire, 133 Carabineros (police). Save your local ones in \"My contacts\" too.",
     "localNoteUY": "In Uruguay 911 handles every emergency. Save your health provider's mobile emergency service in \"My contacts\" too.",
+    "localNoteBO": "Bolivia has no single number: 110 police, 118 ambulance, 119 fire. Save your city’s numbers in \"My contacts\" too.",
+    "localNotePE": "Peru has no single number: 105 police, 116 fire, 106 ambulance (where SAMU operates). Save your district’s serenazgo in \"My contacts\" too.",
+    "unconfirmed": "Not confirmed by an official source.",
+    "unconfirmedLink": "Tell us if it doesn’t work",
+    "unconfirmedReport": "The number for \"{{name}}\" ({{number}}) doesn’t work or is wrong. The one that works is: ",
     "servicesTitle": "Nearby emergency services",
     "servicesEmpty": "Find the nearest fire stations, police, hospitals and ambulances and save them: they stay here, with phone and address, also offline.",
     "mineTitle": "My contacts",
@@ -589,6 +608,10 @@
     "nacionalNote": "AM reaches farther (hundreds of km at night); FM sounds better but only near the station. Frequencies: Radio Nacional (via Wikipedia); check them with your radio.",
     "nacionalTitleUY": "Nearest Radio Uruguay (SODRE) station",
     "nacionalNoteUY": "Public radio: Radio Uruguay (AM 1050 in Montevideo) and its FM repeater network in the interior. AM reaches farther at night; FM only nearby. Frequencies: Radiodifusión Nacional del Uruguay (via Wikipedia); check them with your radio.",
+    "nacionalTitleBO": "Nearest Radio Patria Nueva (state radio) station",
+    "nacionalNoteBO": "State radio: Red Patria Nueva (Radio Illimani), FM 94.3 and AM 1020 in La Paz, FM 93.7 in Cochabamba and repeaters in the capitals. Only La Paz and Cochabamba are confirmed: if you tune in another one in your city, let us know.",
+    "nacionalTitlePE": "Nearest Radio Nacional del Perú station",
+    "nacionalNotePE": "Public radio: Radio Nacional del Perú (IRTP), with AM and FM stations across the country. We don’t have the per-city frequency list yet: if you tune in yours, let us know.",
     "nacionalTitleCL": "Nearest nationwide radio station",
     "nacionalNoteCL": "Chile has no national public radio: this shows the Radio Bío-Bío network (private, with stations in every region), which reports emergencies. SENAPRED official alerts also reach phones through the Emergency Alert System (SAE). Frequencies via Wikipedia; check them with your radio.",
     "packageMissing": "The {{country}} stations come with the country's offline data: it downloads automatically the first time there is a connection.",
@@ -613,7 +636,9 @@
     "hamLicense": {
       "AR": "In Argentina the license is issued by ENACOM; Radio Club Argentino and local clubs run the courses (in the 2013 La Plata floods they kept communications going).",
       "CL": "In Chile the license is issued by SUBTEL after an exam; radio clubs prepare you for it and many run emergency networks.",
-      "UY": "In Uruguay the permit is issued by URSEC; Radio Club Uruguayo (CX1AA) and local clubs run the courses."
+      "UY": "In Uruguay the permit is issued by URSEC; Radio Club Uruguayo (CX1AA) and local clubs run the courses.",
+      "BO": "In Bolivia the license is issued by ATT (the telecom and transport regulator); Radio Club de Bolivia and departmental clubs run the courses.",
+      "PE": "In Peru the license is issued by MTC; Radio Club Peruano (OA4O) runs the courses. Its emergency network (RENER) uses 146.520 MHz simplex."
     },
     "securityNote": "The park ranger, CONAF and Radio Club de Carabineros frequencies are only for calling for help when a life is in danger: with a life at risk you may ask for help by any means. Gendarmerie and police frequencies aren't included: they aren't public and many are encrypted. Listening to forces or services without authorization may be a crime (in Argentina, Penal Code, art. 153)."
   },
@@ -1667,6 +1692,8 @@
     "AR": "Argentina",
     "CL": "Chile",
     "UY": "Uruguay",
+    "BO": "Bolivia",
+    "PE": "Peru",
     "hint": "Sets the emergency numbers, poison center and first aid guide. It can also be changed in Emergency contacts and in the guide."
   },
   "legal": {
@@ -1993,7 +2020,9 @@
     "zoneNoPlace": "A place is needed to suggest the zone: a bed's waypoint or the weather place. Meanwhile, Pampas is used.",
     "zoneCountry": {
       "CL": "Chile has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}}).",
-      "UY": "Uruguay has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}})."
+      "UY": "Uruguay has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}}).",
+      "BO": "Bolivia has no calendar in the app yet: the climate of the altiplano, valleys and tropics doesn’t match any Argentine zone. We are preparing one with INIAF data; meanwhile you can pick the closest zone by hand.",
+      "PE": "Peru has no calendar in the app yet: the climate of the coast, highlands and jungle doesn’t match any Argentine zone. We are preparing one with INIA data; meanwhile you can pick the closest zone by hand."
     },
     "zoneEstimated": "There is no INTA guide for this zone: the calendar is an estimate (mild frosts, very hot and humid summer). Use it as a guideline.",
     "zones": {

@@ -46,6 +46,10 @@ export const CALLS: Record<Country, Partial<Record<CallKey, string>>> = {
   AR: { emergency: '911', same: '107', fire: '100', poison: '0800-333-0160', poisonKids: '0800-444-8694', burns: '011 4923-4082' },
   CL: { emergency: '133', same: '131', fire: '132', poison: '+56 2 2635 3800' },
   UY: { emergency: '911', fire: '104', poison: '1722' },
+  // Bolivia: sin lista oficial (ver emergency/national.ts); sin centro toxicológico nacional.
+  BO: { emergency: '110', same: '118', fire: '119' },
+  // Perú: el SAMU (106) no llega a todas las regiones; sin teléfono confirmado del CICOTOX.
+  PE: { emergency: '105', same: '106', fire: '116' },
 };
 
 /** Nombre del centro toxicológico de cada país, para el texto de la guía. */
@@ -53,6 +57,8 @@ const POISON_NAME: Record<Country, L> = {
   AR: { es: 'Centro Nacional de Intoxicaciones', en: 'the National Poison Center' },
   CL: { es: 'CITUC (centro toxicológico)', en: 'CITUC (poison center)' },
   UY: { es: 'CIAT (centro toxicológico)', en: 'CIAT (poison center)' },
+  BO: { es: 'el centro toxicológico de tu departamento (CIATOX)', en: 'your department’s poison center (CIATOX)' },
+  PE: { es: 'CICOTOX (centro toxicológico de la Universidad de San Marcos)', en: 'CICOTOX (San Marcos University poison center)' },
 };
 
 /**

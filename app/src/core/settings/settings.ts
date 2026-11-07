@@ -101,14 +101,16 @@ export interface Settings {
 export type GardenZone = 'pampeana' | 'nea' | 'noa' | 'cuyo' | 'patagoniaNorte' | 'patagoniaSur';
 
 export type FirstAidEnv = 'city' | 'wild';
-export type Country = 'AR' | 'CL' | 'UY';
-export const COUNTRIES: Country[] = ['AR', 'CL', 'UY'];
+export type Country = 'AR' | 'CL' | 'UY' | 'BO' | 'PE';
+export const COUNTRIES: Country[] = ['AR', 'CL', 'UY', 'BO', 'PE'];
 
-/** Por la zona horaria del dispositivo (Chile y Uruguay tienen la suya); si no, Argentina. */
+/** Por la zona horaria del dispositivo (Chile, Uruguay, Bolivia y Perú tienen la suya); si no, Argentina. */
 export function detectCountry(): Country {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? '';
   if (/^America\/(Santiago|Punta_Arenas)$|^Pacific\/Easter$/.test(zone)) return 'CL';
   if (zone === 'America/Montevideo') return 'UY';
+  if (zone === 'America/La_Paz') return 'BO';
+  if (zone === 'America/Lima') return 'PE';
   return 'AR';
 }
 

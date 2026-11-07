@@ -49,6 +49,14 @@ export function ContactsPage() {
               <span className="list-main">
                 <span className="list-title">{t(`emergency.national.${n.id}.name`)}</span>
                 <span className="list-sub">{t(`emergency.national.${n.id}.desc`)}</span>
+                {n.unconfirmed && (
+                  <span className="list-sub national-unconfirmed" data-testid={`unconfirmed-${n.id}`}>
+                    {t('emergency.unconfirmed')}{' '}
+                    <Link to={`/about?tipo=bug&texto=${encodeURIComponent(t('emergency.unconfirmedReport', { name: t(`emergency.national.${n.id}.name`), number: n.number }))}`}>
+                      {t('emergency.unconfirmedLink')}
+                    </Link>
+                  </span>
+                )}
               </span>
               <PhoneActions phone={n.number} />
             </li>

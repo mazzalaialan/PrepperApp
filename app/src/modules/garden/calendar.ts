@@ -360,9 +360,12 @@ export function monthPlan(zone: Zone, month: number): MonthPlan {
 /**
  * Zona sugerida para un lugar. Uruguay usa la Pampeana; Chile, la zona
  * argentina de clima parecido: el norte, NOA; de Atacama al Biobío, Cuyo; del
- * Biobío al sur, Patagonia sur y andina.
+ * Biobío al sur, Patagonia sur y andina. Bolivia y Perú no se parecen a
+ * ninguna zona argentina (altiplano, selva): sin zona sugerida hasta tener sus
+ * calendarios (INIAF, INIA); se elige a mano.
  */
-export function zoneFor(lat: number, lon: number, country: Country): Zone {
+export function zoneFor(lat: number, lon: number, country: Country): Zone | null {
+  if (country === 'BO' || country === 'PE') return null;
   if (country === 'UY') return 'pampeana';
   if (country === 'CL') {
     if (lat > -27) return 'noa';
