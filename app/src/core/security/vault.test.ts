@@ -68,11 +68,14 @@ describe('vault', () => {
   });
 
   it('verifica la contraseña sin desbloquear ni bloquear', async () => {
-    await initializeVault('contraseña-larga');
+    // Contraseñas de prueba, inventadas para el test (no son credenciales reales).
+    const TEST_PASSWORD = 'contraseña-larga';
+    const WRONG_TEST_PASSWORD = 'no-es-la-contraseña';
+    await initializeVault(TEST_PASSWORD);
     lockVault();
-    expect(await verifyPassword('contraseña-larga')).toBe(true);
+    expect(await verifyPassword(TEST_PASSWORD)).toBe(true);
     expect(isUnlocked()).toBe(false);
-    expect(await verifyPassword('otra-cosa-123')).toBe(false);
+    expect(await verifyPassword(WRONG_TEST_PASSWORD)).toBe(false);
   });
 
   it('recupera con la clave de recuperación (tipeada sin guiones) y permite cambiar la contraseña', async () => {
