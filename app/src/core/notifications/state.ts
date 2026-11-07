@@ -15,10 +15,16 @@ export interface NotificationState {
   /** Último día en que el aviso local (sin servidor) notificó o revisó. */
   lastLocalNotifiedDay: string | null;
   push: PushRegistration | null;
+  /**
+   * Cuentas que hay que borrar del servidor y todavía no lo confirmó (se
+   * desactivaron las notificaciones o se cambió de servidor sin conexión).
+   * Se reintenta al volver la conexión y al abrir la app.
+   */
+  pendingDeletes: PushRegistration[];
 }
 
 const KEY = 'notifications';
-const EMPTY: NotificationState = { lastLocalNotifiedDay: null, push: null };
+const EMPTY: NotificationState = { lastLocalNotifiedDay: null, push: null, pendingDeletes: [] };
 
 export async function readNotificationState(): Promise<NotificationState> {
   return { ...EMPTY, ...((await db.meta.get(KEY))?.value as Partial<NotificationState> | undefined) };

@@ -70,3 +70,56 @@ test('eliminar mi cuenta: pide la contraseña y borra el dispositivo del servido
   await expect(page.getByTestId('account-device')).toHaveCount(0);
   expect((await request.put(`${SERVER}/api/devices/${deviceId}/stock`, { headers: auth, data: { places: [] } })).status()).toBe(401);
 });
+
+test('desactivar las notificaciones sin conexión deja el borrado de la cuenta pendiente y se completa al reintentar', async ({ page, request }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  const res = await request.post(`${SERVER}/api/devices`, {
+    data: { subscription: { endpoint: 'https://push.example.com/e2e2', keys: { p256dh: 'p', auth: 'a' } }, timezone: 'America/Argentina/Buenos_Aires', notifyHour: 9, language: 'es' },
+  });
+  const { deviceId, token } = (await res.json()) as { deviceId: string; token: string };
+  const auth = { authorization: `Bearer ${token}` };
+  // Cuenta activa y notificaciones prendidas, como si las hubiera activado.
+  await page.evaluate(
+    ({ server, deviceId, token }) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('vikarg-user');
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['meta', 'settings'], 'readwrite');
+          tx.objectStore('meta').put({ key: 'notifications', value: { lastLocalNotifiedDay: null, push: { serverUrl: server, deviceId, token }, pendingDeletes: [] } });
+          const settings = tx.objectStore('settings');
+          const get = settings.get('app');
+          get.onsuccess = () => settings.put({ key: 'app', value: { ...(get.result?.value ?? {}), notificationsEnabled: true } });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+        open.onerror = () => reject(open.error);
+      }),
+    { server: SERVER, deviceId, token },
+  );
+  await page.reload();
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await page.goto('/#/settings');
+  await expect(page.getByTestId('disable-deletes')).toContainText('se elimina tu cuenta del servidor');
+
+  // Servidor inalcanzable: se apagan igual, pero el borrado queda pendiente (no se olvida la cuenta).
+  await page.route(`${SERVER}/api/devices/**`, (route) => (route.request().method() === 'DELETE' ? route.abort() : route.continue()));
+  await page.getByRole('button', { name: 'Desactivar' }).click();
+  await expect(page.getByTestId('delete-pending')).toContainText('se borra sola cuando vuelva la conexión');
+  await expect(page.getByTestId('account-pending')).toBeVisible();
+  expect((await request.put(`${SERVER}/api/devices/${deviceId}/stock`, { headers: auth, data: { places: [] } })).status()).toBe(204);
+
+  // Vuelve el servidor: reintentar completa el borrado.
+  await page.unroute(`${SERVER}/api/devices/**`);
+  await page.getByRole('button', { name: 'Reintentar el borrado ahora' }).click();
+  await expect(page.getByTestId('account-done')).toBeVisible();
+  await expect(page.getByTestId('account-pending')).toHaveCount(0);
+  expect((await request.put(`${SERVER}/api/devices/${deviceId}/stock`, { headers: auth, data: { places: [] } })).status()).toBe(401);
+});

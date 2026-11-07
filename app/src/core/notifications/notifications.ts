@@ -76,14 +76,50 @@ async function registerPush(serverUrl: string): Promise<PushRegistration> {
   return { serverUrl: normalizeServerUrl(serverUrl), deviceId, token };
 }
 
-async function unregisterPush(push: PushRegistration): Promise<void> {
-  // Mejor esfuerzo: si el servidor no responde, la suscripción se limpia sola al fallar el envío.
-  await fetch(`${push.serverUrl}/api/devices/${push.deviceId}`, {
+/**
+ * Pide al servidor que borre la cuenta del dispositivo y todos sus datos.
+ * `true` si quedó borrada (o el servidor ya no la conocía); `false` si no se
+ * pudo confirmar (sin conexión, servidor caído).
+ */
+async function deleteRegistration(push: PushRegistration): Promise<boolean> {
+  const res = await fetch(`${push.serverUrl}/api/devices/${push.deviceId}`, {
     method: 'DELETE',
     headers: { authorization: `Bearer ${push.token}` },
-  }).catch(() => undefined);
+  }).catch(() => null);
+  return !!res && (res.ok || res.status === 401);
+}
+
+/**
+ * Apagar las notificaciones (o cambiar de servidor) elimina la cuenta del
+ * servidor. Si no se puede confirmar, queda pendiente y se reintenta: si no,
+ * la app se olvidaría de la cuenta y sus datos quedarían en el servidor.
+ */
+async function unregisterPush(push: PushRegistration): Promise<void> {
+  if (!(await deleteRegistration(push))) {
+    const { pendingDeletes } = await readNotificationState();
+    if (!pendingDeletes.some((p) => p.deviceId === push.deviceId)) await updateNotificationState({ pendingDeletes: [...pendingDeletes, push] });
+  }
   const reg = await navigator.serviceWorker.ready;
   await (await reg.pushManager?.getSubscription())?.unsubscribe();
+}
+
+let retrying: Promise<number> | null = null;
+
+/** Reintenta los borrados pendientes; devuelve cuántos siguen sin confirmar. */
+export function retryPendingDeletes(): Promise<number> {
+  retrying ??= (async () => {
+    const { pendingDeletes } = await readNotificationState();
+    if (!pendingDeletes.length) return 0;
+    const left: PushRegistration[] = [];
+    for (const p of pendingDeletes) if (!(await deleteRegistration(p))) left.push(p);
+    // Se relee por si mientras tanto se agregó otro.
+    const now = (await readNotificationState()).pendingDeletes;
+    const done = new Set(pendingDeletes.filter((p) => !left.includes(p)).map((p) => p.deviceId));
+    const next = now.filter((p) => !done.has(p.deviceId));
+    await updateNotificationState({ pendingDeletes: next });
+    return next.length;
+  })().finally(() => (retrying = null));
+  return retrying;
 }
 
 export interface EnableResult {
@@ -133,13 +169,15 @@ export async function enableNotifications(): Promise<EnableResult> {
   return { localDaily, push, pushError };
 }
 
-export async function disableNotifications(): Promise<void> {
+/** Devuelve `true` si el borrado de la cuenta en el servidor quedó pendiente (sin conexión). */
+export async function disableNotifications(): Promise<boolean> {
   const reg = await navigator.serviceWorker.ready;
   await periodicSync(reg)?.unregister(PERIODIC_SYNC_TAG).catch(() => undefined);
   const state = await readNotificationState();
   if (state.push) await unregisterPush(state.push);
   await updateNotificationState({ push: null });
   await useSettings.getState().update({ notificationsEnabled: false });
+  return (await readNotificationState()).pendingDeletes.length > 0;
 }
 
 /**
@@ -151,7 +189,12 @@ export async function disableNotifications(): Promise<void> {
  */
 export async function deleteServerAccount(): Promise<boolean> {
   const { push } = await readNotificationState();
-  if (!push) return false;
+  if (!push) {
+    // Sin cuenta activa, pero quizás con un borrado pendiente de cuando se apagaron las notificaciones.
+    if (!(await readNotificationState()).pendingDeletes.length) return false;
+    if (await retryPendingDeletes()) throw new ServerError('unreachable');
+    return true;
+  }
   const res = await fetch(`${push.serverUrl}/api/devices/${push.deviceId}`, {
     method: 'DELETE',
     headers: { authorization: `Bearer ${push.token}` },
@@ -211,4 +254,11 @@ export async function sendTestNotification(): Promise<'server' | 'local'> {
   return 'local';
 }
 
-if (typeof window !== 'undefined') window.addEventListener('online', () => void syncPushAlerts());
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    void syncPushAlerts();
+    void retryPendingDeletes();
+  });
+  // Al abrir la app, por si quedó algún borrado de cuenta sin confirmar.
+  setTimeout(() => void retryPendingDeletes(), 5_000);
+}

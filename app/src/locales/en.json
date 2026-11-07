@@ -1344,6 +1344,8 @@
     "cardinalLong": { "N": "North", "NE": "Northeast", "E": "East", "SE": "Southeast", "S": "South", "SW": "Southwest", "W": "West", "NW": "Northwest" }
   },
   "account": {
+    "pending": "You turned notifications off while offline: deleting your server account is pending. It completes on its own once you're back online.",
+    "retry": "Retry deletion now",
     "title": "Delete my account",
     "intro": "VikArg doesn't ask for a username or email: your account on the server is this device, created when you turn on notifications. The server keeps only what it needs to alert you with the app closed:",
     "stored": {
@@ -1533,6 +1535,8 @@
     "createInstead": "Start from scratch"
   },
   "notifications": {
+    "disableDeletes": "Turning them off deletes your server account with all its data (see \"Delete my account\" below). Turning them on again creates a new one.",
+    "deletePending": "Notifications turned off. There was no connection to delete your server account: it will be deleted once you're back online.",
     "serverLocationHint": "The server receives the last location read with the app open (only if you already allowed GPS), rounded to ~1 km, and warns you with the app closed about rain or lightning within 30 km. With the app closed the phone doesn't give GPS to the app: a location older than 24 hours is not used. If you are near a waypoint with alerts, only the waypoint alerts. Turning it off makes the server delete it.",
     "serverLocation": "Use my last known location for rain and lightning alerts",
     "hazards": "Tell me about official alerts and nearby earthquakes, wildfires, floods, cyclones and eruptions",

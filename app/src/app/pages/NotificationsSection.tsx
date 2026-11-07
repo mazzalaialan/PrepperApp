@@ -24,6 +24,7 @@ export function NotificationsSection() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [testSent, setTestSent] = useState<'server' | 'local' | null>(null);
+  const [deletePending, setDeletePending] = useState(false);
   const supported = 'Notification' in window && 'serviceWorker' in navigator;
   const denied = supported && Notification.permission === 'denied';
 
@@ -102,8 +103,13 @@ export function NotificationsSection() {
               <p className="hint" style={{ margin: 0 }}>{t('notifications.updatesHint')}</p>
             </div>
           )}
+          {state?.push && (
+            <p className="hint" style={{ margin: 0 }} data-testid="disable-deletes">
+              {t('notifications.disableDeletes')}
+            </p>
+          )}
           <div className="row-end">
-            <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void run(async () => { await disableNotifications(); setResult(null); })}>
+            <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void run(async () => { setDeletePending(await disableNotifications()); setResult(null); })}>
               <BellOff size={18} /> {t('notifications.disable')}
             </button>
             <button className="btn" type="button" disabled={busy} onClick={() => void run(async () => setTestSent(await sendTestNotification()))}>
@@ -119,6 +125,11 @@ export function NotificationsSection() {
       {testSent && notificationsEnabled && (
         <p className="hint" role="status" data-testid="test-sent">
           {t(testSent === 'server' ? 'notifications.testSentServer' : 'notifications.testSentLocal')}
+        </p>
+      )}
+      {deletePending && !notificationsEnabled && (
+        <p className="hint" role="status" data-testid="delete-pending">
+          {t('notifications.deletePending')}
         </p>
       )}
       {denied && <p className="error">{t('notifications.error.permission-denied')}</p>}

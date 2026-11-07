@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { CONTACT_EMAIL } from '@/core/about';
-import { deleteServerAccount, ServerError } from '@/core/notifications/notifications';
+import { deleteServerAccount, retryPendingDeletes, ServerError } from '@/core/notifications/notifications';
 import { readNotificationState, type PushRegistration } from '@/core/notifications/state';
 import { useSettings } from '@/core/settings/settings';
 import { verifyPassword } from '@/core/security/vault';
@@ -18,6 +18,7 @@ export function AccountSection() {
   const { t } = useTranslation();
   const notificationsEnabled = useSettings((s) => s.settings.notificationsEnabled);
   const [push, setPush] = useState<PushRegistration | null | undefined>(undefined);
+  const [pending, setPending] = useState(0);
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,10 @@ export function AccountSection() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    void readNotificationState().then((s) => setPush(s.push));
+    void readNotificationState().then((s) => {
+      setPush(s.push);
+      setPending(s.pendingDeletes.length);
+    });
   }, [notificationsEnabled, done]);
 
   const close = () => {
@@ -75,6 +79,33 @@ export function AccountSection() {
           <button className="btn btn-danger-outline" type="button" onClick={() => setOpen(true)}>
             <Trash2 size={18} aria-hidden /> {t('account.delete')}
           </button>
+        </>
+      ) : pending > 0 ? (
+        <>
+          <p className="hint" style={{ margin: 0 }} data-testid="account-pending">
+            {t('account.pending')}
+          </p>
+          <button
+            className="btn"
+            type="button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError(null);
+              const left = await retryPendingDeletes();
+              setBusy(false);
+              setPending(left);
+              if (left) setError(t('account.unreachable'));
+              else setDone(true);
+            }}
+          >
+            {t('account.retry')}
+          </button>
+          {error && !open && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
         </>
       ) : (
         !done && (
