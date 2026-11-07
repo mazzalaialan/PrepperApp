@@ -1343,6 +1343,30 @@
     "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SO", "W": "O", "NW": "NO" },
     "cardinalLong": { "N": "Norte", "NE": "Noreste", "E": "Este", "SE": "Sudeste", "S": "Sur", "SW": "Sudoeste", "W": "Oeste", "NW": "Noroeste" }
   },
+  "account": {
+    "title": "Eliminar mi cuenta",
+    "intro": "VikArg no te pide usuario ni mail: tu cuenta en el servidor es este dispositivo, y se crea al activar las notificaciones. El servidor guarda solo lo necesario para avisarte con la app cerrada:",
+    "stored": {
+      "subscription": "La suscripción de notificaciones del navegador y un código de dispositivo.",
+      "prefs": "Idioma, zona horaria, hora de los avisos y qué avisos querés recibir.",
+      "alerts": "Los vencimientos y faltantes del inventario (nombre del producto y fechas).",
+      "places": "Los lugares de los avisos, redondeados: tu última ubicación conocida, los waypoints con avisos, la huerta y los depósitos.",
+      "notices": "Qué avisos ya te mandó, para no repetirlos."
+    },
+    "notStored": "El resto de tus datos (inventario completo, documentos, fichas médicas, tracks) nunca sale del dispositivo y no se borra con esto. Lo que mandes para pasar a otro dispositivo se borra solo a las 24 horas.",
+    "device": "Este dispositivo tiene cuenta en {{server}} (código {{id}}).",
+    "none": "Este dispositivo no tiene cuenta en el servidor: no hay nada para borrar.",
+    "delete": "Eliminar mi cuenta y mis datos del servidor",
+    "confirmTitle": "Eliminar mi cuenta",
+    "confirmText": "Se borra todo lo que el servidor guarda de este dispositivo y dejás de recibir notificaciones. No se puede deshacer. Si después volvés a activar las notificaciones, se crea una cuenta nueva y vacía. Para confirmar, escribí la contraseña de la app.",
+    "password": "Contraseña de la app",
+    "confirm": "Eliminar definitivamente",
+    "wrongPassword": "La contraseña no es correcta. No se borró nada.",
+    "unreachable": "No se pudo conectar con el servidor. No se borró nada: probá de nuevo con conexión.",
+    "failed": "El servidor no pudo borrar la cuenta. No se borró nada: probá de nuevo más tarde.",
+    "done": "Listo: el servidor borró tu cuenta y todos sus datos. Las notificaciones quedaron apagadas.",
+    "byMail": "Si ya no tenés la app, podés pedir el borrado escribiendo a {{email}} con el código de dispositivo (o la fecha aproximada en que activaste las notificaciones)."
+  },
   "gps": {
     "searching": "Buscando señal GPS…",
     "accuracy": "GPS con precisión de ±{{value}}",

@@ -14,6 +14,7 @@ import {
   setTestIterations,
   unlockWithPassword,
   unlockWithRecoveryKey,
+  verifyPassword,
 } from './vault';
 
 setTestIterations(1_000);
@@ -64,6 +65,14 @@ describe('vault', () => {
     await expect(unlockWithPassword('otra-contraseña')).rejects.toBeInstanceOf(WrongSecretError);
     await unlockWithPassword('una-contraseña');
     expect(await repos.waypoints.loadAll()).toEqual([wp]);
+  });
+
+  it('verifica la contraseña sin desbloquear ni bloquear', async () => {
+    await initializeVault('contraseña-larga');
+    lockVault();
+    expect(await verifyPassword('contraseña-larga')).toBe(true);
+    expect(isUnlocked()).toBe(false);
+    expect(await verifyPassword('otra-cosa-123')).toBe(false);
   });
 
   it('recupera con la clave de recuperación (tipeada sin guiones) y permite cambiar la contraseña', async () => {

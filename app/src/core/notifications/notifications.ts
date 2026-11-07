@@ -142,6 +142,31 @@ export async function disableNotifications(): Promise<void> {
   await useSettings.getState().update({ notificationsEnabled: false });
 }
 
+/**
+ * Eliminar mi cuenta: el servidor borra este dispositivo y todo lo suyo
+ * (suscripción, preferencias, vencimientos, lugares de los avisos y avisos ya
+ * enviados). A diferencia de apagar las notificaciones, acá el borrado tiene
+ * que confirmarse: si el servidor no responde, no se olvida la cuenta, para
+ * poder reintentar. Devuelve `false` si este dispositivo no tenía cuenta.
+ */
+export async function deleteServerAccount(): Promise<boolean> {
+  const { push } = await readNotificationState();
+  if (!push) return false;
+  const res = await fetch(`${push.serverUrl}/api/devices/${push.deviceId}`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${push.token}` },
+  }).catch(() => null);
+  if (!res) throw new ServerError('unreachable');
+  // 401: el servidor ya no conoce este dispositivo (se borró antes o se le cayó la suscripción).
+  if (!res.ok && res.status !== 401) throw new ServerError('invalid-response');
+  const reg = await navigator.serviceWorker.ready;
+  await (await reg.pushManager?.getSubscription())?.unsubscribe();
+  await periodicSync(reg)?.unregister(PERIODIC_SYNC_TAG).catch(() => undefined);
+  await updateNotificationState({ push: null });
+  await useSettings.getState().update({ notificationsEnabled: false });
+  return true;
+}
+
 /** Manda al servidor el índice de alertas actual (solo nombre, tipo y fechas). */
 export async function syncPushAlerts(): Promise<void> {
   const { push } = await readNotificationState();

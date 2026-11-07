@@ -3919,3 +3919,16 @@ a.module-card:hover {
   display: grid;
   gap: 6px;
 }
+
+/* Eliminar mi cuenta. */
+.account-list {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 4px;
+}
+.account-done {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ok);
+}

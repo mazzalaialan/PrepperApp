@@ -1343,6 +1343,30 @@
     "cardinal": { "N": "N", "NE": "NE", "E": "E", "SE": "SE", "S": "S", "SW": "SW", "W": "W", "NW": "NW" },
     "cardinalLong": { "N": "North", "NE": "Northeast", "E": "East", "SE": "Southeast", "S": "South", "SW": "Southwest", "W": "West", "NW": "Northwest" }
   },
+  "account": {
+    "title": "Delete my account",
+    "intro": "VikArg doesn't ask for a username or email: your account on the server is this device, created when you turn on notifications. The server keeps only what it needs to alert you with the app closed:",
+    "stored": {
+      "subscription": "The browser's notification subscription and a device code.",
+      "prefs": "Language, time zone, alert time and which alerts you want.",
+      "alerts": "Inventory expirations and shortages (product name and dates).",
+      "places": "The alert locations, rounded: your last known location, waypoints with alerts, the garden and storage places.",
+      "notices": "Which alerts it already sent you, so they aren't repeated."
+    },
+    "notStored": "The rest of your data (full inventory, documents, medical records, tracks) never leaves the device and isn't deleted by this. Anything you send to move to another device is deleted on its own after 24 hours.",
+    "device": "This device has an account on {{server}} (code {{id}}).",
+    "none": "This device has no account on the server: there is nothing to delete.",
+    "delete": "Delete my account and my server data",
+    "confirmTitle": "Delete my account",
+    "confirmText": "Everything the server keeps about this device is deleted and you stop receiving notifications. This can't be undone. If you turn notifications on again later, a new empty account is created. To confirm, type the app password.",
+    "password": "App password",
+    "confirm": "Delete permanently",
+    "wrongPassword": "Wrong password. Nothing was deleted.",
+    "unreachable": "Couldn't reach the server. Nothing was deleted: try again when you're online.",
+    "failed": "The server couldn't delete the account. Nothing was deleted: try again later.",
+    "done": "Done: the server deleted your account and all its data. Notifications are now off.",
+    "byMail": "If you no longer have the app, you can request deletion by writing to {{email}} with the device code (or the approximate date you turned on notifications)."
+  },
   "gps": {
     "searching": "Searching for GPS signal…",
     "accuracy": "GPS accurate to ±{{value}}",

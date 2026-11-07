@@ -226,6 +226,17 @@ docker compose exec vikarg node src/announce.ts --version 0.23.0 \
 
 Título hasta 80 caracteres y texto hasta 300, en español y en inglés (cada celular muestra el de su idioma). El comando dice cuántos se entregaron y borra las suscripciones que ya no existen.
 
+## Eliminar una cuenta
+
+Cada dispositivo puede borrar su cuenta y todos sus datos del servidor desde **Ajustes → Eliminar mi cuenta** (pide la contraseña de la app). Si alguien ya no tiene la app y lo pide por mail con el código de dispositivo:
+
+```bash
+cd PrepperApp/deploy
+docker compose exec vikarg node src/deleteDevice.ts <código de dispositivo>
+```
+
+Borra el dispositivo y, en cascada, sus vencimientos, lugares de avisos, huerta, depósitos y avisos enviados. Toda tabla nueva con `device_id` tiene que llevar `ON DELETE CASCADE` (lo verifica un test).
+
 ## Seguridad
 
 - Cada dispositivo recibe un token propio al registrarse. El servidor guarda solo su hash.

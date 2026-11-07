@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import { deleteDevice } from '../deleteDevice.ts';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Db } from '../db.ts';
 import type { PushSender, PushSubscriptionJson } from '../push.ts';
@@ -413,8 +414,9 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
   );
 
   app.delete<{ Params: { id: string } }>('/api/devices/:id', async (req, reply) => {
+    // Eliminar mi cuenta: las demás tablas del dispositivo se borran en cascada.
     if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
-    db.prepare('DELETE FROM devices WHERE id = ?').run(req.params.id);
+    deleteDevice(db, req.params.id);
     return reply.code(204).send();
   });
 

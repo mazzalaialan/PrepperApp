@@ -5,6 +5,7 @@ import {
   normalizeRecoveryKey,
   unwrapDek,
   wrapDek,
+  WrongSecretError,
   type WrappedKey,
 } from '@/core/crypto/crypto';
 import { db } from '@/core/db/db';
@@ -78,6 +79,21 @@ async function requireHeader(): Promise<VaultHeader> {
 export async function unlockWithPassword(password: string): Promise<void> {
   const header = await requireHeader();
   setDek(await unwrapDek(header.password, password));
+}
+
+/**
+ * Comprueba la contraseña sin cambiar la sesión (para confirmar acciones que
+ * no tienen vuelta atrás, como eliminar la cuenta del servidor).
+ */
+export async function verifyPassword(password: string): Promise<boolean> {
+  const header = await requireHeader();
+  try {
+    await unwrapDek(header.password, password);
+    return true;
+  } catch (err) {
+    if (err instanceof WrongSecretError) return false;
+    throw err;
+  }
 }
 
 /**

@@ -1,0 +1,120 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Trash2 } from 'lucide-react';
+import { CONTACT_EMAIL } from '@/core/about';
+import { deleteServerAccount, ServerError } from '@/core/notifications/notifications';
+import { readNotificationState, type PushRegistration } from '@/core/notifications/state';
+import { useSettings } from '@/core/settings/settings';
+import { verifyPassword } from '@/core/security/vault';
+import { Dialog } from '@/ui/Dialog';
+
+/**
+ * Eliminar mi cuenta: VikArg no tiene usuario y contraseña en el servidor; la
+ * "cuenta" es este dispositivo, que se registra al activar las notificaciones.
+ * Borrarla elimina todo lo que el servidor guarda de él. Pide la contraseña de
+ * la app para que no se borre por un toque accidental.
+ */
+export function AccountSection() {
+  const { t } = useTranslation();
+  const notificationsEnabled = useSettings((s) => s.settings.notificationsEnabled);
+  const [push, setPush] = useState<PushRegistration | null | undefined>(undefined);
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    void readNotificationState().then((s) => setPush(s.push));
+  }, [notificationsEnabled, done]);
+
+  const close = () => {
+    setOpen(false);
+    setPassword('');
+    setError(null);
+  };
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      if (!(await verifyPassword(password))) return setError(t('account.wrongPassword'));
+      await deleteServerAccount();
+      setDone(true);
+      close();
+    } catch (err) {
+      if (!(err instanceof ServerError)) throw err;
+      setError(t(err.code === 'unreachable' ? 'account.unreachable' : 'account.failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card stack" data-testid="account">
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('account.title')}</h2>
+      <p className="hint" style={{ margin: 0 }}>{t('account.intro')}</p>
+      <ul className="account-list hint">
+        {(['subscription', 'prefs', 'alerts', 'places', 'notices'] as const).map((k) => (
+          <li key={k}>{t(`account.stored.${k}`)}</li>
+        ))}
+      </ul>
+      <p className="hint" style={{ margin: 0 }}>{t('account.notStored')}</p>
+
+      {done && (
+        <p className="account-done" role="status" data-testid="account-done">
+          {t('account.done')}
+        </p>
+      )}
+      {push === undefined ? null : push ? (
+        <>
+          <p className="hint" style={{ margin: 0 }} data-testid="account-device">
+            {t('account.device', { server: push.serverUrl, id: push.deviceId })}
+          </p>
+          <button className="btn btn-danger-outline" type="button" onClick={() => setOpen(true)}>
+            <Trash2 size={18} aria-hidden /> {t('account.delete')}
+          </button>
+        </>
+      ) : (
+        !done && (
+          <p className="empty" data-testid="account-none">
+            {t('account.none')}
+          </p>
+        )
+      )}
+      <p className="hint" style={{ margin: 0 }}>{t('account.byMail', { email: CONTACT_EMAIL })}</p>
+
+      {open && (
+        <Dialog title={t('account.confirmTitle')} onClose={close}>
+          <form className="stack" onSubmit={submit}>
+            <p style={{ margin: 0 }}>{t('account.confirmText')}</p>
+            <div className="field">
+              <label htmlFor="account-password">{t('account.password')}</label>
+              <input
+                id="account-password"
+                className="input"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+            <button className="btn btn-danger" type="submit" disabled={!password || busy}>
+              <Trash2 size={18} aria-hidden /> {t('account.confirm')}
+            </button>
+            <button className="btn" type="button" onClick={close}>
+              {t('common.cancel')}
+            </button>
+          </form>
+        </Dialog>
+      )}
+    </section>
+  );
+}

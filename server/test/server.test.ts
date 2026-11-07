@@ -102,6 +102,38 @@ describe('servidor', () => {
     assert.equal((await putAlerts(deviceId, token, [{ ...shortage, kind: 'otro' }])).statusCode, 400);
   });
 
+  it('eliminar mi cuenta: borra el dispositivo y todo lo suyo, solo con su token', async () => {
+    const { deviceId, token } = await register();
+    const other = await register();
+    for (const d of [deviceId, other.deviceId]) {
+      db.prepare('INSERT INTO alerts (device_id, lot_id, item_name, kind, due_date, notify_from) VALUES (?, ?, ?, ?, ?, ?)').run(d, 'l1', 'Atún', 'expiry', '2026-11-30', '2026-10-31');
+      db.prepare('INSERT INTO stock_places (device_id, place_id, label, lat, lon) VALUES (?, ?, ?, ?, ?)').run(d, 'p1', 'Casa', -34.6, -58.4);
+      db.prepare('INSERT INTO hazard_notices (device_id, place_id, event_key, level, notified_at) VALUES (?, ?, ?, ?, ?)').run(d, 'here', 'eq:1', 1, 0);
+      db.prepare('INSERT INTO official_notices (device_id, family, alert_key, severity, expires_at, notified_at) VALUES (?, ?, ?, ?, ?, ?)').run(d, 'smn', 'k', 1, 0, 0);
+    }
+    // Sin el token del dispositivo no se borra nada.
+    const wrong = await app.inject({ method: 'DELETE', url: `/api/devices/${deviceId}`, headers: { authorization: `Bearer ${other.token}` } });
+    assert.equal(wrong.statusCode, 401);
+
+    const res = await app.inject({ method: 'DELETE', url: `/api/devices/${deviceId}`, headers: { authorization: `Bearer ${token}` } });
+    assert.equal(res.statusCode, 204);
+    // Toda tabla con datos de un dispositivo (también las que se agreguen) tiene que quedar sin filas de este y con las del otro.
+    const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[])
+      .map((t) => t.name)
+      .filter((name) => (db.prepare(`PRAGMA table_info(${name})`).all() as { name: string }[]).some((c) => c.name === 'device_id'));
+    assert.ok(tables.length >= 7, `tablas con device_id: ${tables.join(', ')}`);
+    for (const name of tables) {
+      assert.equal((db.prepare(`SELECT COUNT(*) AS n FROM ${name} WHERE device_id = ?`).get(deviceId) as { n: number }).n, 0, name);
+    }
+    for (const name of ['alerts', 'stock_places', 'hazard_notices', 'official_notices']) {
+      assert.equal((db.prepare(`SELECT COUNT(*) AS n FROM ${name} WHERE device_id = ?`).get(other.deviceId) as { n: number }).n, 1, name);
+    }
+    assert.equal((db.prepare('SELECT COUNT(*) AS n FROM devices WHERE id = ?').get(deviceId) as { n: number }).n, 0);
+    // Repetirlo ya no encuentra el dispositivo: la app lo toma como borrado.
+    const again = await app.inject({ method: 'DELETE', url: `/api/devices/${deviceId}`, headers: { authorization: `Bearer ${token}` } });
+    assert.equal(again.statusCode, 401);
+  });
+
   it('borra el dispositivo si la suscripción ya no existe', async () => {
     const { deviceId, token } = await register();
     await putAlerts(deviceId, token, [{ lotId: 'l1', itemName: 'Atún', kind: 'expiry', dueDate: '2026-11-30', notifyFrom: '2026-10-31' }]);

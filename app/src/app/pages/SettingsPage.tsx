@@ -24,6 +24,7 @@ import { Segmented } from '@/ui/Segmented';
 import { useLibrary } from '@/modules/library/store';
 import { useMapZones } from '@/modules/maps/store';
 import { listImported, type ImportedMap } from '@/modules/maps/imported';
+import { AccountSection } from './AccountSection';
 import { NotificationsSection } from './NotificationsSection';
 
 export function SettingsPage() {
@@ -96,6 +97,7 @@ export function SettingsPage() {
       <BackupSection />
       <ConnectionsSection settings={settings} onSave={update} />
       <NotificationsSection />
+      <AccountSection />
       <DeviceSection />
       <StorageSection />
 
