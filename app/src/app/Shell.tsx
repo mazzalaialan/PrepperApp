@@ -22,13 +22,13 @@ import { PortableUpdateNotice } from './PortableUpdateNotice';
 const NAV = [
   { to: '/', key: 'home', icon: House },
   { to: '/first-aid', key: 'firstAid', icon: Siren },
-  { to: '/documents', key: 'documents', icon: FileText },
   { to: '/orientation', key: 'orientation', icon: Compass },
   { to: '/weather', key: 'weather', icon: CloudSun },
+  { to: '/training', key: 'training', icon: Activity },
 ] as const;
 
 const MORE = [
-  { to: '/training', key: 'training', icon: Activity },
+  { to: '/documents', key: 'documents', icon: FileText },
   { to: '/inventory', key: 'inventory', icon: Package },
   { to: '/knots', key: 'knots', icon: Lasso },
   { to: '/garden', key: 'garden', icon: Sprout },

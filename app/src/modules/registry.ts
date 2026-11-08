@@ -36,7 +36,7 @@ import {
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
-export const SECTIONS = ['firstAid', 'documents', 'orientation', 'training', 'weather', 'inventory', 'knots', 'garden', 'library'] as const;
+export const SECTIONS = ['firstAid', 'orientation', 'weather', 'training', 'documents', 'inventory', 'knots', 'garden', 'library'] as const;
 export type Section = (typeof SECTIONS)[number];
 
 export interface ModuleDef {
