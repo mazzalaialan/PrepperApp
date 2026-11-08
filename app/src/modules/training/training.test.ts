@@ -3,7 +3,7 @@ import { GpxError, type TrackPoint } from '@/modules/tracks/gpx';
 import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
 import type { Workout } from '@/core/model/types';
-import { byWeek, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
+import { byWeek, goalProgress, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
@@ -260,5 +260,20 @@ describe('GPX y TCX', () => {
     expect(workout.trackId).toBe(track.id);
     expect(workout.totalS).toBe(120);
     expect(workout.calories).toBeGreaterThan(0);
+  });
+});
+
+describe('objetivos semanales', () => {
+  const week = totalsOf([]);
+  it('sin objetivos no hay nada que mostrar; los que están en 0 no cuentan', () => {
+    expect(goalProgress(week, { distanceKm: 0, minutes: 0, sessions: 0 })).toEqual([]);
+    expect(goalProgress(week, { distanceKm: 10, minutes: 0, sessions: 0 })).toHaveLength(1);
+  });
+  it('mide el avance y marca cuando se cumple (sin pasar de 1)', () => {
+    const w = { ...week, count: 3, distanceM: 12_000, totalS: 1800 };
+    const [d, m, s] = goalProgress(w, { distanceKm: 20, minutes: 30, sessions: 2 });
+    expect(d).toMatchObject({ key: 'distanceKm', fraction: 0.6, reached: false });
+    expect(m).toMatchObject({ key: 'minutes', fraction: 1, reached: true });
+    expect(s).toMatchObject({ key: 'sessions', fraction: 1, reached: true });
   });
 });

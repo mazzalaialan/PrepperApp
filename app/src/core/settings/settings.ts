@@ -97,6 +97,8 @@ export interface Settings {
   knotsLearned: string[];
   /** Última actividad elegida en Entrenamiento. */
   trainingKind: WorkoutKind;
+  /** Objetivos de la semana en Entrenamiento (0 = sin objetivo). */
+  trainingGoals: { distanceKm: number; minutes: number; sessions: number };
   /** Tamaño de letra del visor de la biblioteca (%). */
   readerFontPct: number;
 }
@@ -219,6 +221,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenWateredAt: {},
   knotsLearned: [],
   trainingKind: 'walk',
+  trainingGoals: { distanceKm: 0, minutes: 0, sessions: 0 },
   readerFontPct: 100,
 };
 
@@ -244,6 +247,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
         // Capas nuevas del mapa estelar aparecen activadas aunque ya haya preferencias guardadas.
         starmapLayers: { ...DEFAULT_SETTINGS.starmapLayers, ...stored?.starmapLayers },
         weatherMapLayers: { ...DEFAULT_SETTINGS.weatherMapLayers, ...stored?.weatherMapLayers },
+        trainingGoals: { ...DEFAULT_SETTINGS.trainingGoals, ...stored?.trainingGoals },
         mapLayers: { ...DEFAULT_SETTINGS.mapLayers, ...stored?.mapLayers },
         // Quien ya tenía la app sin servidor recibe el que viene cargado, una sola vez:
         // si después lo vacía a propósito, queda vacío.

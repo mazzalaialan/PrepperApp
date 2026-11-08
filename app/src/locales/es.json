@@ -1501,6 +1501,7 @@
     "pack": "Mochila o carga (kg, opcional)",
     "noWeight": "Sin tu peso no se calculan las calorías.",
     "noWeightLink": "Cargalo en tu ficha médica.",
+    "goals": {"title": "Objetivos de la semana", "hint": "Dejá en blanco los que no quieras. El avance se ve acá arriba y se cuenta de lunes a domingo.", "distanceKm": "Distancia (km)", "minutes": "Tiempo (minutos)", "sessions": "Actividades", "reached": "¡cumplido!"},
     "exportGpx": "Exportar GPX",
     "exportTcx": "Exportar TCX",
     "importFile": "Importar GPX o TCX",

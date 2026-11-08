@@ -79,3 +79,26 @@ export function recalculated(w: Workout, weightKg: number | null, packKg: number
   const kcal = weightKg ? estimate({ kind: w.kind, weightKg, packKg: packKg ?? undefined, movingS: w.movingS || w.totalS, distanceM: w.distanceM, ascentM: w.ascentM, inclinePct: w.inclinePct ?? undefined, intensity: w.intensity ?? undefined }) : 0;
   return { ...w, weightKg, packKg, calories: kcal };
 }
+
+export interface Goals {
+  distanceKm: number;
+  minutes: number;
+  sessions: number;
+}
+
+export interface GoalProgress {
+  key: keyof Goals;
+  done: number;
+  target: number;
+  /** 0 a 1 (se queda en 1 aunque se pase del objetivo). */
+  fraction: number;
+  reached: boolean;
+}
+
+/** Avance de la semana hacia cada objetivo puesto (los que están en 0 no cuentan). */
+export function goalProgress(week: Totals, goals: Goals): GoalProgress[] {
+  const done: Goals = { distanceKm: week.distanceM / 1000, minutes: week.totalS / 60, sessions: week.count };
+  return (Object.keys(goals) as (keyof Goals)[])
+    .filter((k) => goals[k] > 0)
+    .map((key) => ({ key, done: done[key], target: goals[key], fraction: Math.min(1, done[key] / goals[key]), reached: done[key] >= goals[key] }));
+}

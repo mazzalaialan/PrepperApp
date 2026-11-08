@@ -7,7 +7,7 @@ import { useRecorder } from '@/modules/tracks/recorder';
 import { Segmented } from '@/ui/Segmented';
 import { ACTIVITIES, GROUPS, kindsOf, type ActivityGroup, type ActivityKind } from './activities';
 import { useTrainingFormat, useBodyWeight } from './format';
-import { byWeek, recordsOf, totalsOf, weekStart } from './history';
+import { byWeek, goalProgress, recordsOf, totalsOf, weekStart } from './history';
 import { GpxError } from '@/modules/tracks/gpx';
 import { useTracks } from '@/modules/tracks/store';
 import { activityFromFile, parseActivityFile } from './interchange';
@@ -34,6 +34,8 @@ export function TrainingPage() {
   const thisWeek = weeks.find((w) => w.start === currentWeek);
   const week = thisWeek?.totals ?? totalsOf([]);
 
+  const goals = useSettings((s) => s.settings.trainingGoals);
+  const progress = goalProgress(week, goals);
   const navigate = useNavigate();
   const saveTrack = useTracks((s) => s.saveTrack);
   const saveWorkout = useTraining((s) => s.saveWorkout);
@@ -168,6 +170,41 @@ export function TrainingPage() {
             <dd>{f.kcal(week.calories)}</dd>
           </div>
         </dl>
+        {progress.length > 0 && (
+          <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }} data-testid="train-goals">
+            {progress.map((g) => (
+              <li key={g.key}>
+                <span className="hint">
+                  {t(`training.goals.${g.key}`)}: {Math.round(g.done * (g.key === 'distanceKm' ? 10 : 1)) / (g.key === 'distanceKm' ? 10 : 1)} / {g.target}
+                  {g.reached ? ` · ${t('training.goals.reached')}` : ''}
+                </span>
+                <span className="progress">
+                  <span className="progress-bar" data-done={g.reached} style={{ width: `${Math.round(g.fraction * 100)}%` }} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <details>
+          <summary>{t('training.goals.title')}</summary>
+          <div className="stack">
+            <p className="hint" style={{ margin: 0 }}>{t('training.goals.hint')}</p>
+            {(['distanceKm', 'minutes', 'sessions'] as const).map((k) => (
+              <div className="field" key={k}>
+                <label htmlFor={`goal-${k}`}>{t(`training.goals.${k}`)}</label>
+                <input
+                  id={`goal-${k}`}
+                  className="input"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  value={goals[k] || ''}
+                  onChange={(e) => void update({ trainingGoals: { ...goals, [k]: Math.max(0, Number(e.target.value) || 0) } })}
+                />
+              </div>
+            ))}
+          </div>
+        </details>
         {(records.longestM || records.mostAscentM) && (
           <p className="hint" style={{ margin: 0 }} data-testid="train-records">
             {t('training.records')}: {records.longestM ? `${t('training.recordLongest')} ${f.distance(records.longestM)}` : ''}

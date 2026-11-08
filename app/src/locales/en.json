@@ -1501,6 +1501,7 @@
     "pack": "Pack or load (kg, optional)",
     "noWeight": "Calories are not calculated without your weight.",
     "noWeightLink": "Add it to your medical record.",
+    "goals": {"title": "Weekly goals", "hint": "Leave blank any you do not want. Progress shows here and counts Monday to Sunday.", "distanceKm": "Distance (km)", "minutes": "Time (minutes)", "sessions": "Activities", "reached": "reached!"},
     "exportGpx": "Export GPX",
     "exportTcx": "Export TCX",
     "importFile": "Import GPX or TCX",
