@@ -34,7 +34,7 @@ describe('GPX de Wikiloc', () => {
     expect(t.link).toBe('https://es.wikiloc.com/rutas-senderismo/refugio-frey-123456');
     expect(t.segments).toHaveLength(1);
     expect(t.segments[0]).toHaveLength(6);
-    expect(t.segments[0]![0]).toEqual([-41.16, -71.42, 1000]);
+    expect(t.segments[0]![0]).toEqual([-41.16, -71.42, 1000, 1736510400]);
     expect(t.waypoints.map((w) => w.name)).toEqual(['Refugio Frey', 'Arroyo']);
     expect(t.waypoints[0]).toMatchObject({ ele: 1700, desc: 'Refugio con agua & camping' });
   });

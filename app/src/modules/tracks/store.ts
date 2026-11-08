@@ -3,7 +3,7 @@ import { repos } from '@/core/db/repository';
 import { newEntity, touch } from '@/core/model/entity';
 import type { Id, Track } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
-import { parseGpx, simplify, trackStats } from './gpx';
+import { parseGpx, simplify, trackStats, type TrackPoint } from './gpx';
 
 interface TracksState {
   loaded: boolean;
@@ -64,7 +64,8 @@ export function trackFromGpx(text: string, fileName: string): Track {
     desc: parsed.desc,
     source: wikiloc ? 'Wikiloc' : fileName,
     link: parsed.link,
-    segments: parsed.segments.map((s) => simplify(s)),
+    // Un track importado a Tracks no necesita la hora de cada punto (ocuparía de más): se guarda sin ella.
+    segments: parsed.segments.map((s) => simplify(s.map((p): TrackPoint => [p[0], p[1], p[2]]))),
     waypoints: parsed.waypoints,
     ...stats,
     notes: '',

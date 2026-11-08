@@ -10,6 +10,7 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 - **Grabar recorrido con pantalla apagada:** al volver de un corte, avisa entre qué horas fue y pregunta si unir con una recta o dejar el tramo vacío.
 - **Entrenamiento (base):** sesiones de caminata, correr, trekking, remo (kayak, canoa, bote, SUP, rafting), ciclismo (ruta, montaña, gravel, urbana, eléctrica) y bajo techo (cinta, elíptica, escalador); calorías (ACSM y MET) con el peso de la ficha médica; tiempo en movimiento, ritmo o velocidad, parciales por km, desnivel, mapa y gráfico de desnivel; historial por semana, récords y salidas que agrupan actividades con totales, mapa y desnivel de toda la salida. Los puntos grabados ahora llevan la hora.
 - **Enlace público de una salida:** solo si se elige; título, recorrido simplificado, datos y gráfico, sin fotos; se recorta el inicio y el final cerca de casa, vence al año y se puede borrar.
+- **Importar y exportar GPX/TCX:** cada actividad con GPS se exporta a GPX o TCX (con altura y hora) y se puede importar un archivo de Strava, Garmin o Wikiloc como actividad nueva.
 
 ## 1. Calendarios de huerta de Bolivia y Perú (decisión pendiente)
 
@@ -19,7 +20,7 @@ Se investigó y no existe un calendario oficial abierto de siembra por cultivo y
 
 **Funciones de apps de running**
 
-Voz con los datos cada km, intervalos, objetivos semanales y progreso, pausa automática, notas (cómo me sentí, terreno, clima automático), equipo (km de zapatillas, bici o bote), planificar rutas en el mapa, zonas privadas, importar y exportar GPX/TCX, seguimiento en vivo para la familia (opcional y con vencimiento). Sin muro social. Botón de vuelta y cuenta regresiva se revisan al encarar este punto (la carga manual ya está).
+Voz con los datos cada km, intervalos, objetivos semanales y progreso, pausa automática, notas (cómo me sentí, terreno, clima automático), equipo (km de zapatillas, bici o bote), planificar rutas en el mapa, zonas privadas, seguimiento en vivo para la familia (opcional y con vencimiento). Sin muro social. Botón de vuelta y cuenta regresiva se revisan al encarar este punto (la carga manual ya está).
 
 **Pantalla bloqueada**
 

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Map as MapIcon, Pencil, Trash2 } from 'lucide-react';
+import { Download, Map as MapIcon, Pencil, Trash2 } from 'lucide-react';
+import { deliverFile } from '@/ui/files';
 import { ElevationProfile } from '@/modules/tracks/ElevationProfile';
 import { useTracks } from '@/modules/tracks/store';
 import { ACTIVITIES } from './activities';
 import { useBodyWeight, useTrainingFormat } from './format';
 import { recalculated } from './history';
+import { toGpx, toTcx } from './interchange';
 import { blankOuting } from './outings';
 import { useTraining } from './store';
 
@@ -42,6 +44,18 @@ function WorkoutDetail({ id }: { id: string }) {
   const [pack, setPack] = useState(String(w.packKg ?? ''));
   const def = ACTIVITIES[w.kind];
   const hasGps = w.source === 'gps' && !!track;
+
+  async function exportAs(format: 'gpx' | 'tcx') {
+    if (!track) return;
+    const a = { name: w.name, kind: w.kind, startedAt: w.startedAt, segments: track.segments };
+    const text = format === 'gpx' ? toGpx(a) : toTcx(a, w);
+    const file = `${w.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'actividad'}.${format}`;
+    try {
+      await deliverFile(new TextEncoder().encode(text) as Uint8Array<ArrayBuffer>, file, format === 'gpx' ? 'application/gpx+xml' : 'application/vnd.garmin.tcx+xml');
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) throw err;
+    }
+  }
 
   const commitName = () => {
     if (name !== null && name.trim() && name.trim() !== w.name) void save({ ...w, name: name.trim() });
@@ -148,6 +162,12 @@ function WorkoutDetail({ id }: { id: string }) {
             <Link className="btn" to={`/orientation/maps?track=${w.trackId}`} data-testid="w-map">
               <MapIcon size={18} /> {t('training.onMap')}
             </Link>
+            <button className="btn" type="button" data-testid="w-export-gpx" onClick={() => void exportAs('gpx')}>
+              <Download size={18} /> {t('training.exportGpx')}
+            </button>
+            <button className="btn" type="button" data-testid="w-export-tcx" onClick={() => void exportAs('tcx')}>
+              <Download size={18} /> {t('training.exportTcx')}
+            </button>
           </div>
         )}
       </section>

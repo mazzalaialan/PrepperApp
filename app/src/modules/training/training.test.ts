@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { TrackPoint } from '@/modules/tracks/gpx';
+import { GpxError, type TrackPoint } from '@/modules/tracks/gpx';
 import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
 import type { Workout } from '@/core/model/types';
 import { byWeek, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
+import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
 
@@ -216,5 +217,48 @@ describe('compartir una salida', () => {
     const whole = buildSharePayload(outing, [all[1]!], new Map([['t1', { segments: [line(101)] }]]) as never, 'en', 0);
     expect(whole.route[0]![0]).toEqual([-41, -71]);
     expect(whole.lang).toBe('en');
+  });
+});
+
+describe('GPX y TCX', () => {
+  const seg: [number, number, number | null, number?][] = [
+    [-34.6, -58.4, 10, 1_700_000_000],
+    [-34.601, -58.4, 12, 1_700_000_060],
+    [-34.602, -58.4, null, 1_700_000_120],
+  ];
+  const act = { name: 'Salida <1> & "2"', kind: 'run' as const, startedAt: '2023-11-14T22:13:20.000Z', segments: [seg] };
+
+  it('exporta a GPX y se vuelve a leer igual (altura y hora incluidas, nombre escapado)', () => {
+    const back = parseActivityFile(toGpx(act), 'x.gpx');
+    expect(back.name).toBe(act.name);
+    expect(back.kind).toBe('run');
+    expect(back.segments[0]).toEqual(seg);
+    expect(back.startedAt).toBe('2023-11-14T22:13:20.000Z');
+  });
+
+  it('exporta a TCX y se vuelve a leer: deporte, puntos con hora y altura', () => {
+    const back = parseActivityFile(toTcx(act, { totalS: 120, distanceM: 222, calories: 15 }), 'x.tcx');
+    expect(back.kind).toBe('run');
+    expect(back.segments[0]).toEqual(seg);
+  });
+
+  it('un TCX sin posiciones (cinta) no tiene recorrido', () => {
+    const tcx = '<TrainingCenterDatabase><Activities><Activity Sport="Running"><Lap><Track><Trackpoint><Time>2024-01-01T10:00:00Z</Time></Trackpoint><Trackpoint><Time>2024-01-01T10:00:01Z</Time></Trackpoint></Track></Lap></Activity></Activities></TrainingCenterDatabase>';
+    expect(() => parseActivityFile(tcx)).toThrow(GpxError);
+  });
+
+  it('reconoce deportes de otras apps y deja null los desconocidos', () => {
+    expect(kindFromSport('Biking')).toBe('roadBike');
+    expect(kindFromSport('Hiking')).toBe('trek');
+    expect(kindFromSport('MountainBikeRide')).toBe('mtb');
+    expect(kindFromSport('Golf')).toBeNull();
+  });
+
+  it('importar arma la actividad con ritmo y calorías', () => {
+    const { track, workout } = activityFromFile(parseActivityFile(toGpx(act)), 'run', 70);
+    expect(workout.source).toBe('gps');
+    expect(workout.trackId).toBe(track.id);
+    expect(workout.totalS).toBe(120);
+    expect(workout.calories).toBeGreaterThan(0);
   });
 });

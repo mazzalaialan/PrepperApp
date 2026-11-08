@@ -136,4 +136,19 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.goto('/#/training/workouts');
   await expect(page.getByTestId('train-row')).toHaveCount(2);
   await expect(page.getByTestId('train-week')).toContainText('2');
+
+  // Exportar la actividad con GPS a GPX y TCX, y volver a importar el GPX como actividad nueva.
+  await page.getByTestId('train-row').filter({ hasText: 'Trekking al cerro' }).click();
+  const [gpxDownload] = await Promise.all([page.waitForEvent('download'), page.getByTestId('w-export-gpx').click()]);
+  expect(gpxDownload.suggestedFilename()).toBe('Trekking-al-cerro.gpx');
+  const gpxPath = testInfo.outputPath('trekking.gpx');
+  await gpxDownload.saveAs(gpxPath);
+  const [tcxDownload] = await Promise.all([page.waitForEvent('download'), page.getByTestId('w-export-tcx').click()]);
+  expect(tcxDownload.suggestedFilename()).toBe('Trekking-al-cerro.tcx');
+  await page.goto('/#/training/workouts');
+  await page.getByTestId('import-activity-file').setInputFiles(gpxPath);
+  await expect(page).toHaveURL(/#\/training\/workouts\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('w-distance')).toHaveText(/^3\d\d m$/);
+  await page.goto('/#/training/workouts');
+  await expect(page.getByTestId('train-row')).toHaveCount(3);
 });

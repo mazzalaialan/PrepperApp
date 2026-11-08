@@ -56,7 +56,10 @@ function points(xml: string, element: 'trkpt' | 'rtept'): TrackPoint[] {
     const lon = attr(m[1]!, 'lon');
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
     const ele = Number(tag(m[2] ?? '', 'ele'));
-    out.push([lat, lon, m[2] && Number.isFinite(ele) && tag(m[2], 'ele') !== '' ? ele : null]);
+    const e = m[2] && Number.isFinite(ele) && tag(m[2], 'ele') !== '' ? ele : null;
+    // La hora (si el archivo la trae) permite calcular ritmo y tiempo en movimiento al importar una actividad.
+    const ms = m[2] ? Date.parse(tag(m[2], 'time')) : NaN;
+    out.push(Number.isFinite(ms) ? [lat, lon, e, Math.round(ms / 1000)] : [lat, lon, e]);
   }
   return out;
 }

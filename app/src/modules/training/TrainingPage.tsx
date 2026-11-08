@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { Circle, Footprints, PencilLine, Plus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Circle, Footprints, PencilLine, Plus, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { useRecorder } from '@/modules/tracks/recorder';
 import { Segmented } from '@/ui/Segmented';
 import { ACTIVITIES, GROUPS, kindsOf, type ActivityGroup, type ActivityKind } from './activities';
 import { useTrainingFormat, useBodyWeight } from './format';
 import { byWeek, recordsOf, totalsOf, weekStart } from './history';
+import { GpxError } from '@/modules/tracks/gpx';
+import { useTracks } from '@/modules/tracks/store';
+import { activityFromFile, parseActivityFile } from './interchange';
 import { useTraining } from './store';
 
 /** Sesiones de entrenamiento: empezar una, ver la semana y el historial. */
@@ -30,6 +33,27 @@ export function TrainingPage() {
   const currentWeek = weekStart(new Date());
   const thisWeek = weeks.find((w) => w.start === currentWeek);
   const week = thisWeek?.totals ?? totalsOf([]);
+
+  const navigate = useNavigate();
+  const saveTrack = useTracks((s) => s.saveTrack);
+  const saveWorkout = useTraining((s) => s.saveWorkout);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  /** Importa una actividad de un GPX o TCX (Strava, Garmin, Wikiloc…): si el archivo dice el deporte se usa ese, si no, el elegido arriba. */
+  async function importFile(f: File) {
+    setImportError(null);
+    try {
+      const parsed = parseActivityFile(await f.text(), f.name);
+      const { track, workout } = activityFromFile(parsed, parsed.kind ?? kind, weight);
+      await saveTrack(track);
+      await saveWorkout(workout);
+      navigate(`/training/workouts/${workout.id}`);
+    } catch (err) {
+      if (!(err instanceof GpxError)) throw err;
+      setImportError(t(`training.importError.${err.code}`));
+    }
+  }
 
   const pickGroup = (g: ActivityGroup) => {
     setGroup(g);
@@ -96,6 +120,24 @@ export function TrainingPage() {
             </Link>
           )}
         </div>
+        <div className="row wrap">
+          <button className="btn" type="button" data-testid="import-activity" onClick={() => fileInput.current?.click()}>
+            <Upload size={18} /> {t('training.importFile')}
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            hidden
+            data-testid="import-activity-file"
+            accept=".gpx,.tcx,application/gpx+xml,application/xml,text/xml"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (f) void importFile(f);
+            }}
+          />
+        </div>
+        {importError && <p className="error" role="alert" style={{ margin: 0 }}>{importError}</p>}
         {status !== 'idle' && <p className="hint" style={{ margin: 0 }}>{t('training.alreadyRecording')}</p>}
         <p className="hint" style={{ margin: 0 }}>{t('training.estimate')}</p>
       </section>
