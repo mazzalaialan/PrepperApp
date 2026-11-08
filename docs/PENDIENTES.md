@@ -36,7 +36,7 @@ Voz con los datos cada km, intervalos, objetivos semanales, récords personales,
 
 - Usa el mismo grabador que Tracks: el bloqueo automático de la app se pausa mientras se graba y el bloqueo a mano no corta la grabación.
 - En la web, si el sistema suspende la página (pantalla apagada), se pierde el tramo: arranca en modo bolsillo y, al volver, avisa "se cortó la grabación entre HH:MM y HH:MM" sin unir el hueco con una línea recta.
-- Roles de alumno e instructor (copia de la EAAM): ahora no; solo dejar el código preparado.
+- Roles de alumno e instructor (copia institucional): ahora no; solo dejar el código preparado.
 
 ## 5. Elegir una ubicación en el mapa
 
