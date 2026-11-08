@@ -1580,7 +1580,29 @@
     "addChoose": "Choose a session…",
     "notesHint": "What was done, with whom, how the mountain was…",
     "confirmDelete": "Delete the outing \"{{name}}\"? Its activities stay loose.",
-    "newName": "New outing"
+    "newName": "New outing",
+    "share": {
+      "title": "Share with a public link",
+      "intro": "Create a link to show this outing on social networks or send it to anyone: the title, the route, the totals and the elevation chart, on a page that opens without installing anything.",
+      "privacy": "No photos, notes, medical record or contacts are uploaded, only what is on the page. The link is public (anyone who has it can see it), lasts a year and you can delete it whenever you want.",
+      "trim": "Hide the first and last {{meters}} m of the route (in case you leave from or return to your home)",
+      "noServer": "You need a VikArg server in Settings to share.",
+      "create": "Create the public link",
+      "active": "This outing is shared. Anyone with this link can see it:",
+      "link": "Public link",
+      "copy": "Copy the link",
+      "send": "Share",
+      "expires": "The link expires on {{date}}.",
+      "update": "Update with changes",
+      "stop": "Stop sharing",
+      "error": {
+        "offline": "Could not reach the server. Try again when you are online.",
+        "full": "The server reached its maximum of shared outings. Try again later.",
+        "too-many": "You shared many outings in a short time. Try again in an hour.",
+        "invalid": "The outing has no data to share (does it have a route?).",
+        "failed": "Could not share. Try again later."
+      }
+    }
   },
   "gps": {
     "searching": "Searching for GPS signal…",

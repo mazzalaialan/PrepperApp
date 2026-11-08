@@ -4,7 +4,7 @@ const PASSWORD = 'prueba-segura-123';
 
 test.use({ geolocation: { latitude: -41.16, longitude: -71.42 }, permissions: ['geolocation'] });
 
-test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', async ({ page, context }, testInfo) => {
+test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', async ({ page, context, request }, testInfo) => {
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Repetir contraseña').fill(PASSWORD);
@@ -84,6 +84,44 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await expect(page.getByTestId('o-distance')).toHaveText(/^4,3\d km$/);
   await expect(page.getByTestId('o-map')).toHaveAttribute('href', /\/orientation\/maps\?tracks=[0-9a-f-]{36}$/);
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-86-outing.png`, fullPage: true });
+
+  // Compartir con un enlace público: contra el servidor de prueba, sin recorte (el recorrido es de 334 m).
+  const outingUrl = page.url();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('vikarg-user');
+        open.onsuccess = () => {
+          const tx = open.result.transaction('settings', 'readwrite');
+          const store = tx.objectStore('settings');
+          const get = store.get('app');
+          get.onsuccess = () => store.put({ key: 'app', value: { ...(get.result?.value ?? {}), serverUrl: 'http://127.0.0.1:8099' } });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+        open.onerror = () => reject(open.error);
+      }),
+  );
+  await page.reload();
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await page.goto(outingUrl);
+  const share = page.getByTestId('o-share');
+  await expect(share).toContainText('No se sube ninguna foto, nota, ficha médica ni contacto');
+  await share.getByLabel(/Ocultar los primeros y los últimos 300 m/).uncheck();
+  await share.getByRole('button', { name: 'Crear el enlace público' }).click();
+  const link = page.getByTestId('o-share-url');
+  await expect(link).toHaveValue(/^http:\/\/127\.0\.0\.1:8099\/o\/[A-Za-z0-9_-]{10,}$/);
+  const publicUrl = await link.inputValue();
+  const html = await (await request.get(publicUrl)).text();
+  expect(html).toContain('Salida al Platita');
+  expect(html).toContain('<polyline');
+  expect(html).not.toMatch(/<script/i);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-87-outing-share.png`, fullPage: true });
+  // Dejar de compartir: el enlace deja de andar.
+  await share.getByTestId('o-unshare').click();
+  await expect(share.getByRole('button', { name: 'Crear el enlace público' })).toBeVisible();
+  expect((await request.get(publicUrl)).status()).toBe(404);
 
   // En la lista de salidas.
   await page.goto('/#/training/outings');

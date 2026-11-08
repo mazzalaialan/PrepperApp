@@ -17,6 +17,7 @@ import { mapRoutes } from './routes/maps.ts';
 import { libraryRoutes } from './routes/library.ts';
 import { dataRoutes } from './routes/data.ts';
 import { rainMapRoutes } from './routes/rainMap.ts';
+import { sharedOutingRoutes } from './routes/sharedOutings.ts';
 import { transferRoutes } from './routes/transfers.ts';
 
 export const VERSION = '0.1.0';
@@ -48,6 +49,7 @@ export async function buildApp(
   }));
   deviceRoutes(app, db, push);
   transferRoutes(app, db, config);
+  sharedOutingRoutes(app, db, config);
   lightningRoutes(app, lightning.store, lightning.wake);
   rainMapRoutes(app, rainMap.store, rainMap.wake);
   mapRoutes(app, maps, config);

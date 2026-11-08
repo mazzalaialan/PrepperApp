@@ -1580,7 +1580,29 @@
     "addChoose": "Elegí una sesión…",
     "notesHint": "Qué se hizo, con quién, cómo estaba la montaña…",
     "confirmDelete": "¿Borrar la salida \"{{name}}\"? Sus actividades quedan sueltas.",
-    "newName": "Nueva salida"
+    "newName": "Nueva salida",
+    "share": {
+      "title": "Compartir con un enlace público",
+      "intro": "Creá un enlace para mostrar esta salida en redes sociales o mandarla a quien quieras: el título, el recorrido, los totales y el gráfico de desnivel, en una página que se ve sin instalar nada.",
+      "privacy": "No se sube ninguna foto, nota, ficha médica ni contacto, solo lo de la página. El enlace es público (lo ve cualquiera que lo tenga), dura un año y lo podés borrar cuando quieras.",
+      "trim": "Ocultar los primeros y los últimos {{meters}} m del recorrido (por si salís o volvés a tu casa)",
+      "noServer": "Necesitás un servidor VikArg en Ajustes para compartir.",
+      "create": "Crear el enlace público",
+      "active": "Esta salida está compartida. Cualquiera con este enlace la ve:",
+      "link": "Enlace público",
+      "copy": "Copiar el enlace",
+      "send": "Compartir",
+      "expires": "El enlace vence el {{date}}.",
+      "update": "Actualizar con los cambios",
+      "stop": "Dejar de compartir",
+      "error": {
+        "offline": "No se pudo conectar con el servidor. Probá con conexión.",
+        "full": "El servidor llegó al máximo de salidas compartidas. Probá más adelante.",
+        "too-many": "Compartiste muchas salidas en poco tiempo. Probá en una hora.",
+        "invalid": "La salida no tiene datos para compartir (¿tiene recorrido?).",
+        "failed": "No se pudo compartir. Probá de nuevo más tarde."
+      }
+    }
   },
   "gps": {
     "searching": "Buscando señal GPS…",

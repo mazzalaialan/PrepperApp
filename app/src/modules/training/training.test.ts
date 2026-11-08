@@ -4,6 +4,7 @@ import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
 import type { Workout } from '@/core/model/types';
 import { byWeek, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
+import { buildSharePayload, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
 
 describe('actividades', () => {
@@ -167,5 +168,53 @@ describe('historial y salidas', () => {
     expect(recalculated(base, null, null).calories).toBe(0);
     expect(recalculated(base, 70, null).calories).toBeGreaterThan(200);
     expect(recalculated(base, 90, null).calories).toBeGreaterThan(recalculated(base, 70, null).calories);
+  });
+});
+
+describe('compartir una salida', () => {
+  // Una caminata hacia el sur: un punto cada ~22 m (0,0002°).
+  const line = (n: number, lat0 = -41): TrackPoint[] => Array.from({ length: n }, (_, i) => [lat0 - i * 0.0002, -71, 1000 + i, 1_000_000 + i * 15] as TrackPoint);
+  const meters = (seg: TrackPoint[]) => (seg.length - 1) * 22.24;
+
+  it('recorta el inicio y el final (la casa) sin tocar el medio', () => {
+    const seg = line(101); // 2,2 km
+    const [cut] = trimEnds([seg], 300);
+    expect(cut!.length).toBeLessThan(seg.length);
+    // 300 m son ~14 puntos de cada lado.
+    expect(meters(cut!)).toBeGreaterThan(2224 - 2 * 330);
+    expect(meters(cut!)).toBeLessThan(2224 - 2 * 280);
+    expect(cut![0]![0]).toBeLessThan(seg[0]![0] - 0.002);
+    expect(trimEnds([seg], 0)).toEqual([seg]);
+  });
+
+  it('un recorrido corto o en tramos: se recorta de tramo en tramo, y si es muy corto no queda nada', () => {
+    expect(trimEnds([line(10)], 300)).toEqual([]); // 200 m
+    const a = line(30); // 650 m
+    const b = line(30, -42); // 650 m
+    const out = trimEnds([a, b], 300);
+    expect(out).toHaveLength(2);
+    expect(meters(out[0]!)).toBeLessThan(meters(a) - 250);
+    expect(meters(out[1]!)).toBeLessThan(meters(b) - 250);
+  });
+
+  it('el contenido: totales, tipos, día, perfil y tope de puntos; nunca notas ni calorías si no hay', () => {
+    const outing = { id: 'o1', name: 'Salida al Platita', notes: 'mi casa está en la calle…', createdAt: '2026-11-08T10:00:00', updatedAt: '2026-11-08T10:00:00' } as never;
+    const mk = (id: string, started: string, track: string | null, over: Partial<Workout> = {}) =>
+      ({ id, kind: 'trek', name: id, startedAt: started, source: 'gps', trackId: track, totalS: 3600, movingS: 3500, distanceM: 2000, ascentM: 300, descentM: 100, minEle: 1000, maxEle: 1100, calories: 0, outingId: 'o1', ...over }) as unknown as Workout;
+    const big = line(2000, -30); // 44 km en 2000 puntos: pasa el tope
+    const tracks = new Map([['t1', { segments: [big] }], ['t2', { segments: [line(101)] }]]) as never;
+    const all = [mk('b', '2026-11-08T14:00:00', 't2', { kind: 'walk' }), mk('a', '2026-11-08T08:00:00', 't1')];
+    const p = buildSharePayload(outing, all, tracks, 'es', 300);
+    expect(p).toMatchObject({ name: 'Salida al Platita', lang: 'es', date: '2026-11-08', activities: 2, distanceM: 4000, totalS: 7200, ascentM: 600, calories: null });
+    expect(p.kinds.sort()).toEqual(['trek', 'walk']);
+    expect(p.route.flat().length).toBeLessThanOrEqual(1200);
+    expect(p.profile.length).toBeLessThanOrEqual(301);
+    expect(p.profile[0]![0]).toBe(0);
+    expect(JSON.stringify(p)).not.toContain('mi casa');
+    expect('notes' in p).toBe(false);
+    // Sin recorte: el recorrido empieza donde empezó.
+    const whole = buildSharePayload(outing, [all[1]!], new Map([['t1', { segments: [line(101)] }]]) as never, 'en', 0);
+    expect(whole.route[0]![0]).toEqual([-41, -71]);
+    expect(whole.lang).toBe('en');
   });
 });

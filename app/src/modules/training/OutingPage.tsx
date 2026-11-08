@@ -7,6 +7,7 @@ import { useTracks } from '@/modules/tracks/store';
 import { useTrainingFormat } from './format';
 import { inOuting, totalsOf } from './history';
 import { outingTrack } from './outings';
+import { ShareSection } from './ShareSection';
 import { useTraining } from './store';
 
 /** Una salida: totales, mapa y perfil de altura de todas sus actividades. */
@@ -147,6 +148,8 @@ function OutingDetail({ id }: { id: string }) {
           </div>
         )}
       </section>
+
+      <ShareSection outing={outing} />
 
       <section className="card stack">
         <div className="field">

@@ -368,6 +368,8 @@ export interface Workout extends BaseEntity {
 export interface Outing extends BaseEntity {
   name: string;
   notes: string;
+  /** Si se compartió con un enlace público (ver modules/training/share.ts): el código de borrado queda solo acá, cifrado. */
+  share?: { id: string; url: string; deleteToken: string; sharedAt: string; expiresAt: string };
 }
 
 /** Cantero o maceta de la huerta (ARQUITECTURA §10.1). Se dibuja como grilla de cuadros de 30 cm. */

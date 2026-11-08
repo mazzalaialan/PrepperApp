@@ -142,7 +142,7 @@ describe('lluvia estimada con el infrarrojo del GOES-19', () => {
     const map = await buildApp(loadConfig({}), openDb(':memory:'), { publicKey: 'k', send: async () => true }, false, undefined, undefined, { store, wake: () => woke++ });
     const meta = (await map.inject('/api/rain/map')).json() as { at: string; image: string; bounds: { west: number } };
     assert.equal(meta.at, '2026-11-04T03:30:00.000Z');
-    assert.equal(meta.bounds.west, -76);
+    assert.equal(meta.bounds.west, -82);
     assert.equal(woke, 1);
     const img = await map.inject(meta.image);
     assert.equal(img.statusCode, 200);

@@ -126,6 +126,14 @@ const MIGRATIONS = [
     addColumnIfMissing(db, 'rain_places', 'rain_level', 'INTEGER NOT NULL DEFAULT 0');
     addColumnIfMissing(db, 'rain_places', 'dry_since', 'INTEGER');
   },
+  // Salidas de Entrenamiento compartidas con un enlace público (routes/sharedOutings.ts).
+  `CREATE TABLE IF NOT EXISTS shared_outings (
+     id TEXT PRIMARY KEY,
+     token_hash TEXT NOT NULL,
+     data TEXT NOT NULL,
+     created_at INTEGER NOT NULL,
+     expires_at INTEGER NOT NULL
+   );`,
 ];
 
 export type Db = DatabaseSync;
