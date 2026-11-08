@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import parksJson from './parks-data.json';
 import emergencyJson from './emergency-data.json';
 import parksCL from '../../../public/data/parks-CL.json';
-import { inPark, mergeNearby, officialNearby, parksNear, withParks, type EmergencyData, type ParksData } from './data';
+import parksBO from '../../../public/data/parks-BO.json';
+import parksPE from '../../../public/data/parks-PE.json';
+import { distanceToPark, inPark, mergeNearby, officialNearby, parkCountry, parksNear, withParks, type EmergencyData, type ParksData } from './data';
 
 const P = parksJson as unknown as ParksData;
 const D = emergencyJson as EmergencyData;
@@ -79,5 +81,48 @@ describe('áreas protegidas de Chile (CONAF)', () => {
     const near = parksNear(both, -39.585, -71.44, 5000).map((p) => p.park.name);
     expect(near).toContain('Parque Nacional Lanín');
     expect(near).toContain('Parque Nacional Villarrica');
+  });
+});
+
+describe('parques de Bolivia (SERNAP) y Perú (SERNANP)', () => {
+  const pe = parksPE as unknown as ParksData;
+  const bo = parksBO as unknown as ParksData;
+  const named = (d: ParksData, name: string) => d.parks.find((p) => p.name === name)!;
+
+  it('traen el país, límites y contacto de cada área', () => {
+    expect(pe.parks.length).toBeGreaterThan(90);
+    expect(bo.parks.length).toBeGreaterThan(20);
+    for (const [data, country] of [[pe, 'PE'], [bo, 'BO']] as const) {
+      for (const p of data.parks) {
+        expect(p.country, p.name).toBe(country);
+        expect(p.area.length, p.name).toBeGreaterThan(0);
+        expect(p.emergency?.length, p.name).toBeGreaterThan(0);
+        expect(parkCountry(p)).toBe(country);
+      }
+    }
+    // Ninguna lleva el nombre de un titular (las áreas privadas no se incluyen).
+    expect(pe.parks.some((p) => /privada/i.test(p.name))).toBe(false);
+  });
+
+  it('Perú: el Huascarán y Machu Picchu', () => {
+    // Laguna Llanganuco, en la Cordillera Blanca.
+    const [here] = parksNear(pe, -9.03, -77.65, 1000);
+    expect(here!.park.name).toBe('Parque Nacional Huascarán');
+    expect(inPark(named(pe, 'Santuario Histórico Machupicchu'), -13.163, -72.545)).toBe(true);
+    // Lima no está en ningún área.
+    expect(parksNear(pe, -12.05, -77.04, 5000).every((p) => p.distance > 0)).toBe(true);
+  });
+
+  it('Bolivia: Sajama y Madidi, con el SERNAP como contacto', () => {
+    expect(inPark(named(bo, 'Parque Nacional Sajama'), -18.108, -68.883)).toBe(true);
+    expect(inPark(named(bo, 'Parque Nacional Madidi'), -14.0, -68.7)).toBe(true);
+    expect(named(bo, 'Parque Nacional Sajama').emergency?.[0]?.phone).toBe('+591 2 2426304');
+    expect(parksNear(bo, -16.5, -68.15, 1000)).toHaveLength(0); // La Paz
+  });
+
+  it('los países vecinos comparten sus parques en la cordillera (Chile ve Sajama, Perú ve Bolivia)', () => {
+    // Parinacota (Chile) está a ~30 km de Sajama: el límite de 50 km de la pantalla los junta.
+    const sajama = named(bo, 'Parque Nacional Sajama');
+    expect(distanceToPark(sajama, -18.18, -69.14)).toBeLessThan(50_000);
   });
 });

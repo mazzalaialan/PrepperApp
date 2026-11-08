@@ -67,6 +67,8 @@ step() {
 
 step parks-AR.json /repo/tools/emergency-data/parks.mjs
 step parks-CL.json /repo/tools/emergency-data/parks-cl.mjs
+step parks-BO.json /repo/tools/emergency-data/parks-bo.mjs
+step parks-PE.json /repo/tools/emergency-data/parks-pe.mjs
 step CL.json /repo/tools/country-data/build.mjs CL
 step UY.json /repo/tools/country-data/build.mjs UY
 step BO.json /repo/tools/country-data/build.mjs BO

@@ -628,7 +628,51 @@
     "mountain": {"fem": {"name": "FEM · emergencias en montaña", "desc": "Solo emergencias: mantenela despejada. Escuchala siempre que estés en la montaña. Una vez hecho el contacto, pasá a la 139,970 o la 138,510 para hablar."}, "free1": {"name": "Uso libre · comunicación entre todos", "desc": "Para hablar entre grupos y expediciones, y para seguir después de un llamado en la 140,970."}, "free2": {"name": "Uso libre · secundaria", "desc": "Otra de uso libre, si la 139,970 está ocupada."}, "csa": {"name": "Cuerpo de Socorro Andino", "desc": "Figura en guías de montaña como la del Socorro Andino de Chile; no encontramos una confirmación oficial. En Chile no hay una frecuencia oficial de montaña: del lado chileno de la cordillera, escuchá también la 140,970."}, "rangers": {"name": "Guardaparques", "desc": "La escuchan los guardaparques del Aconcagua y, según guías de montaña, de otros parques. No hay una publicación oficial: confirmala en la guardería."}, "conaf": {"name": "CONAF (guardaparques de Chile)", "desc": "Figura en Wikiexplora como la de CONAF; no está confirmada. En Magallanes (Torres del Paine y Kawésqar), CONAF publica la 143,800 MHz: la ves en \"Frecuencias de parques\"."}, "carabineros": {"name": "Radio Club de Carabineros", "desc": "Repetidora de radioaficionados del Radio Club de Carabineros (no es la de la policía). Fuera de una emergencia, transmitir requiere licencia de radioaficionado."}},
     "emergencyOnly": "Solo si tu vida depende de eso. No es de uso libre: fuera de una emergencia real no se transmite ahí.",
     "vhf": "VHF",
-    "park": {"title": "Frecuencias de parques", "intro": "Las que publica cada parque nacional o área de CONAF para emergencias de visitantes, con sus teléfonos. Primero el parque donde estás; después los demás que publican una frecuencia.", "inside": "estás adentro", "near": "a {{distance}} del límite", "noRadio": "El parque no publica una frecuencia VHF para visitantes: con radio, usá la FEM 140,970 MHz.", "noRadioCL": "CONAF no publica una frecuencia VHF para esta área: con radio, escuchá la del Socorro Andino o la FEM 140,970 MHz.", "office": "Intendencia", "source": "Fuente: {{source}}", "othersTitle": "Otros parques con frecuencia publicada", "allTitle": "Parques con frecuencia publicada", "note": "Las frecuencias de los parques son para emergencias: la cobertura depende del terreno. Antes de entrar, registrate en la seccional o guardería y preguntá cuál usan en la zona.", "sources": "Fuentes: Administración de Parques Nacionales (argentina.gob.ar/parquesnacionales, CC BY 4.0) y CONAF (conaf.cl), con la fuente de cada frecuencia; límites: IGN (CC BY 4.0) y © colaboradores de OpenStreetMap (ODbL)."},
+    "rener": {
+      "title": "Red de emergencia de radioaficionados (RENER, Perú)",
+      "intro": "La RENER, del Radio Club Peruano con INDECI, se activa en emergencias y desastres. Son frecuencias de radioaficionados: transmite quien tiene licencia.",
+      "hf": {
+        "name": "HF 40 m: frecuencia primaria",
+        "desc": "Enlace local e internacional. La secundaria es 7.123 kHz LSB."
+      },
+      "hf80": {
+        "name": "HF 80 m: provincias",
+        "desc": "Enlace con las provincias."
+      },
+      "hf20": {
+        "name": "HF 20 m: internacional",
+        "desc": "Primaria internacional; la secundaria es 14.167 kHz USB."
+      },
+      "indeci": {
+        "name": "Enlace RENER–INDECI (HF)",
+        "desc": "Con Defensa Civil. También 7.415 kHz USB."
+      },
+      "rpt1": {
+        "name": "Repetidora de Lima (OA4O)",
+        "desc": "Primaria. Las repetidoras temporales de Trujillo, Huaraz y Arequipa están enlazadas y usan la misma frecuencia."
+      },
+      "rpt2": {
+        "name": "Repetidora de Lima (OA4B, isla San Lorenzo)",
+        "desc": "Secundaria."
+      },
+      "coord": {
+        "name": "Coordinación RENER (directo)",
+        "desc": "Sin repetidora."
+      },
+      "call": {
+        "name": "Llamada de radioaficionados (directo)",
+        "desc": "Frecuencia internacional de llamada en VHF."
+      },
+      "note": "Con la vida en peligro se puede pedir auxilio por cualquier medio; fuera de eso, transmitir en estas frecuencias requiere licencia de radioaficionado (MTC). No encontramos una frecuencia VHF publicada de INDECI ni de la Cruz Roja Peruana.",
+      "sources": "Fuente: manual de procedimientos de operación RENER 2024, Radio Club Peruano (oa4o.pe). La lista está sujeta a variaciones: confirmala con el radioclub."
+    },
+    "park": {"title": "Frecuencias de parques", "intro": "Las que publica cada parque nacional o área protegida para emergencias de visitantes, con sus teléfonos. Primero el parque donde estás; después los demás que publican una frecuencia.", "inside": "estás adentro", "near": "a {{distance}} del límite", "noRadioAR": "El parque no publica una frecuencia VHF para visitantes: con radio, usá la FEM 140,970 MHz.", "noRadioCL": "CONAF no publica una frecuencia VHF para esta área: con radio, escuchá la del Socorro Andino o la FEM 140,970 MHz.",
+      "noRadioBO": "El SERNAP no publica una frecuencia de radio para visitantes de esta área. Antes de entrar, avisá a los guardaparques y llevá una forma de comunicarte; ante una emergencia mirá los números de Bolivia en Contactos de emergencia.",
+      "noRadioPE": "El SERNANP no publica una frecuencia de radio para visitantes de esta área. Antes de entrar, avisá en la jefatura del área y llevá una forma de comunicarte; ante una emergencia llamá al 105 (Policía) o al 116 (Bomberos).", "office": "Intendencia", "source": "Fuente: {{source}}", "othersTitle": "Otros parques con frecuencia publicada", "allTitle": "Parques con frecuencia publicada", "note": "Las frecuencias de los parques son para emergencias: la cobertura depende del terreno. Antes de entrar, registrate en la seccional o guardería y preguntá cuál usan en la zona.", "sourcesLead": "Fuentes:",
+      "sourceOfAR": "Administración de Parques Nacionales (argentina.gob.ar/parquesnacionales, CC BY 4.0), con la fuente de cada frecuencia; límites: IGN (CC BY 4.0).",
+      "sourceOfCL": "CONAF (conaf.cl), con la fuente de cada frecuencia; límites: © colaboradores de OpenStreetMap (ODbL).",
+      "sourceOfBO": "Bolivia: límites © colaboradores de OpenStreetMap (ODbL) y contacto del SERNAP (sernap.gob.bo).",
+      "sourceOfPE": "Perú: límites del SERNANP (MINAM), mapa derivado y simplificado, y contacto de su sede central (gob.pe/sernanp)."},
     "mountainNote": "La FEM y las dos de uso libre son libres, sin licencia, según la Resolución 5/2015 (en Argentina). Fuera de una emergencia, transmitir en otras frecuencias o del lado chileno requiere la autorización que corresponda. Una radio no reemplaza el aviso al 911, a la guardería o al 131 si hay señal.",
     "mountainSources": "Fuentes: Federación Andinistas Argentinos (FEM, 2021), Club Andino Mercedario (2024), Wikiexplora (Chile), Andesport y Meunier (guardaparques). Confirmá las de tu zona en el refugio o la guardería y guardalas en \"Mis frecuencias\".",
     "distressNote": "Para transmitir hace falta un equipo de esa banda. Usalas solo ante un peligro real para la vida: un llamado falso es delito.",

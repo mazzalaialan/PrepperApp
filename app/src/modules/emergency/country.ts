@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSettings, type Country } from '@/core/settings/settings';
-import { loadEmergencyData, loadParksCL, type EmergencyData } from './data';
+import { loadEmergencyData, loadParksCL, loadParksFile, type EmergencyData } from './data';
 import { DATA_CACHE as CACHE, loadDataFile } from './dataFile';
 export { CountryDataError } from './dataFile';
 import { loadOfficialRepeaters } from './officialRepeaters';
@@ -59,6 +59,8 @@ export function useCountryPrefetch(): void {
       void loadOfficialRepeaters(country).catch(() => undefined);
       // Áreas protegidas de Chile (CONAF): también con Argentina, por la cordillera.
       if (country === 'AR' || country === 'CL') void loadParksCL().catch(() => undefined);
+      // Bolivia y Perú: las suyas (SERNAP, SERNANP).
+      if (country === 'BO' || country === 'PE') void loadParksFile(country).catch(() => undefined);
     };
     if (navigator.onLine) fetchIt();
     window.addEventListener('online', fetchIt);

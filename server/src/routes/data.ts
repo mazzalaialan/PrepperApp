@@ -9,7 +9,7 @@ import type { Config } from '../config.ts';
  * del servidor si es más nueva que la que trae (campo `generatedAt`).
  * Solo estos archivos: nada de rutas arbitrarias.
  */
-export const DATA_FILES = new Set(['CL.json', 'UY.json', 'BO.json', 'PE.json', 'parks-CL.json', 'parks-AR.json']);
+export const DATA_FILES = new Set(['CL.json', 'UY.json', 'BO.json', 'PE.json', 'parks-CL.json', 'parks-AR.json', 'parks-BO.json', 'parks-PE.json']);
 
 export function dataRoutes(app: FastifyInstance, config: Config): void {
   app.get<{ Params: { file: string } }>('/api/data/:file', async (req, reply) => {

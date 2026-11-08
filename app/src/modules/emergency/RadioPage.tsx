@@ -6,7 +6,7 @@ import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
-import { distanceToPark, loadParks, nearestRadio, type EmergencyData, type ParksData } from './data';
+import { distanceToPark, loadParks, nearestRadio, parkCountry, type EmergencyData, type ParksData } from './data';
 import { CopyButton, formatDistance, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { distanceToCountry, loadBorders, type BordersData } from './borders';
 import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRepeaterList } from './officialRepeaters';
@@ -173,9 +173,11 @@ export function RadioPage() {
         <p className="hint" style={{ margin: 0 }}>{t('radio.distressNote')}</p>
       </section>
 
-      {(country === 'AR' || country === 'CL') && <ParkSection place={place} />}
+      {country !== 'UY' && <ParkSection place={place} />}
 
       {(country === 'AR' || country === 'CL') && <MountainSection place={place} />}
+
+      <RenerSection place={place} />
 
       <RepeatersSection place={place} />
 
@@ -240,6 +242,62 @@ function MountainSection({ place }: { place: { lat: number; lon: number } | null
   );
 }
 
+/**
+ * Red Nacional de Emergencia de Radioaficionados de Perú (RENER, Radio Club
+ * Peruano e INDECI): manual de procedimientos de operación 2024 ("sujeta a
+ * variaciones"), oa4o.pe. Son frecuencias de radioaficionados: la señal es
+ * para quien tiene licencia; con la vida en peligro se puede pedir auxilio
+ * por cualquier medio. Se muestran con Perú elegido o a menos de 50 km de su
+ * frontera.
+ */
+const RENER: { id: string; freq: string }[] = [
+  { id: 'hf', freq: '7.100 kHz LSB' },
+  { id: 'hf80', freq: '3.730 kHz LSB' },
+  { id: 'hf20', freq: '14.137 kHz USB' },
+  { id: 'indeci', freq: '10.345 kHz USB' },
+  { id: 'rpt1', freq: '146,960 MHz (−600 kHz, 82,5 Hz)' },
+  { id: 'rpt2', freq: '147,050 MHz (+600 kHz, 82,5 Hz)' },
+  { id: 'coord', freq: '147,635 MHz' },
+  { id: 'call', freq: '146,520 MHz' },
+];
+
+function RenerSection({ place }: { place: { lat: number; lon: number } | null }) {
+  const { t } = useTranslation();
+  const country = useSettings((s) => s.settings.country);
+  const [borders, setBorders] = useState<BordersData | null>(null);
+  useEffect(() => {
+    void loadBorders().then(setBorders);
+  }, []);
+  const show = useMemo(() => {
+    if (place && borders) return distanceToCountry(borders, 'PE', place.lat, place.lon) <= FAR_M;
+    return country === 'PE';
+  }, [borders, place?.lat, place?.lon, country]);
+  if (!show) return null;
+  return (
+    <section className="card stack" aria-labelledby="rener-title" data-testid="rener-frequencies">
+      <h2 id="rener-title" className="section-title" style={{ margin: 0 }}>{t('radio.rener.title')}</h2>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.rener.intro')}</p>
+      <p className="list-sub emergency-only" style={{ margin: 0 }}>{t('radio.emergencyOnly')}</p>
+      <ul className="list">
+        {RENER.map((r) => (
+          <li key={r.id} className="contact-row">
+            <span className="list-main">
+              <span className="list-title">{t(`radio.rener.${r.id}.name`)}</span>
+              <span className="list-sub">{t(`radio.rener.${r.id}.desc`)}</span>
+            </span>
+            <span className="contact-actions">
+              <strong className="radio-freqs">{r.freq}</strong>
+              <CopyButton text={r.freq} label={t('radio.copyFrequency', { name: t(`radio.rener.${r.id}.name`) })} />
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.rener.note')}</p>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.rener.sources')}</p>
+    </section>
+  );
+}
+
 /** Cuántos otros parques con frecuencia se listan. */
 const OTHER_PARKS_SHOWN = 10;
 
@@ -274,14 +332,14 @@ function ParkSection({ place }: { place: { lat: number; lon: number } | null }) 
       <h2 id="park-title" className="section-title" style={{ margin: 0 }}>{t('radio.park.title')}</h2>
       <p className="hint" style={{ margin: 0 }}>{t('radio.park.intro')}</p>
       {here.map(({ park, distance }) => (
-        <div key={park.url} className="stack park-block" data-testid="park-here">
+        <div key={`${park.country ?? ''}${park.name}`} className="stack park-block" data-testid="park-here">
           <p style={{ margin: 0 }}>
             <strong>{park.name}</strong> · {where(distance)}
           </p>
           {park.radio?.length ? (
             <ParkRadioList radio={park.radio} />
           ) : (
-            <p className="hint" style={{ margin: 0 }}>{t(park.url.includes('conaf.cl') ? 'radio.park.noRadioCL' : 'radio.park.noRadio')}</p>
+            <p className="hint" style={{ margin: 0 }}>{t(`radio.park.noRadio${parkCountry(park)}`)}</p>
           )}
           {park.emergency?.map((e) => (
             <span key={e.phone} className="list-sub park-phone">
@@ -302,7 +360,7 @@ function ParkSection({ place }: { place: { lat: number; lon: number } | null }) 
           <h3 className="list-title" style={{ margin: 0 }}>{t(here.length ? 'radio.park.othersTitle' : 'radio.park.allTitle')}</h3>
           <ul className="list" data-testid="park-others">
             {others.map(({ park, distance }) => (
-              <li key={park.url} className="contact-row">
+              <li key={`${park.country ?? ''}${park.name}`} className="contact-row">
                 <span className="list-main">
                   <span className="list-title">{park.name}</span>
                   {distance !== null && <span className="list-sub">{where(distance)}</span>}
@@ -319,7 +377,9 @@ function ParkSection({ place }: { place: { lat: number; lon: number } | null }) 
         </>
       )}
       <p className="hint" style={{ margin: 0 }}>{t('radio.park.note')}</p>
-      <p className="hint" style={{ margin: 0 }}>{t('radio.park.sources')}</p>
+      <p className="hint" style={{ margin: 0 }}>
+        {t('radio.park.sourcesLead')} {[...new Set(parks.parks.map(parkCountry))].map((c) => t(`radio.park.sourceOf${c}`)).join(' ')}
+      </p>
     </section>
   );
 }

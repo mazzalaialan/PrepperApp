@@ -628,7 +628,51 @@
     "mountain": {"fem": {"name": "FEM · mountain emergencies", "desc": "Emergencies only: keep it clear. Monitor it whenever you are in the mountains. Once contact is made, move to 139.970 or 138.510 to talk."}, "free1": {"name": "Free use · general communication", "desc": "To talk between groups and expeditions, and to continue after a call on 140.970."}, "free2": {"name": "Free use · secondary", "desc": "Another free-use channel, if 139.970 is busy."}, "csa": {"name": "Cuerpo de Socorro Andino", "desc": "Listed in mountain guides as the Chilean Andean Rescue Corps frequency; we found no official confirmation. Chile has no official mountain frequency: on the Chilean side of the Andes, also monitor 140.970."}, "rangers": {"name": "Park rangers", "desc": "Monitored by the Aconcagua rangers and, according to mountain guides, other parks. There is no official publication: confirm it at the ranger station."}, "conaf": {"name": "CONAF (Chilean park rangers)", "desc": "Listed on Wikiexplora as CONAF's; not confirmed. In Magallanes (Torres del Paine and Kawésqar), CONAF publishes 143.800 MHz: see \"Park frequencies\"."}, "carabineros": {"name": "Radio Club de Carabineros", "desc": "Amateur radio repeater of the Carabineros radio club (not the police channel). Outside an emergency, transmitting requires an amateur license."}},
     "emergencyOnly": "Only if your life depends on it. Not free to use: outside a real emergency, don't transmit there.",
     "vhf": "VHF",
-    "park": {"title": "Park frequencies", "intro": "The ones each national park or CONAF area publishes for visitor emergencies, with their phones. First the park you are in; then the others that publish a frequency.", "inside": "you are inside", "near": "{{distance}} from the boundary", "noRadio": "The park doesn't publish a VHF frequency for visitors: with a radio, use the FEM, 140.970 MHz.", "noRadioCL": "CONAF doesn't publish a VHF frequency for this area: with a radio, monitor the Socorro Andino one or the FEM, 140.970 MHz.", "office": "Park office", "source": "Source: {{source}}", "othersTitle": "Other parks with a published frequency", "allTitle": "Parks with a published frequency", "note": "Park frequencies are for emergencies; coverage depends on the terrain. Before going in, register at the ranger station and ask which one they use in the area.", "sources": "Sources: Administración de Parques Nacionales (argentina.gob.ar/parquesnacionales, CC BY 4.0) and CONAF (conaf.cl), with each frequency's source; boundaries: IGN (CC BY 4.0) and © OpenStreetMap contributors (ODbL)."},
+    "rener": {
+      "title": "Amateur radio emergency network (RENER, Peru)",
+      "intro": "RENER, run by the Radio Club Peruano with INDECI, is activated in emergencies and disasters. These are amateur radio frequencies: licensed operators transmit.",
+      "hf": {
+        "name": "HF 40 m: primary frequency",
+        "desc": "Local and international link. The secondary is 7,123 kHz LSB."
+      },
+      "hf80": {
+        "name": "HF 80 m: provinces",
+        "desc": "Link with the provinces."
+      },
+      "hf20": {
+        "name": "HF 20 m: international",
+        "desc": "International primary; the secondary is 14,167 kHz USB."
+      },
+      "indeci": {
+        "name": "RENER–INDECI link (HF)",
+        "desc": "With Civil Defense. Also 7,415 kHz USB."
+      },
+      "rpt1": {
+        "name": "Lima repeater (OA4O)",
+        "desc": "Primary. The temporary repeaters in Trujillo, Huaraz and Arequipa are linked and use the same frequency."
+      },
+      "rpt2": {
+        "name": "Lima repeater (OA4B, San Lorenzo island)",
+        "desc": "Secondary."
+      },
+      "coord": {
+        "name": "RENER coordination (simplex)",
+        "desc": "No repeater."
+      },
+      "call": {
+        "name": "Amateur calling frequency (simplex)",
+        "desc": "International VHF calling frequency."
+      },
+      "note": "With your life in danger you can ask for help by any means; otherwise, transmitting on these frequencies requires an amateur radio license (MTC). We could not find a published VHF frequency for INDECI or the Peruvian Red Cross.",
+      "sources": "Source: RENER operating procedures manual 2024, Radio Club Peruano (oa4o.pe). The list is subject to change: confirm it with the radio club."
+    },
+    "park": {"title": "Park frequencies", "intro": "The ones each national park or protected area publishes for visitor emergencies, with their phones. First the park you are in; then the others that publish a frequency.", "inside": "you are inside", "near": "{{distance}} from the boundary", "noRadioAR": "The park doesn't publish a VHF frequency for visitors: with a radio, use the FEM, 140.970 MHz.", "noRadioCL": "CONAF doesn't publish a VHF frequency for this area: with a radio, monitor the Socorro Andino one or the FEM, 140.970 MHz.",
+      "noRadioBO": "SERNAP doesn't publish a radio frequency for visitors in this area. Before going in, tell the rangers and bring a way to communicate; in an emergency, see Bolivia's numbers in Emergency contacts.",
+      "noRadioPE": "SERNANP doesn't publish a radio frequency for visitors in this area. Before going in, tell the area office and bring a way to communicate; in an emergency call 105 (Police) or 116 (Fire).", "office": "Park office", "source": "Source: {{source}}", "othersTitle": "Other parks with a published frequency", "allTitle": "Parks with a published frequency", "note": "Park frequencies are for emergencies; coverage depends on the terrain. Before going in, register at the ranger station and ask which one they use in the area.", "sourcesLead": "Sources:",
+      "sourceOfAR": "Administración de Parques Nacionales (argentina.gob.ar/parquesnacionales, CC BY 4.0), with each frequency's source; boundaries: IGN (CC BY 4.0).",
+      "sourceOfCL": "CONAF (conaf.cl), with each frequency's source; boundaries: © OpenStreetMap contributors (ODbL).",
+      "sourceOfBO": "Bolivia: boundaries © OpenStreetMap contributors (ODbL) and SERNAP contact (sernap.gob.bo).",
+      "sourceOfPE": "Peru: boundaries from SERNANP (MINAM), simplified derived map, and its headquarters contact (gob.pe/sernanp)."},
     "mountainNote": "The FEM and the two free-use ones are free to use without a license under Resolution 5/2015 (in Argentina). Outside an emergency, transmitting on other frequencies or on the Chilean side requires the proper authorization. A radio does not replace calling 911, the ranger station or 131 if there is signal.",
     "mountainSources": "Sources: Federación Andinistas Argentinos (FEM, 2021), Club Andino Mercedario (2024), Wikiexplora (Chile), Andesport and Meunier (park rangers). Confirm the ones for your area at the hut or ranger station and save them in \"My frequencies\".",
     "distressNote": "Transmitting needs a radio for that band. Use them only when a life is truly at risk: a false call is a crime.",

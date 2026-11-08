@@ -83,6 +83,8 @@ export interface ParkRadio {
 }
 
 export interface Park {
+  /** País del área (Bolivia y Perú lo traen; en los de Argentina y Chile se deduce de la página). */
+  country?: Country;
   name: string;
   /** Página del área (argentina.gob.ar o conaf.cl). */
   url: string;
@@ -109,6 +111,7 @@ export interface ParksData {
 
 let parksAR: Promise<ParksData> | null = null;
 let parksCL: Promise<ParksData> | null = null;
+const parksOther = new Map<'BO' | 'PE', Promise<ParksData>>();
 
 // Argentina viene con la app; si el servidor propio la regeneró (cada mes), se usa la copia más nueva.
 const loadParksAR = () => (parksAR ??= import('./parks-data.json').then((m) => preferNewer('parks-AR.json', m.default as unknown as ParksData)));
@@ -120,15 +123,44 @@ export function loadParksCL(): Promise<ParksData> {
   return parksCL;
 }
 
+/** Bolivia (SERNAP, de OpenStreetMap) y Perú (SERNANP): archivos aparte, se bajan una vez y quedan guardados, como el de Chile. */
+export function loadParksFile(country: 'BO' | 'PE'): Promise<ParksData> {
+  let p = parksOther.get(country);
+  if (!p) {
+    p = loadDataFile<ParksData>(`parks-${country}.json`);
+    parksOther.set(country, p);
+    // Si falla (sin conexión y sin bajar), se reintenta la próxima vez.
+    p.catch(() => parksOther.delete(country));
+  }
+  return p;
+}
+
+/** Países cuyos parques se muestran junto con los de cada uno (en la cordillera se está a pocos km de la frontera). */
+const PARK_NEIGHBORS: Record<Country, Country[]> = {
+  AR: ['AR', 'CL', 'BO'],
+  CL: ['CL', 'AR', 'BO', 'PE'],
+  UY: [],
+  BO: ['BO', 'PE', 'CL', 'AR'],
+  PE: ['PE', 'BO', 'CL'],
+};
+
+/** País de un área: el que trae el archivo; si no, por la página (conaf.cl es Chile; el resto, Argentina). */
+export const parkCountry = (park: Park): Country => park.country ?? (park.url.includes('conaf.cl') ? 'CL' : 'AR');
+
 /**
- * Parques de Argentina y Chile juntos (en la cordillera se está a pocos km
- * del otro país); Uruguay, ninguno. Si el archivo de Chile no está bajado y
- * no hay conexión, solo los de Argentina.
+ * Parques del país elegido y los de los países vecinos con los que comparte
+ * cordillera (Argentina y Chile, Bolivia y Perú…); Uruguay, ninguno. El de
+ * Argentina viene con la app y los demás se bajan aparte: si no están
+ * bajados y no hay conexión, solo los que haya.
  */
 export async function loadParks(country: Country): Promise<ParksData> {
-  if (country !== 'AR' && country !== 'CL') return { source: '', parks: [] };
-  const [ar, cl] = await Promise.all([loadParksAR(), loadParksCL().catch(() => null)]);
-  return { source: [ar.source, cl?.source].filter(Boolean).join(' '), parks: [...ar.parks, ...(cl?.parks ?? [])] };
+  const want = PARK_NEIGHBORS[country];
+  if (!want.length) return { source: '', parks: [] };
+  const loaded = await Promise.all(
+    want.map((c): Promise<ParksData | null> => (c === 'AR' ? loadParksAR() : c === 'CL' ? loadParksCL().catch(() => null) : c === 'UY' ? Promise.resolve(null) : loadParksFile(c).catch(() => null))),
+  );
+  const ok = loaded.filter((d): d is ParksData => d !== null);
+  return { source: ok.map((d) => d.source).filter(Boolean).join(' '), parks: ok.flatMap((d) => d.parks) };
 }
 
 function inRing(ring: [number, number][], lon: number, lat: number): boolean {
