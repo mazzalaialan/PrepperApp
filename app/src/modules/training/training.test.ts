@@ -1,0 +1,134 @@
+import { describe, expect, it } from 'vitest';
+import type { TrackPoint } from '@/modules/tracks/gpx';
+import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
+import { calories } from './energy';
+import { analyzeRecording, formatClock, formatPace } from './stats';
+
+describe('actividades', () => {
+  it('cada actividad tiene su grupo y las de bajo techo no usan GPS', () => {
+    expect(ACTIVITY_KINDS).toHaveLength(16);
+    for (const k of ACTIVITY_KINDS) expect(ACTIVITIES[k].kind).toBe(k);
+    expect(kindsOf('indoor')).toEqual(['treadmill', 'elliptical', 'stairClimber']);
+    expect(kindsOf('rowing')).toEqual(['kayak', 'canoe', 'rowboat', 'sup', 'rafting']);
+    expect(kindsOf('cycling')).toHaveLength(5);
+    expect(GROUPS.flatMap(kindsOf).sort()).toEqual([...ACTIVITY_KINDS].sort());
+    expect(ACTIVITY_KINDS.filter((k) => !ACTIVITIES[k].gps)).toEqual(['treadmill', 'elliptical', 'stairClimber']);
+    // A pie, ritmo; en bici y remo, velocidad.
+    expect(ACTIVITIES.trek.measure).toBe('pace');
+    expect(ACTIVITIES.kayak.measure).toBe('speed');
+  });
+});
+
+describe('calorías', () => {
+  it('caminar 5 km/h una hora en llano, 70 kg: unas 250 kcal (ACSM)', () => {
+    const k = calories({ kind: 'walk', weightKg: 70, movingS: 3600, distanceM: 5000 });
+    expect(k).toBeGreaterThan(235);
+    expect(k).toBeLessThan(265);
+  });
+
+  it('correr 10 km/h una hora, 70 kg: unas 770 kcal', () => {
+    const k = calories({ kind: 'run', weightKg: 70, movingS: 3600, distanceM: 10_000 });
+    expect(k).toBeGreaterThan(740);
+    expect(k).toBeLessThan(800);
+  });
+
+  it('subir cuesta más: el mismo trekking con desnivel y mochila gasta más', () => {
+    const flat = calories({ kind: 'trek', weightKg: 75, movingS: 7200, distanceM: 8000 });
+    const climb = calories({ kind: 'trek', weightKg: 75, movingS: 7200, distanceM: 8000, ascentM: 800 });
+    const pack = calories({ kind: 'trek', weightKg: 75, packKg: 12, movingS: 7200, distanceM: 8000, ascentM: 800 });
+    expect(climb).toBeGreaterThan(flat * 1.5);
+    expect(pack).toBeGreaterThan(climb * 1.1);
+  });
+
+  it('cinta: la inclinación suma; sin movimiento o sin peso, cero', () => {
+    const flat = calories({ kind: 'treadmill', weightKg: 80, movingS: 1800, distanceM: 4000 });
+    const incline = calories({ kind: 'treadmill', weightKg: 80, movingS: 1800, distanceM: 4000, inclinePct: 8 });
+    expect(incline).toBeGreaterThan(flat * 1.25); // a 8 km/h corre: la pendiente pesa menos que al caminar
+    expect(calories({ kind: 'run', weightKg: 80, movingS: 0, distanceM: 0 })).toBe(0);
+    expect(calories({ kind: 'run', weightKg: 0, movingS: 600, distanceM: 1000 })).toBe(0);
+  });
+
+  it('bici: más rápido, más calorías; la de montaña y la de ruta, más que la eléctrica; subir suma', () => {
+    const road25 = calories({ kind: 'roadBike', weightKg: 70, movingS: 3600, distanceM: 25_000 });
+    const road15 = calories({ kind: 'roadBike', weightKg: 70, movingS: 3600, distanceM: 15_000 });
+    expect(road25).toBeGreaterThan(road15);
+    expect(road25).toBeGreaterThan(650); // MET 10 × 70 kg × 1 h
+    const e = calories({ kind: 'ebike', weightKg: 70, movingS: 3600, distanceM: 25_000 });
+    expect(e).toBeLessThan(road25);
+    const climb = calories({ kind: 'roadBike', weightKg: 70, movingS: 3600, distanceM: 25_000, ascentM: 600 });
+    // 70 kg × 9,81 × 600 m / (4184 × 0,22) ≈ 447 kcal de trabajo de subida
+    expect(climb - road25).toBeGreaterThan(400);
+    expect(climb - road25).toBeLessThan(500);
+    expect(calories({ kind: 'mtb', weightKg: 70, movingS: 3600, distanceM: 12_000 })).toBeGreaterThanOrEqual(595);
+  });
+
+  it('remo, elíptica y escalador: por MET e intensidad', () => {
+    expect(calories({ kind: 'kayak', weightKg: 70, movingS: 3600, distanceM: 5000 })).toBe(350); // 5 MET
+    expect(calories({ kind: 'rafting', weightKg: 80, movingS: 7200, distanceM: 9000 })).toBe(800); // 5 MET
+    const mod = calories({ kind: 'elliptical', weightKg: 70, movingS: 3600, distanceM: 0 });
+    const hard = calories({ kind: 'elliptical', weightKg: 70, movingS: 3600, distanceM: 0, intensity: 'vigorous' });
+    expect(mod).toBe(350);
+    expect(hard).toBeGreaterThan(mod);
+    expect(calories({ kind: 'stairClimber', weightKg: 70, movingS: 1800, distanceM: 0 })).toBe(315); // 9 MET × 70 × 0,5 h
+  });
+});
+
+describe('estadísticas de lo grabado', () => {
+  // Una caminata hacia el sur a 1,5 m/s: un punto cada 15 s (≈ 22,5 m); ~111 m por cada 0,001°.
+  const walk = (n: number, startT = 1_000_000, startLat = -41): TrackPoint[] =>
+    Array.from({ length: n }, (_, i) => [startLat - i * 0.0002, -71, 800 + i * 0.5, startT + i * 15] as TrackPoint);
+
+  it('tiempo, distancia, desnivel, ritmo y parciales por kilómetro', () => {
+    const seg = walk(101); // 100 pasos de 22,24 m ≈ 2,2 km en 1500 s
+    const s = analyzeRecording([seg]);
+    expect(s.totalS).toBe(1500);
+    expect(s.movingS).toBe(1500);
+    expect(s.distanceM).toBeGreaterThan(2200);
+    expect(s.distanceM).toBeLessThan(2250);
+    expect(s.avgSpeedKmh).toBeCloseTo(5.4, 0);
+    expect(s.paceSPerKm).toBeGreaterThan(640);
+    expect(s.paceSPerKm).toBeLessThan(680);
+    expect(s.splitsS).toHaveLength(2);
+    expect(s.splitsS[0]).toBeGreaterThan(660);
+    expect(s.splitsS[0]).toBeLessThan(690);
+    expect(s.maxSpeedKmh).toBeGreaterThan(5);
+    expect(s.ascentM).toBe(50);
+  });
+
+  it('las paradas no cuentan como movimiento ni las pausas como tiempo', () => {
+    const first = walk(21, 1_000_000); // 300 s caminando
+    // Parada de 10 minutos en el mismo lugar: un punto igual al último 600 s después.
+    const last = first.at(-1)!;
+    const stop: TrackPoint[] = [[last[0], last[1], last[2], (last[3] as number) + 600]];
+    const second = walk(21, 1_000_000 + 900, last[0] - 0.0002);
+    const s = analyzeRecording([[...first, ...stop, ...second]]);
+    expect(s.totalS).toBe(1200);
+    expect(s.movingS).toBe(600);
+    // Dos tramos (una pausa): el tiempo entre ellos no suma.
+    const apart = analyzeRecording([first, walk(21, 2_000_000)]);
+    expect(apart.totalS).toBe(600);
+    expect(apart.movingS).toBe(600);
+  });
+
+  it('un salto del GPS no cuenta, y sin horas no hay ritmo', () => {
+    const jump: TrackPoint[] = [
+      [-41, -71, null, 100],
+      [-40, -71, null, 110], // 111 km en 10 s
+      [-40.0002, -71, null, 125],
+    ];
+    expect(analyzeRecording([jump]).maxSpeedKmh).toBeLessThan(10);
+    const noTime = analyzeRecording([[[-41, -71, null], [-41.001, -71, null]]]);
+    expect(noTime.movingS).toBe(0);
+    expect(noTime.paceSPerKm).toBe(0);
+    expect(noTime.distanceM).toBeGreaterThan(100);
+  });
+});
+
+describe('formatos', () => {
+  it('ritmo y reloj', () => {
+    expect(formatPace(332)).toBe('5:32');
+    expect(formatPace(0)).toBe('—');
+    expect(formatClock(3909)).toBe('1:05:09');
+    expect(formatClock(2712)).toBe('45:12');
+  });
+});

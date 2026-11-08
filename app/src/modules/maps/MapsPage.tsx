@@ -31,7 +31,7 @@ const RADII = [2, 5, 10, 20, 50, 100, 200];
 const LAYER_KEYS: (keyof MapLayers)[] = ['hillshade', 'contours', 'slope', 'mine', 'tracks'];
 const SLOPE_ZONES = ['low', 'caution', 'avalanche', 'steep', 'extreme'] as const;
 /** Vista que muestra un track entero (centro y zoom según lo que ocupa). */
-function trackView(tr: { segments: [number, number, number | null][][] }): ViewState | null {
+function trackView(tr: { segments: [number, number, number | null, number?][][] }): ViewState | null {
   const pts = tr.segments.flat();
   if (pts.length === 0) return null;
   const lats = pts.map((p) => p[0]);

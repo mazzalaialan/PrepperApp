@@ -10,8 +10,13 @@ import { latestIrFile, type IrFile } from './observer.ts';
  * con la capa prendida: leer la región son ~5,4 MB por archivo (cada 10 min).
  */
 
-/** Los mismos límites que el mapa de la app (app/src/modules/weathermap/projection.ts). */
-export const MAP_BOUNDS = { west: -76, east: -52, south: -58, north: -21 };
+/**
+ * Región de la imagen: del sur de la Patagonia al norte de Perú, de la costa del
+ * Pacífico a Uruguay (Argentina, Chile, Uruguay, Bolivia y Perú). La app dibuja la
+ * imagen con los límites que le manda `/api/rain/map`, así que no hace falta
+ * cambiarlos allá. Hasta la 0.43 era Cono Sur (−76, −52, −58, −21).
+ */
+export const MAP_BOUNDS = { west: -82, east: -52, south: -58, north: 2 };
 const WIDTH = 720;
 const R = 6_378_137;
 const mercY = (lat: number) => R * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));

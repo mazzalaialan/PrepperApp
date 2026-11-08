@@ -387,7 +387,8 @@ export interface Track extends BaseEntity {
   /** Página original (Wikiloc pone el link a la ruta). */
   link: string | null;
   /** Segmentos simplificados: [lat, lon, altura o null]. */
-  segments: [number, number, number | null][][];
+  /** [lat, lon, altura o null, hora (s desde 1970, solo si se grabó con la app)]. */
+  segments: [number, number, number | null, number?][][];
   waypoints: TrackWaypoint[];
   /** Calculados con todos los puntos originales, antes de simplificar. */
   distanceM: number;

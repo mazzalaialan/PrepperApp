@@ -8,7 +8,8 @@ import type { TrackWaypoint } from '@/core/model/types';
  */
 
 /** [lat, lon, altura o null] */
-export type TrackPoint = [number, number, number | null];
+/** [lat, lon, altura o null, y, si se grabó con la app, la hora en segundos desde 1970]. */
+export type TrackPoint = [number, number, number | null, number?];
 
 export interface ParsedTrack {
   name: string;
