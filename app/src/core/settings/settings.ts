@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { db } from '@/core/db/db';
+import type { WorkoutKind } from '@/core/model/types';
 import type { UnitSystem } from '@/core/units/units';
 import type { MapSourceMode } from '@/modules/maps/sources';
 
@@ -94,6 +95,8 @@ export interface Settings {
   gardenWateredAt: Record<string, string>;
   /** Nudos marcados como aprendidos (ids de la guía de nudos). */
   knotsLearned: string[];
+  /** Última actividad elegida en Entrenamiento. */
+  trainingKind: WorkoutKind;
   /** Tamaño de letra del visor de la biblioteca (%). */
   readerFontPct: number;
 }
@@ -215,6 +218,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenWaterAlerts: true,
   gardenWateredAt: {},
   knotsLearned: [],
+  trainingKind: 'walk',
   readerFontPct: 100,
 };
 

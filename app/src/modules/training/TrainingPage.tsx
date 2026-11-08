@@ -1,0 +1,178 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { Circle, Footprints, PencilLine, Plus } from 'lucide-react';
+import { useSettings } from '@/core/settings/settings';
+import { useRecorder } from '@/modules/tracks/recorder';
+import { Segmented } from '@/ui/Segmented';
+import { ACTIVITIES, GROUPS, kindsOf, type ActivityGroup, type ActivityKind } from './activities';
+import { useTrainingFormat, useBodyWeight } from './format';
+import { byWeek, recordsOf, totalsOf, weekStart } from './history';
+import { useTraining } from './store';
+
+/** Sesiones de entrenamiento: empezar una, ver la semana y el historial. */
+export function TrainingPage() {
+  const { t } = useTranslation();
+  const f = useTrainingFormat();
+  const workouts = useTraining((s) => s.workouts);
+  const status = useRecorder((s) => s.status);
+  const start = useRecorder((s) => s.start);
+  const lastKind = useSettings((s) => s.settings.trainingKind);
+  const update = useSettings((s) => s.update);
+  const weight = useBodyWeight();
+  const [group, setGroup] = useState<ActivityGroup>(ACTIVITIES[lastKind]?.group ?? 'foot');
+  const [kind, setKind] = useState<ActivityKind>(lastKind);
+  const [pack, setPack] = useState('');
+  const list = [...workouts.values()];
+  const weeks = byWeek(list);
+  const records = recordsOf(list);
+  const def = ACTIVITIES[kind];
+  const currentWeek = weekStart(new Date());
+  const thisWeek = weeks.find((w) => w.start === currentWeek);
+  const week = thisWeek?.totals ?? totalsOf([]);
+
+  const pickGroup = (g: ActivityGroup) => {
+    setGroup(g);
+    setKind(kindsOf(g)[0]!);
+  };
+
+  return (
+    <div className="stack">
+      <h1 className="page-title">{t('modules.workouts.title')}</h1>
+
+      <section className="card stack" aria-labelledby="train-start">
+        <h2 id="train-start" className="section-title" style={{ margin: 0 }}>
+          {t('training.startTitle')}
+        </h2>
+        <Segmented<ActivityGroup>
+          label={t('training.group.label')}
+          value={group}
+          options={GROUPS.map((g) => ({ value: g, label: t(`training.group.${g}`) }))}
+          onChange={pickGroup}
+        />
+        <div className="field">
+          <label htmlFor="train-kind">{t('training.activity')}</label>
+          <select id="train-kind" className="select" value={kind} onChange={(e) => setKind(e.target.value as ActivityKind)}>
+            {kindsOf(group).map((k) => (
+              <option key={k} value={k}>
+                {t(`training.kind.${k}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="hint" style={{ margin: 0 }}>{t(`training.kindHint.${kind}`)}</p>
+        {def.gps && kind === 'trek' && (
+          <div className="field">
+            <label htmlFor="train-pack">{t('training.pack')}</label>
+            <input id="train-pack" className="input" type="number" inputMode="decimal" min={0} max={80} step={0.5} value={pack} onChange={(e) => setPack(e.target.value)} placeholder="0" />
+          </div>
+        )}
+        {!weight && (
+          <p className="hint" style={{ margin: 0 }} data-testid="train-no-weight">
+            {t('training.noWeight')} <Link to="/first-aid/medical">{t('training.noWeightLink')}</Link>
+          </p>
+        )}
+        <div className="row-end wrap">
+          {def.gps ? (
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={status !== 'idle'}
+              onClick={() => {
+                void update({ trainingKind: kind });
+                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null });
+              }}
+            >
+              <Circle size={18} fill="currentColor" /> {t('training.startRecording')}
+            </button>
+          ) : (
+            <Link className="btn btn-primary" to={`/training/workouts/new?kind=${kind}`} onClick={() => void update({ trainingKind: kind })}>
+              <PencilLine size={18} /> {t('training.loadSession')}
+            </Link>
+          )}
+          {def.gps && (
+            <Link className="btn" to={`/training/workouts/new?kind=${kind}`}>
+              <Plus size={18} /> {t('training.loadManual')}
+            </Link>
+          )}
+        </div>
+        {status !== 'idle' && <p className="hint" style={{ margin: 0 }}>{t('training.alreadyRecording')}</p>}
+        <p className="hint" style={{ margin: 0 }}>{t('training.estimate')}</p>
+      </section>
+
+      <section className="card stack" aria-labelledby="train-week" data-testid="train-week">
+        <h2 id="train-week" className="section-title" style={{ margin: 0 }}>
+          {t('training.thisWeek')}
+        </h2>
+        <dl className="track-stats">
+          <div>
+            <dt>{t('training.sessions')}</dt>
+            <dd>{week.count}</dd>
+          </div>
+          <div>
+            <dt>{t('training.distance')}</dt>
+            <dd>{f.distance(week.distanceM)}</dd>
+          </div>
+          <div>
+            <dt>{t('training.time')}</dt>
+            <dd>{f.clock(week.totalS)}</dd>
+          </div>
+          <div>
+            <dt>{t('training.ascent')}</dt>
+            <dd>{f.altitude(week.ascentM)}</dd>
+          </div>
+          <div>
+            <dt>{t('training.calories')}</dt>
+            <dd>{f.kcal(week.calories)}</dd>
+          </div>
+        </dl>
+        {(records.longestM || records.mostAscentM) && (
+          <p className="hint" style={{ margin: 0 }} data-testid="train-records">
+            {t('training.records')}: {records.longestM ? `${t('training.recordLongest')} ${f.distance(records.longestM)}` : ''}
+            {records.longestM && records.mostAscentM ? ' · ' : ''}
+            {records.mostAscentM ? `${t('training.recordAscent')} ${f.altitude(records.mostAscentM)}` : ''}
+          </p>
+        )}
+        <div className="row-end wrap">
+          <Link className="btn" to="/training/outings">
+            <Footprints size={18} /> {t('modules.outings.title')}
+          </Link>
+        </div>
+      </section>
+
+      <section className="stack" aria-labelledby="train-history">
+        <h2 id="train-history" className="section-title" style={{ margin: 0 }}>
+          {t('training.history')}
+        </h2>
+        {weeks.length === 0 ? (
+          <p className="empty">{t('training.empty')}</p>
+        ) : (
+          weeks.map((w) => (
+            <div key={w.start} className="card stack" data-testid="train-week-block">
+              <p className="hint" style={{ margin: 0 }}>
+                {t('training.weekOf', { date: new Date(`${w.start}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) })} · {f.distance(w.totals.distanceM)} · {f.clock(w.totals.totalS)} · {f.kcal(w.totals.calories)}
+              </p>
+              <ul className="list">
+                {w.workouts.map((x) => (
+                  <li key={x.id}>
+                    <Link className="list-link" to={`/training/workouts/${x.id}`} data-testid="train-row">
+                      <span className="list-main">
+                        <span className="list-title">{x.name}</span>
+                        <span className="list-sub">
+                          {f.kindName(x.kind)} · {f.date(x.startedAt)}
+                        </span>
+                        <span className="list-sub">
+                          {f.distance(x.distanceM)} · {f.clock(x.totalS)} · {f.effort(x.kind, x)} · {f.kcal(x.calories)}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        )}
+      </section>
+    </div>
+  );
+}

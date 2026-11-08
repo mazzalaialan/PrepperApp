@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { TrackPoint } from '@/modules/tracks/gpx';
 import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
+import type { Workout } from '@/core/model/types';
+import { byWeek, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
 import { analyzeRecording, formatClock, formatPace } from './stats';
 
 describe('actividades', () => {
@@ -130,5 +132,40 @@ describe('formatos', () => {
     expect(formatPace(0)).toBe('—');
     expect(formatClock(3909)).toBe('1:05:09');
     expect(formatClock(2712)).toBe('45:12');
+  });
+});
+
+describe('historial y salidas', () => {
+  const w = (id: string, startedAt: string, over: Partial<Workout> = {}): Workout => ({ id, kind: 'walk', name: id, startedAt, source: 'gps', trackId: null, totalS: 3600, movingS: 3500, distanceM: 5000, ascentM: 100, descentM: 80, minEle: 800, maxEle: 900, avgSpeedKmh: 5, paceSPerKm: 720, maxSpeedKmh: 7, splitsS: [], calories: 250, weightKg: 70, packKg: null, inclinePct: null, intensity: null, avgHr: null, maxHr: null, notes: '', outingId: null, createdAt: startedAt, updatedAt: startedAt, ...over }) as unknown as Workout;
+
+  it('totales: suma y toma la altura más alta y la más baja', () => {
+    const t = totalsOf([w('a', '2026-11-02T10:00:00'), w('b', '2026-11-03T10:00:00', { maxEle: 1200, minEle: 700, distanceM: 3000 })]);
+    expect(t).toMatchObject({ count: 2, totalS: 7200, distanceM: 8000, ascentM: 200, calories: 500, maxEle: 1200, minEle: 700 });
+    expect(totalsOf([]).maxEle).toBeNull();
+  });
+
+  it('semanas: de lunes a domingo, la más nueva primero', () => {
+    expect(weekStart(new Date('2026-11-08T12:00:00'))).toBe('2026-11-02'); // domingo
+    expect(weekStart(new Date('2026-11-09T00:30:00'))).toBe('2026-11-09'); // lunes
+    const weeks = byWeek([w('a', '2026-11-02T10:00:00'), w('b', '2026-11-08T20:00:00'), w('c', '2026-11-09T07:00:00')]);
+    expect(weeks.map((x) => x.start)).toEqual(['2026-11-09', '2026-11-02']);
+    expect(weeks[1]!.workouts.map((x) => x.id)).toEqual(['b', 'a']);
+    expect(weeks[1]!.totals.distanceM).toBe(10_000);
+  });
+
+  it('salida: sus actividades en orden, con totales juntos', () => {
+    const list = [w('baja', '2026-11-08T15:00:00', { outingId: 'o1' }), w('sube', '2026-11-08T08:00:00', { outingId: 'o1', ascentM: 900 }), w('otra', '2026-11-08T09:00:00', { outingId: 'o2' })];
+    expect(inOuting(list, 'o1').map((x) => x.id)).toEqual(['sube', 'baja']);
+    expect(totalsOf(inOuting(list, 'o1')).ascentM).toBe(1000);
+  });
+
+  it('récords y recálculo de calorías con otro peso', () => {
+    const r = recordsOf([w('a', '2026-11-02T10:00:00'), w('b', '2026-11-03T10:00:00', { distanceM: 12_000, ascentM: 900 })]);
+    expect(r).toMatchObject({ longestM: 12_000, mostAscentM: 900 });
+    expect(recordsOf([])).toEqual({ longestM: null, mostAscentM: null, longestS: null });
+    const base = w('x', '2026-11-02T10:00:00', { calories: 0, weightKg: null });
+    expect(recalculated(base, null, null).calories).toBe(0);
+    expect(recalculated(base, 70, null).calories).toBeGreaterThan(200);
+    expect(recalculated(base, 90, null).calories).toBeGreaterThan(recalculated(base, 70, null).calories);
   });
 });

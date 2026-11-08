@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  Activity,
   Anchor,
   BellRing,
   BookA,
@@ -11,6 +12,7 @@ import {
   CloudSun,
   Compass,
   FileText,
+  Flag,
   Footprints,
   HeartPulse,
   Lasso,
@@ -34,7 +36,7 @@ import {
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
-export const SECTIONS = ['firstAid', 'documents', 'orientation', 'weather', 'inventory', 'knots', 'garden', 'library'] as const;
+export const SECTIONS = ['firstAid', 'documents', 'orientation', 'training', 'weather', 'inventory', 'knots', 'garden', 'library'] as const;
 export type Section = (typeof SECTIONS)[number];
 
 export interface ModuleDef {
@@ -73,6 +75,8 @@ export const MODULES: ModuleDef[] = [
   { id: 'waypoints', section: 'orientation', icon: MapPin, implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },
   { id: 'tracks', section: 'orientation', icon: Footprints, implemented: true, path: '/orientation/tracks' },
   { id: 'starmap', section: 'orientation', icon: Sparkles, implemented: true, path: '/orientation/starmap', degradesWithout: ['orientation'] },
+  { id: 'workouts', section: 'training', icon: Activity, implemented: true, path: '/training/workouts', degradesWithout: ['geolocation'] },
+  { id: 'outings', section: 'training', icon: Flag, implemented: true, path: '/training/outings' },
   { id: 'weather', section: 'weather', icon: CloudSun, implemented: true, path: '/weather/forecast' },
   { id: 'weatherMap', section: 'weather', icon: MapIcon, implemented: true, path: '/weather/map' },
   { id: 'astronomy', section: 'weather', icon: Moon, implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },

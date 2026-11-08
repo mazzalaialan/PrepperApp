@@ -59,6 +59,8 @@ export const repos = {
   tracks: new Repository('tracks'),
   gardenBeds: new Repository('gardenBeds'),
   plantings: new Repository('plantings'),
+  workouts: new Repository('workouts'),
+  outings: new Repository('outings'),
 } satisfies { [K in EntityTable]: Repository<K> };
 
 /** Binarios cifrados (fotos), leídos bajo demanda. */

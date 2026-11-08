@@ -304,6 +304,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       name: draft.name.trim(),
       pet: isPet ? { ...pet, speciesOther: pet.species === 'other' ? pet.speciesOther.trim() : '' } : null,
       bloodType: isPet ? '' : draft.bloodType,
+      weightKg: isPet ? null : (draft.weightKg ?? null),
       relationship: isPet ? '' : (draft.relationship ?? '').trim(),
       phone: isPet ? '' : (draft.phone ?? '').trim(),
       isMe: isMe,
@@ -468,6 +469,23 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
               </div>
             )}
           </div>
+          {!isPet && (
+            <div className="field">
+              <label htmlFor="weight">{t('medical.weightKg')}</label>
+              <input
+                id="weight"
+                className="input"
+                type="number"
+                inputMode="decimal"
+                min={20}
+                max={400}
+                step={0.1}
+                value={draft.weightKg ?? ''}
+                onChange={(e) => set({ weightKg: e.target.value === '' ? null : Number(e.target.value) })}
+              />
+              <p className="hint" style={{ margin: 0 }}>{t('medical.weightHint')}</p>
+            </div>
+          )}
           {text('allergies')}
           {text('conditions')}
         </section>

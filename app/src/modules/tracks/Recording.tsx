@@ -162,7 +162,9 @@ export function RecordingBar() {
   async function stop(name: string) {
     setNaming(null);
     const id = await finish(name);
-    if (id) navigate(`/orientation/tracks/${id}`);
+    const workoutId = useRecorder.getState().lastWorkoutId;
+    if (workoutId) navigate(`/training/workouts/${workoutId}`);
+    else if (id) navigate(`/orientation/tracks/${id}`);
     else setNotice(t('tracks.rec.nothing'));
   }
 

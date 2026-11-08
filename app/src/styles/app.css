@@ -3959,3 +3959,19 @@ a.module-card:hover {
   border-radius: 10px;
   overflow: hidden;
 }
+
+/* Entrenamiento. */
+.splits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.splits li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}

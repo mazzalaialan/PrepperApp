@@ -55,7 +55,12 @@ export function MapsPage() {
   const trackMap = useTracks((s) => s.tracks);
   // Desde un track ("Ver en el mapa"): el mapa arranca mostrándolo entero.
   const [params] = useSearchParams();
-  const focusTrack = params.get('track') ? trackMap.get(params.get('track')!) : undefined;
+  // ?track=<id> enmarca un track; ?tracks=<id>,<id>… varios juntos (una salida de Entrenamiento).
+  const focusTrack = params.get('track')
+    ? trackMap.get(params.get('track')!)
+    : params.get('tracks')
+      ? { segments: params.get('tracks')!.split(',').flatMap((id) => trackMap.get(id)?.segments ?? []) }
+      : undefined;
   const { zones, missing, add, remove, loaded, load } = useMapZones();
   // El módulo se carga recién al abrir la pantalla (después de desbloquear): las zonas se leen acá.
   useEffect(() => {

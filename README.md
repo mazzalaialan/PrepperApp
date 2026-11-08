@@ -2,7 +2,7 @@
 
 > *Hay que estar listo para que no te agarre un imprevisto.*
 
-App de preparacionismo **offline-first** para Android y PC: inventario con vencimientos, ubicaciones, herramientas de campo (brújula, inclinómetro, waypoints, tracks, sol y luna, mapa estelar), mapas offline, clima con avisos, emergencias y primeros auxilios, huerta (calendario por zona, canteros y avisos de helada y riego) y una biblioteca de manuales de supervivencia. Todos los datos quedan en el dispositivo, cifrados.
+App de preparacionismo **offline-first** para Android y PC: inventario con vencimientos, ubicaciones, herramientas de campo (brújula, inclinómetro, waypoints, tracks, sol y luna, mapa estelar), entrenamiento (sesiones a pie, remo, ciclismo y bajo techo con calorías, desnivel y salidas), mapas offline, clima con avisos, emergencias y primeros auxilios, huerta (calendario por zona, canteros y avisos de helada y riego) y una biblioteca de manuales de supervivencia. Con datos de Argentina, Chile, Uruguay, Bolivia y Perú (servicios cercanos, emergencias y radio, según el país). Todos los datos quedan en el dispositivo, cifrados.
 
 Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y funciona sin internet.
 

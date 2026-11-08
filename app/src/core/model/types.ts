@@ -264,6 +264,8 @@ export interface MedicalProfile extends BaseEntity {
   doctors?: Doctor[];
   insurance?: HealthInsurance;
   birthDate: IsoDay | null;
+  /** Peso en kg, solo personas: lo usa el Entrenamiento para estimar las calorías (desde 0.44). */
+  weightKg?: number | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
   bloodType: string;
   allergies: string;
@@ -308,6 +310,64 @@ export interface EntityMap {
   tracks: Track;
   gardenBeds: GardenBed;
   plantings: Planting;
+  workouts: Workout;
+  outings: Outing;
+}
+
+/** Actividad del Entrenamiento (ver modules/training/activities.ts). */
+export type WorkoutKind =
+  | 'walk' | 'run' | 'trek'
+  | 'kayak' | 'canoe' | 'rowboat' | 'sup' | 'rafting'
+  | 'roadBike' | 'mtb' | 'gravel' | 'cityBike' | 'ebike'
+  | 'treadmill' | 'elliptical' | 'stairClimber';
+
+/**
+ * Una sesión de entrenamiento: grabada con el GPS (el recorrido queda en el
+ * track `trackId`, con su mapa y su perfil de altura) o cargada a mano
+ * (actividades bajo techo y las que se olvidaron de grabar).
+ */
+export interface Workout extends BaseEntity {
+  kind: WorkoutKind;
+  name: string;
+  /** Cuándo empezó (ISO). */
+  startedAt: string;
+  /** De dónde salen los datos: GPS de la app, carga manual o un reloj (más adelante). */
+  source: 'gps' | 'manual' | 'watch';
+  /** El recorrido grabado (en Tracks), si hubo GPS. */
+  trackId: Id | null;
+  /** Segundos, del primer al último punto (sin pausas) y en movimiento (sin paradas). */
+  totalS: number;
+  movingS: number;
+  distanceM: number;
+  ascentM: number;
+  descentM: number;
+  minEle: number | null;
+  maxEle: number | null;
+  avgSpeedKmh: number;
+  paceSPerKm: number;
+  maxSpeedKmh: number;
+  /** Segundos de cada kilómetro completo. */
+  splitsS: number[];
+  /** Estimadas con el peso de la persona (ver modules/training/energy.ts). */
+  calories: number;
+  weightKg: number | null;
+  packKg: number | null;
+  /** Cinta: inclinación promedio (%). */
+  inclinePct: number | null;
+  /** Elíptica y escalador. */
+  intensity: 'light' | 'moderate' | 'vigorous' | null;
+  /** Frecuencia cardíaca (latidos por minuto): cuando se conecten relojes. */
+  avgHr: number | null;
+  maxHr: number | null;
+  notes: string;
+  /** La salida a la que pertenece, si la hay. */
+  outingId: Id | null;
+}
+
+/** Una salida: varias actividades juntas (por ejemplo "Salida al Platita"), con sus totales, mapa y desnivel. */
+export interface Outing extends BaseEntity {
+  name: string;
+  notes: string;
 }
 
 /** Cantero o maceta de la huerta (ARQUITECTURA §10.1). Se dibuja como grilla de cuadros de 30 cm. */
@@ -380,6 +440,9 @@ export interface Track extends BaseEntity {
   durationS?: number;
   /** Mientras se graba: clave privada para leer los puntos grabados con la app bloqueada (ver tracks/lockedBuffer). */
   recKey?: JsonWebKey;
+  /** Grabado como sesión de Entrenamiento: qué actividad y la carga (mochila, kg). Al terminar crea la actividad. */
+  activity?: WorkoutKind;
+  activityPackKg?: number | null;
   name: string;
   desc: string;
   /** De dónde salió ("Wikiloc", o el nombre del archivo). */

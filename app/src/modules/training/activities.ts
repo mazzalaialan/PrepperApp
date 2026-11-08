@@ -4,6 +4,8 @@
  * cargan a mano o con el cronómetro.
  */
 
+import type { WorkoutKind } from '@/core/model/types';
+
 export type ActivityGroup = 'foot' | 'rowing' | 'cycling' | 'indoor';
 
 export const ACTIVITY_KINDS = [
@@ -23,8 +25,8 @@ export const ACTIVITY_KINDS = [
   'treadmill',
   'elliptical',
   'stairClimber',
-] as const;
-export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
+] as const satisfies readonly WorkoutKind[];
+export type ActivityKind = WorkoutKind;
 
 export interface ActivityDef {
   kind: ActivityKind;

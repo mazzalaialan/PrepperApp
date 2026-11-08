@@ -1,53 +1,44 @@
 # Pendientes de VikArg
 
-Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide.
+Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
-## 1. Parques y frecuencias de Bolivia y Perú
+## Hecho
 
-- Parques de Bolivia (áreas protegidas de OpenStreetMap, como Chile) y de Perú (SERNANP, servicio de descarga, capa "ANP Nacional Definitiva"), con su sección en Radio.
-- Frecuencias de emergencia de Perú, con la aclaración "sin confirmar": RENER (INDECI) VHF 146.960 MHz, HF 7.100 kHz, simplex 147.635 MHz, estación control OA4O; INDECI 155.640 MHz y 10.342 kHz; Cruz Roja Peruana 155.760 MHz; PMR 446.000–446.100 MHz; llamada VHF 146.520 MHz.
+- **Parques y frecuencias de Bolivia y Perú:** parques de Bolivia (SERNAP, de OpenStreetMap) y de Perú (SERNANP) en Radio, con el contacto de la sede central; red de emergencia de radioaficionados de Perú (RENER) con las frecuencias confirmadas del manual 2024 del Radio Club Peruano.
+- **Lluvia estimada por satélite en Bolivia y Perú:** mapa ampliado; medido: 12,5 MB por actualización y 2,0 s de procesador, solo mientras alguien mira la capa.
+- **Elegir una ubicación en el mapa:** en la edición de waypoints y en "Escribir coordenadas" (publicado en la 0.43.0).
+- **Grabar recorrido con pantalla apagada:** al volver de un corte, avisa entre qué horas fue y pregunta si unir con una recta o dejar el tramo vacío.
+- **Entrenamiento (base):** sesiones de caminata, correr, trekking, remo (kayak, canoa, bote, SUP, rafting), ciclismo (ruta, montaña, gravel, urbana, eléctrica) y bajo techo (cinta, elíptica, escalador); calorías (ACSM y MET) con el peso de la ficha médica; tiempo en movimiento, ritmo o velocidad, parciales por km, desnivel, mapa y gráfico de desnivel; historial por semana, récords y salidas que agrupan actividades con totales, mapa y desnivel de toda la salida. Los puntos grabados ahora llevan la hora.
 
-## 2. Calendarios de huerta de Bolivia y Perú
+## 1. Calendarios de huerta de Bolivia y Perú (decisión pendiente)
 
-Con los datos del INIAF (Bolivia) y del INIA (Perú): altiplano, valles y trópico; costa, sierra y selva. No se parecen a ninguna zona argentina.
+Se investigó y no existe un calendario oficial abierto de siembra por cultivo y mes: el INIAF (Bolivia) y el INIA (Perú) no lo publican, y los de Costa, Sierra y Selva del INIA están detrás de un login. Solo hay un manual de una ONG (2016, valle de Tarija) con cuadros gráficos. Los textos de la app ya dicen que no hay calendario oficial. A decidir con el usuario: dejarlo así, armar uno propio a partir del manual de la ONG (con la fuente y sin generalizar a otras zonas) o esperar una fuente oficial. No se parecen a ninguna zona argentina.
 
-## 3. Lluvia estimada por satélite en Bolivia y Perú
-
-Ampliar la zona del mapa de lluvia midiendo el costo de procesador del servidor.
-
-## 4. Entrenamiento
-
-**Lo más importante**
-
-- Modos: caminar, correr, trekking; remo (kayak, canoa, bote, SUP, rafting); ciclismo (ruta, montaña, gravel, urbano, eléctrica). Bajo techo, sin GPS: cinta, elíptica y escalador.
-- Cálculos según la actividad: tiempo total y en movimiento, distancia, calorías (según el esfuerzo de cada actividad y el peso de la ficha médica), ritmo (min/km) o velocidad (km/h), subida y bajada acumuladas. Frecuencia cardíaca y datos de cada actividad cuando se conecten relojes (los datos quedan preparados).
-- Recorrido en el mapa y gráfico de desnivel, como los tracks importados de Wikiloc.
+## 2. Entrenamiento: lo que falta
 
 **Salidas**
 
-- Agrupar actividades en una salida (por ejemplo "Salida al Platita"), con totales, mapa y desnivel de toda la salida.
-- Enlace público para redes sociales, solo si se elige: título, recorrido simplificado, datos y gráfico, **sin fotos** (para controlar el espacio del servidor). Se puede borrar. Sin datos privados; se recorta el inicio y el final cerca de casa.
+- Enlace público de una salida para redes sociales, solo si se elige: título, recorrido simplificado, datos y gráfico, **sin fotos** (para controlar el espacio del servidor). Se puede borrar. Sin datos privados; se recorta el inicio y el final cerca de casa.
 
 **Funciones de apps de running**
 
-Voz con los datos cada km, intervalos, objetivos semanales, récords personales, resúmenes y rachas, botón de vuelta, cuenta regresiva, pausa automática, carga manual, notas (cómo me sentí, terreno, clima automático), equipo (km de zapatillas, bici o bote), planificar rutas en el mapa, zonas privadas, importar y exportar GPX/TCX, seguimiento en vivo para la familia (opcional y con vencimiento). Sin muro social.
+Voz con los datos cada km, intervalos, objetivos semanales y progreso, pausa automática, notas (cómo me sentí, terreno, clima automático), equipo (km de zapatillas, bici o bote), planificar rutas en el mapa, zonas privadas, importar y exportar GPX/TCX, seguimiento en vivo para la familia (opcional y con vencimiento). Sin muro social. Botón de vuelta y cuenta regresiva se revisan al encarar este punto (la carga manual ya está).
 
 **Pantalla bloqueada**
 
 - Usa el mismo grabador que Tracks: el bloqueo automático de la app se pausa mientras se graba y el bloqueo a mano no corta la grabación.
-- En la web, si el sistema suspende la página (pantalla apagada), se pierde el tramo: arranca en modo bolsillo y, al volver, avisa "se cortó la grabación entre HH:MM y HH:MM" sin unir el hueco con una línea recta.
+- En la web, si el sistema suspende la página (pantalla apagada), se pierde el tramo: arranca en modo bolsillo y, al volver, avisa entre qué horas se cortó y pregunta si unir con una recta o dejar el tramo vacío (hecho).
+
+**Roles**
+
 - Roles de alumno e instructor (copia institucional): ahora no; solo dejar el código preparado.
 
-## 5. Elegir una ubicación en el mapa
-
-En todos los lugares donde se elige una ubicación (mi ubicación, waypoint, coordenadas), una opción más que abre el mapa para tocar un punto.
-
-## 6. App nativa (Capacitor)
+## 3. App nativa (Capacitor)
 
 - Detectar la plataforma; guardado sin conexión para web y app; notificaciones nativas por Firebase; tocar una notificación abre la pantalla correcta.
 - **Requisito indispensable:** la grabación (Tracks, Entrenamiento y seguir un track) **nunca se corta con el celular bloqueado o la pantalla apagada**. Android: servicio en primer plano con notificación fija y lo que pide Google Play (declaración, aviso destacado, video). iPhone: ubicación en segundo plano explicada al revisor. Pruebas en celulares reales con salidas largas y pantalla apagada (batería, ahorro de energía de Xiaomi, Samsung y otras marcas).
 
-## 7. Después de la app nativa
+## 4. Después de la app nativa
 
 - Barómetro en el altímetro (sensor de presión de Android y CMAltimeter de iPhone).
 - Relojes: Health Connect (Android) y HealthKit (iPhone), con actividades y pulso.

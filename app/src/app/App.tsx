@@ -82,6 +82,11 @@ const KnotGuidePage = page(() => import('@/modules/knots/KnotGuidePage').then((m
 const KnotPage = page(() => import('@/modules/knots/KnotPage').then((m) => ({ default: m.KnotPage })));
 const CropPage = page(() => import('@/modules/garden/CropPage').then((m) => ({ default: m.CropPage })));
 const GardenCalendarPage = page(() => import('@/modules/garden/GardenCalendarPage').then((m) => ({ default: m.GardenCalendarPage })));
+const TrainingPage = page(() => import('@/modules/training/TrainingPage').then((m) => ({ default: m.TrainingPage })));
+const WorkoutPage = page(() => import('@/modules/training/WorkoutPage').then((m) => ({ default: m.WorkoutPage })));
+const WorkoutEditPage = page(() => import('@/modules/training/WorkoutEditPage').then((m) => ({ default: m.WorkoutEditPage })));
+const OutingsPage = page(() => import('@/modules/training/OutingsPage').then((m) => ({ default: m.OutingsPage })));
+const OutingPage = page(() => import('@/modules/training/OutingPage').then((m) => ({ default: m.OutingPage })));
 const GardenPage = page(() => import('@/modules/garden/GardenPage').then((m) => ({ default: m.GardenPage })));
 const SettingsPage = page(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const AboutPage = page(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
@@ -157,6 +162,12 @@ const router = createHashRouter([
       { path: '/knots/anchors/:id', element: <AnchorPage /> },
       { path: '/knots/ropes', element: <RopesPage /> },
       { path: '/knots/glossary', element: <GlossaryPage /> },
+      { path: '/training', element: <SectionPage section="training" /> },
+      { path: '/training/workouts', element: <TrainingPage /> },
+      { path: '/training/workouts/new', element: <WorkoutEditPage /> },
+      { path: '/training/workouts/:id', element: <WorkoutPage /> },
+      { path: '/training/outings', element: <OutingsPage /> },
+      { path: '/training/outings/:id', element: <OutingPage /> },
       { path: '/garden', element: <SectionPage section="garden" /> },
       { path: '/garden/calendar', element: <GardenCalendarPage /> },
       { path: '/garden/crops/:id', element: <CropPage /> },

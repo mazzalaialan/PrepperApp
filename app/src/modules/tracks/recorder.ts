@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import type { GeoError } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
-import type { Id, Track } from '@/core/model/types';
+import type { Id, Track, WorkoutKind } from '@/core/model/types';
 import { isUnlocked } from '@/core/security/session';
+import { useMedical } from '@/modules/firstAid/medicalStore';
+import { workoutFromRecording } from '@/modules/training/store';
+import { useTraining } from '@/modules/training/store';
+import { analyzeRecording } from '@/modules/training/stats';
 import { trackStats, type TrackPoint } from './gpx';
 import { addLocked, clearLocked, newRecKey, prepareLocked, readLocked } from './lockedBuffer';
 import { addPoint, finishedTrack, joinLastSegments, shouldAdd } from './record';
@@ -37,7 +41,10 @@ interface RecorderState {
   gapTo: number | null;
   /** Precisión de la última posición del GPS (para mostrar por qué todavía no graba). */
   accuracy: number | null;
-  start: (name: string) => Promise<void>;
+  /** Empieza a grabar; con `kind` es una sesión de Entrenamiento (al terminar crea la actividad). */
+  start: (name: string, opts?: { kind?: WorkoutKind; packKg?: number | null }) => Promise<void>;
+  /** La actividad que creó la última grabación terminada (para abrirla al terminar). */
+  lastWorkoutId: Id | null;
   pause: () => Promise<void>;
   resume: () => void;
   /** Termina y guarda (con ese nombre, si se da); devuelve el track, o null si no llegó a grabar nada. */
@@ -46,7 +53,7 @@ interface RecorderState {
   joinGap: () => void;
 }
 
-const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, gapFrom: null, gapTo: null, accuracy: null } as const;
+const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, gapFrom: null, gapTo: null, accuracy: null, lastWorkoutId: null } as const;
 
 /** Más que esto con la pantalla apagada, se avisa que no se grabó. */
 const GAP_NOTICE_MS = 20_000;
@@ -73,7 +80,8 @@ function onPosition(p: GeolocationPosition) {
   if (s.error || s.accuracy !== fix.accuracy) useRecorder.setState({ error: null, accuracy: fix.accuracy });
   const segments = s.track.segments;
   if (!shouldAdd(segments[segments.length - 1]?.at(-1), fix)) return;
-  const point: TrackPoint = [fix.lat, fix.lon, p.coords.altitude ?? null];
+  // Con la hora (segundos): de ahí salen el tiempo en movimiento, el ritmo y los parciales del Entrenamiento.
+  const point: TrackPoint = [fix.lat, fix.lon, p.coords.altitude ?? null, Math.round(p.timestamp / 1000)];
   const next = addPoint(segments, point);
   useRecorder.setState({ track: { ...s.track, segments: next, ...trackStats(next) } });
   // Bloqueada no se puede cifrar con la bóveda: va cifrado con la clave de la grabación.
@@ -104,7 +112,7 @@ function stopWatch() {
 export const useRecorder = create<RecorderState>((set, get) => ({
   ...IDLE,
 
-  async start(name) {
+  async start(name, opts) {
     if (get().status !== 'idle') return;
     const track = newEntity<Track>({
       name,
@@ -122,10 +130,11 @@ export const useRecorder = create<RecorderState>((set, get) => ({
       recorded: true,
       recording: true,
       durationS: 0,
+      ...(opts?.kind ? { activity: opts.kind, activityPackKg: opts.packKg ?? null } : {}),
       recKey: await newRecKey(),
     });
     prepareLocked(track.recKey!);
-    set({ status: 'recording', track, elapsedMs: 0, since: Date.now(), error: null, warned: false, gapS: null, accuracy: null });
+    set({ status: 'recording', track, elapsedMs: 0, since: Date.now(), error: null, warned: false, gapS: null, accuracy: null, lastWorkoutId: null });
     await persist();
     startWatch();
   },
@@ -163,16 +172,28 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     const s = get();
     if (!s.track) return null;
     stopWatch();
-    const finished = finishedTrack({ ...s.track, name: name?.trim() || s.track.name }, elapsedS(s));
+    const finalName = name?.trim() || s.track.name;
+    // Las estadísticas de la actividad, con todos los puntos y sus horas (antes de simplificar el recorrido).
+    const raw = s.track.segments.map((seg) => (seg.length > 1 ? seg : []));
+    const stats = s.track.activity ? analyzeRecording(raw) : null;
+    const finished = finishedTrack({ ...s.track, name: finalName }, elapsedS(s));
     // La clave de la grabación ya no hace falta.
     const done = finished && { ...finished, recKey: undefined };
-    set(IDLE);
+    const kind = s.track.activity;
+    const packKg = s.track.activityPackKg ?? null;
+    set({ ...IDLE });
     void clearLocked();
     if (!done) {
       await useTracks.getState().deleteTrack(s.track.id);
       return null;
     }
     await useTracks.getState().saveTrack(done);
+    if (kind && stats) {
+      const me = [...useMedical.getState().profiles.values()].find((p) => p.isMe);
+      const workout = workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg);
+      await useTraining.getState().saveWorkout(workout);
+      set({ lastWorkoutId: workout.id });
+    }
     return done.id;
   },
 }));
