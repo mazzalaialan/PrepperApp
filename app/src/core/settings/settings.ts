@@ -99,6 +99,8 @@ export interface Settings {
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
   trainingVoice: boolean;
+  /** Altura (cm) para el IMC cuando no hay ficha médica propia donde guardarla. */
+  heightCm: number | null;
   /** Objetivos de la semana en Entrenamiento (0 = sin objetivo). */
   trainingGoals: { distanceKm: number; minutes: number; sessions: number };
   /** Tamaño de letra del visor de la biblioteca (%). */
@@ -224,6 +226,7 @@ export const DEFAULT_SETTINGS: Settings = {
   knotsLearned: [],
   trainingKind: 'walk',
   trainingVoice: false,
+  heightCm: null,
   trainingGoals: { distanceKm: 0, minutes: 0, sessions: 0 },
   readerFontPct: 100,
 };

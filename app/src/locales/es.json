@@ -274,6 +274,7 @@
     "inContacts": "Mostrar en Contactos de emergencia",
     "birthDate": "Fecha de nacimiento",
     "bloodType": "Grupo sanguíneo",
+    "heightCm": "Altura (cm)",
     "weightKg": "Peso (kg)",
     "weightHint": "Para estimar las calorías del Entrenamiento. Queda cifrado en tu dispositivo.",
     "unknown": "No sé",
@@ -1452,6 +1453,7 @@
     "use": "Usar este punto",
     "hint": "Tocá el mapa en el lugar que querés."
   },
+  "weight": {"title": "Peso", "current": "Peso actual", "last30": "Últimos 30 días", "sinceStart": "Desde el primero", "noProfile": "Todavía no tenés tu propia ficha médica: el peso se guarda acá en el historial, pero para que cuente en las calorías hay que crear tu ficha.", "noProfileLink": "Crear mi ficha", "profileEmpty": "Tu ficha médica no tiene el peso cargado: al guardar acá se completa.", "add": "Cargar el peso", "kg": "Peso (kg)", "day": "Día", "invalid": "Poné un peso entre 20 y 400 kg.", "syncs": "Al guardar, el peso más reciente también se actualiza en tu ficha médica, que es el que usa el Entrenamiento para las calorías.", "onlyHistory": "Sin ficha médica propia, el peso queda solo en este historial.", "confirmDelete": "¿Borrar este registro de peso?", "bmi": "IMC", "bmiCategory": {"low": "Bajo peso", "normal": "Peso normal", "overweight": "Sobrepeso", "obese": "Obesidad"}, "bmiNeedsHeight": "Cargá tu altura para calcular el IMC.", "height": "Altura en cm", "bmiNote": "El IMC (peso dividido la altura al cuadrado) es solo una referencia para adultos: no distingue músculo de grasa. Ante dudas, consultá con tu médico."},
   "training": {
     "loading": "Cargando…",
     "startTitle": "Empezar una sesión",

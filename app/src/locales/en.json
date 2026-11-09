@@ -274,6 +274,7 @@
     "inContacts": "Show in Emergency contacts",
     "birthDate": "Date of birth",
     "bloodType": "Blood type",
+    "heightCm": "Height (cm)",
     "weightKg": "Weight (kg)",
     "weightHint": "Used to estimate Training calories. It stays encrypted on your device.",
     "unknown": "Unknown",
@@ -1452,6 +1453,7 @@
     "use": "Use this point",
     "hint": "Tap the map at the place you want."
   },
+  "weight": {"title": "Weight", "current": "Current weight", "last30": "Last 30 days", "sinceStart": "Since the first", "noProfile": "You do not have your own medical profile yet: your weight is saved here in the history, but to count in the calorie estimates you need to create your profile.", "noProfileLink": "Create my profile", "profileEmpty": "Your medical profile has no weight: saving here fills it in.", "add": "Add your weight", "kg": "Weight (kg)", "day": "Day", "invalid": "Enter a weight between 20 and 400 kg.", "syncs": "When you save, the most recent weight also updates your medical profile, which Training uses for the calorie estimates.", "onlyHistory": "Without your own medical profile, the weight stays only in this history.", "confirmDelete": "Delete this weight entry?", "bmi": "BMI", "bmiCategory": {"low": "Underweight", "normal": "Normal weight", "overweight": "Overweight", "obese": "Obesity"}, "bmiNeedsHeight": "Enter your height to calculate your BMI.", "height": "Height in cm", "bmiNote": "BMI (weight divided by height squared) is only a reference for adults: it does not tell muscle from fat. If in doubt, ask your doctor."},
   "training": {
     "loading": "Loading…",
     "startTitle": "Start a session",

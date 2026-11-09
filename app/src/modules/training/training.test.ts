@@ -4,6 +4,8 @@ import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
 import type { Workout } from '@/core/model/types';
 import { byWeek, goalProgress, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
+import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
+import type { WeightEntry } from '@/core/model/types';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
@@ -275,5 +277,33 @@ describe('objetivos semanales', () => {
     expect(d).toMatchObject({ key: 'distanceKm', fraction: 0.6, reached: false });
     expect(m).toMatchObject({ key: 'minutes', fraction: 1, reached: true });
     expect(s).toMatchObject({ key: 'sessions', fraction: 1, reached: true });
+  });
+});
+
+describe('peso e IMC', () => {
+  const e = (day: string, kg: number, updatedAt = day): WeightEntry => ({ id: day + kg, createdAt: day, updatedAt, day, kg }) as WeightEntry;
+  it('parsea pesos válidos con coma o punto y rechaza lo absurdo', () => {
+    expect(parseKg('72,5')).toBe(72.5);
+    expect(parseKg(' 80.04 ')).toBe(80);
+    expect(parseKg('5')).toBeNull();
+    expect(parseKg('abc')).toBeNull();
+    expect(parseKg('500')).toBeNull();
+  });
+  it('resume: actual, cambio desde el primero y en 30 días', () => {
+    const list = sortedWeights([e('2026-11-01', 78), e('2026-09-01', 82), e('2026-10-01', 80)]);
+    const s = summarize(list, new Date('2026-11-08T12:00:00'));
+    expect(s.current).toBe(78);
+    expect(s.sinceStart).toBe(-4);
+    expect(s.last30).toBe(-2); // el de hace 30 días o más: 1 de octubre (80)
+    expect(summarize([], new Date()).current).toBeNull();
+  });
+  it('IMC y categorías de la OMS', () => {
+    expect(bmi(80, 180)).toBe(24.7);
+    expect(bmi(null, 180)).toBeNull();
+    expect(bmi(80, 20)).toBeNull();
+    expect(bmiCategory(18.4)).toBe('low');
+    expect(bmiCategory(24.9)).toBe('normal');
+    expect(bmiCategory(25)).toBe('overweight');
+    expect(bmiCategory(30)).toBe('obese');
   });
 });

@@ -305,6 +305,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
       pet: isPet ? { ...pet, speciesOther: pet.species === 'other' ? pet.speciesOther.trim() : '' } : null,
       bloodType: isPet ? '' : draft.bloodType,
       weightKg: isPet ? null : (draft.weightKg ?? null),
+      heightCm: isPet ? null : (draft.heightCm ?? null),
       relationship: isPet ? '' : (draft.relationship ?? '').trim(),
       phone: isPet ? '' : (draft.phone ?? '').trim(),
       isMe: isMe,
@@ -484,6 +485,22 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
                 onChange={(e) => set({ weightKg: e.target.value === '' ? null : Number(e.target.value) })}
               />
               <p className="hint" style={{ margin: 0 }}>{t('medical.weightHint')}</p>
+            </div>
+          )}
+          {!isPet && (
+            <div className="field">
+              <label htmlFor="height">{t('medical.heightCm')}</label>
+              <input
+                id="height"
+                className="input"
+                type="number"
+                inputMode="decimal"
+                min={50}
+                max={250}
+                step={1}
+                value={draft.heightCm ?? ''}
+                onChange={(e) => set({ heightCm: e.target.value === '' ? null : Number(e.target.value) })}
+              />
             </div>
           )}
           {text('allergies')}

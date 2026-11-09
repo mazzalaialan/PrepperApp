@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { repos } from '@/core/db/repository';
 import { newEntity, touch } from '@/core/model/entity';
-import type { Id, Outing, Track, Workout, WorkoutKind } from '@/core/model/types';
+import type { Gear, Id, Outing, Track, WeightEntry, Workout, WorkoutKind } from '@/core/model/types';
 import { isUnlocked, onSessionChange } from '@/core/security/session';
 import { calories } from './energy';
 import type { RecordedStats } from './stats';
@@ -10,6 +10,8 @@ interface TrainingState {
   loaded: boolean;
   workouts: Map<Id, Workout>;
   outings: Map<Id, Outing>;
+  gear: Map<Id, Gear>;
+  weights: Map<Id, WeightEntry>;
   load: () => Promise<void>;
   clear: () => void;
   saveWorkout: (w: Workout) => Promise<Workout>;
@@ -18,6 +20,10 @@ interface TrainingState {
   saveOuting: (o: Outing) => Promise<Outing>;
   /** Borra la salida; sus actividades quedan sueltas. */
   deleteOuting: (id: Id) => Promise<void>;
+  saveGear: (g: Gear) => Promise<Gear>;
+  deleteGear: (id: Id) => Promise<void>;
+  saveWeight: (w: WeightEntry) => Promise<WeightEntry>;
+  deleteWeight: (id: Id) => Promise<void>;
 }
 
 /** Sesiones de entrenamiento y salidas (cifradas, viajan en el backup). */
@@ -25,14 +31,22 @@ export const useTraining = create<TrainingState>((set, get) => ({
   loaded: false,
   workouts: new Map(),
   outings: new Map(),
+  gear: new Map(),
+  weights: new Map(),
 
   async load() {
-    const [workouts, outings] = await Promise.all([repos.workouts.loadAll(), repos.outings.loadAll()]);
-    set({ loaded: true, workouts: new Map(workouts.map((w) => [w.id, w])), outings: new Map(outings.map((o) => [o.id, o])) });
+    const [workouts, outings, gear, weights] = await Promise.all([repos.workouts.loadAll(), repos.outings.loadAll(), repos.gear.loadAll(), repos.weights.loadAll()]);
+    set({
+      loaded: true,
+      workouts: new Map(workouts.map((w) => [w.id, w])),
+      outings: new Map(outings.map((o) => [o.id, o])),
+      gear: new Map(gear.map((g) => [g.id, g])),
+      weights: new Map(weights.map((w) => [w.id, w])),
+    });
   },
 
   clear() {
-    set({ loaded: false, workouts: new Map(), outings: new Map() });
+    set({ loaded: false, workouts: new Map(), outings: new Map(), gear: new Map(), weights: new Map() });
   },
 
   async saveWorkout(w) {
@@ -59,6 +73,36 @@ export const useTraining = create<TrainingState>((set, get) => ({
     await repos.outings.put(saved);
     set({ outings: new Map(get().outings).set(saved.id, saved) });
     return saved;
+  },
+
+  async saveGear(g) {
+    const saved = touch(g);
+    await repos.gear.put(saved);
+    set({ gear: new Map(get().gear).set(saved.id, saved) });
+    return saved;
+  },
+
+  async deleteGear(id) {
+    await repos.gear.remove(id);
+    const gear = new Map(get().gear);
+    gear.delete(id);
+    set({ gear });
+    // Las actividades que lo usaban quedan sin equipo.
+    for (const w of get().workouts.values()) if (w.gearId === id) await get().saveWorkout({ ...w, gearId: null });
+  },
+
+  async saveWeight(w) {
+    const saved = touch(w);
+    await repos.weights.put(saved);
+    set({ weights: new Map(get().weights).set(saved.id, saved) });
+    return saved;
+  },
+
+  async deleteWeight(id) {
+    await repos.weights.remove(id);
+    const weights = new Map(get().weights);
+    weights.delete(id);
+    set({ weights });
   },
 
   async deleteOuting(id) {

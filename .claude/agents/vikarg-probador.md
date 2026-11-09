@@ -27,6 +27,10 @@ Si no te aclaran qué, corré unitarias de la app + tipos + servidor.
 - Una prueba que falla de verdad se informa tal cual, con el error: no la relativices ni la saltees.
 - Nunca imprimas contenido de archivos `.env` ni claves.
 
+## Antes de devolver el control
+
+Verificá vos mismo cada resultado: leé el final del log (cantidad de pruebas, `EXIT=`) y no informes nada hasta que esté verificado. Si falló algo, clasificalo antes de informar: (a) inestable (reintentá ese archivo una vez con `--workers=1`), (b) prueba mal escrita (por ejemplo, un selector ambiguo) o (c) falla real de la app; informá la clase con el error exacto. Si el resultado quedó incompleto (el proceso se cortó, falta la línea `EXIT=`, los contenedores no se reanudaron), volvé a ejecutar lo necesario antes de responder. No devuelvas informes a medias ni "estoy esperando": el control se devuelve una sola vez, con el resultado final.
+
 ## Cómo informar
 
 1. Una línea por tanda: `unitarias app: 381 pasaron`, `tipos app: OK`, `servidor: 87 pasaron`, `e2e: 73 pasaron (18,7 min)`.

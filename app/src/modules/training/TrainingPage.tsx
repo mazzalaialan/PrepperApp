@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Circle, Footprints, PencilLine, Plus, Upload } from 'lucide-react';
+import { Circle, Footprints, PencilLine, Plus, Scale, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { useRecorder } from '@/modules/tracks/recorder';
 import { Segmented } from '@/ui/Segmented';
@@ -213,6 +213,9 @@ export function TrainingPage() {
           </p>
         )}
         <div className="row-end wrap">
+          <Link className="btn" to="/training/weight" data-testid="to-weight">
+            <Scale size={18} /> {t('weight.title')}
+          </Link>
           <Link className="btn" to="/training/outings">
             <Footprints size={18} /> {t('modules.outings.title')}
           </Link>

@@ -266,6 +266,8 @@ export interface MedicalProfile extends BaseEntity {
   birthDate: IsoDay | null;
   /** Peso en kg, solo personas: lo usa el Entrenamiento para estimar las calorías (desde 0.44). */
   weightKg?: number | null;
+  /** Altura en cm, solo personas: para el IMC en Entrenamiento > Peso. */
+  heightCm?: number | null;
   /** "A+", "0-", etc.; vacío si no se sabe. */
   bloodType: string;
   allergies: string;
@@ -312,6 +314,8 @@ export interface EntityMap {
   plantings: Planting;
   workouts: Workout;
   outings: Outing;
+  gear: Gear;
+  weights: WeightEntry;
 }
 
 /** Actividad del Entrenamiento (ver modules/training/activities.ts). */
@@ -362,6 +366,36 @@ export interface Workout extends BaseEntity {
   notes: string;
   /** La salida a la que pertenece, si la hay. */
   outingId: Id | null;
+  /** Cómo me sentí (1 muy mal a 5 muy bien). */
+  feeling?: 1 | 2 | 3 | 4 | 5 | null;
+  /** Terreno o lugar: ver modules/training/activities.ts (TERRAINS). */
+  terrain?: string | null;
+  /** El clima al terminar, de Open-Meteo (solo si había internet): grados, código del cielo, viento km/h y humedad %. */
+  weather?: { tempC: number; code: number; windKmh: number; humidity: number } | null;
+  /** El equipo usado (zapatillas, bici, bote): suma sus kilómetros. */
+  gearId?: Id | null;
+}
+
+/** Equipo que se gasta con el uso (zapatillas, bici, bote, remo): suma los km de las actividades donde se usó. */
+export interface Gear extends BaseEntity {
+  name: string;
+  /** En qué actividades se ofrece (vacío: en todas). */
+  kinds: WorkoutKind[];
+  /** Kilómetros que ya tenía cuando se cargó. */
+  startKm: number;
+  /** Km de vida útil recomendados (0: sin aviso). */
+  retireKm: number;
+  /** Artículo del Inventario con el que se vincula (para ver su desgaste ahí). */
+  inventoryItemId?: Id | null;
+  retired?: boolean;
+}
+
+/** Un registro del historial de peso (kg, en un día). */
+export interface WeightEntry extends BaseEntity {
+  /** Día (AAAA-MM-DD). */
+  day: string;
+  kg: number;
+  note?: string;
 }
 
 /** Una salida: varias actividades juntas (por ejemplo "Salida al Platita"), con sus totales, mapa y desnivel. */
