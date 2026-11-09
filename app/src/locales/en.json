@@ -67,6 +67,7 @@
     "medical": { "title": "Medical records", "desc": "Blood type, allergies and medication for each person" },
     "firstAidGuides": { "title": "First aid guides", "desc": "What to do in each emergency, offline" },
     "workouts": {"title": "Sessions", "desc": "Record walks, runs, trekking, rowing and cycling, or log an indoor session"},
+    "weight": {"title": "Weight", "desc": "Your weight, its history and your BMI"},
     "outings": {"title": "Outings", "desc": "Group several activities into an outing, with its map and elevation"},
     "compass": { "title": "Compass", "desc": "Magnetic and true heading" },
     "declination": { "title": "Declinometer", "desc": "Declination, bearings and cheat sheet" },

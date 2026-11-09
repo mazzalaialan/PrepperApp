@@ -67,6 +67,7 @@
     "medical": { "title": "Ficha médica", "desc": "Grupo sanguíneo, alergias y medicación de cada persona" },
     "firstAidGuides": { "title": "Guías de primeros auxilios", "desc": "Qué hacer ante cada emergencia, sin conexión" },
     "workouts": {"title": "Sesiones", "desc": "Grabá caminatas, carreras, trekking, remo y ciclismo, o cargá una sesión bajo techo"},
+    "weight": {"title": "Peso", "desc": "Tu peso, su historial y tu IMC"},
     "outings": {"title": "Salidas", "desc": "Agrupá varias actividades en una salida, con su mapa y desnivel"},
     "compass": { "title": "Brújula", "desc": "Rumbo magnético y geográfico" },
     "declination": { "title": "Declinómetro", "desc": "Declinación, rumbos y machete" },

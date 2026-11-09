@@ -31,8 +31,7 @@ import {
   Sprout,
   Tags,
   Triangle,
-  Warehouse,
-} from 'lucide-react';
+  Warehouse, Scale } from 'lucide-react';
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
@@ -77,6 +76,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'starmap', section: 'orientation', icon: Sparkles, implemented: true, path: '/orientation/starmap', degradesWithout: ['orientation'] },
   { id: 'workouts', section: 'training', icon: Activity, implemented: true, path: '/training/workouts', degradesWithout: ['geolocation'] },
   { id: 'outings', section: 'training', icon: Flag, implemented: true, path: '/training/outings' },
+  { id: 'weight', section: 'training', icon: Scale, implemented: true, path: '/training/weight' },
   { id: 'weather', section: 'weather', icon: CloudSun, implemented: true, path: '/weather/forecast' },
   { id: 'weatherMap', section: 'weather', icon: MapIcon, implemented: true, path: '/weather/map' },
   { id: 'astronomy', section: 'weather', icon: Moon, implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },

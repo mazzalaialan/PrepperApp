@@ -12,8 +12,8 @@ test('peso: historial, IMC y ficha médica (con y sin ficha propia)', async ({ p
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
   // Sin ficha médica propia: no falla, guarda el historial y avisa.
-  await page.goto('/#/training/workouts');
-  await page.getByTestId('to-weight').click();
+  await page.goto('/#/training');
+  await page.getByRole('link', { name: /Peso/ }).click();
   await expect(page.getByRole('heading', { name: 'Peso', exact: true })).toBeVisible();
   await expect(page.getByTestId('weight-no-profile')).toBeVisible();
   await page.getByLabel('Peso (kg)').fill('82,5');
