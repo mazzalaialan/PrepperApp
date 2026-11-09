@@ -13,7 +13,7 @@ import type { WeightEntry } from '@/core/model/types';
 import { buildChunks } from './liveChunks';
 import { fastestSlowest, lapRows } from './laps';
 import { clampTimer, elapsedMs, TIMER_MAX_S, timerLeftMs, useTimer } from './stopwatch';
-import { breathing, breathPhaseAt, formatDuration, formatStopwatch, hrZones, PATTERN_FOR_EFFORT, patternById, maxHrFromAge, paceOf, parseDuration, riegel, stopwatchLaps, timeAtPace } from './tools';
+import { breathing, breathPhaseAt, formatDuration, formatStopwatch, hrZones, CADENCE_CATEGORIES, cadenceInfo, PATTERN_FOR, patternById, maxHrFromAge, paceOf, parseDuration, riegel, stopwatchLaps, timeAtPace } from './tools';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, removeZones, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
@@ -558,8 +558,21 @@ describe('respiración al correr', () => {
     expect(breathing(180, p('p21'))).toEqual({ stepsPerBreath: 3, breathsPerMin: 60 });
     expect(breathing(170, p('p11'))).toEqual({ stepsPerBreath: 2, breathsPerMin: 85 });
   });
-  it('sugiere el patrón según el esfuerzo', () => {
-    expect(PATTERN_FOR_EFFORT).toEqual({ easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p11' });
+  it('sugiere el patrón según el movimiento y el esfuerzo (caminando se respira más lento)', () => {
+    expect(PATTERN_FOR.run).toEqual({ easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p11' });
+    expect(PATTERN_FOR.walk.easy).toBe('p33');
+    expect(breathing(110, patternById('p33'))).toEqual({ stepsPerBreath: 6, breathsPerMin: 18.3 });
+  });
+  it('caminata, trote y correr: rangos ordenados, atajos dentro del rango y arranque en el rango', () => {
+    expect(CADENCE_CATEGORIES.map((c) => c.id)).toEqual(['walk', 'jog', 'run']);
+    for (const c of CADENCE_CATEGORIES) {
+      expect(c.from).toBeLessThan(c.to);
+      expect(c.start).toBeGreaterThanOrEqual(c.from);
+      expect(c.start).toBeLessThanOrEqual(c.to);
+      for (const p of c.presets) expect(p >= c.from && p <= c.to, `${c.id}: ${p}`).toBe(true);
+    }
+    // La caminata es bastante más lenta que correr.
+    expect(cadenceInfo('walk').to).toBeLessThan(cadenceInfo('jog').from);
   });
   it('3:2 inhala tres pasos y exhala dos; el primero de cada fase lleva el acento', () => {
     const seq = Array.from({ length: 10 }, (_, i) => breathPhaseAt(i, p('p32')));

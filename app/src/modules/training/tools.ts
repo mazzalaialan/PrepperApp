@@ -104,12 +104,13 @@ export function stopwatchLaps(marks: number[]): { n: number; splitMs: number; to
 
 /** Patrón de respiración al correr: cuántos pasos dura la inhalación y cuántos la exhalación (por ejemplo 3:2). */
 export interface BreathPattern {
-  id: 'p32' | 'p22' | 'p21' | 'p11';
+  id: 'p33' | 'p32' | 'p22' | 'p21' | 'p11';
   inhale: number;
   exhale: number;
 }
 
 export const BREATH_PATTERNS: BreathPattern[] = [
+  { id: 'p33', inhale: 3, exhale: 3 },
   { id: 'p32', inhale: 3, exhale: 2 },
   { id: 'p22', inhale: 2, exhale: 2 },
   { id: 'p21', inhale: 2, exhale: 1 },
@@ -118,8 +119,33 @@ export const BREATH_PATTERNS: BreathPattern[] = [
 
 export type Effort = 'easy' | 'moderate' | 'hard' | 'max';
 
-/** El patrón que se suele recomendar según el esfuerzo: 3:2 suave, 2:2 moderado, 2:1 fuerte y 1:1 al máximo. */
-export const PATTERN_FOR_EFFORT: Record<Effort, BreathPattern['id']> = { easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p11' };
+/** Cadencia por tipo de movimiento: caminata, trote y correr tienen rangos y atajos distintos. */
+export type CadenceCategory = 'walk' | 'jog' | 'run';
+
+export interface CadenceInfo {
+  id: CadenceCategory;
+  /** Cadencia con la que arranca al elegirla (pasos por minuto). */
+  start: number;
+  /** Rango habitual (referencia). */
+  from: number;
+  to: number;
+  presets: number[];
+}
+
+export const CADENCE_CATEGORIES: CadenceInfo[] = [
+  { id: 'walk', start: 110, from: 90, to: 130, presets: [90, 100, 110, 120, 130] },
+  { id: 'jog', start: 155, from: 140, to: 165, presets: [140, 150, 155, 160, 165] },
+  { id: 'run', start: 170, from: 165, to: 190, presets: [165, 170, 175, 180, 190] },
+];
+
+export const cadenceInfo = (id: CadenceCategory): CadenceInfo => CADENCE_CATEGORIES.find((c) => c.id === id)!;
+
+/** El patrón que se suele recomendar según el movimiento y el esfuerzo: caminando se respira más lento (3:3, 3:2, 2:2, 2:1) y corriendo más rápido (3:2 suave hasta 1:1 al máximo). */
+export const PATTERN_FOR: Record<CadenceCategory, Record<Effort, BreathPattern['id']>> = {
+  walk: { easy: 'p33', moderate: 'p32', hard: 'p22', max: 'p21' },
+  jog: { easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p21' },
+  run: { easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p11' },
+};
 
 export const patternById = (id: BreathPattern['id']): BreathPattern => BREATH_PATTERNS.find((p) => p.id === id)!;
 

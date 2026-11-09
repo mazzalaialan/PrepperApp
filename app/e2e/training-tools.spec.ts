@@ -58,6 +58,10 @@ test('entrenamiento: cronómetro, temporizador, herramientas y cuenta regresiva'
   // Metrónomo y respiración: con 170 pasos por minuto y 3:2 son 34 respiraciones por minuto.
   await page.goto('/#/training');
   await page.getByRole('link', { name: /Metrónomo/ }).click();
+  // Por defecto camina (110 pasos por minuto, 3:3); al elegir Correr arranca en 170.
+  await expect(page.getByTestId('metronome-bpm')).toHaveText('110');
+  await expect(page.getByTestId('cadence-range')).toContainText('de 90 a 130');
+  await page.getByRole('button', { name: 'Correr' }).click();
   await expect(page.getByTestId('metronome-bpm')).toHaveText('170');
   await expect(page.getByTestId('breath-result')).toContainText('34 respiraciones por minuto');
   await page.getByRole('button', { name: 'Fuerte' }).click();

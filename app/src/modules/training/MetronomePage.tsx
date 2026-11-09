@@ -4,7 +4,7 @@ import { Minus, Pause, Play, Plus } from 'lucide-react';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { Segmented } from '@/ui/Segmented';
 import { beep, say } from './cues';
-import { BREATH_PATTERNS, breathing, breathPhaseAt, PATTERN_FOR_EFFORT, patternById, type BreathPattern, type Effort } from './tools';
+import { BREATH_PATTERNS, breathing, breathPhaseAt, CADENCE_CATEGORIES, cadenceInfo, PATTERN_FOR, patternById, type BreathPattern, type CadenceCategory, type Effort } from './tools';
 
 const EFFORTS: Effort[] = ['easy', 'moderate', 'hard', 'max'];
 
@@ -16,10 +16,12 @@ const EFFORTS: Effort[] = ['easy', 'moderate', 'hard', 'max'];
  */
 export function MetronomePage() {
   const { t, i18n } = useTranslation();
-  const [bpm, setBpm] = useState(170);
+  // Caminata, trote o correr: cada uno tiene su rango de cadencia, sus atajos y su respiración sugerida.
+  const [category, setCategory] = useState<CadenceCategory>('walk');
+  const [bpm, setBpm] = useState(cadenceInfo('walk').start);
   const [on, setOn] = useState(false);
   const [effort, setEffort] = useState<Effort>('easy');
-  const [patternId, setPatternId] = useState<BreathPattern['id']>(PATTERN_FOR_EFFORT.easy);
+  const [patternId, setPatternId] = useState<BreathPattern['id']>(PATTERN_FOR.walk.easy);
   const [steps, setSteps] = useState(true);
   const [breathSound, setBreathSound] = useState(true);
   const [voice, setVoice] = useState(false);
@@ -60,8 +62,14 @@ export function MetronomePage() {
   const clamp = (n: number) => Math.min(220, Math.max(60, n));
   function pickEffort(e: Effort) {
     setEffort(e);
-    setPatternId(PATTERN_FOR_EFFORT[e]);
+    setPatternId(PATTERN_FOR[category][e]);
   }
+  function pickCategory(c: CadenceCategory) {
+    setCategory(c);
+    setBpm(cadenceInfo(c).start);
+    setPatternId(PATTERN_FOR[c][effort]);
+  }
+  const info_ = cadenceInfo(category);
 
   return (
     <div className="stack">
@@ -70,6 +78,8 @@ export function MetronomePage() {
       <section className="card stack" data-testid="tool-metronome">
         <h2 className="section-title" style={{ margin: 0 }}>{t('metronome.cadence')}</h2>
         <p className="hint" style={{ margin: 0 }}>{t('metronome.intro')}</p>
+        <Segmented<CadenceCategory> label={t('metronome.category')} value={category} options={CADENCE_CATEGORIES.map((c) => ({ value: c.id, label: t(`metronome.categories.${c.id}`) }))} onChange={pickCategory} />
+        <p className="hint" style={{ margin: 0 }} data-testid="cadence-range">{t('metronome.range', { from: info_.from, to: info_.to })}</p>
         <div className="row" style={{ justifyContent: 'center', alignItems: 'center', gap: 16 }}>
           <button className="icon-btn" type="button" onClick={() => setBpm((b) => clamp(b - 1))} aria-label={t('metronome.slower')}>
             <Minus size={22} />
@@ -81,7 +91,7 @@ export function MetronomePage() {
           </button>
         </div>
         <div className="row wrap" style={{ justifyContent: 'center' }}>
-          {[160, 170, 180, 190].map((n) => (
+          {info_.presets.map((n) => (
             <button key={n} className="btn" type="button" aria-pressed={bpm === n} onClick={() => setBpm(n)}>
               {n}
             </button>
