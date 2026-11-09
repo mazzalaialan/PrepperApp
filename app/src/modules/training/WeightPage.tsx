@@ -105,11 +105,6 @@ export function WeightPage() {
           </div>
         </dl>
         <div className="stack" style={{ gap: 6 }} data-testid="weight-bmi">
-          <strong>
-            {t('weight.bmi')}: {imc === null ? '—' : nf.format(imc)}
-            {imc !== null && adult && ` · ${t(`weight.bmiCategory.${bmiCategory(imc)}`)}`}
-          </strong>
-          {imc === null && <p className="hint" style={{ margin: 0 }}>{t('weight.bmiNeedsHeight')}</p>}
           <div className="row wrap">
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="weight-height">{t('weight.height')}{heightCm ? ` (${heightCm} cm)` : ''}</label>
@@ -117,6 +112,11 @@ export function WeightPage() {
             </div>
             <button className="btn" type="button" data-testid="weight-height-save" onClick={() => void saveHeight()}>{t('common.save')}</button>
           </div>
+          <strong>
+            {t('weight.bmi')}: {imc === null ? '—' : nf.format(imc)}
+            {imc !== null && adult && ` · ${t(`weight.bmiCategory.${bmiCategory(imc)}`)}`}
+          </strong>
+          {imc === null && <p className="hint" style={{ margin: 0 }}>{t('weight.bmiNeedsHeight')}</p>}
           <p className="hint" style={{ margin: 0 }}>{t('weight.bmiNote')}</p>
         </div>
         <table className="bmi-table" data-testid="bmi-table">
