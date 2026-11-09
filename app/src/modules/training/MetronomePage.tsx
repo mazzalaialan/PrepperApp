@@ -25,21 +25,36 @@ export function MetronomePage() {
   const [steps, setSteps] = useState(true);
   const [breathSound, setBreathSound] = useState(true);
   const [voice, setVoice] = useState(false);
+  // Cuántos ms antes del paso se empieza a decir la palabra: cada celular tarda distinto en arrancar la voz.
+  const [lead, setLead] = useState(250);
   const [phase, setPhase] = useState<'inhale' | 'exhale' | null>(null);
   const pattern = patternById(patternId);
   const info = breathing(bpm, pattern);
   // Lo que usa el ciclo de sonido, sin reiniciarlo al tocar los controles.
-  const live = useRef({ bpm, pattern, steps, breathSound, voice, lang: i18n.language, inhale: '', exhale: '' });
-  live.current = { bpm, pattern, steps, breathSound, voice, lang: i18n.language, inhale: t('metronome.inhale'), exhale: t('metronome.exhale') };
+  const live = useRef({ bpm, pattern, steps, breathSound, voice, lead: 250, lang: i18n.language, inhale: '', exhale: '' });
+  live.current = { bpm, pattern, steps, breathSound, voice, lead, lang: i18n.language, inhale: t('metronome.inhale'), exhale: t('metronome.exhale') };
   useWakeLock(on);
 
   useEffect(() => {
     if (!on) {
       setPhase(null);
+      try {
+        window.speechSynthesis?.cancel();
+      } catch {
+        /* sin voz */
+      }
       return;
     }
     let step = 0;
-    let next = performance.now();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const speak = (p: 'inhale' | 'exhale') => {
+      const c = live.current;
+      // Rápido y cortando lo anterior: si no, las palabras se acumulan y se atrasan respecto de los pasos.
+      say(p === 'inhale' ? c.inhale : c.exhale, c.lang, { rate: 1.35, interrupt: true });
+    };
+    // Con la voz, el primer paso espera un poco para que "Inhalá" pueda sonar antes de la marca.
+    let next = performance.now() + (live.current.voice ? live.current.lead : 0);
+    if (live.current.voice) speak('inhale');
     let id: ReturnType<typeof setTimeout>;
     const loop = () => {
       const c = live.current;
@@ -48,15 +63,21 @@ export function MetronomePage() {
       if (c.steps) beep(1000, 40);
       if (c.breathSound && first) {
         // Agudo al empezar a inhalar, grave al empezar a exhalar.
-        setTimeout(() => beep(p === 'inhale' ? 1500 : 600, 110), c.steps ? 70 : 0);
-        if (c.voice) say(p === 'inhale' ? c.inhale : c.exhale, c.lang);
+        timers.push(setTimeout(() => beep(p === 'inhale' ? 1500 : 600, 110), c.steps ? 70 : 0));
       }
+      const interval = 60_000 / c.bpm;
+      // La voz tarda en arrancar: se dice un poco antes del paso en que cambia la fase (el adelanto se ajusta).
+      const following = breathPhaseAt(step + 1, c.pattern);
+      if (c.voice && following.first) timers.push(setTimeout(() => speak(following.phase), Math.max(0, interval - c.lead)));
       step += 1;
-      next += 60_000 / c.bpm;
+      next += interval;
       id = setTimeout(loop, Math.max(0, next - performance.now()));
     };
-    loop();
-    return () => clearTimeout(id);
+    id = setTimeout(loop, Math.max(0, next - performance.now()));
+    return () => {
+      clearTimeout(id);
+      timers.forEach(clearTimeout);
+    };
   }, [on]);
 
   const clamp = (n: number) => Math.min(220, Math.max(60, n));
@@ -143,8 +164,21 @@ export function MetronomePage() {
           <input type="checkbox" checked={breathSound} onChange={(e) => setBreathSound(e.target.checked)} data-testid="metronome-breath" /> {t('metronome.soundBreath')}
         </label>
         <label className="check">
-          <input type="checkbox" checked={voice} onChange={(e) => setVoice(e.target.checked)} /> {t('metronome.soundVoice')}
+          <input type="checkbox" checked={voice} onChange={(e) => setVoice(e.target.checked)} data-testid="metronome-voice" /> {t('metronome.soundVoice')}
         </label>
+        {voice && (
+          <div className="field">
+            <label htmlFor="voice-lead">{t('metronome.voiceLead')}</label>
+            <select id="voice-lead" className="select" value={lead} onChange={(e) => setLead(Number(e.target.value))} data-testid="voice-lead">
+              {[0, 100, 200, 300, 400, 500, 700].map((ms) => (
+                <option key={ms} value={ms}>
+                  {ms === 0 ? t('metronome.voiceLeadNone') : `${ms} ms`}
+                </option>
+              ))}
+            </select>
+            <p className="hint" style={{ margin: 0 }}>{t('metronome.voiceLeadHint')}</p>
+          </div>
+        )}
         <button className={`live-btn${on ? '' : ' live-btn-go'}`} type="button" onClick={() => setOn(!on)} data-testid="metronome-toggle">
           {on ? <Pause size={24} /> : <Play size={24} />} {on ? t('metronome.stop') : t('metronome.start')}
         </button>

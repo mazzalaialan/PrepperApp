@@ -29,11 +29,14 @@ export function buzz(pattern: number | number[] = 200): void {
   }
 }
 
-export function say(text: string, lang: string): void {
+export function say(text: string, lang: string, opts: { rate?: number; interrupt?: boolean } = {}): void {
   try {
     if (!('speechSynthesis' in window)) return;
+    // Para avisos que tienen que caer en un momento justo: se corta lo que siga sonando para que no se acumulen y se atrasen.
+    if (opts.interrupt) window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
+    if (opts.rate) u.rate = opts.rate;
     window.speechSynthesis.speak(u);
   } catch {
     /* sin voz */
