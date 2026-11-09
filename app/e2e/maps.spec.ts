@@ -499,7 +499,7 @@ test('planificar una ruta en el mapa: piernas con rumbo magnético, sin crear lu
   await expect(page.getByText('Ruta al Platita')).toHaveCount(0);
 });
 
-test('importar una ruta de un KML: queda como ruta planificada, sin crear lugares, y se exporta a KML', async ({ page }) => {
+test('importar un KML en Tracks y convertirlo en ruta planificada: sin crear lugares, con piernas y exportar a KML', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Repetir contraseña').fill(PASSWORD);
@@ -510,18 +510,23 @@ test('importar una ruta de un KML: queda como ruta planificada, sin crear lugare
   const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Cerro Platita</name>
     <Placemark><name>Refugio</name><Point><coordinates>-69.1,-32.9,2100</coordinates></Point></Placemark>
     <Placemark><name>Subida</name><LineString><coordinates>-69.10,-32.90,2000 -69.11,-32.91,2100 -69.12,-32.92,2200</coordinates></LineString></Placemark></Document></kml>`;
-  await page.goto('/#/orientation/waypoints');
-  // El archivo trae un punto con nombre: se pregunta si va a la lista de lugares; acá, que no.
-  page.once('dialog', (d) => void d.dismiss());
-  await page.getByTestId('route-import-file').setInputFiles({ name: 'platita.kml', mimeType: 'application/vnd.google-earth.kml+xml', buffer: Buffer.from(kml) });
+  // Un solo lugar para importar: Tracks (GPX, KML, KMZ o TCX).
+  await page.goto('/#/orientation/tracks');
+  await page.getByTestId('tracks-file').setInputFiles({ name: 'platita.kml', mimeType: 'application/vnd.google-earth.kml+xml', buffer: Buffer.from(kml) });
+  await expect(page).toHaveURL(/#\/orientation\/tracks\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole('heading', { name: 'Cerro Platita' })).toBeVisible();
+  // Para tener las piernas con rumbo magnético, se crea la ruta planificada desde el track.
+  await page.getByTestId('track-to-route').click();
   await expect(page).toHaveURL(/#\/orientation\/routes\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('planned-route')).toBeVisible();
   await expect(page.getByTestId('planned-legs').getByRole('listitem')).toHaveCount(3);
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('planned-kml').click()]);
   expect(download.suggestedFilename()).toBe('Cerro-Platita.kml');
+  // El punto del KML quedó en el track; no en la lista de lugares.
   await page.goto('/#/orientation/waypoints');
   await expect(page.getByText('Todavía no guardaste puntos.')).toBeVisible();
-  // Un archivo que no es de rutas da un mensaje claro.
-  await page.getByTestId('route-import-file').setInputFiles({ name: 'nada.txt', mimeType: 'text/plain', buffer: Buffer.from('hola') });
-  await expect(page.getByRole('alert')).toContainText('no es un KML');
+  // Un archivo que no sirve da un mensaje claro.
+  await page.goto('/#/orientation/tracks');
+  await page.getByTestId('tracks-file').setInputFiles({ name: 'nada.txt', mimeType: 'text/plain', buffer: Buffer.from('hola') });
+  await expect(page.getByRole('alert')).toContainText('no es un GPX');
 });

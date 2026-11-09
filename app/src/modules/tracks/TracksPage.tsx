@@ -7,7 +7,8 @@ import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpxError } from './gpx';
 import { useRecorder } from './recorder';
 import { formatDuration, useStartRecording } from './Recording';
-import { trackFromGpx, useTracks } from './store';
+import { trackFromBytes } from './importTrack';
+import { useTracks } from './store';
 
 /** Tracks importados de un GPX (Wikiloc u otra app) y grabados con la app: aparte de los waypoints y rutas propios. */
 export function TracksPage() {
@@ -29,7 +30,7 @@ export function TracksPage() {
   async function handleFile(f: File) {
     setError(null);
     try {
-      const track = trackFromGpx(await f.text(), f.name);
+      const track = trackFromBytes(new Uint8Array(await f.arrayBuffer()), f.name);
       await saveTrack(track);
       navigate(`/orientation/tracks/${track.id}`);
     } catch (err) {
@@ -49,7 +50,7 @@ export function TracksPage() {
       <input
         ref={file}
         type="file"
-        accept=".gpx,application/gpx+xml,application/xml,text/xml"
+        accept=".gpx,.kml,.kmz,.tcx,.gz,application/gpx+xml,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz,application/xml,text/xml"
         hidden
         data-testid="tracks-file"
         onChange={(e) => {

@@ -40,7 +40,7 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
 
   // Un archivo que no es GPX avisa.
   await page.getByTestId('tracks-file').setInputFiles({ name: 'mal.gpx', mimeType: 'application/gpx+xml', buffer: Buffer.from('<kml></kml>') });
-  await expect(page.getByRole('alert')).toHaveText('El archivo no es un GPX.');
+  await expect(page.getByRole('alert')).toHaveText('El archivo no es un GPX, KML, KMZ ni TCX.');
 
   // Importar el GPX de Wikiloc abre el track.
   await page.getByTestId('tracks-file').setInputFiles({ name: 'frey.gpx', mimeType: 'application/gpx+xml', buffer: Buffer.from(WIKILOC) });

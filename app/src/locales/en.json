@@ -1383,7 +1383,7 @@
     "calibrate": "If the heading jumps or looks wrong, calibrate by moving the phone in a figure 8, away from metal and magnets."
   },
   "routes": {
-    "exportKml": "Export KML", "import": {"button": "Import route", "askPlaces": "The file has {{count}} named points. Add them to your list of places too? (If not, they stay only as points of the route.)", "error": {"unknown": "The file is not a KML, KMZ, GPX or TCX.", "empty": "The file has no route."}},
+    "exportKml": "Export KML", 
     "planned": "planned",
     "follow": "Follow this route", "viewOnMap": "View on the map", "legsTitle": "Legs", "legTo": "Point {{n}}", "saveAsPlace": "Save point {{n}} as a place", "pointsNotPlaces": "The points of a planned route do not appear in your list of places and give no weather alerts: only the ones you save as a place with each point's button.",
     "plannedName": "Planned route", "saveAsRoute": "Save as route",
@@ -1834,14 +1834,15 @@
     }
   },
   "tracks": {
+    "toRoute": "Create planned route",
     "import": "Import GPX",
     "empty": "No tracks yet. Record your trip, or download the GPX of a Wikiloc trail (or from another app) and import it.",
     "howTo": "To record your trip: tap \"Record my trip\" here, on the map or while following a track. How to download a GPX from Wikiloc: open the trail, tap \"Download\" and choose GPX (a free account is needed). The track's points stay apart from your waypoints; copy any you want.",
     "pointCount_one": "{{count}} point",
     "pointCount_other": "{{count}} points",
     "error": {
-      "not-gpx": "The file is not a GPX.",
-      "empty": "The GPX has no track or points."
+      "not-gpx": "The file is not a GPX, KML, KMZ or TCX.",
+      "empty": "The file has no track or points."
     },
     "notFound": "Track not found.",
     "stats": "Track details",

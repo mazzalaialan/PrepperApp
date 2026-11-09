@@ -1,12 +1,13 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Trash2, X } from 'lucide-react';
+import { Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Route as RouteIcon, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
+import { routeFromTrack } from '@/modules/waypoints/importRoute';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { ElevationProfile } from './ElevationProfile';
 import { useRecorder } from './recorder';
@@ -35,6 +36,7 @@ function TrackDetail({ track }: { track: Track }) {
   const units = useSettings((s) => s.settings.units);
   const { saveTrack, deleteTrack } = useTracks();
   const saveWaypoint = useWaypoints((s) => s.saveWaypoint);
+  const saveRoute = useWaypoints((s) => s.saveRoute);
   const myWaypoints = useWaypoints((s) => s.waypoints);
   const routes = useWaypoints((s) => s.routes);
   const deleteWaypoint = useWaypoints((s) => s.deleteWaypoint);
@@ -180,6 +182,14 @@ function TrackDetail({ track }: { track: Track }) {
         </dl>
         <ElevationProfile track={track} />
         <div className="row-end wrap">
+          <button className="btn" type="button" data-testid="track-to-route" onClick={async () => {
+            const route = routeFromTrack(track);
+            if (!route) return;
+            await saveRoute(route);
+            navigate(`/orientation/routes/${route.id}`);
+          }}>
+            <RouteIcon size={18} /> {t('tracks.toRoute')}
+          </button>
           <Link className="btn" to={`/orientation/maps?track=${track.id}`}>
             <MapIcon size={18} /> {t('tracks.onMap')}
           </Link>

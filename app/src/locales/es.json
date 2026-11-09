@@ -1383,7 +1383,7 @@
     "calibrate": "Si el rumbo salta o no coincide, calibrá la brújula moviendo el celular en forma de 8, lejos de metales e imanes."
   },
   "routes": {
-    "exportKml": "Exportar KML", "import": {"button": "Importar ruta", "askPlaces": "El archivo trae {{count}} puntos con nombre. ¿Agregarlos también a tu lista de lugares? (Si no, quedan solo como puntos de la ruta.)", "error": {"unknown": "El archivo no es un KML, KMZ, GPX ni TCX.", "empty": "El archivo no trae ningún recorrido."}},
+    "exportKml": "Exportar KML", 
     "planned": "planificada",
     "follow": "Seguir esta ruta", "viewOnMap": "Ver en el mapa", "legsTitle": "Piernas", "legTo": "Punto {{n}}", "saveAsPlace": "Guardar el punto {{n}} como lugar", "pointsNotPlaces": "Los puntos de una ruta planificada no aparecen en tu lista de lugares ni dan alertas de clima: solo los que guardás como lugar con el botón de cada punto.",
     "plannedName": "Ruta planificada", "saveAsRoute": "Guardar como ruta",
@@ -1834,14 +1834,15 @@
     }
   },
   "tracks": {
+    "toRoute": "Crear ruta planificada",
     "import": "Importar GPX",
     "empty": "Todavía no tenés tracks. Grabá tu recorrido, o bajá el GPX de una ruta de Wikiloc (o de otra app) e importalo.",
     "howTo": "Para grabar tu recorrido: tocá \"Grabar mi recorrido\" acá, en el mapa o mientras seguís un track. Cómo bajar un GPX de Wikiloc: abrí la ruta, tocá \"Descargar\" y elegí el formato GPX (hace falta una cuenta gratis). Los puntos del track quedan aparte de tus waypoints; si querés alguno, lo copiás.",
     "pointCount_one": "{{count}} punto",
     "pointCount_other": "{{count}} puntos",
     "error": {
-      "not-gpx": "El archivo no es un GPX.",
-      "empty": "El GPX no trae ningún recorrido ni punto."
+      "not-gpx": "El archivo no es un GPX, KML, KMZ ni TCX.",
+      "empty": "El archivo no trae ningún recorrido ni punto."
     },
     "notFound": "No se encontró ese track.",
     "stats": "Datos del recorrido",
