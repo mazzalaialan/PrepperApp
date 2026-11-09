@@ -509,7 +509,7 @@ test('importar un KML en Tracks y convertirlo en ruta planificada: sin crear lug
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
   const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Cerro Platita</name>
     <Placemark><name>Refugio</name><Point><coordinates>-69.1,-32.9,2100</coordinates></Point></Placemark>
-    <Placemark><name>Subida</name><LineString><coordinates>-69.10,-32.90,2000 -69.11,-32.91,2100 -69.12,-32.92,2200</coordinates></LineString></Placemark></Document></kml>`;
+    <Placemark><name>Subida</name><LineString><coordinates>-69.10,-32.90,2000 -69.11,-32.92,2100 -69.13,-32.92,2200</coordinates></LineString></Placemark></Document></kml>`;
   // Un solo lugar para importar: Tracks (GPX, KML, KMZ o TCX).
   await page.goto('/#/orientation/tracks');
   await page.getByTestId('tracks-file').setInputFiles({ name: 'platita.kml', mimeType: 'application/vnd.google-earth.kml+xml', buffer: Buffer.from(kml) });
