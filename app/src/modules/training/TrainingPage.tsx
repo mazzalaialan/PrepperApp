@@ -12,6 +12,10 @@ import { GpxError } from '@/modules/tracks/gpx';
 import { useTracks } from '@/modules/tracks/store';
 import { trackFromRoute } from '@/modules/waypoints/plan';
 import { useWaypoints } from '@/modules/waypoints/store';
+import { gunzipSync } from 'fflate';
+import type { Track, Workout } from '@/core/model/types';
+import { FitError, isFit, parseFitActivity } from './fit';
+import { activityFromFit } from './fitActivity';
 import { activityFromFile, parseActivityFile } from './interchange';
 import { Countdown } from './Countdown';
 import { IntervalPicker } from './IntervalPicker';
@@ -57,14 +61,25 @@ export function TrainingPage() {
   async function importFile(f: File) {
     setImportError(null);
     try {
-      const parsed = parseActivityFile(await f.text(), f.name);
-      const { track, workout } = activityFromFile(parsed, parsed.kind ?? kind, weight);
-      await saveTrack(track);
-      await saveWorkout(workout);
-      navigate(`/training/workouts/${workout.id}`);
+      let bytes: Uint8Array = new Uint8Array(await f.arrayBuffer());
+      // Strava y Garmin Connect exportan comprimido (.gz): se descomprime primero.
+      if (bytes[0] === 0x1f && bytes[1] === 0x8b) bytes = gunzipSync(bytes);
+      let created: { track: Track | null; workout: Workout };
+      if (isFit(bytes)) {
+        // Archivo de un reloj (FIT): trae pulso, vueltas y calorías además del recorrido.
+        const fit = parseFitActivity(bytes);
+        created = activityFromFit(fit, fit.kind ?? kind, f.name.replace(/\.fit(\.gz)?$/i, '') || t(`training.kind.${fit.kind ?? kind}`), weight);
+      } else {
+        const parsed = parseActivityFile(new TextDecoder().decode(bytes), f.name);
+        created = activityFromFile(parsed, parsed.kind ?? kind, weight);
+      }
+      if (created.track) await saveTrack(created.track);
+      await saveWorkout(created.workout);
+      navigate(`/training/workouts/${created.workout.id}`);
     } catch (err) {
-      if (!(err instanceof GpxError)) throw err;
-      setImportError(t(`training.importError.${err.code}`));
+      if (err instanceof FitError) setImportError(t(`training.importError.fit-${err.code}`));
+      else if (err instanceof GpxError) setImportError(t(`training.importError.${err.code}`));
+      else throw err;
     }
   }
 
@@ -195,7 +210,7 @@ export function TrainingPage() {
             type="file"
             hidden
             data-testid="import-activity-file"
-            accept=".gpx,.tcx,application/gpx+xml,application/xml,text/xml"
+            accept=".gpx,.tcx,.fit,.gz,application/gpx+xml,application/xml,text/xml,application/octet-stream"
             onChange={(e) => {
               const f = e.target.files?.[0];
               e.target.value = '';

@@ -83,3 +83,43 @@ test('entrenamiento: cronómetro, temporizador, herramientas y cuenta regresiva'
   await page.getByRole('button', { name: 'Empezar a grabar' }).click();
   await expect(page).toHaveURL(/#\/training\/live$/, { timeout: 10_000 });
 });
+
+// Un FIT mínimo (la estructura que escribe un reloj): 5 registros con posición y pulso, una vuelta y el resumen de la sesión.
+function tinyFit(): Buffer {
+  const le = (n: number, size: number) => Array.from({ length: size }, (_, i) => Math.floor((n < 0 ? n + 2 ** (8 * size) : n) / 2 ** (8 * i)) & 0xff);
+  const FIT_EPOCH = 631_065_600;
+  const t0 = 1_800_000_000 - FIT_EPOCH;
+  const semi = (deg: number) => Math.round(deg / (180 / 2 ** 31));
+  const def = (local: number, num: number, fields: [number, number, number][]) => [0x40 | local, 0, 0, ...le(num, 2), fields.length, ...fields.flatMap(([id, size, type]) => [id, size, type])];
+  const REC: [number, number, number][] = [[253, 4, 0x86], [0, 4, 0x85], [1, 4, 0x85], [2, 2, 0x84], [3, 1, 0x02]];
+  const SES: [number, number, number][] = [[253, 4, 0x86], [2, 4, 0x86], [5, 1, 0x00], [6, 1, 0x00], [7, 4, 0x86], [8, 4, 0x86], [9, 4, 0x86], [11, 2, 0x84], [16, 1, 0x02], [17, 1, 0x02]];
+  const data = [
+    ...def(0, 20, REC),
+    ...[0, 1, 2, 3, 4].flatMap((i) => [0, ...le(t0 + i * 10, 4), ...le(semi(-41 + i * 0.0005), 4), ...le(semi(-71), 4), ...le((800 + 500) * 5, 2), 140 + i * 5]),
+    ...def(1, 18, SES),
+    1, ...le(t0 + 40, 4), ...le(t0, 4), 1, 0, ...le(40_000, 4), ...le(38_000, 4), ...le(22_100, 4), ...le(310, 2), 150, 160,
+  ];
+  return Buffer.from([14, 0x20, 0x64, 0x08, ...le(data.length, 4), 0x2e, 0x46, 0x49, 0x54, 0, 0, ...data, 0, 0]);
+}
+
+test('entrenamiento: importar un archivo FIT de un reloj', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/training/workouts');
+  await page.getByTestId('import-activity-file').setInputFiles({ name: 'salida-reloj.fit', mimeType: 'application/octet-stream', buffer: tinyFit() });
+  await expect(page).toHaveURL(/#\/training\/workouts\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole('heading', { name: 'salida-reloj' })).toBeVisible();
+  // Del reloj: pulso medio y máximo, y las calorías que él calculó.
+  await expect(page.getByText('150 lpm')).toBeVisible();
+  await expect(page.getByText('160 lpm')).toBeVisible();
+  await expect(page.getByTestId('w-kcal')).toHaveText('310 kcal');
+  // Un archivo que no es FIT ni GPX da un mensaje claro.
+  await page.goto('/#/training/workouts');
+  await page.getByTestId('import-activity-file').setInputFiles({ name: 'malo.fit', mimeType: 'application/octet-stream', buffer: Buffer.from(new Uint8Array(64)) });
+  await expect(page.getByRole('alert')).toContainText('no es');
+});
