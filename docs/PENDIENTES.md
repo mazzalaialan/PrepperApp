@@ -6,11 +6,12 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 
 - **Parques y frecuencias de Bolivia y Perú:** parques de Bolivia (SERNAP, de OpenStreetMap) y de Perú (SERNANP) en Radio, con el contacto de la sede central; red de emergencia de radioaficionados de Perú (RENER) con las frecuencias confirmadas del manual 2024 del Radio Club Peruano.
 - **Lluvia estimada por satélite en Bolivia y Perú:** mapa ampliado; medido: 12,5 MB por actualización y 2,0 s de procesador, solo mientras alguien mira la capa.
-- **Elegir una ubicación en el mapa:** en la edición de waypoints y en "Escribir coordenadas" (publicado en la 0.43.0).
+- **Elegir una ubicación en el mapa:** en la edición de waypoints y en "Escribir coordenadas" (publicado en la 0.43.0); también al elegir el lugar de un cantero o de una ubicación del inventario (crea el waypoint con el punto tocado).
 - **Grabar recorrido con pantalla apagada:** al volver de un corte, avisa entre qué horas fue y pregunta si unir con una recta o dejar el tramo vacío.
 - **Entrenamiento (base):** sesiones de caminata, correr, trekking, remo (kayak, canoa, bote, SUP, rafting), ciclismo (ruta, montaña, gravel, urbana, eléctrica) y bajo techo (cinta, elíptica, escalador); calorías (ACSM y MET) con el peso de la ficha médica; tiempo en movimiento, ritmo o velocidad, parciales por km, desnivel, mapa y gráfico de desnivel; historial por semana, récords y salidas que agrupan actividades con totales, mapa y desnivel de toda la salida. Los puntos grabados ahora llevan la hora.
 - **Enlace público de una salida:** solo si se elige; título, recorrido simplificado, datos y gráfico, sin fotos; se recorta el inicio y el final cerca de casa, vence al año y se puede borrar.
 - **Huerta de Bolivia:** zona estimada "Valles de Bolivia (Tarija)" con 20 cultivos (ver el punto 1).
+- **Radio Nacional del Perú:** 13 emisoras cargadas en el paquete de Perú.
 - **Radio de Perú:** servicio colectivo familiar (462 y 467 MHz, hasta 500 mW, sin licencia; sin confirmar vigente). PMR446 no figura como uso libre y no se cargó; INDECI y Cruz Roja siguen sin frecuencia publicada.
 - **Notas y equipo:** cómo me sentí, terreno y clima al terminar (de Open-Meteo, si había internet) en cada sesión; equipo (zapatillas, bici, bote) que suma sus km, avisa su vida útil y se agrega al Inventario como un artículo de la categoría Entrenamiento (o se vincula a uno que ya existe). El equipo se oculta con un interruptor (para copias que no usan el Inventario).
 - **Peso:** historial con gráfico dentro de Entrenamiento; actualiza el peso de la ficha médica propia (sin fallar si no hay ficha) y muestra el IMC con la altura.
