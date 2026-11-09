@@ -421,10 +421,10 @@ test('herramientas del mapa con clic derecho y en pantalla completa', async ({ p
   // Clic derecho: medir desde aquí y agregar un punto.
   await canvas.click({ button: 'right', position: { x: cx - 150, y: cy } });
   await expect(menu).toContainText(/^-34\.\d+, -58\.\d+/);
-  await menu.getByRole('menuitem', { name: 'Medir desde aquí' }).click();
+  await menu.getByRole('menuitem', { name: 'Medir o planificar desde aquí' }).click();
   await expect(menu).toHaveCount(0);
   await canvas.click({ button: 'right', position: { x: cx + 150, y: cy } });
-  await menu.getByRole('menuitem', { name: 'Agregar punto a la medición' }).click();
+  await menu.getByRole('menuitem', { name: 'Agregar punto' }).click();
   await expect(page.getByTestId('measure-distance')).toContainText('en línea recta');
 
   // Dirección desde un punto marcado con clic derecho hasta otro.

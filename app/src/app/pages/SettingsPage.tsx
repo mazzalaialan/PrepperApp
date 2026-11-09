@@ -8,7 +8,7 @@ import { newerRelease, usePortableUpdate } from '@/core/portable/update';
 import { CAPABILITIES, useCapabilities } from '@/core/capabilities/capabilities';
 import { WrongSecretError } from '@/core/crypto/crypto';
 import { setLanguage } from '@/core/i18n/i18n';
-import { ServerError, checkServer, enableNotifications, normalizeServerUrl } from '@/core/notifications/notifications';
+import { ServerError, checkServer, enableNotifications, normalizeServerUrl, isAcceptableServerUrl } from '@/core/notifications/notifications';
 import { useVault } from '@/core/security/useVault';
 import {
   MIN_PASSWORD_LENGTH,
@@ -302,6 +302,12 @@ function ConnectionsSection({ settings, onSave }: { settings: Settings; onSave: 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const nextServer = serverUrl.trim() ? normalizeServerUrl(serverUrl) : '';
+    // Sin https:// el código del dispositivo viajaría en claro: no se guarda.
+    if (nextServer && !isAcceptableServerUrl(nextServer)) {
+      setSaved(false);
+      setCheck({ ok: false, text: t('notifications.error.insecure') });
+      return;
+    }
     const serverChanged = nextServer !== settings.serverUrl;
     await onSave({ serverUrl: nextServer, weatherUrl: weatherUrl.trim() });
     setServerUrl(nextServer);

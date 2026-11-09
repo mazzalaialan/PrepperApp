@@ -137,7 +137,50 @@ interface GardenTaskInput {
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest();
 
+/** Pedidos por minuto y por IP a /api/devices (la app manda pocos: este tope es holgado, incluso detrás de una misma conexión). */
+export const DEVICE_REQUESTS_PER_MIN = 300;
+/** Intentos con código inválido (401) por IP en 10 minutos antes de frenar: un atacante probando códigos. */
+export const DEVICE_FAILURES_PER_10MIN = 30;
+
+/** Límite de pedidos por IP, en memoria (se reinicia con el servidor; alcanza para frenar abusos simples). */
+export function createDeviceLimiter(now: () => number = Date.now) {
+  const requests = new Map<string, { count: number; resetAt: number }>();
+  const failures = new Map<string, { count: number; resetAt: number }>();
+  const bump = (map: Map<string, { count: number; resetAt: number }>, ip: string, windowMs: number) => {
+    const t = now();
+    const cur = map.get(ip);
+    const entry = cur && cur.resetAt > t ? cur : { count: 0, resetAt: t + windowMs };
+    entry.count += 1;
+    map.set(ip, entry);
+    // Se limpia de vez en cuando para que el mapa no crezca sin control.
+    if (map.size > 5000) for (const [k, v] of map) if (v.resetAt <= t) map.delete(k);
+    return entry.count;
+  };
+  return {
+    /** true si este pedido hay que rechazar con 429. */
+    blocked(ip: string): boolean {
+      const f = failures.get(ip);
+      if (f && f.resetAt > now() && f.count >= DEVICE_FAILURES_PER_10MIN) return true;
+      return bump(requests, ip, 60_000) > DEVICE_REQUESTS_PER_MIN;
+    },
+    /** Se anota un intento con código inválido. */
+    failed(ip: string): void {
+      bump(failures, ip, 600_000);
+    },
+  };
+}
+
 export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): void {
+  const limiter = createDeviceLimiter();
+  // Solo las rutas de dispositivos: frena el abuso por IP sin tocar al resto del servidor.
+  app.addHook('onRequest', async (req, reply) => {
+    if (!req.url.startsWith('/api/devices')) return;
+    if (limiter.blocked(req.ip)) return reply.code(429).header('retry-after', '60').send({ error: 'too-many' });
+  });
+  app.addHook('onResponse', async (req, reply) => {
+    if (req.url.startsWith('/api/devices') && reply.statusCode === 401) limiter.failed(req.ip);
+  });
+
   /** Valida `Authorization: Bearer <token>` contra el dispositivo; responde 401 si no corresponde. */
   function authorize(req: FastifyRequest<{ Params: { id: string } }>): boolean {
     const row = db.prepare('SELECT token_hash FROM devices WHERE id = ?').get(req.params.id) as { token_hash: string } | undefined;

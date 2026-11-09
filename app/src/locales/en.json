@@ -704,11 +704,11 @@
   "mapTools": {
     "legBearing": "Bearing {{magnetic}}° magnetic ({{cardinal}})",
     "title": "Tools",
-    "measure": "Measure",
+    "measure": "Measure and plan",
     "target": "Direction to a point",
-    "measureHint": "Tap the map to mark the first point.",
+    "measureHint": "Tap the map to mark the first point. It measures distances and builds a route you can save.",
     "measureNext": "Tap another point: with two, the straight-line distance.",
-    "measureMore": "Keep tapping to measure a route.",
+    "measureMore": "Keep tapping to add legs: at the end you can save it as a route.",
     "straight": "straight line",
     "legs_one": "{{count}} leg",
     "legs_other": "{{count}} legs",
@@ -737,7 +737,7 @@
     "newOrigin": "Choose another origin",
     "climbShort": "+{{up}} / −{{down}}",
     "magneticShort": "Compass: {{value}}",
-    "menu": {"measureFrom": "Measure from here", "addPoint": "Add point to the measurement", "directionTo": "Direction to here (from my location)", "directionToFromOrigin": "Direction to here (from the marked origin)", "directionFrom": "Direction from here", "copy": "Copy coordinates"},
+    "menu": {"measureFrom": "Measure or plan from here", "addPoint": "Add point", "directionTo": "Direction to here (from my location)", "directionToFromOrigin": "Direction to here (from the marked origin)", "directionFrom": "Direction from here", "copy": "Copy coordinates"},
     "saveWaypoint": "Save as waypoint"
   },
   "maps": {
@@ -1825,6 +1825,7 @@
     "localOnly": "No server: approximate daily check (Chrome only does it if the app is installed and used often).",
     "inAppOnly": "On this device, alerts only show up when you open the app.",
     "error": {
+      "insecure": "The address must start with https:// (with http your device code would travel unencrypted). http is only accepted on your own machine or local network.",
       "unreachable": "Couldn't reach the server. Check the address and your connection.",
       "invalid-response": "The address responds, but it isn't a VikArg server.",
       "push-unsupported": "This browser doesn't support push notifications.",

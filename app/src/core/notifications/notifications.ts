@@ -14,7 +14,7 @@ const PERIODIC_SYNC_TAG = 'vikarg-alerts';
 const PERIODIC_MIN_INTERVAL_MS = 12 * 3_600_000;
 
 export class ServerError extends Error {
-  constructor(public readonly code: 'unreachable' | 'invalid-response' | 'push-unsupported' | 'permission-denied') {
+  constructor(public readonly code: 'unreachable' | 'invalid-response' | 'push-unsupported' | 'permission-denied' | 'insecure') {
     super(code);
     this.name = 'ServerError';
   }
@@ -24,12 +24,37 @@ export function normalizeServerUrl(url: string): string {
   return url.trim().replace(/\/+$/, '');
 }
 
+/**
+ * La dirección del servidor tiene que ser https://: con http el código del
+ * dispositivo viaja en claro y cualquiera en la red puede leerlo. Se acepta
+ * http solo para pruebas en tu propia máquina o red local (localhost, 127.x,
+ * ::1 y las redes privadas 10.x, 172.16–31.x y 192.168.x).
+ */
+export function isAcceptableServerUrl(url: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(url.trim());
+  } catch {
+    return false;
+  }
+  if (u.protocol === 'https:') return true;
+  if (u.protocol !== 'http:') return false;
+  const h = u.hostname.replace(/^\[|\]$/g, '');
+  if (h === 'localhost' || h === '::1' || h.endsWith('.localhost')) return true;
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+  if (!m) return false;
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  return a === 127 || a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+}
+
 export interface ServerInfo {
   version: string;
   vapidPublicKey: string;
 }
 
 export async function checkServer(serverUrl: string): Promise<ServerInfo> {
+  if (!isAcceptableServerUrl(serverUrl)) throw new ServerError('insecure');
   let res: Response;
   try {
     res = await fetch(`${normalizeServerUrl(serverUrl)}/api/health`, { signal: AbortSignal.timeout(8000) });

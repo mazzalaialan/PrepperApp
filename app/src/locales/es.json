@@ -704,11 +704,11 @@
   "mapTools": {
     "legBearing": "Rumbo {{magnetic}}° magnético ({{cardinal}})",
     "title": "Herramientas",
-    "measure": "Medir",
+    "measure": "Medir y planificar",
     "target": "Dirección a un punto",
-    "measureHint": "Tocá el mapa para marcar el primer punto.",
+    "measureHint": "Tocá el mapa para marcar el primer punto. Sirve para medir distancias y para armar una ruta que podés guardar.",
     "measureNext": "Tocá otro punto: con dos, la distancia en línea recta.",
-    "measureMore": "Seguí tocando para medir un recorrido.",
+    "measureMore": "Seguí tocando para sumar tramos: al final podés guardarlo como ruta.",
     "straight": "en línea recta",
     "legs_one": "{{count}} tramo",
     "legs_other": "{{count}} tramos",
@@ -737,7 +737,7 @@
     "newOrigin": "Elegir otro origen",
     "climbShort": "+{{up}} / −{{down}}",
     "magneticShort": "Brújula: {{value}}",
-    "menu": {"measureFrom": "Medir desde aquí", "addPoint": "Agregar punto a la medición", "directionTo": "Dirección hasta aquí (desde mi ubicación)", "directionToFromOrigin": "Dirección hasta aquí (desde el origen marcado)", "directionFrom": "Dirección desde aquí", "copy": "Copiar coordenadas"},
+    "menu": {"measureFrom": "Medir o planificar desde aquí", "addPoint": "Agregar punto", "directionTo": "Dirección hasta aquí (desde mi ubicación)", "directionToFromOrigin": "Dirección hasta aquí (desde el origen marcado)", "directionFrom": "Dirección desde aquí", "copy": "Copiar coordenadas"},
     "saveWaypoint": "Guardar como waypoint"
   },
   "maps": {
@@ -1825,6 +1825,7 @@
     "localOnly": "Sin servidor: aviso diario aproximado (Chrome lo hace solo si la app está instalada y la usás seguido).",
     "inAppOnly": "En este dispositivo las alertas solo se ven al abrir la app.",
     "error": {
+      "insecure": "La dirección tiene que empezar con https:// (con http el código de tu dispositivo viajaría sin cifrar). Solo se acepta http en tu propia máquina o red local.",
       "unreachable": "No se pudo conectar con el servidor. Revisá la dirección y la conexión.",
       "invalid-response": "La dirección responde, pero no es un servidor VikArg.",
       "push-unsupported": "Este navegador no admite notificaciones push.",
