@@ -99,6 +99,8 @@ export interface Settings {
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
   trainingVoice: boolean;
+  /** Equipo de entrenamiento (zapatillas, bici, bote) y su desgaste, también en el Inventario: se puede ocultar si no se usa. */
+  trainingGear: boolean;
   /** Altura (cm) para el IMC cuando no hay ficha médica propia donde guardarla. */
   heightCm: number | null;
   /** Objetivos de la semana en Entrenamiento (0 = sin objetivo). */
@@ -226,6 +228,7 @@ export const DEFAULT_SETTINGS: Settings = {
   knotsLearned: [],
   trainingKind: 'walk',
   trainingVoice: false,
+  trainingGear: true,
   heightCm: null,
   trainingGoals: { distanceKm: 0, minutes: 0, sessions: 0 },
   readerFontPct: 100,

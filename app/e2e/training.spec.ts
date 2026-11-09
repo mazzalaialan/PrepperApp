@@ -159,4 +159,24 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await expect(page.getByTestId('w-distance')).toHaveText(/^3\d\d m$/);
   await page.goto('/#/training/workouts');
   await expect(page.getByTestId('train-row')).toHaveCount(3);
+
+  // Notas de la sesión y equipo: cómo me sentí, terreno y zapatillas; el equipo se oculta con el interruptor.
+  await page.goto('/#/training/workouts');
+  await page.getByTestId('to-gear').click();
+  await page.getByLabel('Nombre', { exact: true }).fill('Zapatillas de trail');
+  await page.getByLabel('Vida útil (km)').fill('600');
+  await page.getByTestId('gear-save').click();
+  await expect(page.getByTestId('gear-row')).toContainText('0 km / 600 km');
+  await page.goto('/#/training/workouts');
+  await page.getByTestId('train-row').first().click();
+  await page.getByTestId('w-feeling-4').click();
+  await expect(page.getByTestId('w-feeling-4')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByLabel('Terreno o lugar').selectOption({ label: 'Sendero' });
+  await page.getByLabel('Equipo usado').selectOption({ label: 'Zapatillas de trail' });
+  await page.goto('/#/training/gear');
+  await expect(page.getByTestId('gear-row')).toContainText(/[1-9][\d,]* km|0,\d km/);
+  await page.goto('/#/training/workouts');
+  await page.getByText('Objetivos de la semana').click();
+  await page.getByTestId('gear-toggle').uncheck();
+  await expect(page.getByTestId('to-gear')).toHaveCount(0);
 });

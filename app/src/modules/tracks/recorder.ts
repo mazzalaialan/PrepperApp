@@ -191,8 +191,17 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     if (kind && stats) {
       const me = [...useMedical.getState().profiles.values()].find((p) => p.isMe);
       const workout = workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg);
-      await useTraining.getState().saveWorkout(workout);
+      const saved = await useTraining.getState().saveWorkout(workout);
       set({ lastWorkoutId: workout.id });
+      // El clima se agrega después, sin demorar: si hay internet, queda en la actividad.
+      const start = done.segments.flat()[0];
+      if (start) {
+        void import('@/modules/training/weather').then(async ({ weatherAt }) => {
+          const weather = await weatherAt(start[0], start[1]);
+          const current = useTraining.getState().workouts.get(saved.id);
+          if (weather && current) await useTraining.getState().saveWorkout({ ...current, weather });
+        });
+      }
     }
     return done.id;
   },

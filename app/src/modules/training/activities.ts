@@ -61,3 +61,7 @@ export const GROUPS: ActivityGroup[] = ['foot', 'rowing', 'cycling', 'indoor'];
 export const kindsOf = (group: ActivityGroup): ActivityKind[] => ACTIVITY_KINDS.filter((k) => ACTIVITIES[k].group === group);
 
 export const isActivityKind = (v: unknown): v is ActivityKind => typeof v === 'string' && (ACTIVITY_KINDS as readonly string[]).includes(v);
+
+/** Terreno o lugar de la sesión (para anotar cómo fue). */
+export const TERRAINS = ['road', 'trail', 'mountain', 'sand', 'track', 'water', 'indoor', 'mixed'] as const;
+export type Terrain = (typeof TERRAINS)[number];

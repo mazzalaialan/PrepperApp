@@ -84,6 +84,7 @@ const CropPage = page(() => import('@/modules/garden/CropPage').then((m) => ({ d
 const GardenCalendarPage = page(() => import('@/modules/garden/GardenCalendarPage').then((m) => ({ default: m.GardenCalendarPage })));
 const TrainingPage = page(() => import('@/modules/training/TrainingPage').then((m) => ({ default: m.TrainingPage })));
 const WeightPage = page(() => import('@/modules/training/WeightPage').then((m) => ({ default: m.WeightPage })));
+const GearPage = page(() => import('@/modules/training/GearPage').then((m) => ({ default: m.GearPage })));
 const LivePage = page(() => import('@/modules/training/LivePage').then((m) => ({ default: m.LivePage })));
 const WorkoutPage = page(() => import('@/modules/training/WorkoutPage').then((m) => ({ default: m.WorkoutPage })));
 const WorkoutEditPage = page(() => import('@/modules/training/WorkoutEditPage').then((m) => ({ default: m.WorkoutEditPage })));
@@ -168,6 +169,7 @@ const router = createHashRouter([
       { path: '/training/workouts', element: <TrainingPage /> },
       { path: '/training/live', element: <LivePage /> },
       { path: '/training/weight', element: <WeightPage /> },
+      { path: '/training/gear', element: <GearPage /> },
       { path: '/training/workouts/new', element: <WorkoutEditPage /> },
       { path: '/training/workouts/:id', element: <WorkoutPage /> },
       { path: '/training/outings', element: <OutingsPage /> },

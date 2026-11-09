@@ -21,6 +21,8 @@ import { today } from '../domain/dates';
 import { isPackaged, itemWeightGrams } from '../domain/stock';
 import { formatDay, useCategoryOptions, useLocationOptions } from '../selectors';
 import { useInventory } from '../store';
+import { kmForInventoryItem } from '@/modules/training/gear';
+import { useTraining } from '@/modules/training/store';
 
 function emptyItem(): Item {
   return newEntity<Item>({
@@ -62,6 +64,11 @@ function NotFound() {
 }
 
 function ItemForm({ stored, presetBarcode }: { stored: Item | undefined; presetBarcode: string | null }) {
+  // Si hay equipo de Entrenamiento vinculado a este artículo, se ve cuánto lleva (se oculta con el interruptor de Entrenamiento).
+  const gearOn = useSettings((s) => s.settings.trainingGear);
+  const trainingGear = useTraining((s) => s.gear);
+  const trainingWorkouts = useTraining((s) => s.workouts);
+  const gearKm = gearOn && stored ? kmForInventoryItem(stored?.id ?? '', trainingGear.values(), trainingWorkouts.values()) : null;
   // Se crea una sola vez por montaje: nunca reutilizar el id de otro artículo nuevo.
   const [initial] = useState(() => stored ?? { ...emptyItem(), barcode: presetBarcode });
   const isNew = !stored;
@@ -182,6 +189,11 @@ function ItemForm({ stored, presetBarcode }: { stored: Item | undefined; presetB
               setScanning(false);
             }}
           />
+        )}
+        {gearKm !== null && (
+          <p className="hint" style={{ margin: 0 }} data-testid="item-gear-km">
+            {t('gear.itemKm', { km: gearKm })}
+          </p>
         )}
         <div className="field">
           <label htmlFor="notes">{t('items.notes')}</label>

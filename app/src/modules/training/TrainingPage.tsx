@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Circle, Footprints, PencilLine, Plus, Scale, Upload } from 'lucide-react';
+import { Circle, Footprints, PencilLine, Plus, Scale, Shirt, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { useRecorder } from '@/modules/tracks/recorder';
 import { Segmented } from '@/ui/Segmented';
@@ -35,6 +35,7 @@ export function TrainingPage() {
   const week = thisWeek?.totals ?? totalsOf([]);
 
   const goals = useSettings((s) => s.settings.trainingGoals);
+  const gearOn = useSettings((s) => s.settings.trainingGear);
   const progress = goalProgress(week, goals);
   const navigate = useNavigate();
   const saveTrack = useTracks((s) => s.saveTrack);
@@ -189,6 +190,9 @@ export function TrainingPage() {
           <summary>{t('training.goals.title')}</summary>
           <div className="stack">
             <p className="hint" style={{ margin: 0 }}>{t('training.goals.hint')}</p>
+            <label className="row">
+              <input type="checkbox" checked={gearOn} onChange={(e) => void update({ trainingGear: e.target.checked })} data-testid="gear-toggle" /> {t('gear.toggle')}
+            </label>
             {(['distanceKm', 'minutes', 'sessions'] as const).map((k) => (
               <div className="field" key={k}>
                 <label htmlFor={`goal-${k}`}>{t(`training.goals.${k}`)}</label>
@@ -213,6 +217,11 @@ export function TrainingPage() {
           </p>
         )}
         <div className="row-end wrap">
+          {gearOn && (
+            <Link className="btn" to="/training/gear" data-testid="to-gear">
+              <Shirt size={18} /> {t('gear.title')}
+            </Link>
+          )}
           <Link className="btn" to="/training/weight" data-testid="to-weight">
             <Scale size={18} /> {t('weight.title')}
           </Link>

@@ -5,7 +5,10 @@ import { Download, Map as MapIcon, Pencil, Trash2 } from 'lucide-react';
 import { deliverFile } from '@/ui/files';
 import { ElevationProfile } from '@/modules/tracks/ElevationProfile';
 import { useTracks } from '@/modules/tracks/store';
-import { ACTIVITIES } from './activities';
+import { useSettings } from '@/core/settings/settings';
+import { skyOf } from '@/modules/weather/forecast';
+import { ACTIVITIES, TERRAINS } from './activities';
+import { gearFor } from './gear';
 import { useBodyWeight, useTrainingFormat } from './format';
 import { recalculated } from './history';
 import { toGpx, toTcx } from './interchange';
@@ -43,6 +46,9 @@ function WorkoutDetail({ id }: { id: string }) {
   const [weight, setWeight] = useState(String(w.weightKg ?? ''));
   const [pack, setPack] = useState(String(w.packKg ?? ''));
   const def = ACTIVITIES[w.kind];
+  const gearOn = useSettings((s) => s.settings.trainingGear);
+  const allGear = useTraining((s) => s.gear);
+  const gearList = gearFor(w.kind, allGear.values());
   const hasGps = w.source === 'gps' && !!track;
 
   async function exportAs(format: 'gpx' | 'tcx') {
@@ -230,6 +236,49 @@ function WorkoutDetail({ id }: { id: string }) {
         </div>
         {w.outingId && outings.get(w.outingId) && (
           <Link to={`/training/outings/${w.outingId}`}>{t('training.openOuting', { name: outings.get(w.outingId)!.name })}</Link>
+        )}
+      </section>
+
+      <section className="card stack" data-testid="w-how">
+        <h2 className="section-title" style={{ margin: 0 }}>{t('training.how.title')}</h2>
+        <div className="field">
+          <label id="w-feeling-label">{t('training.how.feeling')}</label>
+          <div className="row wrap" role="group" aria-labelledby="w-feeling-label">
+            {([1, 2, 3, 4, 5] as const).map((n) => (
+              <button key={n} className={`btn${w.feeling === n ? ' btn-primary' : ''}`} type="button" aria-pressed={w.feeling === n} data-testid={`w-feeling-${n}`} onClick={() => void save({ ...w, feeling: w.feeling === n ? null : n })}>
+                {n} · {t(`training.how.f${n}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="field">
+          <label htmlFor="w-terrain">{t('training.how.terrain')}</label>
+          <select id="w-terrain" className="select" value={w.terrain ?? ''} onChange={(e) => void save({ ...w, terrain: e.target.value || null })}>
+            <option value="">—</option>
+            {TERRAINS.map((x) => (
+              <option key={x} value={x}>
+                {t(`training.how.t.${x}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {w.weather && (
+          <p className="hint" style={{ margin: 0 }} data-testid="w-weather">
+            {t('training.how.weather')}: {t(`weather.sky.${skyOf(w.weather.code)}`)} · {w.weather.tempC} °C · {t('training.how.wind', { kmh: w.weather.windKmh })} · {w.weather.humidity} %
+          </p>
+        )}
+        {gearOn && gearList.length > 0 && (
+          <div className="field">
+            <label htmlFor="w-gear">{t('gear.useLabel')}</label>
+            <select id="w-gear" className="select" value={w.gearId ?? ''} onChange={(e) => void save({ ...w, gearId: e.target.value || null })}>
+              <option value="">—</option>
+              {gearList.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
       </section>
 

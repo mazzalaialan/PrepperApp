@@ -4,6 +4,8 @@ import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
 import type { Workout } from '@/core/model/types';
 import { byWeek, goalProgress, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
+import { gearFor, gearKm, kmForInventoryItem, wear } from './gear';
+import type { Gear } from '@/core/model/types';
 import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
 import type { WeightEntry } from '@/core/model/types';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
@@ -305,5 +307,30 @@ describe('peso e IMC', () => {
     expect(bmiCategory(24.9)).toBe('normal');
     expect(bmiCategory(25)).toBe('overweight');
     expect(bmiCategory(30)).toBe('obese');
+  });
+});
+
+describe('equipo', () => {
+  const g = { id: 'g1', name: 'Zapatillas', kinds: ['run', 'walk'], startKm: 100, retireKm: 600 } as unknown as unknown as Gear;
+  const w = (id: string, gearId: string | null, distanceM: number) => ({ id, gearId, distanceM }) as Workout;
+  it('suma los km iniciales y los de las actividades donde se usó', () => {
+    expect(gearKm(g, [w('a', 'g1', 10_000), w('b', 'g1', 5_500), w('c', null, 40_000), w('d', 'otro', 9_000)])).toBe(115.5);
+  });
+  it('desgaste: sin vida útil no avisa; al 90 % ya avisa; al 100 % está gastado', () => {
+    expect(wear({ ...g, retireKm: 0 }, []).fraction).toBeNull();
+    expect(wear(g, [w('a', 'g1', 440_000)])).toMatchObject({ km: 540, nearEnd: true, worn: false });
+    expect(wear(g, [w('a', 'g1', 600_000)])).toMatchObject({ worn: true, fraction: 1 });
+  });
+  it('ofrece el equipo según la actividad y deja afuera lo retirado', () => {
+    const bici = { id: 'g2', name: 'Bici', kinds: ['mtb'], startKm: 0, retireKm: 0 } as unknown as unknown as Gear;
+    const todo = { id: 'g3', name: 'Casco', kinds: [], startKm: 0, retireKm: 0 } as unknown as unknown as Gear;
+    const viejo = { ...g, id: 'g4', retired: true } as unknown as unknown as Gear;
+    expect(gearFor('run', [g, bici, todo, viejo]).map((x) => x.id)).toEqual(['g3', 'g1']);
+    expect(gearFor('mtb', [g, bici, todo]).map((x) => x.id)).toEqual(['g2', 'g3']);
+  });
+  it('km de un artículo del Inventario vinculado (null si no hay ninguno)', () => {
+    const linked = { ...g, inventoryItemId: 'item1' } as unknown as unknown as Gear;
+    expect(kmForInventoryItem('item1', [linked], [w('a', 'g1', 20_000)])).toBe(120);
+    expect(kmForInventoryItem('item2', [linked], [])).toBeNull();
   });
 });
