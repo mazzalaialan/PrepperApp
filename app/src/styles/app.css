@@ -4004,3 +4004,7 @@ a.module-card:hover {
 .bmi-table caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
 .bmi-table th, .bmi-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border, rgba(128,128,128,.3)); }
 .bmi-table tr[aria-current='true'] { background: var(--surface-2); font-weight: 700; }
+
+.countdown { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: var(--bg, #121a24); color: var(--text, #e8e2d6); }
+.countdown-label { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.countdown-number { margin: 0; font-size: clamp(8rem, 40vw, 16rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }

@@ -14,10 +14,11 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 - **Radio de Perú:** servicio colectivo familiar (462 y 467 MHz, hasta 500 mW, sin licencia; sin confirmar vigente). PMR446 no figura como uso libre y no se cargó; INDECI y Cruz Roja siguen sin frecuencia publicada.
 - **Notas y equipo:** cómo me sentí, terreno y clima al terminar (de Open-Meteo, si había internet) en cada sesión; equipo (zapatillas, bici, bote) que suma sus km, avisa su vida útil y se agrega al Inventario como un artículo de la categoría Entrenamiento (o se vincula a uno que ya existe). El equipo se oculta con un interruptor (para copias que no usan el Inventario).
 - **Peso:** historial con gráfico dentro de Entrenamiento; actualiza el peso de la ficha médica propia (sin fallar si no hay ficha) y muestra el IMC con la altura.
-- **Intervalos:** planes por tiempo (entrada en calor, N × trabajo/descanso, vuelta a la calma; 4 armados y uno a medida) con la etapa y el tiempo que falta en la pantalla en vivo, pitido, vibración y voz en cada cambio. Pendiente: intervalos por distancia y botón de vuelta.
+- **Intervalos:** planes por tiempo (entrada en calor, N × trabajo/descanso, vuelta a la calma; 4 armados y uno a medida) con la etapa y el tiempo que falta en la pantalla en vivo, pitido, vibración y voz en cada cambio. También por distancia (por ejemplo 8 × 400 m, con 3 planes armados y a medida; necesitan GPS).
 - **Rutas planificadas (Orientación > Rutas):** con la herramienta Medir del mapa (también sin conexión) se tocan puntos y se guarda como ruta: piernas con distancia y rumbo magnético, desnivel y perfil con el relieve descargado, GPX, ver en el mapa y seguir la ruta (con los datos de la sesión de Entrenamiento arriba). Sus puntos no son lugares ni dan alertas de clima, salvo los que se guardan a mano. Entrenamiento puede empezar una sesión siguiendo una ruta o un track. Va en línea recta entre puntos; pegada a caminos queda pendiente.
 - **Zonas privadas:** un waypoint se puede marcar como zona privada (200, 500 o 1000 m); al compartir una salida se saca del recorrido todo lo que pasa dentro de esas zonas (se corta ahí, sin líneas que las crucen), por defecto y con opción de desmarcarlo en cada enlace. Los totales de la salida no se recalculan sin lo recortado.
 - **Seguimiento en vivo para la familia:** desde la pantalla en vivo se crea un enlace que vence (15 min, 1, 4, 12 o 24 h): el teléfono manda cada 30 s (60 s parado) lo nuevo del recorrido y los datos, y la página pública (HTML sin scripts, se recarga sola) muestra el recorrido, la última posición exacta y hace cuánto llegó, con aviso de posible pérdida de señal. Nunca se mandan las zonas privadas; se corta al terminar la sesión y el servidor borra todo (topes: 300 activos, 5 s entre envíos). En la web solo anda con la app abierta y la pantalla encendida; con la app nativa seguirá con el celular bloqueado.
+- **Botón de vuelta, cuenta regresiva, cronómetro y herramientas:** el botón de vuelta de la pantalla en vivo guarda tiempo, distancia y ritmo de cada vuelta (en la actividad también); cuenta regresiva opcional de 3, 5 o 10 s antes de empezar; Cronómetro con vueltas y temporizador; Herramientas: calculadora de ritmo con estimación de tiempos (Riegel), zonas de pulso (por edad, Karvonen con pulso en reposo) y metrónomo de cadencia.
 - **Importar y exportar GPX/TCX:** cada actividad con GPS se exporta a GPX o TCX (con altura y hora) y se puede importar un archivo de Strava, Garmin o Wikiloc como actividad nueva.
 - **Pantalla en vivo:** al empezar una sesión se abre una pantalla con el tiempo, la distancia, el ritmo o la velocidad de ahora y promedio, el desnivel y las calorías en grande, con pausa y terminar y voz opcional cada km.
 - **Objetivos semanales:** distancia, tiempo y cantidad de actividades, con barras de avance en la semana. La pausa automática ya está cubierta: el tiempo en movimiento descarta las paradas.
@@ -30,7 +31,7 @@ No existe un calendario oficial abierto de siembra por cultivo y mes (INIAF e IN
 
 **Funciones de apps de running**
 
-Sin muro social. Botón de vuelta y cuenta regresiva se revisan al encarar este punto (la carga manual ya está).
+Sin muro social.
 
 **Pantalla bloqueada**
 

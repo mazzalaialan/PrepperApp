@@ -52,6 +52,8 @@ interface RecorderState {
   finish: (name?: string) => Promise<Id | null>;
   /** Después de un corte: unir con una recta el tramo de antes y el de después (por defecto quedan separados). */
   joinGap: () => void;
+  /** Marca una vuelta (botón de la pantalla en vivo): guarda el tiempo y la distancia acumulados. */
+  lap: () => void;
 }
 
 const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, gapFrom: null, gapTo: null, accuracy: null, lastWorkoutId: null } as const;
@@ -157,6 +159,14 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     startWatch();
   },
 
+  lap() {
+    const s = get();
+    if (s.status !== 'recording' || !s.track?.activity) return;
+    const mark = { elapsedS: elapsedS(s), distanceM: Math.round(s.track.distanceM) };
+    set({ track: { ...s.track, laps: [...(s.track.laps ?? []), mark] } });
+    void persist();
+  },
+
   joinGap() {
     const s = get();
     if (!s.track) return;
@@ -191,7 +201,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     await useTracks.getState().saveTrack(done);
     if (kind && stats) {
       const me = [...useMedical.getState().profiles.values()].find((p) => p.isMe);
-      const workout = { ...workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg), intervals: s.track.intervals ?? null };
+      const workout = { ...workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg), intervals: s.track.intervals ?? null, laps: s.track.laps ?? [] };
       const saved = await useTraining.getState().saveWorkout(workout);
       set({ lastWorkoutId: workout.id });
       // El clima se agrega después, sin demorar: si hay internet, queda en la actividad.

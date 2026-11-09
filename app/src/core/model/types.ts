@@ -381,9 +381,28 @@ export interface Workout extends BaseEntity {
   /** El clima al terminar, de Open-Meteo (solo si había internet): grados, código del cielo, viento km/h y humedad %. */
   weather?: { tempC: number; code: number; windKmh: number; humidity: number } | null;
   /** Si fue por intervalos: el plan que se siguió. */
-  intervals?: { warmupS: number; workS: number; restS: number; repeats: number; cooldownS: number } | null;
+  intervals?: IntervalPlanData | null;
+  /** Vueltas que se marcaron. */
+  laps?: LapMark[];
   /** El equipo usado (zapatillas, bici, bote): suma sus kilómetros. */
   gearId?: Id | null;
+}
+
+/** Plan de intervalos (ver modules/training/intervals.ts). Si `workM` o `restM` están, esa etapa se mide en metros y no en segundos. */
+export interface IntervalPlanData {
+  warmupS: number;
+  workS: number;
+  restS: number;
+  repeats: number;
+  cooldownS: number;
+  workM?: number | null;
+  restM?: number | null;
+}
+
+/** Una vuelta marcada: cuánto tiempo y distancia llevaba la sesión al apretar el botón. */
+export interface LapMark {
+  elapsedS: number;
+  distanceM: number;
 }
 
 /** Equipo que se gasta con el uso (zapatillas, bici, bote, remo): suma los km de las actividades donde se usó. */
@@ -492,7 +511,9 @@ export interface Track extends BaseEntity {
   activity?: WorkoutKind;
   activityPackKg?: number | null;
   /** Sesión por intervalos (ver modules/training/intervals.ts). */
-  intervals?: { warmupS: number; workS: number; restS: number; repeats: number; cooldownS: number } | null;
+  intervals?: IntervalPlanData | null;
+  /** Vueltas marcadas con el botón durante la grabación: tiempo (s) y distancia (m) acumulados al marcar. */
+  laps?: LapMark[];
   name: string;
   desc: string;
   /** De dónde salió ("Wikiloc", o el nombre del archivo). */

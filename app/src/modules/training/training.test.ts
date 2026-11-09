@@ -5,12 +5,15 @@ import { calories } from './energy';
 import type { Outing, Track, Workout } from '@/core/model/types';
 import { distanceMeters } from '@/core/geo/geo';
 import { byWeek, goalProgress, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
-import { describePlan, parseClock, phaseAt, phases, planDurationS, validPlan } from './intervals';
+import { advance, describePlan, parseClock, phases, planDurationS, START_STATE, usesDistance, validPlan, type RunState } from './intervals';
 import { gearFor, gearKm, kmForInventoryItem, wear } from './gear';
 import type { Gear } from '@/core/model/types';
 import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
 import type { WeightEntry } from '@/core/model/types';
 import { buildChunks } from './liveChunks';
+import { fastestSlowest, lapRows } from './laps';
+import { elapsedMs, timerLeftMs } from './stopwatch';
+import { formatDuration, formatStopwatch, hrZones, maxHrFromAge, paceOf, parseDuration, riegel, stopwatchLaps, timeAtPace } from './tools';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, removeZones, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
@@ -340,6 +343,7 @@ describe('equipo', () => {
 
 describe('intervalos', () => {
   const plan = { warmupS: 60, workS: 30, restS: 15, repeats: 3, cooldownS: 60 };
+  const at = (p: typeof plan | (typeof plan & { workM: number }), s: number, m = 0, from: RunState = START_STATE) => advance(p, from, s, m);
   it('arma las etapas en orden y no pone descanso después de la última repetición', () => {
     expect(phases(plan).map((p) => `${p.kind}${p.round ?? ''}`)).toEqual(['warmup', 'work1', 'rest1', 'work2', 'rest2', 'work3', 'cooldown']);
     expect(planDurationS(plan)).toBe(60 + 30 * 3 + 15 * 2 + 60);
@@ -347,14 +351,31 @@ describe('intervalos', () => {
   it('sin entrada en calor ni vuelta a la calma, salta esas etapas', () => {
     expect(phases({ ...plan, warmupS: 0, cooldownS: 0 })).toHaveLength(5);
   });
-  it('dice en qué etapa se está y cuánto falta (los bordes pasan a la siguiente)', () => {
-    expect(phaseAt(plan, 0)).toMatchObject({ index: 0, remainingS: 60, done: false });
-    expect(phaseAt(plan, 59.5).remainingS).toBe(1);
-    expect(phaseAt(plan, 60)).toMatchObject({ index: 1, remainingS: 30 });
-    expect(phaseAt(plan, 105)).toMatchObject({ index: 3, remainingS: 30 }); // 60+30+15 = 105: empieza el trabajo 2
-    expect(phaseAt(plan, planDurationS(plan))).toMatchObject({ done: true, phase: null });
+  it('por tiempo: dice la etapa y cuánto falta, y pasa a la siguiente en el borde', () => {
+    expect(at(plan, 0)).toMatchObject({ phase: { kind: 'warmup' }, remaining: 60, unit: 's', done: false });
+    expect(at(plan, 59.5).remaining).toBe(1);
+    expect(at(plan, 60)).toMatchObject({ state: { index: 1 }, remaining: 30 });
+    // Un salto grande (la app estuvo en segundo plano) pasa varias etapas de una vez: 60+30+15 = 105 empieza el trabajo 2.
+    expect(at(plan, 105)).toMatchObject({ state: { index: 3 }, remaining: 30 });
+    expect(at(plan, planDurationS(plan))).toMatchObject({ done: true, phase: null });
   });
-  it('lee tiempos y valida planes', () => {
+  it('por distancia: el trabajo termina al recorrer los metros, vaya rápido o lento', () => {
+    const track = { warmupS: 0, workS: 0, workM: 400, restS: 90, repeats: 2, cooldownS: 0 };
+    expect(phases(track).map((p) => `${p.kind}${p.distanceM ?? ''}`)).toEqual(['work400', 'rest', 'work400']);
+    expect(usesDistance(track)).toBe(true);
+    expect(usesDistance(plan)).toBe(false);
+    const r1 = at(track, 30, 150);
+    expect(r1).toMatchObject({ phase: { kind: 'work' }, remaining: 250, unit: 'm' });
+    // A los 400 m empieza el descanso de 90 s, que cuenta desde ese momento (110 s de la sesión).
+    const r2 = at(track, 110, 400, r1.state);
+    expect(r2).toMatchObject({ phase: { kind: 'rest' }, remaining: 90, unit: 's', state: { index: 1, startedS: 110, startedM: 400 } });
+    const r3 = at(track, 150, 450, r2.state);
+    expect(r3.remaining).toBe(50);
+    const r4 = at(track, 200, 450, r3.state);
+    expect(r4).toMatchObject({ phase: { kind: 'work' }, remaining: 400, unit: 'm' });
+    expect(at(track, 400, 850, r4.state).done).toBe(true);
+  });
+  it('lee tiempos y valida planes (también los de distancia)', () => {
     expect(parseClock('1:30')).toBe(90);
     expect(parseClock('90')).toBe(90);
     expect(parseClock('1:75')).toBeNull();
@@ -362,7 +383,10 @@ describe('intervalos', () => {
     expect(validPlan(plan)).toBe(true);
     expect(validPlan({ ...plan, repeats: 0 })).toBe(false);
     expect(validPlan({ ...plan, workS: 2 })).toBe(false);
+    expect(validPlan({ ...plan, workS: 0, workM: 400 } as typeof plan)).toBe(true);
+    expect(validPlan({ ...plan, workS: 0, workM: 10 } as typeof plan)).toBe(false);
     expect(describePlan({ ...plan, warmupS: 0, cooldownS: 0 }, (s) => `${s}s`)).toBe('3 × 30s / 15s');
+    expect(describePlan({ warmupS: 0, workS: 0, workM: 400, restS: 90, repeats: 8, cooldownS: 0 }, (s) => `${s}s`)).toBe('8 × 400 m / 90s');
   });
 });
 
@@ -448,5 +472,80 @@ describe('seguimiento en vivo: qué se manda', () => {
     const r = buildChunks([seg], { seg: 0, pt: 1 }, [{ lat: -41, lon: -71, radiusM: 100 }], 0);
     expect(r.chunks).toHaveLength(1);
     expect(r.chunks[0]).toMatchObject({ newSegment: true });
+  });
+});
+
+describe('vueltas', () => {
+  it('pasa de marcas acumuladas a vueltas sueltas, con ritmo, y marca la más rápida y la más lenta', () => {
+    const rows = lapRows([
+      { elapsedS: 300, distanceM: 1000 },
+      { elapsedS: 570, distanceM: 2000 }, // 270 s: la más rápida
+      { elapsedS: 900, distanceM: 3000 }, // 330 s: la más lenta
+    ]);
+    expect(rows.map((r) => r.timeS)).toEqual([300, 270, 330]);
+    expect(rows.map((r) => r.distanceM)).toEqual([1000, 1000, 1000]);
+    expect(Math.round(rows[1]!.paceSPerKm)).toBe(270);
+    expect(fastestSlowest(rows)).toEqual({ fastest: 2, slowest: 3 });
+    expect(fastestSlowest(rows.slice(0, 1))).toBeNull();
+    expect(lapRows(undefined)).toEqual([]);
+  });
+  it('una vuelta sin distancia no tiene ritmo', () => {
+    expect(lapRows([{ elapsedS: 60, distanceM: 0 }])[0]!.paceSPerKm).toBe(0);
+  });
+});
+
+describe('herramientas de entrenamiento', () => {
+  it('lee y muestra duraciones', () => {
+    expect(parseDuration('1:05:30')).toBe(3930);
+    expect(parseDuration('25:10')).toBe(1510);
+    expect(parseDuration('90')).toBe(90);
+    expect(parseDuration('1:75')).toBeNull();
+    expect(parseDuration('abc')).toBeNull();
+    expect(parseDuration('')).toBeNull();
+    expect(formatDuration(3930)).toBe('1:05:30');
+    expect(formatDuration(1510)).toBe('25:10');
+  });
+  it('ritmo y velocidad de 10 km en 55:00', () => {
+    const r = paceOf(10, 3300)!;
+    expect(r.paceSPerKm).toBe(330);
+    expect(r.speedKmh).toBeCloseTo(10.909, 2);
+    expect(paceOf(0, 100)).toBeNull();
+    expect(timeAtPace(21.0975, 330)).toBeCloseTo(6962.2, 0);
+  });
+  it('Riegel: de 10 km en 55:00 estima el medio maratón en poco más de 2 h', () => {
+    const half = riegel(10, 3300, 21.0975)!;
+    expect(half).toBeGreaterThan(7200); // más de 2 h
+    expect(half).toBeLessThan(7500);
+    expect(riegel(10, 3300, 10)).toBeCloseTo(3300, 5);
+    expect(riegel(0, 3300, 10)).toBeNull();
+  });
+  it('zonas de pulso: por porcentaje del máximo y por reserva (Karvonen)', () => {
+    expect(maxHrFromAge(40)).toBe(180);
+    expect(maxHrFromAge(5)).toBeNull();
+    const byMax = hrZones(180)!;
+    expect(byMax).toHaveLength(5);
+    expect(byMax[0]).toMatchObject({ n: 1, fromBpm: 90, toBpm: 108 });
+    expect(byMax[4]).toMatchObject({ n: 5, fromBpm: 162, toBpm: 180 });
+    const kar = hrZones(180, 60)!; // reserva 120: zona 1 desde 60 + 0,5×120 = 120
+    expect(kar[0]).toMatchObject({ fromBpm: 120, toBpm: 132 });
+    expect(kar[4]!.toBpm).toBe(180);
+    expect(hrZones(50)).toBeNull();
+    expect(hrZones(180, 190)![0]!.fromBpm).toBe(90); // un reposo que no sirve se ignora
+  });
+  it('cronómetro: formato con centésimas y parciales de vuelta', () => {
+    expect(formatStopwatch(0)).toBe('0:00.00');
+    expect(formatStopwatch(65_370)).toBe('1:05.37');
+    expect(formatStopwatch(3_723_400)).toBe('1:02:03.40');
+    expect(stopwatchLaps([30_000, 75_000])).toEqual([
+      { n: 1, splitMs: 30_000, totalMs: 30_000 },
+      { n: 2, splitMs: 45_000, totalMs: 75_000 },
+    ]);
+  });
+  it('el cronómetro y el temporizador calculan con la hora del reloj', () => {
+    expect(elapsedMs({ startedAt: 1000, accumulatedMs: 500 }, 4000)).toBe(3500);
+    expect(elapsedMs({ startedAt: null, accumulatedMs: 500 }, 4000)).toBe(500);
+    expect(timerLeftMs({ endsAt: 10_000, leftMs: 0 }, 4000)).toBe(6000);
+    expect(timerLeftMs({ endsAt: 10_000, leftMs: 0 }, 12_000)).toBe(0);
+    expect(timerLeftMs({ endsAt: null, leftMs: 2500 }, 4000)).toBe(2500);
   });
 });

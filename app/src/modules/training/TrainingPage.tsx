@@ -13,6 +13,7 @@ import { useTracks } from '@/modules/tracks/store';
 import { trackFromRoute } from '@/modules/waypoints/plan';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { activityFromFile, parseActivityFile } from './interchange';
+import { Countdown } from './Countdown';
 import { IntervalPicker } from './IntervalPicker';
 import type { IntervalPlan } from './intervals';
 import { useTraining } from './store';
@@ -67,6 +68,10 @@ export function TrainingPage() {
     }
   }
 
+  const countdownS = useSettings((s) => s.settings.trainingCountdownS);
+  const [counting, setCounting] = useState(false);
+  const beginSession = () => void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null, intervals: plan }).then(() => void goAfterStart());
+
   /** Después de empezar: a la pantalla en vivo, o al seguimiento de la ruta o el track elegido (con los datos de la sesión arriba). */
   async function goAfterStart() {
     if (follow.startsWith('r:')) {
@@ -93,6 +98,16 @@ export function TrainingPage() {
   return (
     <div className="stack">
       <h1 className="page-title">{t('modules.workouts.title')}</h1>
+      {counting && (
+        <Countdown
+          seconds={countdownS}
+          onCancel={() => setCounting(false)}
+          onDone={() => {
+            setCounting(false);
+            beginSession();
+          }}
+        />
+      )}
 
       <section className="card stack" aria-labelledby="train-start">
         <h2 id="train-start" className="section-title" style={{ margin: 0 }}>
@@ -153,7 +168,9 @@ export function TrainingPage() {
               disabled={status !== 'idle'}
               onClick={() => {
                 void update({ trainingKind: kind });
-                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null, intervals: plan }).then(() => void goAfterStart());
+                // Con cuenta regresiva elegida, primero cuenta y después empieza a grabar.
+                if (countdownS > 0) setCounting(true);
+                else beginSession();
               }}
             >
               <Circle size={18} fill="currentColor" /> {t('training.startRecording')}
@@ -236,6 +253,16 @@ export function TrainingPage() {
           <summary>{t('training.goals.title')}</summary>
           <div className="stack">
             <p className="hint" style={{ margin: 0 }}>{t('training.goals.hint')}</p>
+            <div className="field">
+              <label htmlFor="train-countdown">{t('countdown.setting')}</label>
+              <select id="train-countdown" className="select" value={countdownS} onChange={(e) => void update({ trainingCountdownS: Number(e.target.value) })} data-testid="countdown-setting">
+                {[0, 3, 5, 10].map((n) => (
+                  <option key={n} value={n}>
+                    {n === 0 ? t('countdown.none') : `${n} s`}
+                  </option>
+                ))}
+              </select>
+            </div>
             <label className="row">
               <input type="checkbox" checked={gearOn} onChange={(e) => void update({ trainingGear: e.target.checked })} data-testid="gear-toggle" /> {t('gear.toggle')}
             </label>

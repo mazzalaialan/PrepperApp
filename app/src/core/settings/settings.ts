@@ -99,6 +99,8 @@ export interface Settings {
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
   trainingVoice: boolean;
+  /** Cuenta regresiva antes de empezar a grabar una sesión (segundos; 0 = sin cuenta). */
+  trainingCountdownS: number;
   /** Seguimiento en vivo en curso (ver modules/training/liveShare.ts): el código solo sirve para mandar posiciones y cortar ese enlace, que vence. */
   liveShare: { id: string; url: string; token: string; expiresAt: string; name: string; sentSeg: number; sentPt: number; lastSentAt: number | null; failing: boolean } | null;
   /** Equipo de entrenamiento (zapatillas, bici, bote) y su desgaste, también en el Inventario: se puede ocultar si no se usa. */
@@ -230,6 +232,7 @@ export const DEFAULT_SETTINGS: Settings = {
   knotsLearned: [],
   trainingKind: 'walk',
   trainingVoice: false,
+  trainingCountdownS: 0,
   liveShare: null,
   trainingGear: true,
   heightCm: null,

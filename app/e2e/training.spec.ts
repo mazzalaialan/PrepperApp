@@ -175,6 +175,9 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
     await page.waitForTimeout(300);
   }
   await expect(page.getByTestId('live-distance')).toHaveText(/^\d+$/);
+  // Botón de vuelta: marca la vuelta y aparece en la tabla.
+  await page.getByTestId('live-lap').click();
+  await expect(page.getByTestId('lap-table')).toBeVisible();
   // Seguimiento en vivo para la familia: se crea un enlace, la página pública muestra la sesión y se corta al terminar.
   await page.getByLabel('Cuánto dura').selectOption({ label: '15 min' });
   await page.getByTestId('live-share-start').click();

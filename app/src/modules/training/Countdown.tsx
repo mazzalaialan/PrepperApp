@@ -1,0 +1,38 @@
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { beep, buzz, say } from './cues';
+import { useSettings } from '@/core/settings/settings';
+
+/**
+ * Cuenta regresiva antes de empezar (3, 5 o 10 s): números grandes en pantalla,
+ * un pitido por segundo y uno más largo al arrancar. Se puede cancelar.
+ */
+export function Countdown({ seconds, onDone, onCancel }: { seconds: number; onDone: () => void; onCancel: () => void }) {
+  const { t, i18n } = useTranslation();
+  const voice = useSettings((s) => s.settings.trainingVoice);
+  const [left, setLeft] = useState(seconds);
+  const done = useRef(onDone);
+  done.current = onDone;
+  useEffect(() => {
+    if (left <= 0) {
+      beep(988, 400);
+      buzz([200, 100, 200]);
+      if (voice) say(t('countdown.go'), i18n.language);
+      done.current();
+      return;
+    }
+    beep(660, 120);
+    if (voice && left <= 3) say(String(left), i18n.language);
+    const id = setTimeout(() => setLeft((n) => n - 1), 1000);
+    return () => clearTimeout(id);
+  }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="countdown" role="dialog" aria-label={t('countdown.title')} data-testid="countdown">
+      <p className="countdown-label">{t('countdown.title')}</p>
+      <p className="countdown-number" aria-live="assertive" data-testid="countdown-number">{Math.max(0, left)}</p>
+      <button className="btn" type="button" onClick={onCancel} data-testid="countdown-cancel">
+        {t('common.cancel')}
+      </button>
+    </div>
+  );
+}

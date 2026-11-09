@@ -8,6 +8,7 @@ import { useTracks } from '@/modules/tracks/store';
 import { useSettings } from '@/core/settings/settings';
 import { skyOf } from '@/modules/weather/forecast';
 import { ACTIVITIES, TERRAINS } from './activities';
+import { LapTable } from './LapTable';
 import { gearFor } from './gear';
 import { describePlan } from './intervals';
 import { formatClock } from './stats';
@@ -264,6 +265,7 @@ function WorkoutDetail({ id }: { id: string }) {
             ))}
           </select>
         </div>
+        <LapTable marks={w.laps} />
         {w.intervals && (
           <p className="hint" style={{ margin: 0 }} data-testid="w-intervals">
             {t('intervals.label')}: {describePlan(w.intervals, formatClock)}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Pause, Play, Square, Volume2, VolumeX } from 'lucide-react';
+import { Flag, Pause, Play, Square, Volume2, VolumeX } from 'lucide-react';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
 import { FinishDialog, PocketButton } from '@/modules/tracks/Recording';
@@ -9,9 +9,11 @@ import { elapsedS, useRecorder } from '@/modules/tracks/recorder';
 import { ACTIVITIES } from './activities';
 import { calories } from './energy';
 import { useBodyWeight, useTrainingFormat } from './format';
+import { LapTable } from './LapTable';
 import { LiveShareCard } from './LiveShareCard';
 import { beep, buzz, say } from './cues';
-import { phaseAt } from './intervals';
+import { advance, type RunState } from './intervals';
+import { loadRun, saveRun } from './runState';
 import { currentSpeedMs, kmAnnouncement, kmhFromMs, paceFromMs } from './live';
 import { analyzeRecording, formatClock } from './stats';
 
@@ -61,10 +63,17 @@ export function LivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [km, voice]);
 
-  // Intervalos: en qué etapa se está y un aviso (pitido, vibración y voz) al cambiar y en los últimos 3 segundos.
+  // Intervalos: en qué etapa se está (el estado se guarda para no perderlo si se recarga la app) y un aviso
+  // (pitido, vibración y voz) al cambiar de etapa y en los últimos 3 segundos de las de tiempo.
   const plan = track?.intervals ?? null;
-  const now = plan ? phaseAt(plan, elapsed) : null;
-  const phaseIndex = now?.index ?? -1;
+  const run = useRef<RunState | null>(null);
+  if (plan && track && run.current === null) run.current = loadRun(track.id);
+  const now = plan && run.current ? advance(plan, run.current, elapsed, stats?.distanceM ?? 0) : null;
+  if (now && run.current && (now.state.index !== run.current.index || now.state.startedS !== run.current.startedS)) {
+    run.current = now.state;
+    if (track) saveRun(track.id, now.state);
+  }
+  const phaseIndex = now?.state.index ?? -1;
   const lastPhase = useRef(-1);
   const lastCount = useRef(-1);
   useEffect(() => {
@@ -72,19 +81,17 @@ export function LivePage() {
     if (phaseIndex !== lastPhase.current) {
       const first = lastPhase.current === -1;
       lastPhase.current = phaseIndex;
-      if (first && phaseIndex === 0) {
-        // Al empezar no hace falta el aviso del primer cambio: ya se ve en pantalla.
-        return;
-      }
+      // Al empezar (o al volver a abrir la pantalla) no hace falta el aviso: ya se ve.
+      if (first) return;
       beep(now?.done ? 523 : now?.phase?.kind === 'work' ? 988 : 660, 300);
       buzz(now?.done ? [200, 100, 200] : 300);
       if (voice) say(now?.done ? t('intervals.voice.done') : t(`intervals.voice.${now!.phase!.kind}`), i18n.language);
     }
   }, [phaseIndex]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!now || now.done || status !== 'recording') return;
-    if (now.remainingS <= 3 && now.remainingS >= 1 && lastCount.current !== now.index * 10 + now.remainingS) {
-      lastCount.current = now.index * 10 + now.remainingS;
+    if (!now || now.done || now.unit !== 's' || status !== 'recording') return;
+    if (now.remaining <= 3 && now.remaining >= 1 && lastCount.current !== now.state.index * 10 + now.remaining) {
+      lastCount.current = now.state.index * 10 + now.remaining;
       beep(440, 80);
     }
   }); // cada segundo
@@ -107,13 +114,14 @@ export function LivePage() {
       <p className="live-kind">
         {f.kindName(kind)} · {status === 'recording' ? t('tracks.rec.recording') : t('tracks.rec.paused')}
       </p>
+      <LapTable marks={track.laps} last={5} />
       {plan && now && (
         <div className={`live-phase live-phase-${now.done ? 'done' : now.phase!.kind}`} data-testid="live-phase" aria-live="polite">
           <span className="live-phase-name">
             {now.done ? t('intervals.voice.done') : t(`intervals.phase.${now.phase!.kind}`)}
             {!now.done && now.phase!.round ? ` ${now.phase!.round}/${plan.repeats}` : ''}
           </span>
-          {!now.done && <span className="live-phase-time" data-testid="live-phase-time">{formatClock(now.remainingS)}</span>}
+          {!now.done && <span className="live-phase-time" data-testid="live-phase-time">{now.unit === 'm' ? f.distance(now.remaining) : formatClock(now.remaining)}</span>}
         </div>
       )}
       <p className="live-clock" data-testid="live-clock" data-paused={status === 'paused'}>
@@ -156,6 +164,11 @@ export function LivePage() {
         ) : (
           <button className="live-btn live-btn-go" type="button" onClick={resume} data-testid="live-resume">
             <Play size={28} /> {t('tracks.rec.resume')}
+          </button>
+        )}
+        {status === 'recording' && (
+          <button className="live-btn" type="button" onClick={() => useRecorder.getState().lap()} data-testid="live-lap" style={{ gridColumn: '1 / -1' }}>
+            <Flag size={24} /> {t('laps.button')}
           </button>
         )}
         <button className="live-btn live-btn-stop" type="button" onClick={() => setNaming(true)} data-testid="live-finish">
