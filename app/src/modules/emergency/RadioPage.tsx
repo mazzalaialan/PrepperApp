@@ -261,6 +261,17 @@ const RENER: { id: string; freq: string }[] = [
   { id: 'call', freq: '146,520 MHz' },
 ];
 
+/**
+ * Servicio colectivo familiar de Perú: equipos de hasta 500 mW exceptuados de
+ * licencia (art. 28 del TUO del Reglamento de la Ley de Telecomunicaciones,
+ * canalización del MTC, 14 canales). Versión del reglamento de 2012: sin
+ * confirmar que siga vigente. PMR446 (446 MHz) no figura como uso libre.
+ */
+const PE_FREE: { id: string; freq: string }[] = [
+  { id: 'fam1', freq: '462,5625 – 462,7125 MHz' },
+  { id: 'fam2', freq: '467,5625 – 467,7125 MHz' },
+];
+
 function RenerSection({ place }: { place: { lat: number; lon: number } | null }) {
   const { t } = useTranslation();
   const country = useSettings((s) => s.settings.country);
@@ -274,6 +285,7 @@ function RenerSection({ place }: { place: { lat: number; lon: number } | null })
   }, [borders, place?.lat, place?.lon, country]);
   if (!show) return null;
   return (
+    <>
     <section className="card stack" aria-labelledby="rener-title" data-testid="rener-frequencies">
       <h2 id="rener-title" className="section-title" style={{ margin: 0 }}>{t('radio.rener.title')}</h2>
       <p className="hint" style={{ margin: 0 }}>{t('radio.rener.intro')}</p>
@@ -295,6 +307,26 @@ function RenerSection({ place }: { place: { lat: number; lon: number } | null })
       <p className="hint" style={{ margin: 0 }}>{t('radio.rener.note')}</p>
       <p className="hint" style={{ margin: 0 }}>{t('radio.rener.sources')}</p>
     </section>
+    <section className="card stack" aria-labelledby="pe-free-title" data-testid="pe-free-radios">
+      <h2 id="pe-free-title" className="section-title" style={{ margin: 0 }}>{t('radio.peFree.title')}</h2>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.peFree.intro')}</p>
+      <ul className="list">
+        {PE_FREE.map((r) => (
+          <li key={r.id} className="contact-row">
+            <span className="list-main">
+              <span className="list-title">{t(`radio.peFree.${r.id}.name`)}</span>
+              <span className="list-sub">{t(`radio.peFree.${r.id}.desc`)}</span>
+            </span>
+            <span className="contact-actions">
+              <strong className="radio-freqs">{r.freq}</strong>
+              <CopyButton text={r.freq} label={t('radio.copyFrequency', { name: t(`radio.peFree.${r.id}.name`) })} />
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.peFree.note')}</p>
+    </section>
+    </>
   );
 }
 
