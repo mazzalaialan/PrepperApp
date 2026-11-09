@@ -105,13 +105,20 @@ export function WeightPage() {
           </div>
         </dl>
         <div className="stack" style={{ gap: 6 }} data-testid="weight-bmi">
-          <div className="row wrap">
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="weight-height">{t('weight.height')}{heightCm ? ` (${heightCm} cm)` : ''}</label>
-              <input id="weight-height" className="input" inputMode="decimal" value={heightText} placeholder={heightCm ? String(heightCm) : 'cm'} onChange={(e) => setHeightText(e.target.value)} />
+          {me?.heightCm ? (
+            // La altura no cambia: con la ficha médica ya cargada solo se corrige desde ahí (si hubo un error).
+            <p style={{ margin: 0 }} data-testid="weight-height-locked">
+              {t('weight.heightFixed', { cm: me.heightCm })} <Link to={`/first-aid/medical/${me.id}`}>{t('weight.heightFix')}</Link>
+            </p>
+          ) : (
+            <div className="row wrap">
+              <div className="field" style={{ flex: 1 }}>
+                <label htmlFor="weight-height">{t('weight.height')}{heightCm ? ` (${heightCm} cm)` : ''}</label>
+                <input id="weight-height" className="input" inputMode="decimal" value={heightText} placeholder={heightCm ? String(heightCm) : 'cm'} onChange={(e) => setHeightText(e.target.value)} />
+              </div>
+              <button className="btn" type="button" data-testid="weight-height-save" onClick={() => void saveHeight()}>{t('common.save')}</button>
             </div>
-            <button className="btn" type="button" data-testid="weight-height-save" onClick={() => void saveHeight()}>{t('common.save')}</button>
-          </div>
+          )}
           <strong>
             {t('weight.bmi')}: {imc === null ? '—' : nf.format(imc)}
             {imc !== null && adult && ` · ${t(`weight.bmiCategory.${bmiCategory(imc)}`)}`}
