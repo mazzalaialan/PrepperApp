@@ -119,6 +119,23 @@ export function WeightPage() {
           </div>
           <p className="hint" style={{ margin: 0 }}>{t('weight.bmiNote')}</p>
         </div>
+        <table className="bmi-table" data-testid="bmi-table">
+          <caption>{t('weight.bmiTable.title')}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t('weight.bmiTable.range')}</th>
+              <th scope="col">{t('weight.bmiTable.category')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {([['low', '< 18,5'], ['normal', '18,5 – 24,9'], ['overweight', '25 – 29,9'], ['obese', '≥ 30']] as const).map(([k, range]) => (
+              <tr key={k} aria-current={imc !== null && adult && bmiCategory(imc) === k ? 'true' : undefined}>
+                <td>{range}</td>
+                <td>{t(`weight.bmiCategory.${k}`)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         <WeightChart list={list} />
         {!me && (
           <p className="hint" style={{ margin: 0 }} data-testid="weight-no-profile">

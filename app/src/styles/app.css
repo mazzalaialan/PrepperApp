@@ -3999,3 +3999,8 @@ a.module-card:hover {
 .live-phase-work { background: var(--danger, #c0392b); color: #fff; }
 .live-phase-rest, .live-phase-cooldown { background: var(--ok); color: #fff; }
 .live-phase-warmup { background: var(--warn); color: #000; }
+
+.bmi-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.bmi-table caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+.bmi-table th, .bmi-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border, rgba(128,128,128,.3)); }
+.bmi-table tr[aria-current='true'] { background: var(--surface-2); font-weight: 700; }

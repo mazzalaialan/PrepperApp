@@ -181,8 +181,8 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await expect(page.getByTestId('w-intervals')).toContainText('8 × 0:20 / 0:10');
 
   // Notas de la sesión y equipo: cómo me sentí, terreno y zapatillas; el equipo se oculta con el interruptor.
-  await page.goto('/#/training/workouts');
-  await page.getByTestId('to-gear').click();
+  await page.goto('/#/training');
+  await page.getByRole('link', { name: /Equipo/ }).click();
   await page.getByLabel('Nombre', { exact: true }).fill('Zapatillas de trail');
   await page.getByLabel('Vida útil (km)').fill('600');
   await page.getByTestId('gear-save').click();
@@ -198,5 +198,6 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.goto('/#/training/workouts');
   await page.getByText('Objetivos de la semana').click();
   await page.getByTestId('gear-toggle').uncheck();
-  await expect(page.getByTestId('to-gear')).toHaveCount(0);
+  await page.goto('/#/training');
+  await expect(page.getByRole('link', { name: /Equipo/ })).toHaveCount(0);
 });
