@@ -160,6 +160,26 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.goto('/#/training/workouts');
   await expect(page.getByTestId('train-row')).toHaveCount(3);
 
+  // Intervalos: se elige un plan antes de grabar, la pantalla en vivo muestra la etapa y la sesión guarda el plan.
+  await page.goto('/#/training/workouts');
+  await page.getByRole('button', { name: 'A pie' }).click();
+  await page.getByLabel('Actividad', { exact: true }).selectOption({ label: 'Correr' });
+  await page.getByLabel('Intervalos').selectOption({ label: /Tabata/ });
+  await page.getByRole('button', { name: 'Empezar a grabar' }).click();
+  await expect(page.getByTestId('live-phase')).toContainText('Entrada en calor');
+  await expect(page.getByTestId('live-phase-time')).toHaveText('2:00');
+  await page.getByTestId('rec-warn').getByRole('button', { name: 'Entendido' }).click();
+  await page.waitForTimeout(500);
+  for (const lat of [-41.17, -41.171, -41.172]) {
+    await context.setGeolocation({ latitude: lat, longitude: -71.42, accuracy: 5 });
+    await page.waitForTimeout(300);
+  }
+  await expect(page.getByTestId('live-distance')).toHaveText(/^\d+$/);
+  await page.getByTestId('live-pause').click();
+  await page.getByTestId('live-finish').click();
+  await page.getByRole('dialog', { name: 'Guardar la grabación' }).getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByTestId('w-intervals')).toContainText('8 × 0:20 / 0:10');
+
   // Notas de la sesión y equipo: cómo me sentí, terreno y zapatillas; el equipo se oculta con el interruptor.
   await page.goto('/#/training/workouts');
   await page.getByTestId('to-gear').click();

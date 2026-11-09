@@ -11,6 +11,8 @@ import { byWeek, goalProgress, recordsOf, totalsOf, weekStart } from './history'
 import { GpxError } from '@/modules/tracks/gpx';
 import { useTracks } from '@/modules/tracks/store';
 import { activityFromFile, parseActivityFile } from './interchange';
+import { IntervalPicker } from './IntervalPicker';
+import type { IntervalPlan } from './intervals';
 import { useTraining } from './store';
 
 /** Sesiones de entrenamiento: empezar una, ver la semana y el historial. */
@@ -26,6 +28,7 @@ export function TrainingPage() {
   const [group, setGroup] = useState<ActivityGroup>(ACTIVITIES[lastKind]?.group ?? 'foot');
   const [kind, setKind] = useState<ActivityKind>(lastKind);
   const [pack, setPack] = useState('');
+  const [plan, setPlan] = useState<IntervalPlan | null>(null);
   const list = [...workouts.values()];
   const weeks = byWeek(list);
   const records = recordsOf(list);
@@ -94,6 +97,7 @@ export function TrainingPage() {
             <input id="train-pack" className="input" type="number" inputMode="decimal" min={0} max={80} step={0.5} value={pack} onChange={(e) => setPack(e.target.value)} placeholder="0" />
           </div>
         )}
+        {def.gps && <IntervalPicker onChange={setPlan} />}
         {!weight && (
           <p className="hint" style={{ margin: 0 }} data-testid="train-no-weight">
             {t('training.noWeight')} <Link to="/first-aid/medical">{t('training.noWeightLink')}</Link>
@@ -107,7 +111,7 @@ export function TrainingPage() {
               disabled={status !== 'idle'}
               onClick={() => {
                 void update({ trainingKind: kind });
-                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null }).then(() => navigate('/training/live'));
+                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null, intervals: plan }).then(() => navigate('/training/live'));
               }}
             >
               <Circle size={18} fill="currentColor" /> {t('training.startRecording')}

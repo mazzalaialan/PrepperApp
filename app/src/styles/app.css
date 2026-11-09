@@ -3992,3 +3992,10 @@ a.module-card:hover {
 .live-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border: 0; border-radius: 18px; font: inherit; font-size: 1.15rem; font-weight: 700; cursor: pointer; background: var(--surface-2); color: inherit; }
 .live-btn-go { background: var(--ok); color: #fff; }
 .live-btn-stop { background: var(--danger, #c0392b); color: #fff; }
+
+.live-phase { display: flex; align-items: baseline; justify-content: center; gap: 14px; padding: 12px; border-radius: 16px; background: var(--surface-2); }
+.live-phase-name { font-size: 1.3rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.live-phase-time { font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.live-phase-work { background: var(--danger, #c0392b); color: #fff; }
+.live-phase-rest, .live-phase-cooldown { background: var(--ok); color: #fff; }
+.live-phase-warmup { background: var(--warn); color: #000; }

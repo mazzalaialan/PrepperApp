@@ -4,6 +4,7 @@ import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
 import type { Workout } from '@/core/model/types';
 import { byWeek, goalProgress, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
+import { describePlan, parseClock, phaseAt, phases, planDurationS, validPlan } from './intervals';
 import { gearFor, gearKm, kmForInventoryItem, wear } from './gear';
 import type { Gear } from '@/core/model/types';
 import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
@@ -332,5 +333,33 @@ describe('equipo', () => {
     const linked = { ...g, inventoryItemId: 'item1' } as unknown as unknown as Gear;
     expect(kmForInventoryItem('item1', [linked], [w('a', 'g1', 20_000)])).toBe(120);
     expect(kmForInventoryItem('item2', [linked], [])).toBeNull();
+  });
+});
+
+describe('intervalos', () => {
+  const plan = { warmupS: 60, workS: 30, restS: 15, repeats: 3, cooldownS: 60 };
+  it('arma las etapas en orden y no pone descanso después de la última repetición', () => {
+    expect(phases(plan).map((p) => `${p.kind}${p.round ?? ''}`)).toEqual(['warmup', 'work1', 'rest1', 'work2', 'rest2', 'work3', 'cooldown']);
+    expect(planDurationS(plan)).toBe(60 + 30 * 3 + 15 * 2 + 60);
+  });
+  it('sin entrada en calor ni vuelta a la calma, salta esas etapas', () => {
+    expect(phases({ ...plan, warmupS: 0, cooldownS: 0 })).toHaveLength(5);
+  });
+  it('dice en qué etapa se está y cuánto falta (los bordes pasan a la siguiente)', () => {
+    expect(phaseAt(plan, 0)).toMatchObject({ index: 0, remainingS: 60, done: false });
+    expect(phaseAt(plan, 59.5).remainingS).toBe(1);
+    expect(phaseAt(plan, 60)).toMatchObject({ index: 1, remainingS: 30 });
+    expect(phaseAt(plan, 105)).toMatchObject({ index: 3, remainingS: 30 }); // 60+30+15 = 105: empieza el trabajo 2
+    expect(phaseAt(plan, planDurationS(plan))).toMatchObject({ done: true, phase: null });
+  });
+  it('lee tiempos y valida planes', () => {
+    expect(parseClock('1:30')).toBe(90);
+    expect(parseClock('90')).toBe(90);
+    expect(parseClock('1:75')).toBeNull();
+    expect(parseClock('')).toBeNull();
+    expect(validPlan(plan)).toBe(true);
+    expect(validPlan({ ...plan, repeats: 0 })).toBe(false);
+    expect(validPlan({ ...plan, workS: 2 })).toBe(false);
+    expect(describePlan({ ...plan, warmupS: 0, cooldownS: 0 }, (s) => `${s}s`)).toBe('3 × 30s / 15s');
   });
 });

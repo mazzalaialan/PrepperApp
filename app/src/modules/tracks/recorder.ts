@@ -6,6 +6,7 @@ import { isUnlocked } from '@/core/security/session';
 import { useMedical } from '@/modules/firstAid/medicalStore';
 import { workoutFromRecording } from '@/modules/training/store';
 import { useTraining } from '@/modules/training/store';
+import type { IntervalPlan } from '@/modules/training/intervals';
 import { analyzeRecording } from '@/modules/training/stats';
 import { trackStats, type TrackPoint } from './gpx';
 import { addLocked, clearLocked, newRecKey, prepareLocked, readLocked } from './lockedBuffer';
@@ -42,7 +43,7 @@ interface RecorderState {
   /** Precisión de la última posición del GPS (para mostrar por qué todavía no graba). */
   accuracy: number | null;
   /** Empieza a grabar; con `kind` es una sesión de Entrenamiento (al terminar crea la actividad). */
-  start: (name: string, opts?: { kind?: WorkoutKind; packKg?: number | null }) => Promise<void>;
+  start: (name: string, opts?: { kind?: WorkoutKind; packKg?: number | null; intervals?: IntervalPlan | null }) => Promise<void>;
   /** La actividad que creó la última grabación terminada (para abrirla al terminar). */
   lastWorkoutId: Id | null;
   pause: () => Promise<void>;
@@ -130,7 +131,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
       recorded: true,
       recording: true,
       durationS: 0,
-      ...(opts?.kind ? { activity: opts.kind, activityPackKg: opts.packKg ?? null } : {}),
+      ...(opts?.kind ? { activity: opts.kind, activityPackKg: opts.packKg ?? null, intervals: opts.intervals ?? null } : {}),
       recKey: await newRecKey(),
     });
     prepareLocked(track.recKey!);
@@ -190,7 +191,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     await useTracks.getState().saveTrack(done);
     if (kind && stats) {
       const me = [...useMedical.getState().profiles.values()].find((p) => p.isMe);
-      const workout = workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg);
+      const workout = { ...workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg), intervals: s.track.intervals ?? null };
       const saved = await useTraining.getState().saveWorkout(workout);
       set({ lastWorkoutId: workout.id });
       // El clima se agrega después, sin demorar: si hay internet, queda en la actividad.

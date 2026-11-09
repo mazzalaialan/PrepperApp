@@ -14,6 +14,7 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 - **Radio de Perú:** servicio colectivo familiar (462 y 467 MHz, hasta 500 mW, sin licencia; sin confirmar vigente). PMR446 no figura como uso libre y no se cargó; INDECI y Cruz Roja siguen sin frecuencia publicada.
 - **Notas y equipo:** cómo me sentí, terreno y clima al terminar (de Open-Meteo, si había internet) en cada sesión; equipo (zapatillas, bici, bote) que suma sus km, avisa su vida útil y se puede vincular a un artículo del Inventario. El equipo se oculta con un interruptor (para copias que no usan el Inventario).
 - **Peso:** historial con gráfico dentro de Entrenamiento; actualiza el peso de la ficha médica propia (sin fallar si no hay ficha) y muestra el IMC con la altura.
+- **Intervalos:** planes por tiempo (entrada en calor, N × trabajo/descanso, vuelta a la calma; 4 armados y uno a medida) con la etapa y el tiempo que falta en la pantalla en vivo, pitido, vibración y voz en cada cambio. Pendiente: intervalos por distancia y botón de vuelta.
 - **Importar y exportar GPX/TCX:** cada actividad con GPS se exporta a GPX o TCX (con altura y hora) y se puede importar un archivo de Strava, Garmin o Wikiloc como actividad nueva.
 - **Pantalla en vivo:** al empezar una sesión se abre una pantalla con el tiempo, la distancia, el ritmo o la velocidad de ahora y promedio, el desnivel y las calorías en grande, con pausa y terminar y voz opcional cada km.
 - **Objetivos semanales:** distancia, tiempo y cantidad de actividades, con barras de avance en la semana. La pausa automática ya está cubierta: el tiempo en movimiento descarta las paradas.
@@ -26,7 +27,7 @@ No existe un calendario oficial abierto de siembra por cultivo y mes (INIAF e IN
 
 **Funciones de apps de running**
 
-Voz con los datos cada km, intervalos, planificar rutas en el mapa, zonas privadas, seguimiento en vivo para la familia (opcional y con vencimiento). Sin muro social. Botón de vuelta y cuenta regresiva se revisan al encarar este punto (la carga manual ya está).
+Planificar rutas en el mapa, zonas privadas, seguimiento en vivo para la familia (opcional y con vencimiento). Sin muro social. Botón de vuelta y cuenta regresiva se revisan al encarar este punto (la carga manual ya está).
 
 **Pantalla bloqueada**
 

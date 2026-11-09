@@ -9,6 +9,8 @@ import { elapsedS, useRecorder } from '@/modules/tracks/recorder';
 import { ACTIVITIES } from './activities';
 import { calories } from './energy';
 import { useBodyWeight, useTrainingFormat } from './format';
+import { beep, buzz, say } from './cues';
+import { phaseAt } from './intervals';
 import { currentSpeedMs, kmAnnouncement, kmhFromMs, paceFromMs } from './live';
 import { analyzeRecording, formatClock } from './stats';
 
@@ -58,6 +60,34 @@ export function LivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [km, voice]);
 
+  // Intervalos: en qué etapa se está y un aviso (pitido, vibración y voz) al cambiar y en los últimos 3 segundos.
+  const plan = track?.intervals ?? null;
+  const now = plan ? phaseAt(plan, elapsed) : null;
+  const phaseIndex = now?.index ?? -1;
+  const lastPhase = useRef(-1);
+  const lastCount = useRef(-1);
+  useEffect(() => {
+    if (!plan || status !== 'recording') return;
+    if (phaseIndex !== lastPhase.current) {
+      const first = lastPhase.current === -1;
+      lastPhase.current = phaseIndex;
+      if (first && phaseIndex === 0) {
+        // Al empezar no hace falta el aviso del primer cambio: ya se ve en pantalla.
+        return;
+      }
+      beep(now?.done ? 523 : now?.phase?.kind === 'work' ? 988 : 660, 300);
+      buzz(now?.done ? [200, 100, 200] : 300);
+      if (voice) say(now?.done ? t('intervals.voice.done') : t(`intervals.voice.${now!.phase!.kind}`), i18n.language);
+    }
+  }, [phaseIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!now || now.done || status !== 'recording') return;
+    if (now.remainingS <= 3 && now.remainingS >= 1 && lastCount.current !== now.index * 10 + now.remainingS) {
+      lastCount.current = now.index * 10 + now.remainingS;
+      beep(440, 80);
+    }
+  }); // cada segundo
+
   if (status === 'idle' || !track || !kind || !def || !stats) {
     return (
       <p className="empty">
@@ -76,6 +106,15 @@ export function LivePage() {
       <p className="live-kind">
         {f.kindName(kind)} · {status === 'recording' ? t('tracks.rec.recording') : t('tracks.rec.paused')}
       </p>
+      {plan && now && (
+        <div className={`live-phase live-phase-${now.done ? 'done' : now.phase!.kind}`} data-testid="live-phase" aria-live="polite">
+          <span className="live-phase-name">
+            {now.done ? t('intervals.voice.done') : t(`intervals.phase.${now.phase!.kind}`)}
+            {!now.done && now.phase!.round ? ` ${now.phase!.round}/${plan.repeats}` : ''}
+          </span>
+          {!now.done && <span className="live-phase-time" data-testid="live-phase-time">{formatClock(now.remainingS)}</span>}
+        </div>
+      )}
       <p className="live-clock" data-testid="live-clock" data-paused={status === 'paused'}>
         {formatClock(elapsed)}
       </p>

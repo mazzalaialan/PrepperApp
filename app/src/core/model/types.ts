@@ -372,6 +372,8 @@ export interface Workout extends BaseEntity {
   terrain?: string | null;
   /** El clima al terminar, de Open-Meteo (solo si había internet): grados, código del cielo, viento km/h y humedad %. */
   weather?: { tempC: number; code: number; windKmh: number; humidity: number } | null;
+  /** Si fue por intervalos: el plan que se siguió. */
+  intervals?: { warmupS: number; workS: number; restS: number; repeats: number; cooldownS: number } | null;
   /** El equipo usado (zapatillas, bici, bote): suma sus kilómetros. */
   gearId?: Id | null;
 }
@@ -479,6 +481,8 @@ export interface Track extends BaseEntity {
   /** Grabado como sesión de Entrenamiento: qué actividad y la carga (mochila, kg). Al terminar crea la actividad. */
   activity?: WorkoutKind;
   activityPackKg?: number | null;
+  /** Sesión por intervalos (ver modules/training/intervals.ts). */
+  intervals?: { warmupS: number; workS: number; restS: number; repeats: number; cooldownS: number } | null;
   name: string;
   desc: string;
   /** De dónde salió ("Wikiloc", o el nombre del archivo). */
