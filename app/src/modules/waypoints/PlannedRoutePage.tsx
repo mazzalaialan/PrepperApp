@@ -10,6 +10,7 @@ import { summarizePath, type PathSummary } from '@/modules/maps/measure';
 import { toGpx } from '@/modules/training/interchange';
 import { useTracks } from '@/modules/tracks/store';
 import { deliverFile } from '@/ui/files';
+import { toKml } from './kml';
 import { legsOf, lineLength, trackFromRoute } from './plan';
 import { useWaypoints } from './store';
 import type { NewWaypointDraft } from './WaypointEditPage';
@@ -48,6 +49,15 @@ export function PlannedRoutePage({ route }: { route: Route }) {
     const track = trackFromRoute(route, existing);
     await saveTrack(track);
     return track;
+  }
+
+  async function exportKml() {
+    const file = `${route.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'ruta'}.kml`;
+    try {
+      await deliverFile(new TextEncoder().encode(toKml(route.name, line)) as Uint8Array<ArrayBuffer>, file, 'application/vnd.google-earth.kml+xml');
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) throw err;
+    }
   }
 
   async function exportGpx() {
@@ -111,6 +121,9 @@ export function PlannedRoutePage({ route }: { route: Route }) {
           </button>
           <button className="btn" type="button" data-testid="planned-gpx" onClick={() => void exportGpx()}>
             <Download size={18} /> {t('training.exportGpx')}
+          </button>
+          <button className="btn" type="button" data-testid="planned-kml" onClick={() => void exportKml()}>
+            <Download size={18} /> {t('routes.exportKml')}
           </button>
         </div>
       </section>

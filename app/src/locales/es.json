@@ -1383,6 +1383,7 @@
     "calibrate": "Si el rumbo salta o no coincide, calibrá la brújula moviendo el celular en forma de 8, lejos de metales e imanes."
   },
   "routes": {
+    "exportKml": "Exportar KML", "import": {"button": "Importar ruta", "askPlaces": "El archivo trae {{count}} puntos con nombre. ¿Agregarlos también a tu lista de lugares? (Si no, quedan solo como puntos de la ruta.)", "error": {"unknown": "El archivo no es un KML, KMZ, GPX ni TCX.", "empty": "El archivo no trae ningún recorrido."}},
     "planned": "planificada",
     "follow": "Seguir esta ruta", "viewOnMap": "Ver en el mapa", "legsTitle": "Piernas", "legTo": "Punto {{n}}", "saveAsPlace": "Guardar el punto {{n}} como lugar", "pointsNotPlaces": "Los puntos de una ruta planificada no aparecen en tu lista de lugares ni dan alertas de clima: solo los que guardás como lugar con el botón de cada punto.",
     "plannedName": "Ruta planificada", "saveAsRoute": "Guardar como ruta",

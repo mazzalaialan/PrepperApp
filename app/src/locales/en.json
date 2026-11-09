@@ -1383,6 +1383,7 @@
     "calibrate": "If the heading jumps or looks wrong, calibrate by moving the phone in a figure 8, away from metal and magnets."
   },
   "routes": {
+    "exportKml": "Export KML", "import": {"button": "Import route", "askPlaces": "The file has {{count}} named points. Add them to your list of places too? (If not, they stay only as points of the route.)", "error": {"unknown": "The file is not a KML, KMZ, GPX or TCX.", "empty": "The file has no route."}},
     "planned": "planned",
     "follow": "Follow this route", "viewOnMap": "View on the map", "legsTitle": "Legs", "legTo": "Point {{n}}", "saveAsPlace": "Save point {{n}} as a place", "pointsNotPlaces": "The points of a planned route do not appear in your list of places and give no weather alerts: only the ones you save as a place with each point's button.",
     "plannedName": "Planned route", "saveAsRoute": "Save as route",
