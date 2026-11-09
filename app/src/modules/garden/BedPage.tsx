@@ -10,6 +10,7 @@ import { Dialog } from '@/ui/Dialog';
 import { BedDialog } from './BedDialog';
 import { CROP_BY_ID, cropName } from './crops';
 import { cellOwners, gridSize, plantsFor, recommendForBed } from './logic';
+import { LayoutPlanner } from './LayoutPlanner';
 import { FAMILY_COLOR } from './parts';
 import { CropSelect, PlantingDialog } from './PlantingDialog';
 import { newPlanting, useGarden } from './store';
@@ -52,6 +53,8 @@ export function BedPage() {
   const current = here.filter((p) => p.status !== 'done').sort((a, b) => a.sownOn.localeCompare(b.sownOn));
   const history = here.filter((p) => p.status === 'done').sort((a, b) => (b.endedOn ?? '').localeCompare(a.endedOn ?? ''));
   const wp = bed.waypointId ? waypoints.get(bed.waypointId) : undefined;
+  const sunPlace = wp ? { lat: wp.lat, lon: wp.lon, alt: wp.alt } : place ? { lat: place.lat, lon: place.lon } : null;
+  const ownerCrops = new Map<number, string>([...owners].map(([cell, p]) => [cell, p.cropId]));
 
   function tap(cell: number) {
     const owner = owners.get(cell);
@@ -197,6 +200,17 @@ export function BedPage() {
           </ul>
         </section>
       )}
+
+      <LayoutPlanner
+        bed={bed}
+        place={sunPlace}
+        owners={ownerCrops}
+        suggested={recs.map((r) => r.crop.id)}
+        onPlant={(cropId, cells) => {
+          setSelected(new Set(cells));
+          setPlanting({ cropId, variety: '', date: today, method: 'direct' });
+        }}
+      />
 
       <section className="card stack" aria-labelledby="bed-recs">
         <h2 id="bed-recs" className="section-title" style={{ margin: 0 }}>{t('garden.recommendations')}</h2>

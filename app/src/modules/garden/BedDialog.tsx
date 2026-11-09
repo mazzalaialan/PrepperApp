@@ -1,11 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { GardenBed } from '@/core/model/types';
+import { useWaypoints } from '@/modules/waypoints/store';
 import { WaypointField } from '@/modules/waypoints/WaypointField';
 import { Dialog } from '@/ui/Dialog';
 import { numToInput, parseNum } from '@/ui/numbers';
 import { Segmented } from '@/ui/Segmented';
 import { gridSize } from './logic';
+import { useZonePlace } from './status';
+import { SunSection } from './SunSection';
+import { bedSun, roundHalf } from './sun';
 
 /** Alta y edición de un cantero o maceta, con su waypoint (de ahí salen la helada y la lluvia). */
 export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; onClose: () => void; onSave: (b: GardenBed) => Promise<void>; onDelete?: () => void }) {
@@ -14,16 +18,23 @@ export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; 
   const [width, setWidth] = useState(numToInput(bed.widthCm));
   const [length, setLength] = useState(numToInput(bed.lengthCm));
   const [sun, setSun] = useState(numToInput(bed.sunHours));
+  const waypoints = useWaypoints((s) => s.waypoints);
+  const zonePlace = useZonePlace(false);
+  const wp = draft.waypointId ? waypoints.get(draft.waypointId) : undefined;
+  const sunPlace = wp ? { lat: wp.lat, lon: wp.lon, alt: wp.alt } : zonePlace ? { lat: zonePlace.lat, lon: zonePlace.lon } : null;
+  const calculated = draft.sunMode === 'calculated';
   const w = parseNum(width);
   const l = parseNum(length);
   const h = parseNum(sun);
-  const valid = draft.name.trim() !== '' && w !== null && w >= 10 && w <= 3000 && l !== null && l >= 10 && l <= 10000 && h !== null && h >= 0 && h <= 16;
+  const valid = draft.name.trim() !== '' && w !== null && w >= 10 && w <= 3000 && l !== null && l >= 10 && l <= 10000 && (calculated || (h !== null && h >= 0 && h <= 16));
   const size = valid ? gridSize({ widthCm: w!, lengthCm: l! }) : null;
 
   function submit(e: FormEvent) {
     e.preventDefault();
     if (!valid) return;
-    void onSave({ ...draft, name: draft.name.trim(), widthCm: w!, lengthCm: l!, sunHours: h! });
+    // Con el cálculo, las horas son las del equinoccio (lo que se usa para recomendar cultivos).
+    const sunHours = calculated && sunPlace ? roundHalf(bedSun({ ...draft, widthCm: w!, lengthCm: l! }, sunPlace).equinox.hours) : (h ?? draft.sunHours);
+    void onSave({ ...draft, name: draft.name.trim(), widthCm: w!, lengthCm: l!, sunHours });
   }
 
   return (
@@ -68,16 +79,6 @@ export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; 
           </div>
         </div>
         {size && <p className="hint" style={{ margin: 0 }}>{t('garden.gridHint', { cols: size.cols, rows: size.rows })}</p>}
-        <div className="field">
-          <label htmlFor="bed-sun">{t('garden.sunHours')}</label>
-          <input id="bed-sun" className="input" inputMode="decimal" value={sun} onChange={(e) => setSun(e.target.value)} />
-          <p className="hint">{t('garden.sunHint')}</p>
-        </div>
-        <label className="check">
-          <input type="checkbox" checked={draft.greenhouse} onChange={(e) => setDraft({ ...draft, greenhouse: e.target.checked })} data-testid="bed-greenhouse" />
-          {t('garden.inGreenhouse')}
-        </label>
-        <p className="hint" style={{ margin: 0 }}>{t('garden.greenhouseHint')}</p>
         <WaypointField
           id="bed-place"
           label={t('garden.bedPlace')}
@@ -87,6 +88,29 @@ export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; 
           noneLabel={t('garden.noPlace')}
           hint={draft.greenhouse ? t('garden.placeHintGreenhouse') : t('garden.placeHint')}
         />
+        <Segmented
+          label={t('garden.sun.mode')}
+          value={calculated ? 'calculated' : 'manual'}
+          options={[
+            { value: 'manual', label: t('garden.sun.modeManual') },
+            { value: 'calculated', label: t('garden.sun.modeCalculated') },
+          ]}
+          onChange={(sunMode) => setDraft((d) => ({ ...d, sunMode }))}
+        />
+        {calculated ? (
+          <SunSection draft={{ ...draft, widthCm: w ?? draft.widthCm, lengthCm: l ?? draft.lengthCm }} setDraft={setDraft} place={sunPlace} />
+        ) : (
+          <div className="field">
+            <label htmlFor="bed-sun">{t('garden.sunHours')}</label>
+            <input id="bed-sun" className="input" inputMode="decimal" value={sun} onChange={(e) => setSun(e.target.value)} />
+            <p className="hint">{t('garden.sunHint')}</p>
+          </div>
+        )}
+        <label className="check">
+          <input type="checkbox" checked={draft.greenhouse} onChange={(e) => setDraft({ ...draft, greenhouse: e.target.checked })} data-testid="bed-greenhouse" />
+          {t('garden.inGreenhouse')}
+        </label>
+        <p className="hint" style={{ margin: 0 }}>{t('garden.greenhouseHint')}</p>
         <div className="field">
           <label htmlFor="bed-notes">{t('garden.notes')}</label>
           <textarea id="bed-notes" className="textarea" value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} rows={2} />

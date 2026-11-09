@@ -167,3 +167,48 @@ test('huerta: calendario por zona, canteros con waypoint, grilla, avisos por lug
   await page.goto('/#/orientation/waypoints');
   await expect(page.getByText('Despensa', { exact: true })).toBeVisible();
 });
+
+test('huerta: sol del cantero según su entorno y distribución de varias plantas sin que una tape a otra', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  await page.goto('/#/garden/beds');
+  await page.getByRole('button', { name: 'Cantero', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Ancho (cm)').fill('120');
+  await dialog.getByLabel('Largo (cm)').fill('240');
+  await dialog.getByRole('button', { name: /marcarlo con el GPS/ }).click();
+  await expect(dialog.getByLabel('Dónde está (waypoint)')).toHaveValue(/.+/);
+
+  // Sol calculado: el frente mira al norte; sin nada que tape da el día largo.
+  await dialog.getByRole('button', { name: 'Calcular según el entorno' }).click();
+  await dialog.getByLabel(/Hacia dónde mira el frente/).fill('0');
+  const result = dialog.getByTestId('bed-sun-result');
+  await expect(result).toContainText('Sol directo');
+  const open = Number((await result.locator('strong').innerText()).match(/unas ([\d.,]+) h/)![1]!.replace(',', '.'));
+  expect(open).toBeGreaterThan(9);
+
+  // Una pared de 3 m pegada al lado norte le saca horas; una malla del 50 % las reduce más.
+  await dialog.getByTestId('wall-front').check();
+  await dialog.getByLabel('Altura de la pared en cm').fill('300');
+  await expect(result).not.toContainText(`unas ${String(open).replace('.', ',')} h`);
+  await dialog.getByRole('button', { name: 'Media 50%' }).click();
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByRole('heading', { name: 'Cantero 1' })).toBeVisible();
+
+  // Distribuir tomate y zanahoria: el tomate (alto) va al sur (abajo) y la zanahoria al norte.
+  const layout = page.getByTestId('bed-layout');
+  await expect(layout).toContainText('El sol viene sobre todo del');
+  await layout.getByLabel('Agregar un cultivo').selectOption({ label: 'Tomate' });
+  await layout.getByLabel('Agregar un cultivo').selectOption({ label: 'Zanahoria' });
+  await expect(page.getByTestId('layout-chosen')).toContainText('Tomate');
+  await layout.getByTestId('layout-run').click();
+  await expect(page.getByTestId('layout-result')).toContainText('su sombra llega');
+  await layout.getByTestId('layout-plant-tomate').click();
+  await expect(page.getByRole('dialog').getByLabel('Cultivo')).toHaveValue('tomate');
+});

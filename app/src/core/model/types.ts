@@ -435,6 +435,18 @@ export interface Outing extends BaseEntity {
   share?: { id: string; url: string; deleteToken: string; sharedAt: string; expiresAt: string };
 }
 
+export type BedSide = 'front' | 'back' | 'left' | 'right';
+
+/** Algo que tapa el sol entre dos rumbos, hasta cierta altura sobre el horizonte. */
+export interface SunObstacle {
+  id: Id;
+  /** Rumbos geográficos (0–359°) del sector, en sentido horario de uno a otro. */
+  fromDeg: number;
+  toDeg: number;
+  /** Ángulo aparente del borde de arriba sobre el horizonte, en grados. */
+  heightDeg: number;
+}
+
 /** Cantero o maceta de la huerta (ARQUITECTURA §10.1). Se dibuja como grilla de cuadros de 30 cm. */
 export interface GardenBed extends BaseEntity {
   name: string;
@@ -443,8 +455,18 @@ export interface GardenBed extends BaseEntity {
   greenhouse: boolean;
   widthCm: number;
   lengthCm: number;
-  /** Horas de sol directo por día. */
+  /** Horas de sol directo por día (a mano, o las que dio el cálculo con `sunMode: 'calculated'`). */
   sunHours: number;
+  /** De dónde sale `sunHours`; sin valor = a mano. Ver modules/garden/sun.ts. */
+  sunMode?: 'manual' | 'calculated';
+  /** Rumbo geográfico (0–359°) hacia el que mira el frente del cantero; los lados se miden desde ahí. */
+  bearingDeg?: number | null;
+  /** Paredes pegadas a un lado del cantero: lado → altura en cm. */
+  walls?: Partial<Record<BedSide, number>>;
+  /** Obstáculos a distancia (árbol, edificio, cerro): un sector del horizonte con su altura aparente. */
+  obstacles?: SunObstacle[];
+  /** Media sombra (malla) encima: porcentaje de sol que frena (0 = sin malla). */
+  shadePct?: number;
   /** Dónde está (uno de "Mis waypoints"); `null` = el lugar general de la huerta. */
   waypointId: Id | null;
   notes: string;
