@@ -669,7 +669,7 @@
         "name": "Llamada de radioaficionados (directo)",
         "desc": "Frecuencia internacional de llamada en VHF."
       },
-      "note": "Con la vida en peligro se puede pedir auxilio por cualquier medio; fuera de eso, transmitir en estas frecuencias requiere licencia de radioaficionado (MTC). No encontramos una frecuencia VHF publicada de INDECI ni de la Cruz Roja Peruana.",
+      "note": "Con la vida en peligro se puede pedir auxilio por cualquier medio; fuera de eso, transmitir en estas frecuencias requiere licencia de radioaficionado (MTC). En internet circulan 155.640 MHz para INDECI y 155.760 MHz para la Cruz Roja Peruana, pero no están publicadas por las instituciones y son de uso institucional: transmitir ahí sin autorización es una infracción. Por eso no las incluimos. Para pedir ayuda por teléfono, INDECI atiende en el 115.",
       "sources": "Fuente: manual de procedimientos de operación RENER 2024, Radio Club Peruano (oa4o.pe). La lista está sujeta a variaciones: confirmala con el radioclub."
     },
     "park": {"title": "Frecuencias de parques", "intro": "Las que publica cada parque nacional o área protegida para emergencias de visitantes, con sus teléfonos. Primero el parque donde estás; después los demás que publican una frecuencia.", "inside": "estás adentro", "near": "a {{distance}} del límite", "noRadioAR": "El parque no publica una frecuencia VHF para visitantes: con radio, usá la FEM 140,970 MHz.", "noRadioCL": "CONAF no publica una frecuencia VHF para esta área: con radio, escuchá la del Socorro Andino o la FEM 140,970 MHz.",

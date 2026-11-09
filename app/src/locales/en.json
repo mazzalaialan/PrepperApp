@@ -669,7 +669,7 @@
         "name": "Amateur calling frequency (simplex)",
         "desc": "International VHF calling frequency."
       },
-      "note": "With your life in danger you can ask for help by any means; otherwise, transmitting on these frequencies requires an amateur radio license (MTC). We could not find a published VHF frequency for INDECI or the Peruvian Red Cross.",
+      "note": "With your life in danger you can ask for help by any means; otherwise, transmitting on these frequencies requires an amateur radio license (MTC). 155.640 MHz (INDECI) and 155.760 MHz (Peruvian Red Cross) circulate online, but the institutions do not publish them and they are for institutional use: transmitting there without authorization is an offence. That is why we do not list them. To ask for help by phone, INDECI answers on 115.",
       "sources": "Source: RENER operating procedures manual 2024, Radio Club Peruano (oa4o.pe). The list is subject to change: confirm it with the radio club."
     },
     "park": {"title": "Park frequencies", "intro": "The ones each national park or protected area publishes for visitor emergencies, with their phones. First the park you are in; then the others that publish a frequency.", "inside": "you are inside", "near": "{{distance}} from the boundary", "noRadioAR": "The park doesn't publish a VHF frequency for visitors: with a radio, use the FEM, 140.970 MHz.", "noRadioCL": "CONAF doesn't publish a VHF frequency for this area: with a radio, monitor the Socorro Andino one or the FEM, 140.970 MHz.",
