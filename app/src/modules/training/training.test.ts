@@ -12,8 +12,8 @@ import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
 import type { WeightEntry } from '@/core/model/types';
 import { buildChunks } from './liveChunks';
 import { fastestSlowest, lapRows } from './laps';
-import { elapsedMs, timerLeftMs } from './stopwatch';
-import { formatDuration, formatStopwatch, hrZones, maxHrFromAge, paceOf, parseDuration, riegel, stopwatchLaps, timeAtPace } from './tools';
+import { clampTimer, elapsedMs, TIMER_MAX_S, timerLeftMs, useTimer } from './stopwatch';
+import { breathing, breathPhaseAt, formatDuration, formatStopwatch, hrZones, PATTERN_FOR_EFFORT, patternById, maxHrFromAge, paceOf, parseDuration, riegel, stopwatchLaps, timeAtPace } from './tools';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, removeZones, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
@@ -547,5 +547,47 @@ describe('herramientas de entrenamiento', () => {
     expect(timerLeftMs({ endsAt: 10_000, leftMs: 0 }, 4000)).toBe(6000);
     expect(timerLeftMs({ endsAt: 10_000, leftMs: 0 }, 12_000)).toBe(0);
     expect(timerLeftMs({ endsAt: null, leftMs: 2500 }, 4000)).toBe(2500);
+  });
+});
+
+describe('respiración al correr', () => {
+  const p = (id: 'p32' | 'p22' | 'p21' | 'p11') => patternById(id);
+  it('respiraciones por minuto según la cadencia y el patrón', () => {
+    expect(breathing(170, p('p32'))).toEqual({ stepsPerBreath: 5, breathsPerMin: 34 });
+    expect(breathing(180, p('p22'))).toEqual({ stepsPerBreath: 4, breathsPerMin: 45 });
+    expect(breathing(180, p('p21'))).toEqual({ stepsPerBreath: 3, breathsPerMin: 60 });
+    expect(breathing(170, p('p11'))).toEqual({ stepsPerBreath: 2, breathsPerMin: 85 });
+  });
+  it('sugiere el patrón según el esfuerzo', () => {
+    expect(PATTERN_FOR_EFFORT).toEqual({ easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p11' });
+  });
+  it('3:2 inhala tres pasos y exhala dos; el primero de cada fase lleva el acento', () => {
+    const seq = Array.from({ length: 10 }, (_, i) => breathPhaseAt(i, p('p32')));
+    expect(seq.map((x) => x.phase[0]).join('')).toBe('iiieeiiiee');
+    expect(seq.filter((x) => x.first).map((x, i) => x.phase + i)).toEqual(['inhale0', 'exhale1', 'inhale2', 'exhale3']);
+    expect(breathPhaseAt(-1, p('p32'))).toEqual({ phase: 'exhale', first: false });
+  });
+});
+
+describe('temporizador: ajustar con las flechas', () => {
+  it('suma y resta con límites de 1 s a 3 h', () => {
+    expect(clampTimer(0)).toBe(1);
+    expect(clampTimer(-50)).toBe(1);
+    expect(clampTimer(300)).toBe(300);
+    expect(clampTimer(99_999)).toBe(TIMER_MAX_S);
+    useTimer.getState().set(300);
+    useTimer.getState().adjust(60);
+    expect(useTimer.getState().totalS).toBe(360);
+    useTimer.getState().adjust(-5);
+    expect(useTimer.getState().totalS).toBe(355);
+    expect(timerLeftMs(useTimer.getState())).toBe(355_000);
+    useTimer.getState().adjust(-10_000);
+    expect(useTimer.getState().totalS).toBe(1);
+    // Corriendo, no se puede cambiar.
+    useTimer.getState().set(120);
+    useTimer.getState().start();
+    useTimer.getState().adjust(60);
+    expect(useTimer.getState().totalS).toBe(120);
+    useTimer.getState().reset();
   });
 });

@@ -26,8 +26,18 @@ test('entrenamiento: cronómetro, temporizador, herramientas y cuenta regresiva'
   await page.getByTestId('sw-reset').click();
   await expect(page.getByTestId('sw-time')).toHaveText('0:00.00');
 
-  // Temporizador: se elige 1 minuto y corre.
+  // Temporizador: con las flechas se ajustan minutos y segundos (sin quedarse con los armados) y corre.
   await page.getByRole('button', { name: 'Temporizador' }).click();
+  await expect(page.getByTestId('timer-min')).toHaveText('05');
+  await page.getByTestId('timer-min-up').click();
+  await page.getByTestId('timer-sec-up').click();
+  await page.getByTestId('timer-sec-up').click();
+  await expect(page.getByTestId('timer-min')).toHaveText('06');
+  await expect(page.getByTestId('timer-sec')).toHaveText('02');
+  await page.getByTestId('timer-sec-down').click();
+  await page.getByTestId('timer-min-down').click();
+  await expect(page.getByTestId('timer-min')).toHaveText('05');
+  await expect(page.getByTestId('timer-sec')).toHaveText('01');
   await page.getByTestId('timer-preset-60').click();
   await expect(page.getByTestId('timer-time')).toHaveText('1:00');
   await page.getByTestId('timer-start').click();
@@ -44,7 +54,16 @@ test('entrenamiento: cronómetro, temporizador, herramientas y cuenta regresiva'
   await expect(page.getByTestId('hr-zones')).toContainText('90–108');
   await page.getByLabel('O, si querés cumplir un ritmo (min/km)').fill('6:00');
   await expect(page.getByTestId('pace-target-result')).toContainText('1:00:00');
+
+  // Metrónomo y respiración: con 170 pasos por minuto y 3:2 son 34 respiraciones por minuto.
+  await page.goto('/#/training');
+  await page.getByRole('link', { name: /Metrónomo/ }).click();
+  await expect(page.getByTestId('metronome-bpm')).toHaveText('170');
+  await expect(page.getByTestId('breath-result')).toContainText('34 respiraciones por minuto');
+  await page.getByRole('button', { name: 'Fuerte' }).click();
+  await expect(page.getByTestId('breath-result')).toContainText('56,7 respiraciones por minuto');
   await page.getByTestId('metronome-toggle').click();
+  await expect(page.getByTestId('breath-phase')).toHaveText(/Inhalá|Exhalá/);
   await page.getByTestId('metronome-toggle').click();
 
   // Cuenta regresiva antes de empezar una sesión con GPS.

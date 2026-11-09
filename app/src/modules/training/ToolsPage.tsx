@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Minus, Pause, Play, Plus } from 'lucide-react';
 import { useMedical } from '@/modules/firstAid/medicalStore';
-import { beep } from './cues';
 import { formatDuration, hrZones, maxHrFromAge, paceOf, parseDuration, RACES, riegel, timeAtPace } from './tools';
 import { formatPace } from './stats';
 
-/** Herramientas para entrenar, todas sin conexión: calculadora de ritmo, zonas de pulso y metrónomo de cadencia. */
+/** Herramientas para entrenar, todas sin conexión: calculadora de ritmo y zonas de pulso. */
 export function ToolsPage() {
   const { t } = useTranslation();
   return (
@@ -14,7 +12,6 @@ export function ToolsPage() {
       <h1 className="page-title">{t('modules.tools.title')}</h1>
       <PaceTool />
       <ZonesTool />
-      <Metronome />
     </div>
   );
 }
@@ -137,54 +134,6 @@ function ZonesTool() {
         <p className="hint" style={{ margin: 0 }}>{t('tools.zones.needs')}</p>
       )}
       <p className="hint" style={{ margin: 0 }}>{t('tools.zones.note')}</p>
-    </section>
-  );
-}
-
-/** Metrónomo de cadencia: un pitido por paso. Corre a 170–180 pasos por minuto para la mayoría de los corredores. */
-function Metronome() {
-  const { t } = useTranslation();
-  const [bpm, setBpm] = useState(170);
-  const [on, setOn] = useState(false);
-  const bpmRef = useRef(bpm);
-  bpmRef.current = bpm;
-  useEffect(() => {
-    if (!on) return;
-    let next = performance.now();
-    let id: ReturnType<typeof setTimeout>;
-    const loop = () => {
-      beep(1000, 40);
-      next += 60_000 / bpmRef.current;
-      id = setTimeout(loop, Math.max(0, next - performance.now()));
-    };
-    loop();
-    return () => clearTimeout(id);
-  }, [on]);
-  const clamp = (n: number) => Math.min(220, Math.max(60, n));
-  return (
-    <section className="card stack" data-testid="tool-metronome">
-      <h2 className="section-title" style={{ margin: 0 }}>{t('tools.metronome.title')}</h2>
-      <p className="hint" style={{ margin: 0 }}>{t('tools.metronome.intro')}</p>
-      <div className="row" style={{ justifyContent: 'center', alignItems: 'center', gap: 16 }}>
-        <button className="icon-btn" type="button" onClick={() => setBpm((b) => clamp(b - 1))} aria-label={t('tools.metronome.slower')}>
-          <Minus size={22} />
-        </button>
-        <p className="live-big" style={{ margin: 0 }} data-testid="metronome-bpm">{bpm}</p>
-        <span className="live-unit">{t('tools.metronome.unit')}</span>
-        <button className="icon-btn" type="button" onClick={() => setBpm((b) => clamp(b + 1))} aria-label={t('tools.metronome.faster')}>
-          <Plus size={22} />
-        </button>
-      </div>
-      <div className="row wrap" style={{ justifyContent: 'center' }}>
-        {[160, 170, 180, 190].map((n) => (
-          <button key={n} className="btn" type="button" aria-pressed={bpm === n} onClick={() => setBpm(n)}>
-            {n}
-          </button>
-        ))}
-      </div>
-      <button className={`live-btn${on ? '' : ' live-btn-go'}`} type="button" onClick={() => setOn(!on)} data-testid="metronome-toggle">
-        {on ? <Pause size={24} /> : <Play size={24} />} {on ? t('tools.metronome.stop') : t('tools.metronome.start')}
-      </button>
     </section>
   );
 }

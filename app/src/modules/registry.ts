@@ -31,7 +31,7 @@ import {
   Sprout,
   Tags,
   Triangle,
-  Warehouse, Scale, Shirt, Timer } from 'lucide-react';
+  Warehouse, Scale, Shirt, Timer, Metronome } from 'lucide-react';
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
@@ -79,6 +79,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'workouts', section: 'training', icon: Activity, implemented: true, path: '/training/workouts', degradesWithout: ['geolocation'] },
   { id: 'outings', section: 'training', icon: Flag, implemented: true, path: '/training/outings' },
   { id: 'stopwatch', section: 'training', icon: Timer, implemented: true, path: '/training/stopwatch' },
+  { id: 'metronome', section: 'training', icon: Metronome, implemented: true, path: '/training/metronome' },
   { id: 'tools', section: 'training', icon: Calculator, implemented: true, path: '/training/tools' },
   { id: 'gear', section: 'training', icon: Shirt, implemented: true, path: '/training/gear', hideWhenOff: 'trainingGear' },
   { id: 'weight', section: 'training', icon: Scale, implemented: true, path: '/training/weight' },

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Flag, Pause, Play, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Flag, Pause, Play, RotateCcw } from 'lucide-react';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { Segmented } from '@/ui/Segmented';
 import { beep, buzz } from './cues';
 import { elapsedMs, timerLeftMs, useStopwatch, useTimer } from './stopwatch';
 import { formatDuration, formatStopwatch, stopwatchLaps } from './tools';
+import { useHoldRepeat } from './useHoldRepeat';
 
 /** Cronómetro (con vueltas) y temporizador (cuenta regresiva con aviso al llegar a cero). */
 export function StopwatchPage() {
@@ -117,9 +118,19 @@ function Timer() {
   });
   return (
     <section className="card stack live" data-testid="timer">
-      <p className="live-clock" data-testid="timer-time" data-paused={!s.running}>
-        {formatDuration(Math.ceil(left / 1000))}
-      </p>
+      {s.running || left < s.totalS * 1000 ? (
+        <p className="live-clock" data-testid="timer-time" data-paused={!s.running}>
+          {formatDuration(Math.ceil(left / 1000))}
+        </p>
+      ) : (
+        // Sin empezar: con las flechas se suman o restan minutos y segundos (manteniendo apretado se repite).
+        <div className="timer-set" data-testid="timer-set">
+          <TimerUnit label={t('stopwatch.minutes')} value={Math.floor(s.totalS / 60)} onStep={(d) => s.adjust(d * 60)} testid="min" />
+          <span className="timer-colon" aria-hidden>:</span>
+          <TimerUnit label={t('stopwatch.seconds')} value={s.totalS % 60} onStep={(d) => s.adjust(d)} testid="sec" />
+          <span className="sr-only" data-testid="timer-time">{formatDuration(s.totalS)}</span>
+        </div>
+      )}
       <div className="row wrap" style={{ justifyContent: 'center' }}>
         {PRESETS_S.map((p) => (
           <button key={p} className="btn" type="button" aria-pressed={s.totalS === p} disabled={s.running} onClick={() => s.set(p)} data-testid={`timer-preset-${p}`}>
@@ -142,5 +153,22 @@ function Timer() {
         </button>
       </div>
     </section>
+  );
+}
+
+/** Un número (minutos o segundos) con una flecha arriba y una abajo. */
+function TimerUnit({ label, value, onStep, testid }: { label: string; value: number; onStep: (delta: 1 | -1) => void; testid: string }) {
+  const up = useHoldRepeat(() => onStep(1));
+  const down = useHoldRepeat(() => onStep(-1));
+  return (
+    <div className="timer-unit">
+      <button className="icon-btn" type="button" aria-label={`${label} +`} data-testid={`timer-${testid}-up`} {...up}>
+        <ChevronUp size={32} />
+      </button>
+      <span className="live-clock" data-testid={`timer-${testid}`} aria-label={label}>{String(value).padStart(2, '0')}</span>
+      <button className="icon-btn" type="button" aria-label={`${label} −`} data-testid={`timer-${testid}-down`} {...down}>
+        <ChevronDown size={32} />
+      </button>
+    </div>
   );
 }

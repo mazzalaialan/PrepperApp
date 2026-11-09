@@ -101,3 +101,43 @@ export function formatStopwatch(ms: number): string {
 export function stopwatchLaps(marks: number[]): { n: number; splitMs: number; totalMs: number }[] {
   return marks.map((total, i) => ({ n: i + 1, splitMs: total - (marks[i - 1] ?? 0), totalMs: total }));
 }
+
+/** Patrón de respiración al correr: cuántos pasos dura la inhalación y cuántos la exhalación (por ejemplo 3:2). */
+export interface BreathPattern {
+  id: 'p32' | 'p22' | 'p21' | 'p11';
+  inhale: number;
+  exhale: number;
+}
+
+export const BREATH_PATTERNS: BreathPattern[] = [
+  { id: 'p32', inhale: 3, exhale: 2 },
+  { id: 'p22', inhale: 2, exhale: 2 },
+  { id: 'p21', inhale: 2, exhale: 1 },
+  { id: 'p11', inhale: 1, exhale: 1 },
+];
+
+export type Effort = 'easy' | 'moderate' | 'hard' | 'max';
+
+/** El patrón que se suele recomendar según el esfuerzo: 3:2 suave, 2:2 moderado, 2:1 fuerte y 1:1 al máximo. */
+export const PATTERN_FOR_EFFORT: Record<Effort, BreathPattern['id']> = { easy: 'p32', moderate: 'p22', hard: 'p21', max: 'p11' };
+
+export const patternById = (id: BreathPattern['id']): BreathPattern => BREATH_PATTERNS.find((p) => p.id === id)!;
+
+export interface Breathing {
+  /** Pasos por respiración completa (inhalar + exhalar). */
+  stepsPerBreath: number;
+  /** Respiraciones por minuto con esa cadencia. */
+  breathsPerMin: number;
+}
+
+/** Con una cadencia (pasos por minuto) y un patrón: cuántas respiraciones por minuto hay que hacer. */
+export function breathing(cadence: number, pattern: BreathPattern): Breathing {
+  const stepsPerBreath = pattern.inhale + pattern.exhale;
+  return { stepsPerBreath, breathsPerMin: Math.round((cadence / stepsPerBreath) * 10) / 10 };
+}
+
+/** En qué parte de la respiración cae el paso número `step` (0, 1, 2…): 'inhale' o 'exhale', y si es el primero de esa fase. */
+export function breathPhaseAt(step: number, pattern: BreathPattern): { phase: 'inhale' | 'exhale'; first: boolean } {
+  const i = ((step % (pattern.inhale + pattern.exhale)) + (pattern.inhale + pattern.exhale)) % (pattern.inhale + pattern.exhale);
+  return i < pattern.inhale ? { phase: 'inhale', first: i === 0 } : { phase: 'exhale', first: i === pattern.inhale };
+}

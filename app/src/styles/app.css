@@ -4008,3 +4008,8 @@ a.module-card:hover {
 .countdown { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: var(--bg, #121a24); color: var(--text, #e8e2d6); }
 .countdown-label { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.08em; }
 .countdown-number { margin: 0; font-size: clamp(8rem, 40vw, 16rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+
+.timer-set { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.timer-unit { display: flex; flex-direction: column; align-items: center; }
+.timer-colon { font-size: clamp(3rem, 14vw, 5rem); font-weight: 800; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

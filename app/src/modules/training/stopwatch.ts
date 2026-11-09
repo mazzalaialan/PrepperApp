@@ -45,10 +45,16 @@ interface TimerState {
   /** Lo que quedaba (ms) al pausar. */
   leftMs: number;
   set: (totalS: number) => void;
+  /** Suma o resta segundos a la duración (solo si no corre): de 1 segundo a 3 horas. */
+  adjust: (deltaS: number) => void;
   start: () => void;
   pause: () => void;
   reset: () => void;
 }
+
+export const TIMER_MAX_S = 3 * 3600;
+
+export const clampTimer = (s: number): number => Math.min(TIMER_MAX_S, Math.max(1, Math.round(s)));
 
 export const timerLeftMs = (s: Pick<TimerState, 'endsAt' | 'leftMs'>, now = Date.now()): number => (s.endsAt !== null ? Math.max(0, s.endsAt - now) : s.leftMs);
 
@@ -57,7 +63,11 @@ export const useTimer = create<TimerState>((set, get) => ({
   running: false,
   endsAt: null,
   leftMs: 300_000,
-  set: (totalS) => !get().running && set({ totalS, leftMs: totalS * 1000 }),
+  set: (totalS) => !get().running && set({ totalS: clampTimer(totalS), leftMs: clampTimer(totalS) * 1000 }),
+  adjust: (deltaS) => {
+    const s = get();
+    if (!s.running) set({ totalS: clampTimer(s.totalS + deltaS), leftMs: clampTimer(s.totalS + deltaS) * 1000 });
+  },
   start: () => {
     const s = get();
     if (s.running || s.leftMs <= 0) return;

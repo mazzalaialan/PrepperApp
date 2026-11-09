@@ -84,6 +84,7 @@ const CropPage = page(() => import('@/modules/garden/CropPage').then((m) => ({ d
 const GardenCalendarPage = page(() => import('@/modules/garden/GardenCalendarPage').then((m) => ({ default: m.GardenCalendarPage })));
 const TrainingPage = page(() => import('@/modules/training/TrainingPage').then((m) => ({ default: m.TrainingPage })));
 const StopwatchPage = page(() => import('@/modules/training/StopwatchPage').then((m) => ({ default: m.StopwatchPage })));
+const MetronomePage = page(() => import('@/modules/training/MetronomePage').then((m) => ({ default: m.MetronomePage })));
 const ToolsPage = page(() => import('@/modules/training/ToolsPage').then((m) => ({ default: m.ToolsPage })));
 const WeightPage = page(() => import('@/modules/training/WeightPage').then((m) => ({ default: m.WeightPage })));
 const GearPage = page(() => import('@/modules/training/GearPage').then((m) => ({ default: m.GearPage })));
@@ -173,6 +174,7 @@ const router = createHashRouter([
       { path: '/training/weight', element: <WeightPage /> },
       { path: '/training/stopwatch', element: <StopwatchPage /> },
       { path: '/training/tools', element: <ToolsPage /> },
+      { path: '/training/metronome', element: <MetronomePage /> },
       { path: '/training/gear', element: <GearPage /> },
       { path: '/training/workouts/new', element: <WorkoutEditPage /> },
       { path: '/training/workouts/:id', element: <WorkoutPage /> },
