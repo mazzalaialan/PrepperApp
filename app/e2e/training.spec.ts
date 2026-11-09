@@ -175,9 +175,20 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
     await page.waitForTimeout(300);
   }
   await expect(page.getByTestId('live-distance')).toHaveText(/^\d+$/);
+  // Seguimiento en vivo para la familia: se crea un enlace, la página pública muestra la sesión y se corta al terminar.
+  await page.getByLabel('Cuánto dura').selectOption({ label: '15 min' });
+  await page.getByTestId('live-share-start').click();
+  const liveUrl = await page.getByTestId('live-share-url').inputValue();
+  expect(liveUrl).toMatch(/\/l\/[\w-]+$/);
+  await expect(page.getByTestId('live-share-status')).toContainText('último envío', { timeout: 15_000 });
+  const livePage = await request.get(liveUrl);
+  expect(livePage.status()).toBe(200);
+  expect(await livePage.text()).toContain('Correr');
   await page.getByTestId('live-pause').click();
   await page.getByTestId('live-finish').click();
   await page.getByRole('dialog', { name: 'Guardar la grabación' }).getByRole('button', { name: 'Guardar' }).click();
+  // Al terminar la sesión el seguimiento se corta y el servidor lo borra.
+  await expect.poll(async () => (await request.get(liveUrl)).status(), { timeout: 15_000 }).toBe(404);
   await expect(page.getByTestId('w-intervals')).toContainText('8 × 0:20 / 0:10');
 
   // Zona privada: un waypoint marcado como tal se ve en la lista y se ofrece al compartir una salida.

@@ -99,6 +99,8 @@ export interface Settings {
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
   trainingVoice: boolean;
+  /** Seguimiento en vivo en curso (ver modules/training/liveShare.ts): el código solo sirve para mandar posiciones y cortar ese enlace, que vence. */
+  liveShare: { id: string; url: string; token: string; expiresAt: string; name: string; sentSeg: number; sentPt: number; lastSentAt: number | null; failing: boolean } | null;
   /** Equipo de entrenamiento (zapatillas, bici, bote) y su desgaste, también en el Inventario: se puede ocultar si no se usa. */
   trainingGear: boolean;
   /** Altura (cm) para el IMC cuando no hay ficha médica propia donde guardarla. */
@@ -228,6 +230,7 @@ export const DEFAULT_SETTINGS: Settings = {
   knotsLearned: [],
   trainingKind: 'walk',
   trainingVoice: false,
+  liveShare: null,
   trainingGear: true,
   heightCm: null,
   trainingGoals: { distanceKm: 0, minutes: 0, sessions: 0 },

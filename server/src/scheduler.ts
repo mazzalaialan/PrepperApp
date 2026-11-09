@@ -64,5 +64,6 @@ export async function runScheduler(db: Db, push: PushSender, now = new Date()): 
   }
 
   db.prepare('DELETE FROM transfers WHERE expires_at < ?').run(now.getTime());
+  db.prepare('DELETE FROM live_sessions WHERE expires_at < ?').run(now.getTime());
   return result;
 }

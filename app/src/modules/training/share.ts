@@ -83,29 +83,30 @@ function distanceToSegmentM(p: { lat: number; lon: number }, a: TrackPoint, b: T
  * los puntos dentro del radio y el recorrido se corta ahí (no queda una línea
  * que cruce la zona, ni siquiera si el GPS saltó de un lado al otro).
  */
-export function removeZones(segments: TrackPoint[][], zones: PrivateZone[]): TrackPoint[][] {
-  if (zones.length === 0) return segments.filter((s) => s.length > 1);
+export function splitByZones(points: TrackPoint[], zones: PrivateZone[]): TrackPoint[][] {
   const inside = (p: TrackPoint) => zones.some((z) => distanceMeters({ lat: p[0], lon: p[1] }, z) <= z.radiusM);
   const crosses = (a: TrackPoint, b: TrackPoint) => zones.some((z) => distanceToSegmentM(z, a, b) <= z.radiusM);
   const out: TrackPoint[][] = [];
-  for (const seg of segments) {
-    let cur: TrackPoint[] = [];
-    for (let i = 0; i < seg.length; i++) {
-      const p = seg[i]!;
-      if (inside(p)) {
-        if (cur.length > 1) out.push(cur);
-        cur = [];
-        continue;
-      }
-      if (cur.length > 0 && crosses(cur.at(-1)!, p)) {
-        if (cur.length > 1) out.push(cur);
-        cur = [];
-      }
-      cur.push(p);
+  let cur: TrackPoint[] = [];
+  for (const p of points) {
+    if (inside(p)) {
+      if (cur.length > 0) out.push(cur);
+      cur = [];
+      continue;
     }
-    if (cur.length > 1) out.push(cur);
+    if (cur.length > 0 && crosses(cur.at(-1)!, p)) {
+      out.push(cur);
+      cur = [];
+    }
+    cur.push(p);
   }
+  if (cur.length > 0) out.push(cur);
   return out;
+}
+
+export function removeZones(segments: TrackPoint[][], zones: PrivateZone[]): TrackPoint[][] {
+  if (zones.length === 0) return segments.filter((s) => s.length > 1);
+  return segments.flatMap((seg) => splitByZones(seg, zones)).filter((s) => s.length > 1);
 }
 
 /** Simplifica hasta que entren en el tope de puntos. */

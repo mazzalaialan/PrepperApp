@@ -12,6 +12,8 @@ export interface Config {
   /** Salidas compartidas con un enlace público: cuántas como máximo (el espacio no crece sin control) y cuánto duran. */
   sharedOutingsMax: number;
   sharedOutingsTtlMs: number;
+  /** Seguimientos en vivo activos a la vez (el espacio no crece sin control). */
+  liveSessionsMax: number;
   /** Carpeta con el build de la PWA para servirla desde acá; vacío = no servirla. */
   appDir: string | null;
   /** Cada cuánto revisar si hay notificaciones para enviar. */
@@ -67,6 +69,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     transferTtlMs: Number(env.TRANSFER_TTL_HOURS ?? 24) * 3_600_000,
     sharedOutingsMax: Number(env.SHARED_OUTINGS_MAX ?? 2000),
     sharedOutingsTtlMs: Number(env.SHARED_OUTINGS_TTL_DAYS ?? 365) * 86_400_000,
+    liveSessionsMax: Number(env.LIVE_SESSIONS_MAX ?? 300),
     appDir: env.APP_DIR?.trim() || null,
     schedulerIntervalMs: Number(env.SCHEDULER_INTERVAL_MINUTES ?? 10) * 60_000,
     weatherUrl: env.WEATHER_URL?.trim() || 'https://api.open-meteo.com',

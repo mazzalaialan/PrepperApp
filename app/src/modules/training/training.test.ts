@@ -10,6 +10,7 @@ import { gearFor, gearKm, kmForInventoryItem, wear } from './gear';
 import type { Gear } from '@/core/model/types';
 import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
 import type { WeightEntry } from '@/core/model/types';
+import { buildChunks } from './liveChunks';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
 import { buildSharePayload, removeZones, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
@@ -395,5 +396,57 @@ describe('zonas privadas', () => {
     const without = buildSharePayload({ id: 'o', name: 'x', createdAt: '2026-11-01' } as unknown as Outing, [workout], new Map([['t', track]]), 'es', 0, []);
     expect(without.route.flat().length).toBeGreaterThan(withZone.route.flat().length);
     expect(withZone.distanceM).toBe(1000); // los totales no se recalculan
+  });
+});
+
+describe('seguimiento en vivo: qué se manda', () => {
+  const walk = (n: number, lon = -71): TrackPoint[] => Array.from({ length: n }, (_, i) => [-41, lon + i * 0.0001, 100, 1_800_000_000 + i * 10] as TrackPoint);
+  it('el primer envío lleva todo y abre un tramo; el siguiente solo lo nuevo, sin abrir otro', () => {
+    const seg = walk(5);
+    const first = buildChunks([seg], { seg: 0, pt: 0 }, [], 1_800_000_100);
+    expect(first.chunks).toHaveLength(1);
+    expect(first.chunks[0]).toMatchObject({ newSegment: true });
+    expect(first.chunks[0]!.points).toHaveLength(5);
+    expect(first.next).toEqual({ seg: 0, pt: 5 });
+    const more = [...seg, ...walk(3, -70.9)];
+    const second = buildChunks([more], first.next, [], 1_800_000_200);
+    expect(second.chunks).toHaveLength(1);
+    expect(second.chunks[0]).toMatchObject({ newSegment: false });
+    expect(second.chunks[0]!.points).toHaveLength(3);
+    // Sin nada nuevo no manda trozos.
+    expect(buildChunks([more], second.next, [], 1_800_000_300).chunks).toEqual([]);
+  });
+  it('un punto solo también se manda (la última posición importa)', () => {
+    const seg = walk(3);
+    const r = buildChunks([seg], { seg: 0, pt: 2 }, [], 0);
+    expect(r.chunks).toHaveLength(1);
+    expect(r.chunks[0]!.points).toHaveLength(1);
+    expect(r.chunks[0]!.newSegment).toBe(false);
+  });
+  it('un corte (tramo nuevo) abre tramo en el servidor', () => {
+    const a = walk(3);
+    const b = walk(2, -70.5);
+    const r = buildChunks([a, b], { seg: 0, pt: 3 }, [], 0);
+    expect(r.chunks).toHaveLength(1);
+    expect(r.chunks[0]).toMatchObject({ newSegment: true });
+    expect(r.next).toEqual({ seg: 1, pt: 2 });
+  });
+  it('las zonas privadas no se mandan y cortan el tramo', () => {
+    const seg = walk(60); // ~660 m hacia el este
+    const zone = { lat: -41, lon: -71 + 30 * 0.0001, radiusM: 100 };
+    const r = buildChunks([seg], { seg: 0, pt: 0 }, [zone], 0);
+    expect(r.chunks.length).toBeGreaterThanOrEqual(2);
+    for (const c of r.chunks) for (const p of c.points) expect(distanceMeters({ lat: p[0], lon: p[1] }, zone)).toBeGreaterThan(100);
+    expect(r.chunks.slice(1).every((c) => c.newSegment)).toBe(true);
+    // Todo dentro de la zona: no se manda nada, pero se avanza.
+    const inside = buildChunks([walk(5)], { seg: 0, pt: 0 }, [{ lat: -41, lon: -71, radiusM: 500 }], 0);
+    expect(inside.chunks).toEqual([]);
+    expect(inside.next).toEqual({ seg: 0, pt: 5 });
+  });
+  it('si entre el último punto mandado y el nuevo hay una zona, no los une', () => {
+    const seg: TrackPoint[] = [[-41, -71.01, null, 1], [-41, -70.99, null, 2]];
+    const r = buildChunks([seg], { seg: 0, pt: 1 }, [{ lat: -41, lon: -71, radiusM: 100 }], 0);
+    expect(r.chunks).toHaveLength(1);
+    expect(r.chunks[0]).toMatchObject({ newSegment: true });
   });
 });

@@ -9,6 +9,7 @@ import { elapsedS, useRecorder } from '@/modules/tracks/recorder';
 import { ACTIVITIES } from './activities';
 import { calories } from './energy';
 import { useBodyWeight, useTrainingFormat } from './format';
+import { LiveShareCard } from './LiveShareCard';
 import { beep, buzz, say } from './cues';
 import { phaseAt } from './intervals';
 import { currentSpeedMs, kmAnnouncement, kmhFromMs, paceFromMs } from './live';
@@ -161,6 +162,7 @@ export function LivePage() {
           <Square size={24} fill="currentColor" /> {t('tracks.rec.finish')}
         </button>
       </div>
+      <LiveShareCard />
       <div className="row wrap">
         <button className="btn" type="button" aria-pressed={voice} onClick={() => void update({ trainingVoice: !voice })} data-testid="live-voice">
           {voice ? <Volume2 size={18} /> : <VolumeX size={18} />} {t(voice ? 'training.live.voiceOn' : 'training.live.voiceOff')}

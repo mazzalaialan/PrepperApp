@@ -9,6 +9,7 @@ import { BrandMark } from '@/ui/Brand';
 import { BackButton } from '@/ui/BackButton';
 import { Dialog } from '@/ui/Dialog';
 import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
+import { useLiveSender } from '@/modules/training/liveShare';
 import { RainNotices } from '@/modules/weather/RainNotices';
 import { useZoneForecastRefresh } from '@/modules/maps/zoneForecast';
 import { useRainServerSync } from '@/modules/weather/rainServer';
@@ -47,6 +48,7 @@ export function Shell() {
   useGardenServerSync();
   useStockServerSync();
   useZoneForecastRefresh();
+  useLiveSender();
 
   return (
     <div className="shell">

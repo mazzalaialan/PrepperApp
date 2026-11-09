@@ -134,6 +134,15 @@ const MIGRATIONS = [
      created_at INTEGER NOT NULL,
      expires_at INTEGER NOT NULL
    );`,
+  // Seguimiento en vivo para la familia (routes/liveSessions.ts): se borra al terminar o al vencer.
+  `CREATE TABLE IF NOT EXISTS live_sessions (
+     id TEXT PRIMARY KEY,
+     token_hash TEXT NOT NULL,
+     data TEXT NOT NULL,
+     created_at INTEGER NOT NULL,
+     updated_at INTEGER NOT NULL,
+     expires_at INTEGER NOT NULL
+   );`,
 ];
 
 export type Db = DatabaseSync;
