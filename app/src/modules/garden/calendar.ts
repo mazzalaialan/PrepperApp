@@ -16,16 +16,22 @@ import type { Country, GardenZone } from '@/core/settings/settings';
  * NOA, Calendario de huerta agroecológica de La Rioja (INTA EEA La Rioja).
  * Patagonia sur y andina, Planificador de huerta del sur de Santa Cruz (INTA
  * EEA Santa Cruz). NEA: sin cartilla regional; estimado.
+ * Valles de Bolivia: Manual para el cultivo de hortalizas, Valle Central de
+ * Tarija (Organización Esperanza Bolivia y Louvain Coopération, 2016). No es
+ * una fuente oficial y sus cuadros son gráficos: los meses se leyeron a ojo
+ * (±1 mes). Las filas "Siembra" van como siembra directa; donde el cuadro solo
+ * tiene "Cultivo" (la planta en el campo), siembra o trasplante son los
+ * primeros tres meses de esa franja. Cosecha: la de los cuadros.
  */
 
-export const ZONES = ['pampeana', 'nea', 'noa', 'cuyo', 'patagoniaNorte', 'patagoniaSur'] as const;
+export const ZONES = ['pampeana', 'nea', 'noa', 'cuyo', 'patagoniaNorte', 'patagoniaSur', 'vallesBolivia'] as const;
 export type Zone = (typeof ZONES)[number];
 // El tipo de Ajustes tiene que coincidir con esta lista.
 const _sameZones: Zone extends GardenZone ? (GardenZone extends Zone ? true : never) : never = true;
 void _sameZones;
 
 /** Zonas sin cartilla del INTA: el calendario es una estimación. */
-export const ESTIMATED_ZONES: ReadonlySet<Zone> = new Set(['nea']);
+export const ESTIMATED_ZONES: ReadonlySet<Zone> = new Set(['nea', 'vallesBolivia']);
 
 export interface ZoneEntry {
   /** Siembra directa. */
@@ -260,6 +266,30 @@ const PATAGONIA_SUR: ZoneTable = {
   zapallito: { S: '11-12' },
 };
 
+/** Estimado a partir del manual de la ONG de Tarija (ver arriba): sin cartilla oficial. */
+const VALLES_BOLIVIA: ZoneTable = {
+  esparrago: { A: '8-10', T: '11-1', H: '9-12' },
+  puerro: { A: '2-6', T: '5-7', H: '9-12' },
+  lechuga: { S: '1-12', A: '3-12', H: '1-12' },
+  brocoli: { A: '2-4', T: '3-5', H: '6-10' },
+  coliflor: { A: '2-5', T: '3-5', H: '6-10' },
+  repollo: { A: '2-4', T: '3-5', H: '6-11' },
+  rabanito: { S: '3-4,8-12', H: '9-1,4-5' },
+  rucula: { S: '7-1', H: '9-3' },
+  tomate: { A: '7-10', T: '9-11', H: '11-4' },
+  pimiento: { A: '7-10', T: '9-11', H: '12-4' },
+  berenjena: { A: '7-10', T: '9-11', H: '12-4' },
+  zapallito: { S: '9-12', H: '11-2' },
+  pepino: { S: '9-12', H: '12-4' },
+  melon: { S: '9-12', H: '1-4' },
+  sandia: { S: '9-12', H: '12-3' },
+  apio: { A: '2-6', T: '5-7', H: '9-12' },
+  perejil: { S: '3-5', H: '6-8' },
+  chaucha: { S: '9-11', H: '11-4' },
+  acelga: { A: '2-6', T: '5-7', H: '9-12' },
+  remolacha: { S: '4-6', H: '7-11' },
+};
+
 export const ZONE_TABLES: Record<Zone, ZoneTable> = {
   pampeana: PAMPEANA,
   nea: NEA,
@@ -267,6 +297,7 @@ export const ZONE_TABLES: Record<Zone, ZoneTable> = {
   cuyo: CUYO,
   patagoniaNorte: PATAGONIA_NORTE,
   patagoniaSur: PATAGONIA_SUR,
+  vallesBolivia: VALLES_BOLIVIA,
 };
 
 /** "8-11,2" → {8,9,10,11,2}; los rangos pueden cruzar el año ("11-2"). Meses 1–12. */

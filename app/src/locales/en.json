@@ -2241,9 +2241,10 @@
     "zoneCountry": {
       "CL": "Chile has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}}).",
       "UY": "Uruguay has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}}).",
-      "BO": "Bolivia has no official published home-garden calendar by crop and month (INIAF does not publish one): the climate of the altiplano, valleys and tropics doesn’t match any Argentine zone. Pick the closest zone by hand and treat the months as a reference.",
-      "PE": "Peru has no official published home-garden calendar by crop and month (INIA does not publish one openly): the climate of the coast, highlands and jungle doesn’t match any Argentine zone. Pick the closest zone by hand and treat the months as a reference."
+      "BO": "Bolivia has no official garden calendar by crop and month (INIAF does not publish one). For the valleys there is an estimated zone, \"Bolivian valleys (Tarija)\", built from an NGO manual; on the altiplano or in the tropics pick the closest one by hand and treat the months as a reference.",
+      "PE": "Peru has no official garden calendar by crop and month (INIA does not publish an open one): the climate of the coast, highlands and jungle matches no Argentine zone. Pick the closest by hand (\"Bolivian valleys\" is a temperate valley climate) and treat the months as a reference."
     },
+    "zoneEstimatedValles": "This zone comes from an NGO manual for the Central Tarija Valley (2016), not an official source: months were read from graphic tables and may be off by a month. It suits temperate valleys; on the altiplano or in the tropics the months change. Use it as guidance and check what is done locally.",
     "zoneEstimated": "There is no INTA guide for this zone: the calendar is an estimate (mild frosts, very hot and humid summer). Use it as a guideline.",
     "zones": {
       "pampeana": "Pampas",
@@ -2251,7 +2252,8 @@
       "noa": "Northwest",
       "cuyo": "Cuyo",
       "patagoniaNorte": "Northern Patagonia",
-      "patagoniaSur": "Southern and Andean Patagonia"
+      "patagoniaSur": "Southern and Andean Patagonia",
+      "vallesBolivia": "Bolivian valleys (Tarija, estimated)"
     },
     "thisMonth": "This month: {{month}}",
     "prevMonth": "Previous month",

@@ -10,12 +10,15 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 - **Grabar recorrido con pantalla apagada:** al volver de un corte, avisa entre qué horas fue y pregunta si unir con una recta o dejar el tramo vacío.
 - **Entrenamiento (base):** sesiones de caminata, correr, trekking, remo (kayak, canoa, bote, SUP, rafting), ciclismo (ruta, montaña, gravel, urbana, eléctrica) y bajo techo (cinta, elíptica, escalador); calorías (ACSM y MET) con el peso de la ficha médica; tiempo en movimiento, ritmo o velocidad, parciales por km, desnivel, mapa y gráfico de desnivel; historial por semana, récords y salidas que agrupan actividades con totales, mapa y desnivel de toda la salida. Los puntos grabados ahora llevan la hora.
 - **Enlace público de una salida:** solo si se elige; título, recorrido simplificado, datos y gráfico, sin fotos; se recorta el inicio y el final cerca de casa, vence al año y se puede borrar.
+- **Huerta de Bolivia:** zona estimada "Valles de Bolivia (Tarija)" con 20 cultivos (ver el punto 1).
+- **Radio de Perú:** servicio colectivo familiar (462 y 467 MHz, hasta 500 mW, sin licencia; sin confirmar vigente). PMR446 no figura como uso libre y no se cargó; INDECI y Cruz Roja siguen sin frecuencia publicada.
 - **Importar y exportar GPX/TCX:** cada actividad con GPS se exporta a GPX o TCX (con altura y hora) y se puede importar un archivo de Strava, Garmin o Wikiloc como actividad nueva.
+- **Pantalla en vivo:** al empezar una sesión se abre una pantalla con el tiempo, la distancia, el ritmo o la velocidad de ahora y promedio, el desnivel y las calorías en grande, con pausa y terminar y voz opcional cada km.
 - **Objetivos semanales:** distancia, tiempo y cantidad de actividades, con barras de avance en la semana. La pausa automática ya está cubierta: el tiempo en movimiento descarta las paradas.
 
-## 1. Calendarios de huerta de Bolivia y Perú (decisión pendiente)
+## 1. Calendarios de huerta de Bolivia y Perú
 
-Se investigó y no existe un calendario oficial abierto de siembra por cultivo y mes: el INIAF (Bolivia) y el INIA (Perú) no lo publican, y los de Costa, Sierra y Selva del INIA están detrás de un login. Solo hay un manual de una ONG (2016, valle de Tarija) con cuadros gráficos. Los textos de la app ya dicen que no hay calendario oficial. A decidir con el usuario: dejarlo así, armar uno propio a partir del manual de la ONG (con la fuente y sin generalizar a otras zonas) o esperar una fuente oficial. No se parecen a ninguna zona argentina.
+No existe un calendario oficial abierto de siembra por cultivo y mes (INIAF e INIA no lo publican; los del INIA están detrás de un login). Se cargó una zona estimada, "Valles de Bolivia (Tarija)", con 20 cultivos del manual de una ONG (2016): los cuadros son gráficos, se leyeron a ojo (±1 mes) y la app lo avisa. Perú y el altiplano o el trópico de Bolivia siguen con la zona elegida a mano. Si aparece una fuente oficial, reemplaza o completa esta zona.
 
 ## 2. Entrenamiento: lo que falta
 
