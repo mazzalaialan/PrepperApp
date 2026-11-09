@@ -7,6 +7,7 @@ import { newEntity } from '@/core/model/entity';
 import type { Id, Route } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
+import { PlannedRoutePage } from './PlannedRoutePage';
 import { routeLength, useWaypoints } from './store';
 
 export function RouteEditPage() {
@@ -22,6 +23,7 @@ export function RouteEditPage() {
       </p>
     );
   }
+  if (stored?.line) return <PlannedRoutePage route={stored} />;
   return <RouteForm key={stored?.id ?? 'new'} stored={stored} />;
 }
 

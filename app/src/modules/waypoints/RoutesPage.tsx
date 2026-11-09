@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Plus, Route as RouteIcon } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
+import { lineLength } from './plan';
 import { routeLength, routePoints, useWaypoints } from './store';
 
 /** Rutas armadas uniendo waypoints: van abajo de los waypoints, en la misma pantalla. */
@@ -41,8 +42,10 @@ export function RoutesSection() {
                 <span className="list-main">
                   <span className="list-title">{route.name}</span>
                   <span className="list-sub">
-                    {t('routes.pointCount', { count: points.length })}
-                    {points.length > 1 && ` · ${formatDistance(routeLength(points), units, i18n.language)}`}
+                    {t('routes.pointCount', { count: route.line ? route.line.length : points.length })}
+                    {route.line
+                      ? ` · ${formatDistance(lineLength(route.line), units, i18n.language)} · ${t('routes.planned')}`
+                      : points.length > 1 && ` · ${formatDistance(routeLength(points), units, i18n.language)}`}
                   </span>
                 </span>
               </Link>

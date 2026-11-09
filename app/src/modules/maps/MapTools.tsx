@@ -8,6 +8,10 @@ import { declinationAt } from '@/core/sensors/heading';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import type { NewWaypointDraft } from '@/modules/waypoints/WaypointEditPage';
+import { useWaypoints } from '@/modules/waypoints/store';
+import { legsOf } from '@/modules/waypoints/plan';
+import { newEntity } from '@/core/model/entity';
+import type { Route } from '@/core/model/types';
 import { summarizePath, targetInfo, type PathSummary, type TargetInfo } from './measure';
 
 export type MapTool = 'measure' | 'target';
@@ -19,7 +23,7 @@ interface Origin extends LatLon {
 }
 
 /** Perfil de altura del recorrido medido. */
-function Profile({ profile }: { profile: [number, number][] }) {
+export function Profile({ profile }: { profile: [number, number][] }) {
   const { t } = useTranslation();
   if (profile.length < 2) return null;
   const total = profile.at(-1)![0] || 1;
@@ -50,6 +54,8 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
   const [info, setInfo] = useState<TargetInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [fromMode, setFromMode] = useState<FromMode>('here');
+  const [routeName, setRouteName] = useState('');
+  const saveRoute = useWaypoints((s) => s.saveRoute);
 
   // Desde dónde: tu ubicación (si hay) o el primer punto que se toca.
   const usePoint = fromMode === 'point' || !fix;
@@ -200,6 +206,36 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
               )
             )}
           </>
+        )}
+        {points.length >= 2 && (
+          <ol className="list" data-testid="measure-legs">
+            {legsOf(points).map((l) => (
+              <li key={l.n} className="list-row">
+                <span className="route-index">{l.n}</span>
+                <span className="list-main">
+                  <span className="list-title">{dist(l.distanceM)}</span>
+                  <span className="list-sub">{t('mapTools.legBearing', { magnetic: Math.round(l.magneticBearing), cardinal: l.cardinal })}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        {points.length >= 2 && (
+          <form
+            className="input-group"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const route = newEntity<Route>({ name: routeName.trim() || t('routes.plannedName'), waypointIds: [], notes: '', line: points.map((p) => ({ lat: p.lat, lon: p.lon })) });
+              await saveRoute(route);
+              setRouteName('');
+              navigate(`/orientation/routes/${route.id}`);
+            }}
+          >
+            <input className="input" value={routeName} onChange={(e) => setRouteName(e.target.value)} placeholder={t('routes.plannedName')} aria-label={t('routes.name')} data-testid="plan-name" />
+            <button className="btn btn-primary" type="submit" data-testid="plan-save">
+              {t('routes.saveAsRoute')}
+            </button>
+          </form>
         )}
         {points.length > 0 && (
           <div className="row-end">

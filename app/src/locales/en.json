@@ -696,6 +696,7 @@
     "securityNote": "The park ranger, CONAF and Radio Club de Carabineros frequencies are only for calling for help when a life is in danger: with a life at risk you may ask for help by any means. Gendarmerie and police frequencies aren't included: they aren't public and many are encrypted. Listening to forces or services without authorization may be a crime (in Argentina, Penal Code, art. 153)."
   },
   "mapTools": {
+    "legBearing": "Bearing {{magnetic}}° magnetic ({{cardinal}})",
     "title": "Tools",
     "measure": "Measure",
     "target": "Direction to a point",
@@ -1376,6 +1377,9 @@
     "calibrate": "If the heading jumps or looks wrong, calibrate by moving the phone in a figure 8, away from metal and magnets."
   },
   "routes": {
+    "planned": "planned",
+    "follow": "Follow this route", "viewOnMap": "View on the map", "legsTitle": "Legs", "legTo": "Point {{n}}", "saveAsPlace": "Save point {{n}} as a place", "pointsNotPlaces": "The points of a planned route do not appear in your list of places and give no weather alerts: only the ones you save as a place with each point's button.",
+    "plannedName": "Planned route", "saveAsRoute": "Save as route",
     "new": "New route",
     "empty": "No routes yet. A route is an ordered list of saved points, e.g. \"Evacuation to shelter\": the app guides you from one to the next.",
     "needPoints": "To build a route, first save points in Waypoints.",
@@ -1506,7 +1510,8 @@
     "pack": "Pack or load (kg, optional)",
     "noWeight": "Calories are not calculated without your weight.",
     "noWeightLink": "Add it to your medical record.",
-    "live": {"none": "No session is being recorded.", "paceNow": "Pace now", "speedNow": "Speed now", "paceAvg": "Average pace", "speedAvg": "Average speed", "ascent": "Ascent", "calories": "Calories", "voiceOn": "Voice every km", "voiceOff": "No voice", "open": "Open the live session", "voiceKm": "Kilometer {{km}}. Time {{time}}. Pace {{pace}}.", "voiceKmShort": "Kilometer {{km}}. Time {{time}}."},
+    "followLabel": "Follow a route or a track", "followNone": "No route", "followRoute": "Route: {{name}}", "followTrack": "Track: {{name}}",
+    "live": {"time": "Time", "title": "Session in progress", "none": "No session is being recorded.", "paceNow": "Pace now", "speedNow": "Speed now", "paceAvg": "Average pace", "speedAvg": "Average speed", "ascent": "Ascent", "calories": "Calories", "voiceOn": "Voice every km", "voiceOff": "No voice", "open": "Open the live session", "voiceKm": "Kilometer {{km}}. Time {{time}}. Pace {{pace}}.", "voiceKmShort": "Kilometer {{km}}. Time {{time}}."},
     "how": {"title": "How it went", "feeling": "How I felt", "f1": "awful", "f2": "bad", "f3": "okay", "f4": "good", "f5": "great", "terrain": "Terrain or place", "weather": "Weather at the end", "wind": "wind {{kmh}} km/h", "t": {"road": "Road or street", "trail": "Trail", "mountain": "Mountain", "sand": "Sand or beach", "track": "Track", "water": "Water", "indoor": "Indoor", "mixed": "Mixed"}},
     "goals": {"title": "Weekly goals", "hint": "Leave blank any you do not want. Progress shows here and counts Monday to Sunday.", "distanceKm": "Distance (km)", "minutes": "Time (minutes)", "sessions": "Activities", "reached": "reached!"},
     "exportGpx": "Export GPX",

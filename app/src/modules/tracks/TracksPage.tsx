@@ -24,7 +24,7 @@ export function TracksPage() {
   }
   const file = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const list = useMemo(() => [...tracks.values()].sort((a, b) => a.name.localeCompare(b.name, i18n.language)), [tracks, i18n.language]);
+  const list = useMemo(() => [...tracks.values()].filter((x) => !x.routeId).sort((a, b) => a.name.localeCompare(b.name, i18n.language)), [tracks, i18n.language]);
 
   async function handleFile(f: File) {
     setError(null);

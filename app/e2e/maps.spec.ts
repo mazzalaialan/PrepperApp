@@ -454,3 +454,47 @@ test('herramientas del mapa con clic derecho y en pantalla completa', async ({ p
   await overlay.getByRole('button', { name: 'Borrar' }).click();
   await expect(overlay).toContainText('Tocá el mapa para marcar el primer punto.');
 });
+
+test('planificar una ruta en el mapa: piernas con rumbo magnético, sin crear lugares, exportar y seguir', async ({ page }) => {
+  await mockMaps(page);
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/orientation/maps');
+  const canvas = page.getByTestId('offline-map').locator('canvas');
+  await expect(canvas).toBeVisible();
+  await expect(page.getByTestId('map-center')).toHaveText(/zoom 12$/, { timeout: 15_000 });
+  const box = (await canvas.boundingBox())!;
+  const cx = box.width / 2;
+  const cy = box.height / 2;
+
+  await page.getByRole('button', { name: 'Medir' }).click();
+  await canvas.click({ position: { x: cx, y: cy } });
+  await canvas.click({ position: { x: cx + 200, y: cy } });
+  await canvas.click({ position: { x: cx + 200, y: cy + 150 } });
+  // Cada pierna con su distancia y su rumbo magnético.
+  await expect(page.getByTestId('measure-legs').getByRole('listitem')).toHaveCount(2);
+  await expect(page.getByTestId('measure-legs')).toContainText('magnético');
+  await page.getByTestId('plan-name').fill('Ruta al Platita');
+  await page.getByTestId('plan-save').click();
+
+  // La ruta guardada: piernas, GPX y seguirla. Sus puntos no son lugares.
+  await expect(page).toHaveURL(/#\/orientation\/routes\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('planned-route')).toBeVisible();
+  await expect(page.getByTestId('planned-legs').getByRole('listitem')).toHaveCount(3);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('planned-gpx').click()]);
+  expect(download.suggestedFilename()).toBe('Ruta-al-Platita.gpx');
+  await page.goto('/#/orientation/waypoints');
+  await expect(page.getByText('Ruta al Platita')).toBeVisible(); // la ruta sí está en la lista de rutas
+  await expect(page.getByText('Todavía no guardaste puntos.')).toBeVisible(); // y sus puntos no son lugares
+  await page.getByText('Ruta al Platita').click();
+  await page.getByTestId('planned-follow').click();
+  await expect(page).toHaveURL(/#\/orientation\/tracks\/[0-9a-f-]{36}\/follow$/);
+  // La ruta no ensucia la lista de Tracks.
+  await page.goto('/#/orientation/tracks');
+  await expect(page.getByText('Ruta al Platita')).toHaveCount(0);
+});

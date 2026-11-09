@@ -10,6 +10,8 @@ import { useTrainingFormat, useBodyWeight } from './format';
 import { byWeek, goalProgress, recordsOf, totalsOf, weekStart } from './history';
 import { GpxError } from '@/modules/tracks/gpx';
 import { useTracks } from '@/modules/tracks/store';
+import { trackFromRoute } from '@/modules/waypoints/plan';
+import { useWaypoints } from '@/modules/waypoints/store';
 import { activityFromFile, parseActivityFile } from './interchange';
 import { IntervalPicker } from './IntervalPicker';
 import type { IntervalPlan } from './intervals';
@@ -29,6 +31,10 @@ export function TrainingPage() {
   const [kind, setKind] = useState<ActivityKind>(lastKind);
   const [pack, setPack] = useState('');
   const [plan, setPlan] = useState<IntervalPlan | null>(null);
+  // Seguir una ruta planificada o un track durante la sesión: "r:<id>" o "t:<id>".
+  const [follow, setFollow] = useState('');
+  const routes = useWaypoints((s) => s.routes);
+  const allTracks = useTracks((s) => s.tracks);
   const list = [...workouts.values()];
   const weeks = byWeek(list);
   const records = recordsOf(list);
@@ -59,6 +65,24 @@ export function TrainingPage() {
       if (!(err instanceof GpxError)) throw err;
       setImportError(t(`training.importError.${err.code}`));
     }
+  }
+
+  /** Después de empezar: a la pantalla en vivo, o al seguimiento de la ruta o el track elegido (con los datos de la sesión arriba). */
+  async function goAfterStart() {
+    if (follow.startsWith('r:')) {
+      const route = routes.get(follow.slice(2));
+      if (route) {
+        const track = trackFromRoute(route, [...allTracks.values()].find((x) => x.routeId === route.id));
+        await saveTrack(track);
+        navigate(`/orientation/tracks/${track.id}/follow`);
+        return;
+      }
+    }
+    if (follow.startsWith('t:')) {
+      navigate(`/orientation/tracks/${follow.slice(2)}/follow`);
+      return;
+    }
+    navigate('/training/live');
   }
 
   const pickGroup = (g: ActivityGroup) => {
@@ -98,6 +122,24 @@ export function TrainingPage() {
           </div>
         )}
         {def.gps && <IntervalPicker onChange={setPlan} />}
+        {def.gps && (
+          <div className="field">
+            <label htmlFor="train-follow">{t('training.followLabel')}</label>
+            <select id="train-follow" className="select" value={follow} onChange={(e) => setFollow(e.target.value)}>
+              <option value="">{t('training.followNone')}</option>
+              {[...routes.values()].filter((r) => r.line).sort((a, b) => a.name.localeCompare(b.name)).map((r) => (
+                <option key={r.id} value={`r:${r.id}`}>
+                  {t('training.followRoute', { name: r.name })}
+                </option>
+              ))}
+              {[...allTracks.values()].filter((x) => !x.routeId && !x.recording).sort((a, b) => a.name.localeCompare(b.name)).map((x) => (
+                <option key={x.id} value={`t:${x.id}`}>
+                  {t('training.followTrack', { name: x.name })}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {!weight && (
           <p className="hint" style={{ margin: 0 }} data-testid="train-no-weight">
             {t('training.noWeight')} <Link to="/first-aid/medical">{t('training.noWeightLink')}</Link>
@@ -111,7 +153,7 @@ export function TrainingPage() {
               disabled={status !== 'idle'}
               onClick={() => {
                 void update({ trainingKind: kind });
-                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null, intervals: plan }).then(() => navigate('/training/live'));
+                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null, intervals: plan }).then(() => void goAfterStart());
               }}
             >
               <Circle size={18} fill="currentColor" /> {t('training.startRecording')}

@@ -140,6 +140,12 @@ export interface Route extends BaseEntity {
   /** En orden de recorrido; un punto puede repetirse (ida y vuelta). */
   waypointIds: Id[];
   notes: string;
+  /**
+   * Ruta planificada en el mapa: los puntos van acá adentro y NO son waypoints
+   * (no salen en la lista de lugares ni dan alertas de clima), salvo los que se
+   * guardan como lugar a mano. Cada tramo entre dos puntos es una pierna.
+   */
+  line?: { lat: number; lon: number }[];
 }
 
 /** `radio`: frecuencia guardada por el usuario (p. ej. la que le dieron en un refugio). */
@@ -472,6 +478,8 @@ export interface TrackWaypoint {
 export interface Track extends BaseEntity {
   /** Grabado con la app (no importado). */
   recorded?: boolean;
+  /** Track armado a partir de una ruta planificada (para seguirla): no sale en la lista de Tracks. */
+  routeId?: Id;
   /** Grabación en curso: se guarda a medida que avanza, para no perderla si la app se cierra. */
   recording?: boolean;
   /** Tiempo grabando, sin contar las pausas. */

@@ -12,6 +12,7 @@ import { angleDiff } from '@/core/sensors/heading';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
+import { LiveSummary } from '@/modules/training/LiveSummary';
 import { GpsStatus, useFormatBearing } from '@/modules/waypoints/components';
 import { followState, isOffTrack, prepareFollow, walkingMinutes, type FollowLine } from './follow';
 import { firstPoints } from './record';
@@ -161,6 +162,8 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
           <Circle size={16} fill="currentColor" className="rec-icon" /> {t('tracks.rec.start')}
         </button>
       )}
+
+      <LiveSummary />
 
       <p className={`follow-status${statusClass}`} role="status" data-testid="follow-status">
         {status}

@@ -696,6 +696,7 @@
     "securityNote": "Las frecuencias de guardaparques, CONAF y el Radio Club de Carabineros están solo para pedir auxilio con la vida en peligro: ante un peligro de vida se puede pedir ayuda por cualquier medio. No se incluyen las de Gendarmería ni policía: no son públicas y muchas están cifradas. Escuchar comunicaciones de fuerzas o servicios sin autorización puede ser delito (en Argentina, Código Penal, art. 153)."
   },
   "mapTools": {
+    "legBearing": "Rumbo {{magnetic}}° magnético ({{cardinal}})",
     "title": "Herramientas",
     "measure": "Medir",
     "target": "Dirección a un punto",
@@ -1376,6 +1377,9 @@
     "calibrate": "Si el rumbo salta o no coincide, calibrá la brújula moviendo el celular en forma de 8, lejos de metales e imanes."
   },
   "routes": {
+    "planned": "planificada",
+    "follow": "Seguir esta ruta", "viewOnMap": "Ver en el mapa", "legsTitle": "Piernas", "legTo": "Punto {{n}}", "saveAsPlace": "Guardar el punto {{n}} como lugar", "pointsNotPlaces": "Los puntos de una ruta planificada no aparecen en tu lista de lugares ni dan alertas de clima: solo los que guardás como lugar con el botón de cada punto.",
+    "plannedName": "Ruta planificada", "saveAsRoute": "Guardar como ruta",
     "new": "Nueva ruta",
     "empty": "Todavía no armaste rutas. Una ruta es una lista de puntos guardados en orden, por ejemplo \"Evacuación al refugio\": la app te guía de uno al siguiente.",
     "needPoints": "Para armar una ruta primero guardá puntos en Waypoints.",
@@ -1506,7 +1510,8 @@
     "pack": "Mochila o carga (kg, opcional)",
     "noWeight": "Sin tu peso no se calculan las calorías.",
     "noWeightLink": "Cargalo en tu ficha médica.",
-    "live": {"none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}}.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
+    "followLabel": "Seguir una ruta o un track", "followNone": "Sin ruta", "followRoute": "Ruta: {{name}}", "followTrack": "Track: {{name}}",
+    "live": {"time": "Tiempo", "title": "Sesión en curso", "none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}}.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
     "how": {"title": "Cómo me fue", "feeling": "Cómo me sentí", "f1": "muy mal", "f2": "mal", "f3": "normal", "f4": "bien", "f5": "muy bien", "terrain": "Terreno o lugar", "weather": "Clima al terminar", "wind": "viento {{kmh}} km/h", "t": {"road": "Calle o ruta", "trail": "Sendero", "mountain": "Montaña", "sand": "Arena o playa", "track": "Pista", "water": "Agua", "indoor": "Bajo techo", "mixed": "Mixto"}},
     "goals": {"title": "Objetivos de la semana", "hint": "Dejá en blanco los que no quieras. El avance se ve acá arriba y se cuenta de lunes a domingo.", "distanceKm": "Distancia (km)", "minutes": "Tiempo (minutos)", "sessions": "Actividades", "reached": "¡cumplido!"},
     "exportGpx": "Exportar GPX",
