@@ -28,6 +28,7 @@ export function MetronomePage() {
   // Cuántos ms antes del paso se empieza a decir la palabra: cada celular tarda distinto en arrancar la voz.
   const [lead, setLead] = useState(250);
   const [phase, setPhase] = useState<'inhale' | 'exhale' | null>(null);
+  const nf = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
   const pattern = patternById(patternId);
   const info = breathing(bpm, pattern);
   // Lo que usa el ciclo de sonido, sin reiniciarlo al tocar los controles.
@@ -135,7 +136,7 @@ export function MetronomePage() {
           </select>
         </div>
         <p className="measure-big" data-testid="breath-result">
-          {t('metronome.breathsPerMin', { n: info.breathsPerMin })}
+          {t('metronome.breathsPerMin', { n: nf.format(info.breathsPerMin) })}
           <span className="hint"> · {t('metronome.stepsPerBreath', { n: info.stepsPerBreath })}</span>
         </p>
         <p className="live-clock" data-testid="breath-phase" aria-live="polite" style={{ minHeight: '1.2em' }}>
@@ -147,7 +148,7 @@ export function MetronomePage() {
             {BREATH_PATTERNS.map((p) => (
               <tr key={p.id} aria-current={p.id === patternId ? 'true' : undefined}>
                 <td>{p.inhale}:{p.exhale}</td>
-                <td>{t('metronome.breathsPerMin', { n: breathing(bpm, p).breathsPerMin })}</td>
+                <td>{t('metronome.breathsPerMin', { n: nf.format(breathing(bpm, p).breathsPerMin) })}</td>
                 <td>{t(`metronome.use.${p.id}`)}</td>
               </tr>
             ))}

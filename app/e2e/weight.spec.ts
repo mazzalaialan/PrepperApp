@@ -47,6 +47,5 @@ test('peso: historial, IMC y ficha médica (con y sin ficha propia)', async ({ p
   await expect(page.getByTestId('weight-current')).toHaveText('79,2 kg');
   await page.goto('/#/first-aid/medical');
   await page.getByRole('link', { name: /Yo mismo/ }).first().click();
-  await page.getByRole('button', { name: 'Editar' }).click();
   await expect(page.getByLabel('Peso (kg)')).toHaveValue('79.2');
 });

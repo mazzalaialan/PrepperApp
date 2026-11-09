@@ -164,7 +164,7 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.goto('/#/training/workouts');
   await page.getByRole('button', { name: 'A pie' }).click();
   await page.getByLabel('Actividad', { exact: true }).selectOption({ label: 'Correr' });
-  await page.getByLabel('Intervalos').selectOption({ label: /Tabata/ });
+  await page.getByLabel('Intervalos').selectOption('tabata');
   await page.getByRole('button', { name: 'Empezar a grabar' }).click();
   await expect(page.getByTestId('live-phase')).toContainText('Entrada en calor');
   await expect(page.getByTestId('live-phase-time')).toHaveText('2:00');
