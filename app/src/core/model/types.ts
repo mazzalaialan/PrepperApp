@@ -132,6 +132,8 @@ export interface Waypoint extends BaseEntity {
   notes: string;
   /** Avisar si va a llover en este punto. */
   rainAlerts: boolean;
+  /** Zona privada: radio en metros alrededor de este punto que se saca del recorrido al compartir una salida (0 o ausente: no es zona privada). */
+  privateRadiusM?: number | null;
 }
 
 /** Lista ordenada de waypoints con nombre (ej.: "Evacuación al refugio"). */

@@ -180,6 +180,17 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.getByRole('dialog', { name: 'Guardar la grabación' }).getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByTestId('w-intervals')).toContainText('8 × 0:20 / 0:10');
 
+  // Zona privada: un waypoint marcado como tal se ve en la lista y se ofrece al compartir una salida.
+  await page.goto('/#/orientation/waypoints/new');
+  await page.getByLabel('Nombre').fill('Mi casa');
+  await page.getByLabel('Coordenadas').fill('-41.1612, -71.4201');
+  await page.getByTestId('wp-private').check();
+  await page.getByLabel('Radio').selectOption('500');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/#\/orientation\/waypoints\/[0-9a-f-]{36}$/);
+  await page.goto('/#/orientation/waypoints');
+  await expect(page.getByText('Zona privada · 500 m')).toBeVisible();
+
   // Notas de la sesión y equipo: cómo me sentí, terreno y zapatillas; el equipo se oculta con el interruptor.
   await page.goto('/#/training');
   await page.getByRole('link', { name: /Equipo/ }).click();

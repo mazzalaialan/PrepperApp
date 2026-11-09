@@ -6,7 +6,8 @@ import type { Outing } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { CopyButton } from '@/modules/emergency/parts';
 import { useTracks } from '@/modules/tracks/store';
-import { buildSharePayload, DEFAULT_TRIM_M, shareOuting, ShareError, unshareOuting } from './share';
+import { useWaypoints } from '@/modules/waypoints/store';
+import { buildSharePayload, DEFAULT_TRIM_M, type PrivateZone, shareOuting, ShareError, unshareOuting } from './share';
 import { useTraining } from './store';
 
 /**
@@ -20,6 +21,11 @@ export function ShareSection({ outing }: { outing: Outing }) {
   const saveOuting = useTraining((s) => s.saveOuting);
   const tracks = useTracks((s) => s.tracks);
   const [trim, setTrim] = useState(true);
+  // Las zonas privadas son waypoints marcados como tales: por defecto se ocultan en el enlace (se puede desmarcar).
+  const waypoints = useWaypoints((s) => s.waypoints);
+  const zones: PrivateZone[] = [...waypoints.values()].filter((w) => (w.privateRadiusM ?? 0) > 0).map((w) => ({ lat: w.lat, lon: w.lon, radiusM: w.privateRadiusM! }));
+  const [useZones, setUseZones] = useState(true);
+  const payload = () => buildSharePayload(outing, [...workouts.values()], tracks, i18n.language.startsWith('en') ? 'en' : 'es', trim ? DEFAULT_TRIM_M : 0, useZones ? zones : []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const share = outing.share;
@@ -38,8 +44,7 @@ export function ShareSection({ outing }: { outing: Outing }) {
   }
   const create = () =>
     run(async () => {
-      const payload = buildSharePayload(outing, [...workouts.values()], tracks, i18n.language.startsWith('en') ? 'en' : 'es', trim ? DEFAULT_TRIM_M : 0);
-      const created = await shareOuting(serverUrl, payload);
+      const created = await shareOuting(serverUrl, payload());
       await saveOuting({ ...outing, share: created });
     });
   const remove = () =>
@@ -68,7 +73,7 @@ export function ShareSection({ outing }: { outing: Outing }) {
           </div>
           <p className="hint" style={{ margin: 0 }}>{t('outings.share.expires', { date: new Date(share.expiresAt).toLocaleDateString(i18n.language, { dateStyle: 'medium' }) })}</p>
           <div className="row-end wrap">
-            <button className="btn" type="button" disabled={busy} onClick={() => void run(async () => { await unshareOuting(serverUrl, share); const created = await shareOuting(serverUrl, buildSharePayload(outing, [...workouts.values()], tracks, i18n.language.startsWith('en') ? 'en' : 'es', trim ? DEFAULT_TRIM_M : 0)); await saveOuting({ ...outing, share: created }); })}>
+            <button className="btn" type="button" disabled={busy} onClick={() => void run(async () => { await unshareOuting(serverUrl, share); const created = await shareOuting(serverUrl, payload()); await saveOuting({ ...outing, share: created }); })}>
               {t('outings.share.update')}
             </button>
             <button className="btn btn-danger-outline" type="button" disabled={busy} onClick={() => void remove()} data-testid="o-unshare">
@@ -80,6 +85,12 @@ export function ShareSection({ outing }: { outing: Outing }) {
         <>
           <p className="hint" style={{ margin: 0 }}>{t('outings.share.intro')}</p>
           <p className="hint" style={{ margin: 0 }}>{t('outings.share.privacy')}</p>
+          {zones.length > 0 && (
+            <label className="check">
+              <input type="checkbox" checked={useZones} onChange={(e) => setUseZones(e.target.checked)} data-testid="share-zones" />
+              {t('outings.share.zones', { count: zones.length })}
+            </label>
+          )}
           <label className="check">
             <input type="checkbox" checked={trim} onChange={(e) => setTrim(e.target.checked)} />
             {t('outings.share.trim', { meters: DEFAULT_TRIM_M })}

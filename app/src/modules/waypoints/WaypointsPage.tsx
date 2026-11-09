@@ -89,6 +89,7 @@ export function WaypointsPage() {
                 <span className="list-main">
                   <span className="list-title">{wp.name}</span>
                   {fix && <span className="list-sub">{distanceLabel(fix, wp)}</span>}
+                  {(wp.privateRadiusM ?? 0) > 0 && <span className="list-sub">{t('waypoints.privateBadge', { m: wp.privateRadiusM })}</span>}
                 </span>
               </Link>
               {hasGps && (

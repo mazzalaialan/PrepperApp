@@ -56,6 +56,58 @@ export function trimEnds(segments: TrackPoint[][], m: number): TrackPoint[][] {
   return segs.filter((s) => s.length > 1);
 }
 
+/** Una zona privada: un punto y un radio en metros (salen de los waypoints marcados como zona privada). */
+export interface PrivateZone {
+  lat: number;
+  lon: number;
+  radiusM: number;
+}
+
+/** Distancia (m) de un punto a un tramo recto, en un plano local (alcanza para unos pocos km). */
+function distanceToSegmentM(p: { lat: number; lon: number }, a: TrackPoint, b: TrackPoint): number {
+  const k = Math.cos((p.lat * Math.PI) / 180);
+  const M = 111_320;
+  const ax = (a[1] - p.lon) * k * M;
+  const ay = (a[0] - p.lat) * M;
+  const bx = (b[1] - p.lon) * k * M;
+  const by = (b[0] - p.lat) * M;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len2));
+  return Math.hypot(ax + t * dx, ay + t * dy);
+}
+
+/**
+ * Saca del recorrido todo lo que pasa dentro de una zona privada: se descartan
+ * los puntos dentro del radio y el recorrido se corta ahí (no queda una línea
+ * que cruce la zona, ni siquiera si el GPS saltó de un lado al otro).
+ */
+export function removeZones(segments: TrackPoint[][], zones: PrivateZone[]): TrackPoint[][] {
+  if (zones.length === 0) return segments.filter((s) => s.length > 1);
+  const inside = (p: TrackPoint) => zones.some((z) => distanceMeters({ lat: p[0], lon: p[1] }, z) <= z.radiusM);
+  const crosses = (a: TrackPoint, b: TrackPoint) => zones.some((z) => distanceToSegmentM(z, a, b) <= z.radiusM);
+  const out: TrackPoint[][] = [];
+  for (const seg of segments) {
+    let cur: TrackPoint[] = [];
+    for (let i = 0; i < seg.length; i++) {
+      const p = seg[i]!;
+      if (inside(p)) {
+        if (cur.length > 1) out.push(cur);
+        cur = [];
+        continue;
+      }
+      if (cur.length > 0 && crosses(cur.at(-1)!, p)) {
+        if (cur.length > 1) out.push(cur);
+        cur = [];
+      }
+      cur.push(p);
+    }
+    if (cur.length > 1) out.push(cur);
+  }
+  return out;
+}
+
 /** Simplifica hasta que entren en el tope de puntos. */
 function fit(segments: TrackPoint[][], max: number): TrackPoint[][] {
   let tol = 5;
@@ -89,11 +141,12 @@ const localDay = (iso: string) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-export function buildSharePayload(outing: Outing, all: Workout[], tracks: Map<string, Track>, lang: 'es' | 'en', trimM = DEFAULT_TRIM_M): SharePayload {
+export function buildSharePayload(outing: Outing, all: Workout[], tracks: Map<string, Track>, lang: 'es' | 'en', trimM = DEFAULT_TRIM_M, zones: PrivateZone[] = []): SharePayload {
   const list = inOuting(all, outing.id);
   const totals = totalsOf(list);
   const raw: TrackPoint[][] = list.flatMap((w) => (w.trackId ? tracks.get(w.trackId)?.segments ?? [] : []));
-  const trimmed = fit(trimEnds(raw, trimM), MAX_ROUTE_POINTS);
+  // Primero se sacan las zonas privadas y después se recortan las puntas del recorrido que quedó.
+  const trimmed = fit(trimEnds(removeZones(raw, zones), trimM), MAX_ROUTE_POINTS);
   // Perfil de altura con lo recortado (no se muestra la altura de la casa tampoco), por distancia acumulada.
   const profile: [number, number][] = [];
   let acc = 0;

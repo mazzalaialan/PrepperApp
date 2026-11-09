@@ -58,6 +58,8 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   const [alt, setAlt] = useState(altitudeForInput(initial.alt, units));
   const [notes, setNotes] = useState(initial.notes);
   const [rainAlerts, setRainAlerts] = useState(initial.rainAlerts);
+  const [privateOn, setPrivateOn] = useState((initial.privateRadiusM ?? 0) > 0);
+  const [privateRadius, setPrivateRadius] = useState(String(initial.privateRadiusM || 500));
   const [saved, setSaved] = useState(false);
   const [locating, setLocating] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -94,6 +96,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
       alt: altValue === null ? null : altitudeToMeters(altValue, units),
       notes,
       rainAlerts,
+      privateRadiusM: privateOn ? Number(privateRadius) : null,
     });
     if (isNew) navigate(`/orientation/waypoints/${initial.id}`, { replace: true });
     else setSaved(true);
@@ -183,6 +186,26 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
             {t('waypoints.rainAlerts')}
           </label>
           <p className="hint" style={{ margin: 0 }}>{t('waypoints.lightningSoon')}</p>
+        </fieldset>
+        <fieldset className="fieldset stack">
+          <legend>{t('waypoints.privacy')}</legend>
+          <label className="check">
+            <input type="checkbox" checked={privateOn} onChange={(e) => { setPrivateOn(e.target.checked); dirty(); }} data-testid="wp-private" />
+            {t('waypoints.privateZone')}
+          </label>
+          {privateOn && (
+            <div className="field">
+              <label htmlFor="wp-private-radius">{t('waypoints.privateRadius')}</label>
+              <select id="wp-private-radius" className="select" value={privateRadius} onChange={(e) => { setPrivateRadius(e.target.value); dirty(); }}>
+                {[200, 500, 1000].map((m) => (
+                  <option key={m} value={m}>
+                    {m} m
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <p className="hint" style={{ margin: 0 }}>{t('waypoints.privateHint')}</p>
         </fieldset>
         {saved &&<p className="success" role="status">{t('common.saved')}</p>}
         <div className="row-end">

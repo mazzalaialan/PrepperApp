@@ -1601,7 +1601,7 @@
     "notesHint": "Qué se hizo, con quién, cómo estaba la montaña…",
     "confirmDelete": "¿Borrar la salida \"{{name}}\"? Sus actividades quedan sueltas.",
     "newName": "Nueva salida",
-    "share": {
+    "share": {"zones": "Ocultar mis zonas privadas ({{count}})", 
       "title": "Compartir con un enlace público",
       "intro": "Creá un enlace para mostrar esta salida en redes sociales o mandarla a quien quieras: el título, el recorrido, los totales y el gráfico de desnivel, en una página que se ve sin instalar nada.",
       "privacy": "No se sube ninguna foto, nota, ficha médica ni contacto, solo lo de la página. El enlace es público (lo ve cualquiera que lo tenga), dura un año y lo podés borrar cuando quieras.",
@@ -1635,6 +1635,7 @@
     }
   },
   "waypoints": {
+    "privacy": "Privacidad", "privateZone": "Zona privada", "privateRadius": "Radio", "privateHint": "Al compartir una salida con un enlace público, se saca de su recorrido todo lo que pasa dentro de este radio (tu casa, el trabajo…). Podés desmarcarlo en cada enlace.", "privateBadge": "Zona privada · {{m}} m",
     "new": "Nuevo",
     "markHere": "Marcar acá",
     "defaultName": "Punto {{when}}",

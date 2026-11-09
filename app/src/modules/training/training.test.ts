@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { GpxError, type TrackPoint } from '@/modules/tracks/gpx';
 import { ACTIVITIES, ACTIVITY_KINDS, GROUPS, kindsOf } from './activities';
 import { calories } from './energy';
-import type { Workout } from '@/core/model/types';
+import type { Outing, Track, Workout } from '@/core/model/types';
+import { distanceMeters } from '@/core/geo/geo';
 import { byWeek, goalProgress, inOuting, recalculated, recordsOf, totalsOf, weekStart } from './history';
 import { describePlan, parseClock, phaseAt, phases, planDurationS, validPlan } from './intervals';
 import { gearFor, gearKm, kmForInventoryItem, wear } from './gear';
@@ -10,7 +11,7 @@ import type { Gear } from '@/core/model/types';
 import { bmi, bmiCategory, parseKg, sortedWeights, summarize } from './weight';
 import type { WeightEntry } from '@/core/model/types';
 import { activityFromFile, kindFromSport, parseActivityFile, toGpx, toTcx } from './interchange';
-import { buildSharePayload, trimEnds } from './share';
+import { buildSharePayload, removeZones, trimEnds } from './share';
 import { analyzeRecording, formatClock, formatPace } from './stats';
 
 describe('actividades', () => {
@@ -361,5 +362,38 @@ describe('intervalos', () => {
     expect(validPlan({ ...plan, repeats: 0 })).toBe(false);
     expect(validPlan({ ...plan, workS: 2 })).toBe(false);
     expect(describePlan({ ...plan, warmupS: 0, cooldownS: 0 }, (s) => `${s}s`)).toBe('3 × 30s / 15s');
+  });
+});
+
+describe('zonas privadas', () => {
+  // Una calle de oeste a este: un punto cada ~11 m sobre el mismo paralelo, desde la casa.
+  const street: TrackPoint[] = Array.from({ length: 100 }, (_, i) => [-41, -71 + i * 0.0001, 100]);
+  const home = { lat: -41, lon: -71, radiusM: 200 };
+  it('saca los puntos dentro del radio y deja el resto', () => {
+    const out = removeZones([street], [home]);
+    expect(out).toHaveLength(1);
+    const first = out[0]![0]!;
+    expect(first[1]).toBeGreaterThan(-71 + 0.002); // ~200 m al este de la casa
+    for (const p of out.flat()) expect(distanceMeters({ lat: p[0], lon: p[1] }, home)).toBeGreaterThan(200);
+  });
+  it('si la zona está en el medio, parte el recorrido en dos y no deja una línea que la cruce', () => {
+    const mid = { lat: -41, lon: -71 + 50 * 0.0001, radiusM: 100 };
+    const out = removeZones([street], [mid]);
+    expect(out).toHaveLength(2);
+    expect(out[0]!.at(-1)![1]).toBeLessThan(mid.lon);
+    expect(out[1]![0]![1]).toBeGreaterThan(mid.lon);
+  });
+  it('un salto del GPS de un lado al otro de la zona también corta', () => {
+    const jump: TrackPoint[] = [[-41, -71.01, null], [-41, -70.99, null], [-41, -70.98, null]];
+    expect(removeZones([jump], [{ lat: -41, lon: -71, radiusM: 100 }])).toEqual([[jump[1]!, jump[2]!]]);
+  });
+  it('sin zonas no cambia nada; el payload usa las zonas', () => {
+    expect(removeZones([street], [])).toEqual([street]);
+    const workout = { id: 'w', outingId: 'o', trackId: 't', startedAt: '2026-11-01T10:00:00Z', kind: 'walk', distanceM: 1000, totalS: 600, movingS: 600, ascentM: 0, descentM: 0, calories: 0, maxEle: null, minEle: null } as unknown as Workout;
+    const track = { id: 't', segments: [street] } as unknown as Track;
+    const withZone = buildSharePayload({ id: 'o', name: 'x', createdAt: '2026-11-01' } as unknown as Outing, [workout], new Map([['t', track]]), 'es', 0, [home]);
+    const without = buildSharePayload({ id: 'o', name: 'x', createdAt: '2026-11-01' } as unknown as Outing, [workout], new Map([['t', track]]), 'es', 0, []);
+    expect(without.route.flat().length).toBeGreaterThan(withZone.route.flat().length);
+    expect(withZone.distanceM).toBe(1000); // los totales no se recalculan
   });
 });

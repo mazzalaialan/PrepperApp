@@ -1601,7 +1601,7 @@
     "notesHint": "What was done, with whom, how the mountain was…",
     "confirmDelete": "Delete the outing \"{{name}}\"? Its activities stay loose.",
     "newName": "New outing",
-    "share": {
+    "share": {"zones": "Hide my private zones ({{count}})", 
       "title": "Share with a public link",
       "intro": "Create a link to show this outing on social networks or send it to anyone: the title, the route, the totals and the elevation chart, on a page that opens without installing anything.",
       "privacy": "No photos, notes, medical record or contacts are uploaded, only what is on the page. The link is public (anyone who has it can see it), lasts a year and you can delete it whenever you want.",
@@ -1635,6 +1635,7 @@
     }
   },
   "waypoints": {
+    "privacy": "Privacy", "privateZone": "Private zone", "privateRadius": "Radius", "privateHint": "When you share an outing with a public link, everything within this radius (your home, work…) is removed from its route. You can uncheck it on each link.", "privateBadge": "Private zone · {{m}} m",
     "new": "New",
     "markHere": "Mark here",
     "defaultName": "Point {{when}}",
