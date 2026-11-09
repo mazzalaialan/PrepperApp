@@ -1501,6 +1501,7 @@
     "pack": "Pack or load (kg, optional)",
     "noWeight": "Calories are not calculated without your weight.",
     "noWeightLink": "Add it to your medical record.",
+    "live": {"none": "No session is being recorded.", "paceNow": "Pace now", "speedNow": "Speed now", "paceAvg": "Average pace", "speedAvg": "Average speed", "ascent": "Ascent", "calories": "Calories", "voiceOn": "Voice every km", "voiceOff": "No voice", "open": "Open the live session", "voiceKm": "Kilometer {{km}}. Time {{time}}. Pace {{pace}}.", "voiceKmShort": "Kilometer {{km}}. Time {{time}}."},
     "goals": {"title": "Weekly goals", "hint": "Leave blank any you do not want. Progress shows here and counts Monday to Sunday.", "distanceKm": "Distance (km)", "minutes": "Time (minutes)", "sessions": "Activities", "reached": "reached!"},
     "exportGpx": "Export GPX",
     "exportTcx": "Export TCX",

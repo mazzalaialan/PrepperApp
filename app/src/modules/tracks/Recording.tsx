@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Circle, Moon, Pause, Play, Square, TriangleAlert, Undo2 } from 'lucide-react';
+import { Circle, Gauge, Moon, Pause, Play, Square, TriangleAlert, Undo2 } from 'lucide-react';
 import { usePocket } from '@/core/power/pocket';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
@@ -126,11 +126,9 @@ export function PocketScreen() {
  */
 export function RecordingBar() {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const units = useSettings((s) => s.settings.units);
-  const { status, track, error, elapsedMs, since, warned, gapS, gapFrom, gapTo, accuracy, pause, resume, finish } = useRecorder();
-  const hhmm = (ms: number | null) => (ms === null ? '' : new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(ms)));
+  const { status, track, error, elapsedMs, since, accuracy, pause, resume } = useRecorder();
   const [, tick] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   /** Nombre que se está poniendo al terminar (null: sin el diálogo). */
@@ -157,17 +155,10 @@ export function RecordingBar() {
   }
 
   const points = track.segments.flat().length;
+  // En la pantalla en vivo de Entrenamiento los controles están en grande; acá queda solo el aviso.
+  if (pathname === '/training/live') return <RecWarning />;
   const backTo = `/orientation/tracks/${track.id}/follow`;
   const goingBack = pathname === backTo && search.includes('back');
-  async function stop(name: string) {
-    setNaming(null);
-    const id = await finish(name);
-    const workoutId = useRecorder.getState().lastWorkoutId;
-    if (workoutId) navigate(`/training/workouts/${workoutId}`);
-    else if (id) navigate(`/orientation/tracks/${id}`);
-    else setNotice(t('tracks.rec.nothing'));
-  }
-
   return (
     <section className={`rec-bar rec-${status}`} aria-label={t('tracks.rec.bar')} data-testid="rec-bar">
       <span className="rec-dot" aria-hidden />
@@ -205,67 +196,96 @@ export function RecordingBar() {
             <Undo2 size={20} />
           </Link>
         )}
+        {track.activity && (
+          <Link className="icon-btn" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
+            <Gauge size={20} />
+          </Link>
+        )}
         <PocketButton />
         <button className="icon-btn" type="button" onClick={() => setNaming(track.name)} aria-label={t('tracks.rec.finish')} title={t('tracks.rec.finish')}>
           <Square size={18} fill="currentColor" />
         </button>
       </span>
-      {/* El navegador no da la posición con el celular bloqueado: se avisa al empezar y, si pasó, al volver. */}
-      {status === 'recording' && (gapS !== null || !warned) && (
-        <p className="rec-warn" role="alert" data-testid="rec-warn">
-          <TriangleAlert size={16} aria-hidden className="rec-warn-icon" />
-          <span>{gapS !== null ? t('tracks.rec.gap', { time: formatDuration(gapS), from: hhmm(gapFrom), to: hhmm(gapTo) }) : t('tracks.rec.screenOff')}</span>
-          {gapS !== null ? (
-            // Se pregunta: dejar el hueco (no suma distancia) o unir con una recta.
-            <span className="rec-warn-actions">
-              <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true, gapS: null, gapFrom: null, gapTo: null })}>
-                {t('tracks.rec.gapKeep')}
-              </button>
-              <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.getState().joinGap()}>
-                {t('tracks.rec.gapJoin')}
-              </button>
-            </span>
-          ) : (
-            <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true })}>
-              {t('tracks.rec.understood')}
-            </button>
-          )}
-        </p>
-      )}
-      {/* Al terminar se le pone nombre (mientras tanto sigue grabando); después se cambia en el track. */}
-      {naming !== null && (
-        <Dialog
-          title={t('tracks.rec.saveTitle')}
-          onClose={() => setNaming(null)}
-          footer={
-            <>
-              <button className="btn" type="button" onClick={() => setNaming(null)}>
-                {t('tracks.rec.keepRecording')}
-              </button>
-              <button className="btn btn-primary" type="submit" form="rec-save">
-                {t('common.save')}
-              </button>
-            </>
-          }
-        >
-          <form
-            id="rec-save"
-            className="field"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void stop(naming);
-            }}
-          >
-            {points < 2 && (
-              <p className="error" role="alert">
-                {t('tracks.rec.nothingYet')}
-              </p>
-            )}
-            <label htmlFor="rec-name">{t('tracks.name')}</label>
-            <input id="rec-name" className="input" value={naming} onChange={(e) => setNaming(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
-          </form>
-        </Dialog>
-      )}
+      <RecWarning />
+      {naming !== null && <FinishDialog initialName={naming} points={points} onClose={() => setNaming(null)} />}
     </section>
+  );
+}
+
+/** Aviso de que con el celular bloqueado el navegador no da la posición; si hubo un corte, pregunta qué hacer con el tramo. */
+export function RecWarning() {
+  const { t, i18n } = useTranslation();
+  const { status, warned, gapS, gapFrom, gapTo } = useRecorder();
+  const hhmm = (ms: number | null) => (ms === null ? '' : new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(ms)));
+  if (status !== 'recording' || (gapS === null && warned)) return null;
+  return (
+    <p className="rec-warn" role="alert" data-testid="rec-warn">
+      {/* El navegador no da la posición con el celular bloqueado: se avisa al empezar y, si pasó, al volver. */}
+      <TriangleAlert size={16} aria-hidden className="rec-warn-icon" />
+      <span>{gapS !== null ? t('tracks.rec.gap', { time: formatDuration(gapS), from: hhmm(gapFrom), to: hhmm(gapTo) }) : t('tracks.rec.screenOff')}</span>
+      {gapS !== null ? (
+        // Se pregunta: dejar el hueco (no suma distancia) o unir con una recta.
+        <span className="rec-warn-actions">
+          <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true, gapS: null, gapFrom: null, gapTo: null })}>
+            {t('tracks.rec.gapKeep')}
+          </button>
+          <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.getState().joinGap()}>
+            {t('tracks.rec.gapJoin')}
+          </button>
+        </span>
+      ) : (
+        <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true })}>
+          {t('tracks.rec.understood')}
+        </button>
+      )}
+    </p>
+  );
+}
+
+/** Al terminar se le pone nombre (mientras tanto sigue grabando); después se cambia en el track. */
+export function FinishDialog({ initialName, points, onClose }: { initialName: string; points: number; onClose: () => void }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const finish = useRecorder((s) => s.finish);
+  const [name, setName] = useState(initialName);
+  async function stop() {
+    onClose();
+    const id = await finish(name);
+    const workoutId = useRecorder.getState().lastWorkoutId;
+    if (workoutId) navigate(`/training/workouts/${workoutId}`);
+    else if (id) navigate(`/orientation/tracks/${id}`);
+  }
+  return (
+    <Dialog
+      title={t('tracks.rec.saveTitle')}
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn" type="button" onClick={onClose}>
+            {t('tracks.rec.keepRecording')}
+          </button>
+          <button className="btn btn-primary" type="submit" form="rec-save">
+            {t('common.save')}
+          </button>
+        </>
+      }
+    >
+      <form
+        id="rec-save"
+        className="field"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void stop();
+        }}
+      >
+        {points < 2 && (
+          <p className="error" role="alert">
+            {t('tracks.rec.nothingYet')}
+          </p>
+        )}
+        <label htmlFor="rec-name">{t('tracks.name')}</label>
+        <input id="rec-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
+      </form>
+    </Dialog>
   );
 }

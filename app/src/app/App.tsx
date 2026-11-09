@@ -83,6 +83,7 @@ const KnotPage = page(() => import('@/modules/knots/KnotPage').then((m) => ({ de
 const CropPage = page(() => import('@/modules/garden/CropPage').then((m) => ({ default: m.CropPage })));
 const GardenCalendarPage = page(() => import('@/modules/garden/GardenCalendarPage').then((m) => ({ default: m.GardenCalendarPage })));
 const TrainingPage = page(() => import('@/modules/training/TrainingPage').then((m) => ({ default: m.TrainingPage })));
+const LivePage = page(() => import('@/modules/training/LivePage').then((m) => ({ default: m.LivePage })));
 const WorkoutPage = page(() => import('@/modules/training/WorkoutPage').then((m) => ({ default: m.WorkoutPage })));
 const WorkoutEditPage = page(() => import('@/modules/training/WorkoutEditPage').then((m) => ({ default: m.WorkoutEditPage })));
 const OutingsPage = page(() => import('@/modules/training/OutingsPage').then((m) => ({ default: m.OutingsPage })));
@@ -164,6 +165,7 @@ const router = createHashRouter([
       { path: '/knots/glossary', element: <GlossaryPage /> },
       { path: '/training', element: <SectionPage section="training" /> },
       { path: '/training/workouts', element: <TrainingPage /> },
+      { path: '/training/live', element: <LivePage /> },
       { path: '/training/workouts/new', element: <WorkoutEditPage /> },
       { path: '/training/workouts/:id', element: <WorkoutPage /> },
       { path: '/training/outings', element: <OutingsPage /> },

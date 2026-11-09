@@ -1501,6 +1501,7 @@
     "pack": "Mochila o carga (kg, opcional)",
     "noWeight": "Sin tu peso no se calculan las calorías.",
     "noWeightLink": "Cargalo en tu ficha médica.",
+    "live": {"none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}}.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
     "goals": {"title": "Objetivos de la semana", "hint": "Dejá en blanco los que no quieras. El avance se ve acá arriba y se cuenta de lunes a domingo.", "distanceKm": "Distancia (km)", "minutes": "Tiempo (minutos)", "sessions": "Actividades", "reached": "¡cumplido!"},
     "exportGpx": "Exportar GPX",
     "exportTcx": "Exportar TCX",

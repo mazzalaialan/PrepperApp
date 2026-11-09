@@ -106,7 +106,7 @@ export function TrainingPage() {
               disabled={status !== 'idle'}
               onClick={() => {
                 void update({ trainingKind: kind });
-                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null });
+                void start(t(`training.kind.${kind}`), { kind, packKg: kind === 'trek' && Number(pack) > 0 ? Number(pack) : null }).then(() => navigate('/training/live'));
               }}
             >
               <Circle size={18} fill="currentColor" /> {t('training.startRecording')}

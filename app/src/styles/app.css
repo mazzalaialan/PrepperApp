@@ -3975,3 +3975,20 @@ a.module-card:hover {
   padding: 4px 0;
   border-bottom: 1px solid var(--border);
 }
+
+/* Pantalla en vivo de Entrenamiento: números grandes para mirar de reojo. */
+.live { align-items: stretch; text-align: center; }
+.live-kind { margin: 0; color: var(--text-muted, inherit); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.85rem; }
+.live-clock { margin: 0; font-size: clamp(3.5rem, 18vw, 6rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.live-clock[data-paused='true'] { opacity: 0.45; }
+.live-main { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+.live-big { font-size: clamp(3rem, 15vw, 5rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.live-unit { font-size: 1.4rem; font-weight: 600; }
+.live-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.live-tile { display: flex; flex-direction: column; gap: 4px; padding: 14px 8px; border-radius: 16px; background: var(--surface-2); }
+.live-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+.live-value { font-size: clamp(1.5rem, 7vw, 2.1rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.live-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border: 0; border-radius: 18px; font: inherit; font-size: 1.15rem; font-weight: 700; cursor: pointer; background: var(--surface-2); color: inherit; }
+.live-btn-go { background: var(--ok); color: #fff; }
+.live-btn-stop { background: var(--danger, #c0392b); color: #fff; }

@@ -44,7 +44,9 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.getByLabel('Mochila o carga (kg, opcional)').fill('10');
   await page.getByRole('button', { name: 'Empezar a grabar' }).click();
   const bar = page.getByTestId('rec-bar');
-  await expect(bar).toContainText('Grabando');
+  // Al empezar abre la pantalla en vivo, con el tiempo y los datos en grande.
+  await expect(page).toHaveURL(/#\/training\/live$/);
+  await expect(page.getByTestId('live')).toContainText('Grabando');
   await page.getByTestId('rec-warn').getByRole('button', { name: 'Entendido' }).click();
   await page.waitForTimeout(500);
   const walk = async (lat: number) => {
@@ -54,8 +56,14 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await walk(-41.161);
   await walk(-41.162);
   await walk(-41.163);
-  await expect(page.getByTestId('rec-stats')).toContainText(/33\d m/);
-  await bar.getByRole('button', { name: 'Terminar y guardar la grabación' }).click();
+  await expect(page.getByTestId('live-distance')).toHaveText(/^33\d$/);
+  await expect(page.getByTestId('live-clock')).toHaveText(/^\d+:\d\d$/);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-40-live.png`, fullPage: true });
+  // Pausar y seguir desde los botones grandes.
+  await page.getByTestId('live-pause').click();
+  await expect(page.getByTestId('live')).toContainText('Grabación en pausa');
+  await page.getByTestId('live-resume').click();
+  await page.getByTestId('live-finish').click();
   const dialog = page.getByRole('dialog', { name: 'Guardar la grabación' });
   await expect(dialog.getByLabel('Nombre')).toHaveValue('Trekking');
   await dialog.getByLabel('Nombre').fill('Trekking al cerro');

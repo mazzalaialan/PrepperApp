@@ -97,6 +97,8 @@ export interface Settings {
   knotsLearned: string[];
   /** Última actividad elegida en Entrenamiento. */
   trainingKind: WorkoutKind;
+  /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
+  trainingVoice: boolean;
   /** Objetivos de la semana en Entrenamiento (0 = sin objetivo). */
   trainingGoals: { distanceKm: number; minutes: number; sessions: number };
   /** Tamaño de letra del visor de la biblioteca (%). */
@@ -221,6 +223,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenWateredAt: {},
   knotsLearned: [],
   trainingKind: 'walk',
+  trainingVoice: false,
   trainingGoals: { distanceKm: 0, minutes: 0, sessions: 0 },
   readerFontPct: 100,
 };
