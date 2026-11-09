@@ -1976,8 +1976,9 @@
     "githubHint": "GitHub needs an account (free). If you do not have one, send it by email.",
     "noMailYet": "Reporting on GitHub needs an account (free). If you do not have one, copy the message and send it however you like; sending from here is coming soon.",
     "coffeeTitle": "Buy me a coffee",
-    "coffeeText": "VikArg is free and ad-free. If it helps you and you want to support its development, you can buy me a coffee (cafecito).",
-    "coffee": "Buy me a cafecito"
+    "coffeeText": "VikArg is free and ad-free. If it helps you and you want to support its development, you can buy me a coffee (cafecito) or contribute through Mercado Pago (Argentina).",
+    "coffee": "Buy me a cafecito",
+    "mercadopago": "Contribute via Mercado Pago"
   },
   "guides": {
     "voice": "Read the steps aloud",

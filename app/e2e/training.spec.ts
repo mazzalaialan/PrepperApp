@@ -215,7 +215,7 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   // El equipo también queda en el Inventario, en la categoría Entrenamiento.
   await expect(page.getByTestId('gear-row')).toContainText('Inventario: Zapatillas de trail');
   await page.goto('/#/inventory/items');
-  await expect(page.getByText('Zapatillas de trail')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Zapatillas de trail/ })).toBeVisible();
   await page.goto('/#/training/gear');
   await page.goto('/#/training/workouts');
   await page.getByTestId('train-row').first().click();

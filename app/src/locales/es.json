@@ -1976,8 +1976,9 @@
     "githubHint": "En GitHub hace falta una cuenta (gratis). Si no tenés, mandalo por mail.",
     "noMailYet": "Para reportar en GitHub hace falta una cuenta (gratis). Si no tenés, copiá el mensaje y mandalo por donde te quede cómodo; pronto se va a poder enviar desde acá.",
     "coffeeTitle": "Invitame un cafecito",
-    "coffeeText": "VikArg es gratis y sin publicidad. Si te sirve y querés apoyar su desarrollo, podés invitarme un cafecito.",
-    "coffee": "Invitame un cafecito"
+    "coffeeText": "VikArg es gratis y sin publicidad. Si te sirve y querés apoyar su desarrollo, podés invitarme un cafecito o aportar por Mercado Pago.",
+    "coffee": "Invitame un cafecito",
+    "mercadopago": "Aportar por Mercado Pago"
   },
   "guides": {
     "voice": "Leer los pasos en voz alta",

@@ -44,6 +44,8 @@ test('acerca de: versión, reportar un problema o sugerencia y cafecito', async 
 
   // Cafecito.
   await expect(page.getByTestId('about-cafecito')).toHaveAttribute('href', 'https://cafecito.app/vikarg');
+  // Mercado Pago.
+  await expect(page.getByTestId('about-mercadopago')).toHaveAttribute('href', 'https://link.mercadopago.com.ar/vikarg');
 
   await page.goto('/#/settings');
   await expect(page.getByRole('link', { name: 'Acerca de, reportar un problema y contacto' })).toBeVisible();

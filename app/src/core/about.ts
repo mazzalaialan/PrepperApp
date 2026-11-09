@@ -5,6 +5,8 @@
 
 export const REPO_URL = 'https://github.com/mazzalaialan/PrepperApp';
 export const CAFECITO_URL = 'https://cafecito.app/vikarg';
+/** Link de pago de Mercado Pago (Argentina), para quien prefiere aportar por ahí. */
+export const MERCADOPAGO_URL = 'https://link.mercadopago.com.ar/vikarg';
 /** Mail de contacto de VikArg (formulario de contacto y reporte de errores). Vacío = el botón no aparece. */
 export const CONTACT_EMAIL = 'contacto.vikarg@gmail.com';
 

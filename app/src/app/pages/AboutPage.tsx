@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
-import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare } from 'lucide-react';
-import { CAFECITO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
+import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare, HandCoins } from 'lucide-react';
+import { CAFECITO_URL, MERCADOPAGO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
 import { PortableUpdateCheck } from './SettingsPage';
 
 const KINDS: { kind: FeedbackKind; icon: typeof Bug }[] = [
@@ -132,6 +132,9 @@ export function AboutPage() {
         <p className="hint" style={{ margin: 0 }}>{t('about.coffeeText')}</p>
         <a className="btn btn-primary" href={CAFECITO_URL} target="_blank" rel="noreferrer" data-testid="about-cafecito">
           <Coffee size={18} /> {t('about.coffee')}
+        </a>
+        <a className="btn" href={MERCADOPAGO_URL} target="_blank" rel="noreferrer" data-testid="about-mercadopago">
+          <HandCoins size={18} /> {t('about.mercadopago')}
         </a>
       </section>
     </div>
