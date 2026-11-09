@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { newEntity } from '@/core/model/entity';
 import type { Gear, WorkoutKind } from '@/core/model/types';
+import { systemCategoryId } from '@/modules/inventory/domain/categories';
 import { useInventory } from '@/modules/inventory/store';
+import type { Item } from '@/core/model/types';
 import { ACTIVITY_KINDS } from './activities';
 import { wear } from './gear';
 import { useTraining } from './store';
@@ -22,6 +24,27 @@ export function GearPage() {
   const saveGear = useTraining((s) => s.saveGear);
   const deleteGear = useTraining((s) => s.deleteGear);
   const items = useInventory((s) => s.items);
+  const saveItem = useInventory((s) => s.saveItem);
+  const [addToInventory, setAddToInventory] = useState(true);
+
+  /** El equipo como artículo del Inventario, en la categoría Entrenamiento (sin control de vencimiento ni cantidades). */
+  async function inventoryItemFor(gearName: string): Promise<Item> {
+    const item = newEntity<Item>({
+      name: gearName,
+      categoryId: systemCategoryId('training'),
+      notes: t('gear.itemNote'),
+      barcode: null,
+      unit: '',
+      weightGrams: null,
+      favorite: false,
+      controlType: null,
+      alertsEnabled: null,
+      alertLeadDays: null,
+      alertCapacityPct: null,
+    });
+    await saveItem(item);
+    return item;
+  }
   const [name, setName] = useState('');
   const [kinds, setKinds] = useState<WorkoutKind[]>([]);
   const [startKm, setStartKm] = useState('');
@@ -33,7 +56,9 @@ export function GearPage() {
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    await saveGear(newEntity<Gear>({ name: name.trim(), kinds, startKm: num(startKm), retireKm: num(retireKm), inventoryItemId: itemId || null, retired: false }));
+    // Si no se vincula a un artículo que ya existe, se agrega al Inventario en la categoría Entrenamiento.
+    const linked = itemId || (addToInventory ? (await inventoryItemFor(name.trim())).id : null);
+    await saveGear(newEntity<Gear>({ name: name.trim(), kinds, startKm: num(startKm), retireKm: num(retireKm), inventoryItemId: linked, retired: false }));
     setName('');
     setKinds([]);
     setStartKm('');
@@ -67,6 +92,11 @@ export function GearPage() {
                     )}
                   </span>
                   <span className="contact-actions">
+                    {!item && (
+                      <button className="btn" type="button" data-testid="gear-to-inventory" onClick={async () => void saveGear({ ...g, inventoryItemId: (await inventoryItemFor(g.name)).id })}>
+                        {t('gear.addToInventory')}
+                      </button>
+                    )}
                     <button className="btn" type="button" onClick={() => void saveGear({ ...g, retired: !g.retired })}>
                       {g.retired ? t('gear.reactivate') : t('gear.retire')}
                     </button>
@@ -114,6 +144,10 @@ export function GearPage() {
             <input id="gear-retire" className="input" inputMode="decimal" value={retireKm} onChange={(e) => setRetireKm(e.target.value)} />
           </div>
         </div>
+        <label className="check">
+          <input type="checkbox" checked={addToInventory && !itemId} disabled={!!itemId} onChange={(e) => setAddToInventory(e.target.checked)} data-testid="gear-add-inventory" />
+          {t('gear.addToInventoryCheck')}
+        </label>
         {items.size > 0 && (
           <div className="field">
             <label htmlFor="gear-item">{t('gear.inventoryItem')}</label>

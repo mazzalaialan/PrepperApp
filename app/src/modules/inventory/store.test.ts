@@ -58,7 +58,7 @@ describe('inventario', () => {
 
   it('crea las categorías del sistema una sola vez', async () => {
     const count = inv().categories.size;
-    expect(count).toBe(14);
+    expect(count).toBe(15);
     await inv().load();
     expect(inv().categories.size).toBe(count);
   });

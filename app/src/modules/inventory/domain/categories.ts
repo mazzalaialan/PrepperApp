@@ -30,6 +30,8 @@ const SYSTEM_CATEGORIES: SystemCategorySpec[] = [
   { key: 'tools', icon: 'wrench', color: '#9a8a74', controlType: 'none' },
   { key: 'entertainment', icon: 'gamepad', color: '#a86a8f', controlType: 'none' },
   { key: 'other', icon: 'package', color: '#7a8696', controlType: 'none' },
+  // Después de "other" para no mover el orden de las que ya están guardadas. El equipo de Entrenamiento se agrega acá.
+  { key: 'training', icon: 'activity', color: '#4f9a6f', controlType: 'none' },
 ];
 
 export function systemCategoryId(key: string): string {

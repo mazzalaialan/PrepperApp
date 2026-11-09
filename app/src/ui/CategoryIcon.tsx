@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  Activity,
   Anchor,
   Axe,
   BatteryCharging,
@@ -49,6 +50,7 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   dog: Dog,
   anchor: Anchor,
   package: Package,
+  activity: Activity,
 };
 
 export const CATEGORY_COLORS = [

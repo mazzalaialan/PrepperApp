@@ -198,6 +198,11 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.getByLabel('Vida útil (km)').fill('600');
   await page.getByTestId('gear-save').click();
   await expect(page.getByTestId('gear-row')).toContainText('0 km / 600 km');
+  // El equipo también queda en el Inventario, en la categoría Entrenamiento.
+  await expect(page.getByTestId('gear-row')).toContainText('Inventario: Zapatillas de trail');
+  await page.goto('/#/inventory/items');
+  await expect(page.getByText('Zapatillas de trail')).toBeVisible();
+  await page.goto('/#/training/gear');
   await page.goto('/#/training/workouts');
   await page.getByTestId('train-row').first().click();
   await page.getByTestId('w-feeling-4').click();
