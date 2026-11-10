@@ -214,6 +214,7 @@ test('aviso de lluvia por waypoint, activado desde su ficha', async ({ page, con
   await page.goto('/#/orientation/waypoints/new');
   await page.getByLabel('Nombre').fill('Refugio');
   await page.getByLabel('Coordenadas').fill('-41.13, -71.31');
+  await page.getByTestId('wp-more').getByText('Más opciones').click();
   await page.getByLabel('Avisarme de lluvia, rayos y peligros naturales en este punto').check();
   await page.getByRole('button', { name: 'Guardar' }).click();
 

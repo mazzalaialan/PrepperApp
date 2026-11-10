@@ -59,6 +59,7 @@ test('declinómetro: lugar, cambio anual, convertir rumbos, mapa viejo y machete
 
   // Desde la brújula se llega al declinómetro.
   await page.goto('/#/orientation/compass');
+  await page.getByTestId('compass-advanced').getByText('Norte verdadero o magnético').click();
   await page.getByRole('link', { name: /Más en el Declinómetro/ }).click();
   await expect(page.getByRole('heading', { name: 'Declinómetro' })).toBeVisible();
 });
