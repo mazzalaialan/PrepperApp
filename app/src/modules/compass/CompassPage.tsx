@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useCapability } from '@/core/capabilities/capabilities';
+import { useCapabilities, useCapability } from '@/core/capabilities/capabilities';
+import { useWakeLock } from '@/core/power/useWakeLock';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings, type NorthReference } from '@/core/settings/settings';
@@ -12,7 +13,10 @@ export function CompassPage() {
   const { t, i18n } = useTranslation();
   const hasGps = useCapability('geolocation');
   const { fix } = useGeolocation(hasGps);
+  const caps = useCapabilities((s) => s.caps);
   const heading = useHeading(fix);
+  // Con la brújula a la vista la pantalla no se apaga sola.
+  useWakeLock(!!heading);
   const formatBearing = useFormatBearing();
   const reference = useSettings((s) => s.settings.northReference);
   const update = useSettings((s) => s.update);
@@ -31,6 +35,9 @@ export function CompassPage() {
             {heading.mode === 'upright' ? t('compass.upright') : t('compass.flat')}
           </p>
         </>
+      ) : caps && !caps.orientation ? (
+        // Una PC no tiene el sensor: no se espera para siempre.
+        <p className="empty" data-testid="compass-none">{t('compass.noSensor')}</p>
       ) : (
         <p className="empty">{t('compass.waiting')}</p>
       )}

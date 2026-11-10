@@ -71,6 +71,13 @@ export function MyLocationPage() {
     return best;
   }, [fix, waypoints]);
 
+  // Antigüedad de la posición (se actualiza cada medio minuto): si el GPS se perdió, se ve que es la última conocida.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const ageMin = fix ? Math.max(0, Math.floor((nowMs - fix.timestamp) / 60_000)) : 0;
   const west = t('geo.westLetter');
   const decimal = fix ? `${fix.lat.toFixed(5)}, ${fix.lon.toFixed(5)}` : '';
   const mapUrl = fix ? `https://www.google.com/maps/search/?api=1&query=${fix.lat.toFixed(6)},${fix.lon.toFixed(6)}` : '';
@@ -81,6 +88,8 @@ export function MyLocationPage() {
       t('location.msg.intro'),
       t('location.msg.coords', { decimal, dms: formatDms(fix, west), accuracy: Math.round(fix.accuracy) }),
     ];
+    // Cuándo se tomó la posición: quien recibe el mensaje sabe cuánto puede haberse movido.
+    lines.push(t('location.msg.takenAt', { time: new Date(fix.timestamp).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }) }));
     if (info?.address || info?.locality) lines.push(t('location.msg.address', { address: [info.address, info.locality].filter(Boolean).join(', ') }));
     if (info?.nearbyStreets.length) lines.push(t('location.msg.streets', { streets: info.nearbyStreets.join(t('location.and')) }));
     if (info?.roads.length) lines.push(t('location.msg.road', { road: info.roads.join(' / ') }) + (info.milestone ? ` ${t('location.msg.km', { km: info.milestone.km })}` : ''));
@@ -175,6 +184,9 @@ export function MyLocationPage() {
             <p className="hint" style={{ margin: 0 }}>
               {t('location.accuracy', { m: Math.round(fix.accuracy) })}
               {fix.alt !== null && ` · ${t('location.altitude', { m: Math.round(fix.alt) })}`}
+            </p>
+            <p className={ageMin >= 5 ? 'warning-box' : 'hint'} style={{ margin: 0 }} data-testid="location-age">
+              {ageMin < 1 ? t('location.ageNow') : t(ageMin >= 5 ? 'location.ageStale' : 'location.age', { min: ageMin })}
             </p>
             <div className="row-end">
               <CopyButton text={decimal} label={t('location.copyCoords')} />
