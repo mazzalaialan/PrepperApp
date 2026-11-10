@@ -89,8 +89,9 @@ function crossings(strands, W) {
   return xs;
 }
 
-export function render(spec, { debug = false, id: P = "" } = {}) {
-  const { width = 400, height = 300, ropes = [], poles = [], arrows = [], under = [], rope: W = 14 } = spec;
+/** Cuerdas, cruces y quién va arriba en cada uno (lo usan el dibujo y el análisis). */
+function resolve(spec) {
+  const { ropes = [], under = [], rope: W = 14 } = spec;
   const strands = ropes.map((r, k) => ({ color: '#e8a33d', light: '#f7d39a', ...r, k, pts: catmull(r.path) }));
   const xs = crossings(strands, W);
   xs.forEach((c, i) => {
@@ -99,6 +100,35 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
     if (c.earlier.z !== c.later.z) [c.over, c.under] = c.earlier.z > c.later.z ? [c.earlier, c.later] : [c.later, c.earlier];
     else [c.over, c.under] = flip ? [c.earlier, c.later] : [c.later, c.earlier];
   });
+  return { strands, xs, W };
+}
+
+/**
+ * Recorrido de cada cuerda, en el orden en que se la sigue desde su primer punto: cada cruce con
+ * "por arriba" o "por debajo" de qué cuerda y en qué lugar (x, y). Sirve para revisar el nudo sin mirar el dibujo.
+ */
+export function trace(spec) {
+  const { strands, xs } = resolve(spec);
+  return strands.map((r) => {
+    const mine = [];
+    for (const c of xs) {
+      for (const side of ['over', 'under']) {
+        if (c[side].k !== r.k) continue;
+        const other = side === 'over' ? c.under : c.over;
+        // Una cuerda que se cruza consigo misma aparece dos veces (una por cada pasada).
+        if (c.over.k === c.under.k && c[side].s !== (side === 'over' ? c.over.s : c.under.s)) continue;
+        mine.push({ s: c[side].s, pos: side === 'over' ? 'ARRIBA' : 'ABAJO', cruzaCon: other.k === r.k ? 'sí misma' : `cuerda ${other.k}`, x: Math.round(c.x), y: Math.round(c.y), mismaProfundidad: c.over.z === c.under.z });
+      }
+    }
+    mine.sort((a, b) => a.s - b.s);
+    const first = r.path[0], last = r.path[r.path.length - 1];
+    return { cuerda: r.k, desde: [first[0], first[1]], hasta: [last[0], last[1]], puntaLibre: r.end !== false, cruces: mine };
+  });
+}
+
+export function render(spec, { debug = false, id: P = "" } = {}) {
+  const { width = 400, height = 300, poles = [], arrows = [] } = spec;
+  const { strands, xs, W } = resolve(spec);
   const defs = [];
   const body = [];
   // Fondo y borde con clase (colores del tema); el resto, color fijo.
