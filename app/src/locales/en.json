@@ -1538,7 +1538,6 @@
     "live": {"activity": "Activity", "activityNone": "Choose when finishing", "time": "Time", "title": "Session in progress", "none": "No session is being recorded.", "paceNow": "Pace now", "speedNow": "Speed now", "paceAvg": "Average pace", "speedAvg": "Average speed", "ascent": "Ascent", "calories": "Calories", "voiceOn": "Voice every km", "voiceOff": "No voice", "open": "Open the live session", "voiceKm": "Kilometer {{km}}. Time {{time}}. Pace {{pace}}.", "voiceKmShort": "Kilometer {{km}}. Time {{time}}."},
     "how": {"title": "How it went", "feeling": "How I felt", "f1": "awful", "f2": "bad", "f3": "okay", "f4": "good", "f5": "great", "terrain": "Terrain or place", "weather": "Weather at the end", "wind": "wind {{kmh}} km/h", "t": {"road": "Road or street", "trail": "Trail", "mountain": "Mountain", "sand": "Sand or beach", "track": "Track", "water": "Water", "indoor": "Indoor", "mixed": "Mixed"}},
     "goals": {"title": "Weekly goals", "hint": "Leave blank any you do not want. Progress shows here and counts Monday to Sunday.", "distanceKm": "Distance (km)", "minutes": "Time (minutes)", "sessions": "Activities", "reached": "reached!"},
-    "seeWorkout": "See the training session",
     "exportGpx": "Export GPX",
     "exportTcx": "Export TCX",
     "importFile": "Import GPX, TCX or FIT",
@@ -1845,6 +1844,7 @@
     }
   },
   "tracks": {
+    "seeWorkout": "See the training session",
     "exportGpx": "Export GPX",
     "toRoute": "Create planned route",
     "import": "Import GPX",
