@@ -2905,6 +2905,31 @@ a.module-card:hover {
 .rec-actions {
   display: flex;
   flex: none;
+  gap: 2px;
+}
+
+/* Cada acción con su nombre debajo del ícono, y Terminar separado de las demás. */
+.rec-act {
+  width: auto;
+  min-width: 56px;
+  height: 52px;
+  padding: 0 4px;
+  grid-auto-flow: row;
+  gap: 2px;
+  align-content: center;
+  color: var(--text);
+}
+
+.rec-lbl {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.rec-finish {
+  margin-left: 10px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
 }
 
 .rec-bar {
@@ -4116,4 +4141,27 @@ a.module-card:hover {
   fill: var(--accent);
   stroke: var(--surface);
   stroke-width: 2;
+}
+
+/* Accesos rápidos del inicio. */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .quick-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.quick-action {
+  min-height: 56px;
+  text-decoration: none;
+}
+
+.quick-danger {
+  border-color: var(--danger);
+  color: var(--danger);
 }

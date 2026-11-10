@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { BellRing, CircleCheck } from 'lucide-react';
+import { BellRing, CircleCheck, Circle, Compass, Navigation, Siren } from 'lucide-react';
 import { AlertList, ShortageList } from '@/modules/inventory/components/AlertList';
 import { DocumentExpiryList, useExpiringDocuments } from '@/modules/documents/DocumentExpiryList';
 import { useAlerts, useShortages } from '@/modules/inventory/selectors';
@@ -60,10 +60,32 @@ function AlertSummary() {
   );
 }
 
+/** Lo que más se usa en el campo, a un toque desde el inicio. */
+function QuickActions() {
+  const { t } = useTranslation();
+  const items = [
+    { to: '/first-aid/location', icon: Siren, label: t('home.quick.emergency'), danger: true },
+    { to: '/orientation/tracks', icon: Circle, label: t('home.quick.record') },
+    { to: '/orientation/waypoints', icon: Navigation, label: t('home.quick.goTo') },
+    { to: '/orientation/compass', icon: Compass, label: t('home.quick.compass') },
+  ];
+  return (
+    <nav className="quick-actions" aria-label={t('home.quick.title')} data-testid="quick-actions">
+      {items.map(({ to, icon: Icon, label, danger }) => (
+        <Link key={to} to={to} className={`btn quick-action${danger ? ' quick-danger' : ''}`}>
+          <Icon size={22} aria-hidden />
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function HomePage() {
   const { t } = useTranslation();
   return (
     <>
+      <QuickActions />
       <AlertSummary />
       {SECTIONS.map((section) => (
         <Fragment key={section}>

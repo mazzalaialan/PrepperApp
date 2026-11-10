@@ -62,12 +62,13 @@ export function RecordButton() {
   );
 }
 
-export function PocketButton() {
+export function PocketButton({ labeled = false }: { labeled?: boolean }) {
   const { t } = useTranslation();
   const set = usePocket((s) => s.set);
   return (
-    <button className="icon-btn" type="button" onClick={() => set(true)} aria-label={t('pocket.on')} title={t('pocket.on')}>
+    <button className={`icon-btn${labeled ? ' rec-act' : ''}`} type="button" onClick={() => set(true)} aria-label={t('pocket.on')} title={t('pocket.on')}>
       <Moon size={20} />
+      {labeled && <span className="rec-lbl">{t('tracks.rec.pocketShort')}</span>}
     </button>
   );
 }
@@ -183,27 +184,32 @@ export function RecordingBar() {
       </span>
       <span className="rec-actions">
         {status === 'recording' ? (
-          <button className="icon-btn" type="button" onClick={() => void pause()} aria-label={t('tracks.rec.pause')} title={t('tracks.rec.pause')}>
+          <button className="icon-btn rec-act" type="button" onClick={() => void pause()} aria-label={t('tracks.rec.pause')} title={t('tracks.rec.pause')}>
             <Pause size={20} />
+            <span className="rec-lbl">{t('tracks.rec.pauseShort')}</span>
           </button>
         ) : (
-          <button className="icon-btn" type="button" onClick={resume} aria-label={t('tracks.rec.resume')} title={t('tracks.rec.resume')}>
+          <button className="icon-btn rec-act" type="button" onClick={resume} aria-label={t('tracks.rec.resume')} title={t('tracks.rec.resume')}>
             <Play size={20} />
+            <span className="rec-lbl">{t('tracks.rec.resumeShort')}</span>
           </button>
         )}
         {points > 1 && !goingBack && (
-          <Link className="icon-btn" to={`${backTo}?back=${points}`} aria-label={t('tracks.rec.back')} title={t('tracks.rec.back')}>
+          <Link className="icon-btn rec-act" to={`${backTo}?back=${points}`} aria-label={t('tracks.rec.back')} title={t('tracks.rec.back')}>
             <Undo2 size={20} />
+            <span className="rec-lbl">{t('tracks.rec.backShort')}</span>
           </Link>
         )}
         {track.activity && (
-          <Link className="icon-btn" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
+          <Link className="icon-btn rec-act" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
             <Gauge size={20} />
+            <span className="rec-lbl">{t('tracks.rec.liveShort')}</span>
           </Link>
         )}
-        <PocketButton />
-        <button className="icon-btn" type="button" onClick={() => setNaming(track.name)} aria-label={t('tracks.rec.finish')} title={t('tracks.rec.finish')}>
+        <PocketButton labeled />
+        <button className="icon-btn rec-act rec-finish" type="button" onClick={() => setNaming(track.name)} aria-label={t('tracks.rec.finish')} title={t('tracks.rec.finish')}>
           <Square size={18} fill="currentColor" />
+          <span className="rec-lbl">{t('tracks.rec.finishShort')}</span>
         </button>
       </span>
       <RecWarning />

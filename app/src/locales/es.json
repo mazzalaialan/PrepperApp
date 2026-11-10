@@ -40,6 +40,13 @@
     "library": "Biblioteca"
   },
   "home": {
+    "quick": {
+      "title": "Accesos rápidos",
+      "emergency": "Emergencia",
+      "record": "Grabar",
+      "goTo": "Ir a un punto",
+      "compass": "Brújula"
+    },
     "alertsTitle": "Alertas",
     "alertsEmpty": "Las alertas de vencimiento aparecerán acá cuando cargues tu inventario.",
     "alertsCount_one": "{{count}} alerta",
@@ -1902,6 +1909,12 @@
       "rotateNoCompass": "Sin brújula en este dispositivo: el dibujo queda con el norte arriba."
     },
     "rec": {
+      "pauseShort": "Pausa",
+      "resumeShort": "Seguir",
+      "backShort": "Origen",
+      "liveShort": "En vivo",
+      "pocketShort": "Bolsillo",
+      "finishShort": "Terminar",
       "start": "Grabar mi recorrido",
       "pause": "Pausar la grabación",
       "resume": "Seguir grabando",

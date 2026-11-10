@@ -40,6 +40,13 @@
     "library": "Library"
   },
   "home": {
+    "quick": {
+      "title": "Quick access",
+      "emergency": "Emergency",
+      "record": "Record",
+      "goTo": "Go to a point",
+      "compass": "Compass"
+    },
     "alertsTitle": "Alerts",
     "alertsEmpty": "Expiry alerts will show up here once you add your inventory.",
     "alertsCount_one": "{{count}} alert",
@@ -1902,6 +1909,12 @@
       "rotateNoCompass": "No compass on this device: the drawing stays north-up."
     },
     "rec": {
+      "pauseShort": "Pause",
+      "resumeShort": "Resume",
+      "backShort": "Origin",
+      "liveShort": "Live",
+      "pocketShort": "Pocket",
+      "finishShort": "Finish",
       "start": "Record my trip",
       "pause": "Pause recording",
       "resume": "Resume recording",
