@@ -10,7 +10,7 @@ const eight = [[-20, 220], [120, 220], [230, 218], [290, 180], [295, 110], [245,
 
 // Escape (simple corredizo = nudo simple con la punta doblada en seno). Se parte del nudo simple: la vuelta (loop) y el
 // tramo que la atraviesa (thru) se duplican en una pata paralela unida por un seno; la punta sale del otro lado.
-const legA = [[185, 248], [206, 262], [232, 246], [228, 205], [215, 150], [232, 112], [262, 98], [290, 92]];
+const legA = [[185, 248, -0.5], [206, 262, -0.5], [232, 246, -0.5], [228, 205, -0.5], [215, 150, -0.5], [232, 112, 0.5], [262, 98, 0.5], [290, 92, 0.5]];
 const legB = rev(offset(legA, -46));
 const bight = (apexPts) => [...loop, ...legA, ...apexPts, ...legB, [150, 276]];
 export default {
@@ -24,9 +24,9 @@ export default {
     // 1) El nudo simple empezado: la vuelta y la punta ya doblada en seno, lista para pasar por la vuelta.
     { zoom: [0.82, 200, 150], ropes: [{ ...A, path: [...loop, [185, 250], [205, 280], [240, 292], [262, 278], [250, 262]] }], arrows: [[[296, 268], [270, 232], [236, 205]]] },
     // 2) El seno entra por la vuelta (las dos patas pasan por debajo del firme).
-    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[310, 92], [330, 104], [326, 124]]) }], under: [[228, 205], [200, 205]], arrows: [[[60, 240], [20, 240]], [[330, 165], [330, 215]]] },
+    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[310, 92, 0.5], [330, 104, 0.5], [326, 124, 0.5]]) }], arrows: [[[60, 240], [20, 240]], [[330, 165], [330, 215]]] },
     // 3) Ajustado: el seno asoma del otro lado; tirando de la punta (abajo) sale y se deshace.
-    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[316, 80], [344, 92], [346, 124]]) }], under: [[228, 205], [200, 205]], arrows: [[[168, 288], [128, 296]]] },
+    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[316, 80, 0.5], [344, 92, 0.5], [346, 124, 0.5]]) }], arrows: [[[168, 288], [128, 296]]] },
   ],
   'ocho-simple': [
     { ropes: [{ ...A, path: [...eight.slice(0, 9), [215, 265], [230, 292]] }], arrows: [[[245, 288], [180, 296], [135, 260]]] },
