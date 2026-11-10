@@ -7,6 +7,7 @@ import { useTracks } from '@/modules/tracks/store';
 import { useTrainingFormat } from './format';
 import { inOuting, totalsOf } from './history';
 import { outingTrack } from './outings';
+import { OutingPlanSection } from './OutingPlanSection';
 import { ShareSection } from './ShareSection';
 import { useTraining } from './store';
 
@@ -148,6 +149,8 @@ function OutingDetail({ id }: { id: string }) {
           </div>
         )}
       </section>
+
+      <OutingPlanSection outing={outing} />
 
       <ShareSection outing={outing} />
 

@@ -9,6 +9,7 @@ import { BrandMark } from '@/ui/Brand';
 import { BackButton } from '@/ui/BackButton';
 import { Dialog } from '@/ui/Dialog';
 import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
+import { OutingPlanBar } from '@/modules/training/OutingPlanBar';
 import { useLiveSender } from '@/modules/training/liveShare';
 import { RainNotices } from '@/modules/weather/RainNotices';
 import { useZoneForecastRefresh } from '@/modules/maps/zoneForecast';
@@ -106,6 +107,7 @@ export function Shell() {
         <PortableUpdateNotice />
         <RainNotices />
         <RecordingBar />
+        <OutingPlanBar />
         <PocketScreen />
         <main className="content">
           <Suspense fallback={null}>

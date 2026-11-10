@@ -231,3 +231,53 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.goto('/#/training');
   await expect(page.getByRole('link', { name: /Equipo/ })).toHaveCount(0);
 });
+
+test('salida planificada: hora límite vencida avisa arriba, "estoy bien" y volver apagan el aviso', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  await page.goto('/#/training/outings');
+  await page.getByLabel('Nombre de la salida').fill('Cerro Catedral');
+  await page.getByRole('button', { name: 'Crear salida' }).click();
+  await expect(page.getByTestId('outing-plan')).toBeVisible();
+
+  // Hora límite hace una hora: ya está vencida.
+  const p = (n: number) => String(n).padStart(2, '0');
+  const d = new Date(Date.now() - 3_600_000);
+  const local = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  await page.getByLabel('Hora límite de regreso').fill(local);
+  await page.getByLabel('Responsable').fill('Ana');
+  await page.getByLabel('A quién avisar').fill('Mamá 11 5555-1234');
+  await page.getByLabel('Si no vuelvo o me demoro').fill('Bajar por el mismo camino');
+  await page.getByTestId('plan-save').click();
+  await expect(page.getByTestId('plan-status')).toHaveAttribute('data-state', 'overdue');
+
+  // La barra de arriba se ve en toda la app, como alerta.
+  await page.goto('/#/');
+  const bar = page.getByTestId('plan-bar');
+  await expect(bar).toBeVisible();
+  await expect(bar).toContainText('Pasó la hora límite');
+  await expect(bar).toHaveAttribute('role', 'alert');
+
+  // "Estoy bien" queda anotado y se ve el último contacto.
+  await page.getByTestId('plan-bar-checkin').click();
+  await page.getByRole('link', { name: 'Ver plan' }).click();
+  await expect(page.getByTestId('plan-status')).toContainText('último «estoy bien»');
+
+  // El mensaje para la familia lleva lo acordado.
+  const sms = await page.getByRole('link', { name: 'SMS' }).getAttribute('href');
+  const body = decodeURIComponent(sms!.split('body=')[1]!);
+  expect(body).toContain('Cerro Catedral');
+  expect(body).toContain('Bajar por el mismo camino');
+
+  // Volver apaga el aviso.
+  await page.getByTestId('plan-close').click();
+  await expect(page.getByTestId('plan-status')).toHaveAttribute('data-state', 'closed');
+  await page.goto('/#/');
+  await expect(page.getByTestId('plan-bar')).toHaveCount(0);
+});

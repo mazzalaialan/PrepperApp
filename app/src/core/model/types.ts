@@ -433,6 +433,26 @@ export interface Outing extends BaseEntity {
   notes: string;
   /** Si se compartió con un enlace público (ver modules/training/share.ts): el código de borrado queda solo acá, cifrado. */
   share?: { id: string; url: string; deleteToken: string; sharedAt: string; expiresAt: string };
+  /** Plan de la salida: hora de regreso, integrantes, a quién avisar y qué hacer si no se vuelve. */
+  plan?: OutingPlan;
+}
+
+/** Lo que se acuerda antes de salir (ver modules/training/outingPlan.ts). Las horas son ISO con zona. */
+export interface OutingPlan {
+  startsAt: string | null;
+  /** Hora límite de regreso: pasada esa hora sin avisar, algo anda mal. */
+  returnBy: string | null;
+  leader: string;
+  /** Integrantes, uno por línea. */
+  members: string;
+  /** A quién avisar (nombre y teléfono). */
+  contact: string;
+  /** Plan B: qué hacer si no se llega o se demora. */
+  contingency: string;
+  /** Cada "estoy bien" que se dio durante la salida. */
+  checkIns: { at: string; note: string }[];
+  /** Se volvió: la salida terminó y se apagan los avisos. */
+  closedAt: string | null;
 }
 
 export type BedSide = 'front' | 'back' | 'left' | 'right';
