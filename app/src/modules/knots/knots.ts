@@ -145,8 +145,8 @@ export const KNOTS: Knot[] = [
     uses: ['rappel', 'everyday', 'nautical'],
     purpose: l('Un tope más grueso que el simple. En rappel se hace en cada punta de la cuerda para no salirse del descensor al llegar al final.', 'A bulkier stopper than the overhand. In rappelling it is tied at each rope end so you cannot slide off the end.'),
     steps: [
-      { text: l('Dejá un chicote de unos 30 cm. Pasalo dos veces alrededor del firme, avanzando hacia vos.', 'Leave about 30 cm of tail. Wrap it twice around the standing part, working toward yourself.') },
-      { text: l('Pasá el chicote por dentro de las dos vueltas, en el mismo sentido en que las hiciste.', 'Pass the end back through both wraps, in the same direction you wrapped them.') },
+      { text: l('Dejá un chicote de unos 30 cm. Pasalo dos veces alrededor del firme, avanzando hacia el firme (alejándote de la punta).', 'Leave about 30 cm of tail. Wrap it twice around the standing part, working toward the standing part (away from the end).') },
+      { text: l('Pasá el chicote de vuelta por dentro de las dos vueltas, hacia la curva donde empezaste.', 'Pass the end back through both wraps, toward the bend where you started.') },
       { text: l('Ajustá tirando del firme y del chicote: las vueltas quedan una al lado de la otra, en forma de barril.', 'Tighten by pulling the standing part and the end: the wraps sit side by side in a barrel shape.') },
     ],
     images: [img('tope', 1)],
