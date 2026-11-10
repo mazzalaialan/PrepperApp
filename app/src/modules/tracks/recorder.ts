@@ -49,6 +49,8 @@ interface RecorderState {
   /** Desde y hasta cuándo (ms) fue ese corte. */
   gapFrom: number | null;
   gapTo: number | null;
+  /** Qué se hizo con ese corte: `true` = se unió con una recta; `false` = quedó el hueco. */
+  gapJoined: boolean | null;
   /** Precisión de la última posición del GPS (para mostrar por qué todavía no graba). */
   accuracy: number | null;
   /** Empieza a grabar; con `kind` es una sesión de Entrenamiento (al terminar crea la actividad). */
@@ -67,10 +69,12 @@ interface RecorderState {
   lap: () => void;
 }
 
-const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, gapFrom: null, gapTo: null, accuracy: null, lastWorkoutId: null } as const;
+const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: null, warned: false, gapS: null, gapFrom: null, gapTo: null, gapJoined: null, accuracy: null, lastWorkoutId: null } as const;
 
 /** Más que esto con la pantalla apagada, se avisa que no se grabó. */
 const GAP_NOTICE_MS = 20_000;
+/** Un corte de menos de esto se une con una recta sin preguntar. */
+const GAP_AUTOJOIN_S = 180;
 let hiddenAt: number | null = null;
 
 let watchId: number | null = null;
@@ -216,7 +220,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
       const joined = joinLastSegments(segs);
       set({ track: { ...s.track, segments: joined, ...trackStats(joined) } });
     }
-    set({ gapS: null, gapFrom: null, gapTo: null });
+    set({ gapS: null, gapFrom: null, gapTo: null, gapJoined: null });
   },
 
   async finish(name, opts) {
@@ -269,14 +273,19 @@ document.addEventListener('visibilitychange', () => {
     return;
   }
   if (recording && hiddenAt !== null && Date.now() - hiddenAt >= GAP_NOTICE_MS) {
-    // Lo recorrido sin GPS no se une con una recta (no se sabe por dónde fue ni cuánto): arranca un tramo nuevo.
     const s = useRecorder.getState();
-    const segments = s.track && s.track.segments.at(-1)?.length ? [...s.track.segments, []] : s.track?.segments;
+    const gapS = Math.round((Date.now() - hiddenAt) / 1000);
+    // Un corte corto se une solo con una recta (se sigue en el mismo tramo); uno largo queda como hueco (no se sabe por dónde fue
+    // ni cuánto), en un tramo nuevo. Se avisa qué se hizo y queda anotado en el track.
+    const joined = gapS < GAP_AUTOJOIN_S;
+    const segments = s.track && !joined && s.track.segments.at(-1)?.length ? [...s.track.segments, []] : s.track?.segments;
+    const gap = { from: hiddenAt, to: Date.now(), joined };
     useRecorder.setState({
-      gapS: Math.round((Date.now() - hiddenAt) / 1000),
-      gapFrom: hiddenAt,
-      gapTo: Date.now(),
-      ...(s.track && segments ? { track: { ...s.track, segments } } : {}),
+      gapS,
+      gapFrom: gap.from,
+      gapTo: gap.to,
+      gapJoined: joined,
+      ...(s.track && segments ? { track: { ...s.track, segments, gaps: [...(s.track.gaps ?? []), gap] } } : {}),
     });
   }
   hiddenAt = null;

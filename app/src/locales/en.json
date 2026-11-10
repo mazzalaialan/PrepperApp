@@ -1853,6 +1853,9 @@
     }
   },
   "tracks": {
+    "gapsTitle": "Recording gaps",
+    "gapItemJoined": "{{from}} to {{to}}: screen off, joined with a straight line.",
+    "gapItemKept": "{{from}} to {{to}}: screen off, left as a gap.",
     "seeWorkout": "See the training session",
     "exportGpx": "Export GPX",
     "importFormats": "You can import GPX, KML, KMZ and TCX files, also compressed (.gz).",
@@ -1927,6 +1930,8 @@
       "rotateNoCompass": "No compass on this device: the drawing stays north-up."
     },
     "rec": {
+      "gapJoined": "Nothing was recorded with the screen off between {{from}} and {{to}} ({{time}}). It was short, so it was joined with a straight line. To avoid it, keep the app open with the black screen (moon).",
+      "gapKept": "Nothing was recorded with the screen off between {{from}} and {{to}} ({{time}}). The route has a gap there (it adds no distance). To avoid it, keep the app open with the black screen (moon).",
       "pauseShort": "Pause",
       "resumeShort": "Resume",
       "backShort": "Origin",

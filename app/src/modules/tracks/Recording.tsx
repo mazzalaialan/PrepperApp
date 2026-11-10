@@ -231,29 +231,26 @@ export function RecordingBar() {
 /** Aviso de que con el celular bloqueado el navegador no da la posición; si hubo un corte, pregunta qué hacer con el tramo. */
 export function RecWarning() {
   const { t, i18n } = useTranslation();
-  const { status, warned, gapS, gapFrom, gapTo } = useRecorder();
+  const { status, warned, gapS, gapFrom, gapTo, gapJoined } = useRecorder();
   const hhmm = (ms: number | null) => (ms === null ? '' : new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(new Date(ms)));
   if (status !== 'recording' || (gapS === null && warned)) return null;
   return (
     <p className="rec-warn" role="alert" data-testid="rec-warn">
       {/* El navegador no da la posición con el celular bloqueado: se avisa al empezar y, si pasó, al volver. */}
       <TriangleAlert size={16} aria-hidden className="rec-warn-icon" />
-      <span>{gapS !== null ? t('tracks.rec.gap', { time: formatDuration(gapS), from: hhmm(gapFrom), to: hhmm(gapTo) }) : t('tracks.rec.screenOff')}</span>
-      {gapS !== null ? (
-        // Se pregunta: dejar el hueco (no suma distancia) o unir con una recta.
-        <span className="rec-warn-actions">
-          <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true, gapS: null, gapFrom: null, gapTo: null })}>
-            {t('tracks.rec.gapKeep')}
-          </button>
-          <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.getState().joinGap()}>
-            {t('tracks.rec.gapJoin')}
-          </button>
-        </span>
-      ) : (
-        <button className="btn rec-warn-ok" type="button" onClick={() => useRecorder.setState({ warned: true })}>
-          {t('tracks.rec.understood')}
-        </button>
-      )}
+      {/* Un corte corto se unió solo con una recta; uno largo quedó como hueco: ya no se pregunta, se avisa qué se hizo. */}
+      <span>
+        {gapS !== null
+          ? t(gapJoined ? 'tracks.rec.gapJoined' : 'tracks.rec.gapKept', { time: formatDuration(gapS), from: hhmm(gapFrom), to: hhmm(gapTo) })
+          : t('tracks.rec.screenOff')}
+      </span>
+      <button
+        className="btn rec-warn-ok"
+        type="button"
+        onClick={() => useRecorder.setState(gapS !== null ? { warned: true, gapS: null, gapFrom: null, gapTo: null, gapJoined: null } : { warned: true })}
+      >
+        {t('tracks.rec.understood')}
+      </button>
     </p>
   );
 }

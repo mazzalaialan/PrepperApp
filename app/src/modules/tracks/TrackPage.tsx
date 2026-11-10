@@ -198,6 +198,18 @@ function TrackDetail({ track }: { track: Track }) {
           )}
         </dl>
         <ElevationProfile track={track} />
+        {track.gaps && track.gaps.length > 0 && (
+          <div className="stack" style={{ gap: 4 }} data-testid="track-gaps">
+            <strong>{t('tracks.gapsTitle')}</strong>
+            <ul className="list">
+              {track.gaps.map((g) => (
+                <li key={g.from} className="hint">
+                  {t(g.joined ? 'tracks.gapItemJoined' : 'tracks.gapItemKept', { from: new Date(g.from).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }), to: new Date(g.to).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }) })}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="row-end wrap">
           <button className="btn" type="button" data-testid="track-to-route" onClick={async () => {
             const route = routeFromTrack(track);

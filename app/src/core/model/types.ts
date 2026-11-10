@@ -543,6 +543,13 @@ export interface TrackWaypoint {
  * Va aparte de los waypoints y rutas propios: sus puntos no se mezclan con
  * los del usuario.
  */
+/** Un corte de la grabación (pantalla apagada): cuándo fue y si se unió con una recta o quedó como hueco. */
+export interface TrackGap {
+  from: number;
+  to: number;
+  joined: boolean;
+}
+
 export interface Track extends BaseEntity {
   /** Grabado con la app (no importado). */
   recorded?: boolean;
@@ -561,6 +568,8 @@ export interface Track extends BaseEntity {
   intervals?: IntervalPlanData | null;
   /** Vueltas marcadas con el botón durante la grabación: tiempo (s) y distancia (m) acumulados al marcar. */
   laps?: LapMark[];
+  /** Cortes de la grabación (pantalla apagada). */
+  gaps?: TrackGap[];
   name: string;
   desc: string;
   /** De dónde salió ("Wikiloc", o el nombre del archivo). */

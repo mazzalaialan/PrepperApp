@@ -1853,6 +1853,9 @@
     }
   },
   "tracks": {
+    "gapsTitle": "Cortes de la grabación",
+    "gapItemJoined": "{{from}} a {{to}}: pantalla apagada, se unió con una recta.",
+    "gapItemKept": "{{from}} a {{to}}: pantalla apagada, quedó un hueco.",
     "seeWorkout": "Ver la sesión de entrenamiento",
     "exportGpx": "Exportar GPX",
     "importFormats": "Se pueden importar archivos GPX, KML, KMZ y TCX, también comprimidos (.gz).",
@@ -1927,6 +1930,8 @@
       "rotateNoCompass": "Sin brújula en este dispositivo: el dibujo queda con el norte arriba."
     },
     "rec": {
+      "gapJoined": "Con la pantalla apagada no se grabó entre las {{from}} y las {{to}} ({{time}}). Como fue corto, se unió con una línea recta. Para que no pase, dejá la app abierta con la pantalla negra (luna).",
+      "gapKept": "Con la pantalla apagada no se grabó entre las {{from}} y las {{to}} ({{time}}). Quedó un hueco en el recorrido (no suma distancia). Para que no pase, dejá la app abierta con la pantalla negra (luna).",
       "pauseShort": "Pausa",
       "resumeShort": "Seguir",
       "backShort": "Origen",
