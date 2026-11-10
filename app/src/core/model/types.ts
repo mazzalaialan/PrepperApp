@@ -123,6 +123,9 @@ export interface Attachment extends BaseEntity {
   sizeBytes: number;
 }
 
+/** Para qué sirve un lugar en una emergencia: salida, refugio, agua o algo a evitar. */
+export type WaypointRole = 'escape' | 'shelter' | 'water' | 'danger';
+
 export interface Waypoint extends BaseEntity {
   name: string;
   lat: number;
@@ -134,6 +137,8 @@ export interface Waypoint extends BaseEntity {
   rainAlerts: boolean;
   /** Zona privada: radio en metros alrededor de este punto que se saca del recorrido al compartir una salida (0 o ausente: no es zona privada). */
   privateRadiusM?: number | null;
+  /** Qué es el lugar en una emergencia (punto de escape, refugio, agua, peligro); sin valor = un lugar común. */
+  role?: WaypointRole | null;
 }
 
 /** Lista ordenada de waypoints con nombre (ej.: "Evacuación al refugio"). */

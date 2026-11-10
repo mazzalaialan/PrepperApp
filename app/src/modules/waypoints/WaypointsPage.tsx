@@ -6,9 +6,10 @@ import { useCapability } from '@/core/capabilities/capabilities';
 import { distanceMeters } from '@/core/geo/geo';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
-import type { Waypoint } from '@/core/model/types';
+import type { Waypoint, WaypointRole } from '@/core/model/types';
 import { GpsStatus, useDistanceLabel } from './components';
 import { RoutesSection } from './RoutesPage';
+import { WAYPOINT_ROLES } from './roles';
 import { useWaypoints } from './store';
 
 const FRESH_FIX_MS = 10_000;
@@ -23,14 +24,16 @@ export function WaypointsPage() {
   const distanceLabel = useDistanceLabel();
   const [marking, setMarking] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<WaypointRole | null>(null);
 
   const rows = useMemo(() => {
-    const list = [...waypoints.values()];
+    const list = [...waypoints.values()].filter((w) => !roleFilter || w.role === roleFilter);
     // Con posición, los más cercanos primero; sin posición, por nombre.
     return fix
       ? list.sort((a, b) => distanceMeters(fix, a) - distanceMeters(fix, b))
       : list.sort((a, b) => a.name.localeCompare(b.name, i18n.language));
-  }, [waypoints, fix, i18n.language]);
+  }, [waypoints, fix, i18n.language, roleFilter]);
+  const usedRoles = WAYPOINT_ROLES.filter((r) => [...waypoints.values()].some((w) => w.role === r));
 
   async function markHere() {
     setMarking(true);
@@ -78,6 +81,19 @@ export function WaypointsPage() {
         <p className="hint">{t('waypoints.noGps')}</p>
       )}
 
+      {usedRoles.length > 0 && (
+        <div className="chips" role="group" aria-label={t('waypoints.role.filter')}>
+          <button type="button" className="chip" aria-pressed={roleFilter === null} onClick={() => setRoleFilter(null)}>
+            {t('waypoints.role.all')}
+          </button>
+          {usedRoles.map((r) => (
+            <button key={r} type="button" className="chip" aria-pressed={roleFilter === r} onClick={() => setRoleFilter(r)} data-testid={`role-filter-${r}`}>
+              {t(`waypoints.role.${r}`)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {rows.length === 0 ? (
         <p className="empty">{t('waypoints.empty')}</p>
       ) : (
@@ -88,6 +104,7 @@ export function WaypointsPage() {
                 <MapPin size={22} aria-hidden style={{ color: 'var(--accent)', flex: 'none' }} />
                 <span className="list-main">
                   <span className="list-title">{wp.name}</span>
+                  {wp.role && <span className="list-sub" data-testid="wp-role-badge">{t(`waypoints.role.${wp.role}`)}</span>}
                   {fix && <span className="list-sub">{distanceLabel(fix, wp)}</span>}
                   {(wp.privateRadiusM ?? 0) > 0 && <span className="list-sub">{t('waypoints.privateBadge', { m: wp.privateRadiusM })}</span>}
                 </span>

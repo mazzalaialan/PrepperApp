@@ -9,6 +9,7 @@ import { useSettings, type Country } from '@/core/settings/settings';
 import { speak, stopSpeaking, useSpeechVoice } from '@/core/speech/speech';
 import { CALLS } from '@/modules/firstAid/guides/types';
 import type { NewWaypointDraft } from '@/modules/waypoints/WaypointEditPage';
+import { nearestWithRole } from '@/modules/waypoints/roles';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { describeLocation, type LocationInfo } from './osm';
 import { CopyButton, formatDistance } from './parts';
@@ -96,10 +97,15 @@ export function MyLocationPage() {
     if (nearestWp && nearestWp.d < 20_000) {
       lines.push(t('location.msg.waypoint', { distance: formatDistance(nearestWp.d, i18n.language), dir: t(`geo.cardinal.${cardinalOf(nearestWp.bearing)}`), name: nearestWp.name }));
     }
+    // Si hay un punto de escape o un refugio guardados cerca, el mensaje (y la pantalla) dicen cuál es el más cercano.
+    for (const role of ['escape', 'shelter'] as const) {
+      const near = nearestWithRole(waypoints.values(), role, fix);
+      if (near) lines.push(t(`location.msg.${role}`, { name: near.waypoint.name, distance: formatDistance(near.distanceM, i18n.language), dir: t(`geo.cardinal.${cardinalOf(near.bearing)}`) }));
+    }
     if (fix.alt !== null) lines.push(t('location.msg.altitude', { alt: Math.round(fix.alt) }));
     lines.push(t('location.msg.map', { url: mapUrl }));
     return lines.join('\n');
-  }, [fix, info, nearestWp, t, i18n.language]);
+  }, [fix, info, nearestWp, waypoints, t, i18n.language]);
 
   // El mismo mensaje, para leerlo en voz alta: coordenadas cifra por cifra (para anotarlas), sin el link del mapa.
   const spoken = useMemo(() => {

@@ -7,7 +7,8 @@ import { bearingDeg, distanceMeters, formatDecimal, formatDms, parseCoordinates 
 import { MapPickButton } from '@/modules/maps/MapPickButton';
 import { currentPosition, GeoPositionError, useGeolocation } from '@/core/geo/useGeolocation';
 import { newEntity } from '@/core/model/entity';
-import type { Waypoint } from '@/core/model/types';
+import type { Waypoint, WaypointRole } from '@/core/model/types';
+import { WAYPOINT_ROLES } from './roles';
 import { useSettings } from '@/core/settings/settings';
 import { altitudeForInput, altitudeToMeters, altitudeUnit, formatDistance } from '@/core/units/units';
 import { parseNum } from '@/ui/numbers';
@@ -58,6 +59,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   const [alt, setAlt] = useState(altitudeForInput(initial.alt, units));
   const [notes, setNotes] = useState(initial.notes);
   const [rainAlerts, setRainAlerts] = useState(initial.rainAlerts);
+  const [role, setRole] = useState<WaypointRole | ''>(initial.role ?? '');
   const [privateOn, setPrivateOn] = useState((initial.privateRadiusM ?? 0) > 0);
   const [privateRadius, setPrivateRadius] = useState(String(initial.privateRadiusM || 500));
   const [saved, setSaved] = useState(false);
@@ -97,6 +99,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
       notes,
       rainAlerts,
       privateRadiusM: privateOn ? Number(privateRadius) : null,
+      role: role || null,
     });
     if (isNew) navigate(`/orientation/waypoints/${initial.id}`, { replace: true });
     else setSaved(true);
@@ -187,6 +190,18 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
           </label>
           <p className="hint" style={{ margin: 0 }}>{t('waypoints.lightningSoon')}</p>
         </fieldset>
+        <div className="field">
+          <label htmlFor="wp-role">{t('waypoints.role.label')}</label>
+          <select id="wp-role" className="select" value={role} onChange={(e) => { setRole(e.target.value as WaypointRole | ''); dirty(); }} data-testid="wp-role">
+            <option value="">{t('waypoints.role.none')}</option>
+            {WAYPOINT_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {t(`waypoints.role.${r}`)}
+              </option>
+            ))}
+          </select>
+          <p className="hint">{t('waypoints.role.hint')}</p>
+        </div>
         <fieldset className="fieldset stack">
           <legend>{t('waypoints.privacy')}</legend>
           <label className="check">
