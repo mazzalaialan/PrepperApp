@@ -735,7 +735,7 @@ export const CROPS: Crop[] = [
     avoid: ['papa'],
     rotateAfter: ['bulb', 'leaf', 'legume'],
     waterCritical: tx('Desde que florece hasta que se desarrollan los frutos', 'From flowering through fruit development'),
-    yield: tx('0,5 a 1,5 kg por planta (orientativo, según variedad y manejo)', '0.5 to 1.5 kg per plant (approximate, depends on variety and care)'),
+    yield: tx('2 a 2,5 kg/m² en huerta familiar (unos 0,6 a 0,8 kg por planta)', '2 to 2.5 kg/m² in a family garden (about 0.6 to 0.8 kg per plant)'),
     harvest: tx('Verde o maduro (rojo, amarillo) según el gusto', 'Green or ripe (red, yellow) as you like'),
     harvestUnit: 'u',
   },

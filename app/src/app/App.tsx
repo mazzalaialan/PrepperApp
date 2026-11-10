@@ -62,6 +62,7 @@ const StarMapPage = page(() => import('@/modules/starmap/StarMapPage').then((m) 
 const InclinometerPage = page(() => import('@/modules/inclinometer/InclinometerPage').then((m) => ({ default: m.InclinometerPage })));
 const GoToPage = page(() => import('@/modules/waypoints/GoToPage').then((m) => ({ default: m.GoToPage })));
 const RouteEditPage = page(() => import('@/modules/waypoints/RouteEditPage').then((m) => ({ default: m.RouteEditPage })));
+const GoToPointPage = page(() => import('@/modules/waypoints/GoToPointPage').then((m) => ({ default: m.GoToPointPage })));
 const RouteGoPage = page(() => import('@/modules/waypoints/RouteGoPage').then((m) => ({ default: m.RouteGoPage })));
 const TrackFollowPage = page(() => import('@/modules/tracks/TrackFollowPage').then((m) => ({ default: m.TrackFollowPage })));
 const TrackPage = page(() => import('@/modules/tracks/TrackPage').then((m) => ({ default: m.TrackPage })));
@@ -137,6 +138,7 @@ const router = createHashRouter([
       { path: '/orientation/waypoints', element: <WaypointsPage /> },
       { path: '/orientation/waypoints/:id', element: <WaypointEditPage /> },
       { path: '/orientation/waypoints/:id/go', element: <GoToPage /> },
+      { path: '/orientation/go', element: <GoToPointPage /> },
       { path: '/orientation/compass', element: <CompassPage /> },
       { path: '/orientation/declination', element: <DeclinationPage /> },
       { path: '/orientation/inclinometer', element: <InclinometerPage /> },

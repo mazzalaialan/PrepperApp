@@ -393,6 +393,10 @@
     "notesPlaceholder": "Cirugías, vacunas, otros datos útiles"
   },
   "emergency": {
+    "openHere": "Ir en VikArg",
+    "openHereTitle": "Guiarme hasta acá con la brújula o el mapa de VikArg",
+    "openOther": "Otra app",
+    "openOtherTitle": "Abrir en la app de mapas que elijas (Waze, OsmAnd, Maps…)",
     "newContact": "Nuevo contacto",
     "editContact": "Editar {{name}}",
     "nationalTitle": "Números nacionales",
@@ -1030,6 +1034,7 @@
     "source": "Pronóstico de Open-Meteo para {{place}}. Se guarda en el dispositivo para verlo sin conexión."
   },
   "rainAlerts": {
+    "foldTitle": "Configurar avisos de lluvia, rayos y peligros",
     "backgroundOn": "Con la app cerrada te avisa el servidor de lluvia, de rayos a menos de 30 km y de peligros naturales cerca (sismos, incendios, inundaciones, ciclones y erupciones), en estos waypoints y, si está activado en Ajustes → Notificaciones, donde estás.",
     "title": "Avisos de lluvia",
     "here": "Avisarme si va a llover donde estoy",
@@ -1431,12 +1436,16 @@
     "finished": "Llegaste al final de la ruta"
   },
   "goto": {
+    "pointName": "ese lugar",
+    "cameraOn": "Usar la cámara de fondo",
+    "cameraOff": "Volver al fondo negro",
+    "camera": {"denied": "Sin permiso de cámara: se sigue con el fondo negro.", "unavailable": "No hay cámara disponible: se sigue con el fondo negro."},
     "changeView": "Cambiar la vista",
     "chooseHint": "¿Cómo querés que te guíe?",
     "viewMap": "Verlo en el mapa",
     "viewMapHint": "El mapa te sigue y gira con la brújula; una línea te marca el camino recto al punto.",
     "view3d": "Vista 3D con brújula y horizonte",
-    "view3dHint": "Fondo negro, sin cámara: horizonte artificial, puntos cardinales y un camino con un faro en la dirección del punto. Usá el celular parado.",
+    "view3dHint": "Fondo negro (o la cámara, si la activás): horizonte artificial, puntos cardinales y un camino con un faro en la dirección del punto. Usá el celular parado.",
     "view3dLabel": "Entorno simulado con el horizonte y la dirección al punto",
     "raisePhone": "Pará el celular frente a vos para ver el horizonte y el camino.",
     "button": "Ir a este punto",
@@ -1901,6 +1910,7 @@
     "confirmDelete": "¿Eliminar el track \"{{name}}\"? Los puntos que copiaste a tus waypoints quedan.",
     "delete": "Eliminar {{name}}",
     "follow": {
+      "timeHintTitle": "¿Cómo se calcula el tiempo?",
       "lightShort": "Te queda poca luz para lo que falta: el sol se pone en {{sunset}} y te faltan unos {{walk}} de marcha (más un margen de media hora). Pensá en acortar o en volver, y llevá la linterna a mano.",
       "offVoice": "Te saliste del track",
       "soundOn": "Sonido y voz al salirte: sí",

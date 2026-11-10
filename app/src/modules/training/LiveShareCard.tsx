@@ -24,11 +24,11 @@ export function LiveShareCard() {
   const [error, setError] = useState<string | null>(null);
 
   async function start() {
-    if (!track?.activity) return;
+    if (!track) return;
     setBusy(true);
     setError(null);
     try {
-      const created = await createLive(serverUrl, { name: track.name, lang: i18n.language.startsWith('en') ? 'en' : 'es', kind: track.activity, durationMin: minutes });
+      const created = await createLive(serverUrl, { name: track.name, lang: i18n.language.startsWith('en') ? 'en' : 'es', kind: track.activity ?? '', durationMin: minutes });
       await update({ liveShare: { id: created.id, url: created.url, token: created.token, expiresAt: created.expiresAt, name: track.name, sentSeg: 0, sentPt: 0, lastSentAt: null, failing: false } });
     } catch (err) {
       setError(t(`liveShare.error.${err instanceof LiveError ? err.code : 'failed'}`));

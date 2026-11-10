@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Copy, Flame, HeartPulse, Hospital, LifeBuoy, MapPinned, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Check, Copy, ExternalLink, Flame, HeartPulse, Hospital, LifeBuoy, MapPinned, Navigation, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { dialable, mapsUrl } from './national';
 import type { ParkRadio } from './data';
@@ -61,15 +62,32 @@ export function PhoneActions({ phone, testId }: { phone: string; testId?: string
   );
 }
 
-/** Dirección: abre Google Maps. */
+/**
+ * Dirección: abre Google Maps. Con coordenadas, además se puede ir hasta ahí con
+ * VikArg (brújula o mapa, también sin conexión) o abrirlo en la app de mapas que elijas.
+ */
 export function MapLink({ address, lat, lon }: { address: string; lat: number | null; lon: number | null }) {
   const { t } = useTranslation();
   const url = mapsUrl(address, lat, lon);
   if (!url) return null;
+  const hasPoint = lat !== null && lon !== null;
+  const name = encodeURIComponent(address.trim().slice(0, 80));
   return (
-    <a className="map-link" href={url} target="_blank" rel="noreferrer" title={t('emergency.openMaps')}>
-      <MapPinned size={14} aria-hidden /> {address || t('emergency.seeOnMap')}
-    </a>
+    <span className="map-links">
+      <a className="map-link" href={url} target="_blank" rel="noreferrer" title={t('emergency.openMaps')}>
+        <MapPinned size={14} aria-hidden /> {address || t('emergency.seeOnMap')}
+      </a>
+      {hasPoint && (
+        <>
+          <Link className="map-link" to={`/orientation/go?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&name=${name}`} title={t('emergency.openHereTitle')} data-testid="open-in-app">
+            <Navigation size={14} aria-hidden /> {t('emergency.openHere')}
+          </Link>
+          <a className="map-link" href={`geo:${lat.toFixed(6)},${lon.toFixed(6)}?q=${lat.toFixed(6)},${lon.toFixed(6)}`} title={t('emergency.openOtherTitle')}>
+            <ExternalLink size={14} aria-hidden /> {t('emergency.openOther')}
+          </a>
+        </>
+      )}
+    </span>
   );
 }
 

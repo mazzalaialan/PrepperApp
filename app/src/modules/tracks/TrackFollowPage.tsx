@@ -226,19 +226,23 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
               {t('tracks.follow.next', { name: state.next.name, distance: dist(state.next.aheadM) })}
             </p>
           )}
-          <p className="hint" style={{ margin: 0 }}>{t('tracks.follow.timeHint')}</p>
+          <details className="more-options">
+            <summary>{t('tracks.follow.timeHintTitle')}</summary>
+            <p className="hint" style={{ margin: 0 }}>{t('tracks.follow.timeHint')}</p>
+          </details>
         </section>
       )}
 
-      <button className="btn" type="button" aria-pressed={sound} onClick={() => void update({ followSound: !sound })} data-testid="follow-sound">
-        {sound ? <Volume2 size={18} aria-hidden /> : <VolumeX size={18} aria-hidden />} {t(sound ? 'tracks.follow.soundOn' : 'tracks.follow.soundOff')}
-      </button>
+      {/* Vista y sonido en una sola fila: menos pantalla ocupada antes del mapa. */}
       <div className="chips" role="group" aria-label={t('tracks.follow.view')}>
         {(['drawing', 'map'] as const).map((v) => (
           <button key={v} type="button" className="chip" aria-pressed={view === v} onClick={() => void update({ trackFollowView: v })}>
             {t(`tracks.follow.views.${v}`)}
           </button>
         ))}
+        <button className="chip" type="button" aria-pressed={sound} onClick={() => void update({ followSound: !sound })} data-testid="follow-sound">
+          {sound ? <Volume2 size={16} aria-hidden /> : <VolumeX size={16} aria-hidden />} {t(sound ? 'tracks.follow.soundOn' : 'tracks.follow.soundOff')}
+        </button>
       </div>
       {view === 'map' ? (
         <Suspense fallback={null}>

@@ -393,6 +393,10 @@
     "notesPlaceholder": "Surgeries, vaccines, other useful details"
   },
   "emergency": {
+    "openHere": "Go in VikArg",
+    "openHereTitle": "Guide me there with the VikArg compass or map",
+    "openOther": "Other app",
+    "openOtherTitle": "Open in the map app you choose (Waze, OsmAnd, Maps…)",
     "newContact": "New contact",
     "editContact": "Edit {{name}}",
     "nationalTitle": "National numbers (Argentina)",
@@ -1030,6 +1034,7 @@
     "source": "Open-Meteo forecast for {{place}}. Saved on this device to view offline."
   },
   "rainAlerts": {
+    "foldTitle": "Set up rain, lightning and hazard alerts",
     "backgroundOn": "With the app closed the server warns you about rain, lightning within 30 km and nearby natural hazards (earthquakes, wildfires, floods, cyclones and eruptions), at these waypoints and, if enabled in Settings → Notifications, where you are.",
     "title": "Rain alerts",
     "here": "Warn me if it's going to rain where I am",
@@ -1431,12 +1436,16 @@
     "finished": "You've reached the end of the route"
   },
   "goto": {
+    "pointName": "that place",
+    "cameraOn": "Use the camera as background",
+    "cameraOff": "Back to black background",
+    "camera": {"denied": "No camera permission: staying on the black background.", "unavailable": "No camera available: staying on the black background."},
     "changeView": "Change view",
     "chooseHint": "How do you want to be guided?",
     "viewMap": "See it on the map",
     "viewMapHint": "The map follows you and turns with the compass; a line shows the straight way to the point.",
     "view3d": "3D view with compass and horizon",
-    "view3dHint": "Black background, no camera: artificial horizon, cardinal points and a path with a beacon toward the point. Hold the phone upright.",
+    "view3dHint": "Black background (or the camera, if you turn it on): artificial horizon, cardinal points and a path with a beacon toward the point. Hold the phone upright.",
     "view3dLabel": "Simulated surroundings with the horizon and the direction to the point",
     "raisePhone": "Hold the phone upright in front of you to see the horizon and the path.",
     "button": "Go to this point",
@@ -1901,6 +1910,7 @@
     "confirmDelete": "Delete track \"{{name}}\"? Points you copied to your waypoints stay.",
     "delete": "Delete {{name}}",
     "follow": {
+      "timeHintTitle": "How is the time worked out?",
       "lightShort": "Daylight is short for what is left: the sun sets in {{sunset}} and you have about {{walk}} of walking left (plus a half-hour margin). Consider shortening the route or turning back, and keep a flashlight handy.",
       "offVoice": "You left the track",
       "soundOn": "Sound and voice when off track: on",

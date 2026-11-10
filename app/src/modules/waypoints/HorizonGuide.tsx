@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Camera as CameraIcon, CameraOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CARDINALS } from '@/core/geo/geo';
 import { declinationAt } from '@/core/sensors/heading';
+import { useCamera, visibleFov } from '@/core/sensors/useCamera';
 import { useDeviceAngles } from '@/core/sensors/useDeviceAngles';
 import { cameraFromDevice, horizontalToVector, offscreenDirection, projectCamera, type Camera, type Vec3 } from '@/modules/starmap/sky';
 
 /**
- * Vista 3D sobre fondo negro, sin cámara: con la brújula y la inclinación del
+ * Vista 3D sobre fondo negro (o sobre la cámara, si se elige): con la brújula y la inclinación del
  * celular se arma un entorno simulado con horizonte artificial, puntos
  * cardinales cada 15°, un camino sobre el suelo hacia el punto y un faro en su
  * dirección. Con el celular parado frente a vos, lo que ves es lo que tenés adelante.
  */
 
-const FOV = 62;
+const DEFAULT_FOV = 62;
 const SMOOTHING = 0.3;
 /** Altura de los ojos sobre el suelo, m: da la perspectiva del camino. */
 const EYE_M = 1.6;
@@ -30,6 +32,7 @@ export function HorizonGuide({
   place,
   name,
   distanceLabel,
+  elevationDeg,
   turnText,
 }: {
   /** Rumbo geográfico al punto, grados. */
@@ -37,12 +40,24 @@ export function HorizonGuide({
   place: { lat: number; lon: number };
   name: string;
   distanceLabel: string;
+  /** Ángulo sobre el horizonte al que se ve el punto (según desnivel y distancia); null si falta la altura. */
+  elevationDeg: number | null;
   turnText: string | null;
 }) {
   const { t } = useTranslation();
   const angles = useDeviceAngles(true);
   const smoothed = useRef<Camera | null>(null);
   const box = useRef<HTMLDivElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  // Por defecto, fondo negro; la cámara es opcional y se pide solo al activarla.
+  const [withCamera, setWithCamera] = useState(false);
+  const cam = useCamera(video, withCamera);
+  const [fov, setFov] = useState(DEFAULT_FOV);
+  useEffect(() => {
+    if (withCamera && cam.ready && video.current) setFov(visibleFov(video.current).v);
+    if (!withCamera) setFov(DEFAULT_FOV);
+  }, [withCamera, cam.ready]);
+  const elev = elevationDeg === null ? 0 : Math.max(-80, Math.min(80, elevationDeg));
   const [size, setSize] = useState({ w: 360, h: 560 });
   const declination = useMemo(() => declinationAt(Math.round(place.lat * 10) / 10, Math.round(place.lon * 10) / 10), [place.lat, place.lon]);
 
@@ -58,12 +73,12 @@ export function HorizonGuide({
 
   let camera: Camera | null = null;
   if (angles) {
-    const raw = cameraFromDevice(angles.alpha, angles.beta, angles.gamma, declination, angles.screenAngle, FOV);
+    const raw = cameraFromDevice(angles.alpha, angles.beta, angles.gamma, declination, angles.screenAngle, fov);
     const prev = smoothed.current;
     const forward = prev ? norm(add(prev.forward, raw.forward, SMOOTHING)) : raw.forward;
     const up0 = prev ? norm(add(prev.up, raw.up, SMOOTHING)) : raw.up;
     const right = norm(cross(forward, up0));
-    camera = { forward, right, up: cross(right, forward), fov: FOV };
+    camera = { forward, right, up: cross(right, forward), fov };
     smoothed.current = camera;
   }
 
@@ -123,16 +138,18 @@ export function HorizonGuide({
         cls: 'hg-path',
       });
     });
-    // Faro en la dirección del punto: una columna sobre el horizonte.
-    const base = px(dir(bearing, 0));
-    const top = px(dir(bearing, 14));
-    if (base && top && inside(base)) {
-      beacon = { x: base.x, y: base.y };
-      lines.push({ d: `M${base.x.toFixed(1)} ${base.y.toFixed(1)}L${top.x.toFixed(1)} ${top.y.toFixed(1)}`, cls: 'hg-beacon' });
-      labels.push({ x: top.x, y: top.y - 12, text: `${name} · ${distanceLabel}`, cls: 'hg-name' });
+    // El punto, a la altura que le corresponde según el desnivel y la distancia; una línea baja hasta el horizonte.
+    const mark = px(dir(bearing, elev));
+    if (mark && inside(mark)) {
+      beacon = { x: mark.x, y: mark.y };
+      const ground = px(dir(bearing, 0));
+      if (ground && Math.abs(elev) > 1) lines.push({ d: `M${mark.x.toFixed(1)} ${mark.y.toFixed(1)}L${ground.x.toFixed(1)} ${ground.y.toFixed(1)}`, cls: 'hg-beacon' });
+      else lines.push({ d: `M${mark.x.toFixed(1)} ${mark.y.toFixed(1)}L${mark.x.toFixed(1)} ${(mark.y - 60).toFixed(1)}`, cls: 'hg-beacon' });
+      const tilt = elevationDeg === null ? '' : ` · ${elev > 0 ? '+' : ''}${Math.round(elev)}°`;
+      labels.push({ x: mark.x, y: mark.y - (Math.abs(elev) > 1 ? 14 : 72), text: `${name} · ${distanceLabel}${tilt}`, cls: 'hg-name' });
     } else {
-      // Fuera de cuadro: flecha en el borde hacia donde girar.
-      edge = { angle: offscreenDirection(dir(bearing, 0), camera) };
+      // Fuera de cuadro: flecha en el borde hacia donde girar (y subir o bajar la vista).
+      edge = { angle: offscreenDirection(dir(bearing, elev), camera) };
     }
   }
 
@@ -140,7 +157,8 @@ export function HorizonGuide({
   const ey = edge ? h / 2 + Math.sin(edge.angle) * (h / 2 - 34) : 0;
 
   return (
-    <div ref={box} className="hg" data-testid="horizon-guide">
+    <div ref={box} className={`hg${withCamera ? ' hg-cam' : ''}`} data-testid="horizon-guide">
+      {withCamera && <video ref={video} className="hg-video" playsInline muted aria-hidden />}
       <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} role="img" aria-label={t('goto.view3dLabel')}>
         {lines.map((l, i) => (
           <path key={i} d={l.d} className={l.cls} fill="none" />
@@ -157,6 +175,18 @@ export function HorizonGuide({
           </g>
         )}
       </svg>
+      <button
+        type="button"
+        className="icon-btn hg-camera"
+        onClick={() => setWithCamera(!withCamera)}
+        aria-pressed={withCamera}
+        aria-label={withCamera ? t('goto.cameraOff') : t('goto.cameraOn')}
+        title={withCamera ? t('goto.cameraOff') : t('goto.cameraOn')}
+        data-testid="hg-camera"
+      >
+        {withCamera ? <CameraOff size={22} /> : <CameraIcon size={22} />}
+      </button>
+      {withCamera && cam.error && <p className="hg-turn" role="alert">{t(`goto.camera.${cam.error}`)}</p>}
       {turnText && <p className="hg-turn">{turnText}</p>}
       {!angles && <p className="hg-turn">{t('compass.waiting')}</p>}
     </div>

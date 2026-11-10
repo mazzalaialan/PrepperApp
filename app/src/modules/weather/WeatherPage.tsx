@@ -186,7 +186,11 @@ export function WeatherPage() {
         </>
       )}
 
-      <RainAlertsSettings />
+      {/* Se configura una vez: queda plegado para que la pantalla muestre primero el pronóstico. */}
+      <details className="more-options" data-testid="weather-alerts">
+        <summary>{t('rainAlerts.foldTitle')}</summary>
+        <RainAlertsSettings />
+      </details>
       <OfficialWeatherNotice />
     </div>
   );

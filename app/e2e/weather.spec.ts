@@ -222,6 +222,7 @@ test('aviso de lluvia por waypoint, activado desde su ficha', async ({ page, con
   const notice = page.locator('.rain-notice');
   await expect(notice).toHaveText(/Lluvia en unos 45 min · Refugio/);
   await notice.getByRole('link').click();
+  await page.getByTestId('weather-alerts').getByText('Configurar avisos').click();
   await expect(page.getByRole('heading', { name: 'Avisos de lluvia' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Refugio.*Lluvia en unos 45 min/ })).toBeVisible();
   await notice.getByRole('button', { name: 'Cerrar' }).click();
@@ -233,6 +234,7 @@ test('aviso de lluvia por waypoint, activado desde su ficha', async ({ page, con
   await page.getByLabel('Avisarme de lluvia, rayos y peligros naturales en este punto').uncheck();
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.goto('/#/weather/forecast');
+  await page.getByTestId('weather-alerts').getByText('Configurar avisos').click();
   await expect(page.getByText('Para recibir avisos de un lugar guardado')).toBeVisible();
 
   // Con la app cerrada avisa el servidor: sin notificaciones registradas, se indica cómo activarlo.

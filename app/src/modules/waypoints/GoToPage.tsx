@@ -171,6 +171,7 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
           place={fix}
           name={target.name}
           distanceLabel={distance === null ? '' : formatDistance(distance, units, i18n.language)}
+          elevationDeg={distance !== null && fix.alt !== null && target.alt !== null ? (Math.atan2(target.alt - fix.alt, Math.max(distance, 1)) * 180) / Math.PI : null}
           turnText={turn === null ? null : turnLabel(t, turn)}
         />
       ) : (
