@@ -1931,7 +1931,7 @@
       "gapJoin": "Join with a line",
       "understood": "Got it",
       "nothing": "Not saved: nothing was recorded (you need to move with a good GPS signal).",
-      "nothingYet": "Nothing has been recorded yet: if you finish now nothing is saved. Move a few meters with a good GPS signal (under open sky).",
+      "nothingYet": "Nothing has been recorded yet: if you finish now the recording is discarded. Move a few meters with a good GPS signal (under open sky).",
       "weakGps": "Weak GPS signal (±{{accuracy}}): nothing is recorded until it is under ±{{max}}. Open sky helps.",
       "waitingMove": "GPS ready: recording as you move.",
       "defaultName": "Trip on {{date}} {{time}}",
@@ -1940,6 +1940,8 @@
       "mine": "Recorded by me",
       "recordedOn": "Recorded on {{date}} · {{time}} recording",
       "whileLocked": "Your trip is still being recorded.",
+      "discard": "Discard",
+      "discardTitle": "Discard the recording",
       "saveTitle": "Save the recording",
       "keepRecording": "Keep recording"
     }

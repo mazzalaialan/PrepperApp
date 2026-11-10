@@ -1931,7 +1931,7 @@
       "gapJoin": "Unir con una recta",
       "understood": "Entendido",
       "nothing": "No se guardó: no llegó a grabarse ningún tramo (hace falta moverse con el GPS dando buena señal).",
-      "nothingYet": "Todavía no se grabó ningún tramo: si terminás ahora no se guarda nada. Hace falta moverse unos metros con buena señal de GPS (a cielo abierto).",
+      "nothingYet": "Todavía no se grabó ningún tramo: si terminás ahora se descarta la grabación. Hace falta moverse unos metros con buena señal de GPS (a cielo abierto).",
       "weakGps": "Señal de GPS débil (±{{accuracy}}): no se graba hasta que baje de ±{{max}}. A cielo abierto mejora.",
       "waitingMove": "GPS listo: se graba a medida que te movés.",
       "defaultName": "Recorrido del {{date}} {{time}}",
@@ -1940,6 +1940,8 @@
       "mine": "Grabado por mí",
       "recordedOn": "Grabado el {{date}} · {{time}} grabando",
       "whileLocked": "Se sigue grabando tu recorrido.",
+      "discard": "Descartar",
+      "discardTitle": "Descartar la grabación",
       "saveTitle": "Guardar la grabación",
       "keepRecording": "Seguir grabando"
     }

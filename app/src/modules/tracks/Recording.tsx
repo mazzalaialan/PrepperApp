@@ -254,6 +254,7 @@ export function FinishDialog({ initialName, points, onClose }: { initialName: st
   const navigate = useNavigate();
   const finish = useRecorder((s) => s.finish);
   const [name, setName] = useState(initialName);
+  const nothing = points < 2;
   async function stop() {
     onClose();
     const id = await finish(name);
@@ -263,15 +264,16 @@ export function FinishDialog({ initialName, points, onClose }: { initialName: st
   }
   return (
     <Dialog
-      title={t('tracks.rec.saveTitle')}
+      title={t(nothing ? 'tracks.rec.discardTitle' : 'tracks.rec.saveTitle')}
       onClose={onClose}
       footer={
         <>
           <button className="btn" type="button" onClick={onClose}>
             {t('tracks.rec.keepRecording')}
           </button>
-          <button className="btn btn-primary" type="submit" form="rec-save">
-            {t('common.save')}
+          {/* Sin nada que guardar, terminar es descartar: el botón lo dice. */}
+          <button className={`btn ${nothing ? 'btn-danger-outline' : 'btn-primary'}`} type="submit" form="rec-save" data-testid={nothing ? 'rec-discard' : 'rec-save-btn'}>
+            {t(nothing ? 'tracks.rec.discard' : 'common.save')}
           </button>
         </>
       }
@@ -284,13 +286,16 @@ export function FinishDialog({ initialName, points, onClose }: { initialName: st
           void stop();
         }}
       >
-        {points < 2 && (
+        {nothing ? (
           <p className="error" role="alert">
             {t('tracks.rec.nothingYet')}
           </p>
+        ) : (
+          <>
+            <label htmlFor="rec-name">{t('tracks.name')}</label>
+            <input id="rec-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
+          </>
         )}
-        <label htmlFor="rec-name">{t('tracks.name')}</label>
-        <input id="rec-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
       </form>
     </Dialog>
   );
