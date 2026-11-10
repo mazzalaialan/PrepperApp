@@ -2083,6 +2083,9 @@
     }
   },
   "share": {
+    "quickBefore": "¿Solo querés mandar dónde estás o tu plan de salida? Usá",
+    "quickLink": "Mi ubicación",
+    "quickAfter": "(SMS, WhatsApp o compartir) o el plan de una salida en Entrenamiento. Esta pantalla arma un archivo cifrado con contraseña para pasar tus datos a otro dispositivo.",
     "title": "Compartir con un familiar",
     "link": "Compartir con un familiar",
     "linkHint": "Pasale tus fichas médicas, contactos y documentos a alguien de tu familia: se suman a lo que ya tiene, sin borrarle nada.",

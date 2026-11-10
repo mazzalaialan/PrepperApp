@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Check, FileUp, Share2 } from 'lucide-react';
 import { MIN_PASSWORD_LENGTH } from '@/core/security/vault';
 import { deliverFile } from '@/ui/files';
@@ -14,6 +15,9 @@ export function SharePage() {
       <div className="page-head">
         <h1 className="page-title" style={{ flex: 1 }}>{t('share.title')}</h1>
       </div>
+      <p className="hint" style={{ margin: 0 }} data-testid="share-quick">
+        {t('share.quickBefore')} <Link to="/first-aid/location">{t('share.quickLink')}</Link> {t('share.quickAfter')}
+      </p>
       <p className="hint">{t('share.intro')}</p>
       <SendSection />
       <ReceiveSection />

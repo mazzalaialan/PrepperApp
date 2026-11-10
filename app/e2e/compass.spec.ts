@@ -49,6 +49,8 @@ test('brújula: norte geográfico con declinación y magnético', async ({ page 
   await page.getByRole('link', { name: /Brújula/ }).click();
 
   // Celular acostado apuntando al norte magnético: el norte geográfico está ~9,5° al este.
+  // Lo avanzado está plegado: se abre para ver y cambiar la referencia del norte.
+  await page.getByTestId('compass-advanced').getByText('Norte verdadero o magnético').click();
   await expect(page.getByRole('button', { name: 'Geográfico' })).toBeVisible();
   await setOrientation(page, 0, 0);
   await expect(page.getByTestId('declination')).toHaveText(/Declinación en tu ubicación: \d+,\d° O/);

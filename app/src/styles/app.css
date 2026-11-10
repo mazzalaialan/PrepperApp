@@ -4281,3 +4281,17 @@ a.module-card:hover {
   color: var(--accent-strong);
   font-weight: 600;
 }
+
+/* Transiciones suaves en botones y chips (apagadas con "reducir movimiento" y en el ahorro de batería, que ya las anula arriba). */
+@media (prefers-reduced-motion: no-preference) {
+  .btn,
+  .chip,
+  .icon-btn,
+  .segmented button,
+  .more-options > summary {
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+}

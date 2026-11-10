@@ -2083,6 +2083,9 @@
     }
   },
   "share": {
+    "quickBefore": "Just want to send where you are or your outing plan? Use",
+    "quickLink": "My location",
+    "quickAfter": "(SMS, WhatsApp or share) or an outing's plan in Training. This screen builds a password-encrypted file to move your data to another device.",
     "title": "Share with a family member",
     "link": "Share with a family member",
     "linkHint": "Give your medical records, contacts and documents to someone in your family: they're added to what they have, nothing is deleted.",
