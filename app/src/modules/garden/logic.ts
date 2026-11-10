@@ -64,7 +64,8 @@ export function harvestStart(p: Planting, crop: Crop): IsoDay {
 /** Hasta cuándo se cosecha, aproximadamente. */
 export function harvestEnd(p: Planting, crop: Crop): IsoDay {
   const span = crop.daysToHarvest[1] - crop.daysToHarvest[0] + Math.round(crop.harvestMonths * 30);
-  return addDays(harvestStart(p, crop), crop.perennial ? 365 * 50 : span);
+  // Una perenne rinde unos años (la frutilla se renueva a los 3); sin dato, se la deja de por vida.
+  return addDays(harvestStart(p, crop), crop.perennial ? 365 * (crop.productiveYears ?? 50) : span);
 }
 
 /** La próxima tarea de cada siembra activa. */
@@ -137,7 +138,13 @@ export function recommendForBed(bed: GardenBed, plantings: Planting[], opts: Rec
     .map((p) => CROP_BY_ID.get(p.cropId))
     .filter((c): c is Crop => !!c);
   const thisMonth = month(opts.today);
-  const frostWait = !bed.greenhouse && beforeLastFrost(opts.today, opts.lastFrost);
+  // Lo sensible al frío no se recomienda antes de la última helada: ni ahora ni para el mes que viene (se mide a mitad de ese mes).
+  const frostWaitAt = (when: 0 | 1) => {
+    if (bed.greenhouse) return false;
+    if (when === 0) return beforeLastFrost(opts.today, opts.lastFrost);
+    const nextMonth = (thisMonth % 12) + 1;
+    return beforeLastFrost(`${opts.today.slice(0, 4)}-${String(nextMonth).padStart(2, '0')}-15`, opts.lastFrost);
+  };
 
   const out: BedRecommendation[] = [];
   for (const crop of CROPS) {
@@ -150,7 +157,7 @@ export function recommendForBed(bed: GardenBed, plantings: Planting[], opts: Rec
     let pick: Pick<BedRecommendation, 'action' | 'when'> | null = null;
     for (const when of [0, 1] as const) {
       const m = ((thisMonth - 1 + when) % 12) + 1;
-      const tender = crop.frost === 'tender' && frostWait && when === 0;
+      const tender = crop.frost === 'tender' && frostWaitAt(when);
       if (cal.sow.has(m) && !tender) pick = { action: 'sow', when };
       else if (cal.transplant.has(m) && !tender) pick = { action: 'transplant', when };
       else if (cal.nursery.has(m)) pick = { action: 'nursery', when };

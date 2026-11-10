@@ -17,6 +17,9 @@ export function CropPage() {
   const cal = cropCalendar(zone, crop.id);
   const fp = gridFootprint(crop);
   const days = (d: [number, number]) => t('garden.daysRange', { from: d[0], to: d[1] });
+  // En semanas y con la fecha estimada si se siembra (o se trasplanta) hoy: no hay que sumar a mano.
+  const dateAfter = (n: number) => new Date(Date.now() + n * 86_400_000).toLocaleDateString(lang, { day: 'numeric', month: 'long' });
+  const weeks = (d: [number, number]) => t('garden.weeksRange', { from: Math.round(d[0] / 7), to: Math.round(d[1] / 7) });
   const others = (ids: string[]) => ids.map((x) => CROP_BY_ID.get(x)).filter((c) => !!c);
 
   return (
@@ -51,7 +54,21 @@ export function CropPage() {
             </>
           )}
           <dt>{t('garden.facts.toHarvest')}</dt>
-          <dd>{crop.firstHarvestYear ? t('garden.fromYear', { year: crop.firstHarvestYear }) : days(crop.daysToHarvest)}</dd>
+          <dd>
+            {crop.firstHarvestYear ? (
+              t('garden.fromYear', { year: crop.firstHarvestYear })
+            ) : (
+              <>
+                {days(crop.daysToHarvest)} ({weeks(crop.daysToHarvest)})
+                <br />
+                <span className="hint" data-testid="harvest-estimate">
+                  {crop.sowing === 'transplant'
+                    ? t('garden.harvestIfTransplant', { from: dateAfter(crop.daysToHarvest[0]), to: dateAfter(crop.daysToHarvest[1]) })
+                    : t('garden.harvestIfSow', { from: dateAfter(crop.daysToHarvest[0]), to: dateAfter(crop.daysToHarvest[1]) })}
+                </span>
+              </>
+            )}
+          </dd>
           <dt>{t('garden.facts.spacing')}</dt>
           <dd>{t('garden.spacingValue', { plant: crop.spacingCm, row: crop.rowCm })}</dd>
           <dt>{t('garden.facts.grid')}</dt>

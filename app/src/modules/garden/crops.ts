@@ -62,6 +62,8 @@ export interface Crop {
   harvestMonths: number;
   /** Perenne: se planta una vez y produce varios años. */
   perennial?: boolean;
+  /** Años que rinde bien antes de renovarla (perennes): de ahí sale la tarea de renovar o arrancar. */
+  productiveYears?: number;
   /** Se cosecha recién a partir del año N (espárrago). */
   firstHarvestYear?: number;
   rootDepth: RootDepth;
@@ -351,7 +353,7 @@ export const CROPS: Crop[] = [
     companions: ['zanahoria', 'lechuga', 'remolacha', 'acelga', 'repollo'],
     avoid: ['chaucha', 'haba', 'arveja'],
     rotateAfter: ['root', 'leaf', 'legume'],
-    waterCritical: tx('En la siembra y el trasplante', 'At sowing and transplanting'),
+    waterCritical: tx('En la siembra y el trasplante, y cuando engruesa el bulbo', 'At sowing and transplanting, and while the bulb swells'),
     yield: tx('3 a 6 kg/m²', '3 to 6 kg/m²'),
     harvest: tx('Planta entera cuando las hojas se secan y se doblan; orear al sol', 'Whole plant when the leaves dry and bend; cure in the sun'),
     harvestUnit: 'kg',
@@ -375,7 +377,7 @@ export const CROPS: Crop[] = [
     companions: ['zanahoria', 'lechuga', 'remolacha', 'repollo', 'tomate'],
     avoid: ['chaucha', 'haba', 'arveja'],
     rotateAfter: ['root', 'leaf', 'legume'],
-    waterCritical: tx('En la siembra y el trasplante', 'At sowing and transplanting'),
+    waterCritical: tx('En la siembra y el trasplante, y durante el crecimiento de las hojas', 'At sowing and transplanting, and during leaf growth'),
     yield: tx('3 a 5 kg/m²', '3 to 5 kg/m²'),
     harvest: tx('Planta entera, antes de que florezca', 'Whole plant, before it flowers'),
     harvestUnit: 'atados',
@@ -488,6 +490,7 @@ export const CROPS: Crop[] = [
     nurseryDays: [300, 365],
     harvestMonths: 2,
     perennial: true,
+    productiveYears: 15,
     firstHarvestYear: 3,
     rootDepth: 'deep',
     kc: [0.5, 0.95, 0.3],
@@ -536,6 +539,7 @@ export const CROPS: Crop[] = [
     daysToHarvest: [150, 180],
     harvestMonths: 3,
     perennial: true,
+    productiveYears: 3,
     rootDepth: 'shallow',
     kc: [0.4, 0.85, 0.75],
     companions: ['lechuga', 'espinaca', 'ajo', 'acelga'],
@@ -731,7 +735,7 @@ export const CROPS: Crop[] = [
     avoid: ['papa'],
     rotateAfter: ['bulb', 'leaf', 'legume'],
     waterCritical: tx('Desde que florece hasta que se desarrollan los frutos', 'From flowering through fruit development'),
-    yield: tx('300 a 400 g por planta', '300 to 400 g per plant'),
+    yield: tx('0,5 a 1,5 kg por planta (orientativo, según variedad y manejo)', '0.5 to 1.5 kg per plant (approximate, depends on variety and care)'),
     harvest: tx('Verde o maduro (rojo, amarillo) según el gusto', 'Green or ripe (red, yellow) as you like'),
     harvestUnit: 'u',
   },

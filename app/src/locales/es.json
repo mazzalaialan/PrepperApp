@@ -2301,6 +2301,9 @@
     "offlineReady": "Lista para usar sin conexión."
   },
   "garden": {
+    "weeksRange": "{{from}} a {{to}} semanas",
+    "harvestIfSow": "Si sembrás hoy: cosecha entre el {{from}} y el {{to}}.",
+    "harvestIfTransplant": "Si trasplantás hoy: cosecha entre el {{from}} y el {{to}} (sin contar el almácigo).",
     "zone": "Zona",
     "zoneAuto": "Automática: {{zone}}",
     "zoneAutoNone": "Automática (cargá el waypoint de un cantero)",

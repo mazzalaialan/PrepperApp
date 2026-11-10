@@ -2301,6 +2301,9 @@
     "offlineReady": "Ready to use offline."
   },
   "garden": {
+    "weeksRange": "{{from}} to {{to}} weeks",
+    "harvestIfSow": "If you sow today: harvest between {{from}} and {{to}}.",
+    "harvestIfTransplant": "If you transplant today: harvest between {{from}} and {{to}} (not counting the nursery).",
     "zone": "Zone",
     "zoneAuto": "Automatic: {{zone}}",
     "zoneAutoNone": "Automatic (set a bed's waypoint)",
