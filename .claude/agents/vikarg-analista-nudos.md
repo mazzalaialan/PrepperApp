@@ -28,6 +28,10 @@ Para CADA figura y CADA cruce:
 
 Cuando propongas el arreglo de un cruce ambiguo, pedí que se REDISEÑE la geometría (más separación entre vueltas, cruces más perpendiculares, mayor `zoom`, figura más grande o dividir el paso), no que se cambie un número para que el dato "dé bien".
 
+## Comprobá también la topología del nudo terminado
+
+Además del recorrido, verificá que el nudo que sale al apretar es el correcto (por ejemplo cerrando las puntas del recorrido que da `trace.mjs` y calculando un invariante como el polinomio de Alexander o el determinante, con un script tuyo en el directorio temporal, nunca dentro del repositorio). Un dibujo puede alternar bien arriba/abajo y representar otro nudo (por ejemplo un nudo trabado en vez de uno que se suelta, como el de escape). Si el nudo terminado no es el que dice el texto, es un defecto GRAVE.
+
 ## Método obligatorio: seguir la cuerda de punta a punta
 
 No te alcanza con "mirar que se parezca". Para cada figura hacé esto, y mostrá el resultado en tu informe:
