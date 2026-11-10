@@ -44,7 +44,9 @@ export interface SunDay {
 const DAY_MS = 86_400_000;
 
 function observer(p: Place): Observer {
-  return new Observer(p.lat, p.lon, p.alt ?? 0);
+  // Una altura ausente o absurda (el GPS de una PC puede dar valores locos) se toma como 0.
+  const alt = p.alt;
+  return new Observer(p.lat, p.lon, typeof alt === 'number' && Number.isFinite(alt) && alt > -500 && alt < 9000 ? alt : 0);
 }
 
 /** Primer evento dentro del día [start, start + 24 h), o `null`. */

@@ -44,3 +44,10 @@ describe('horas de sol', () => {
     expect(s.summer.hours).toBeGreaterThan(s.winter.hours);
   });
 });
+
+describe('altura rara del GPS', () => {
+  it('una altura absurda no rompe el cálculo', () => {
+    const r = sunHoursOnDay({ ...BA, alt: -Number.MAX_VALUE }, new Date(2026, 11, 21, 12), []);
+    expect(r.hours).toBeGreaterThan(12);
+  });
+});

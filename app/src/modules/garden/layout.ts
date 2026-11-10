@@ -1,11 +1,11 @@
-import { Body, Equator, Horizon, Observer } from 'astronomy-engine';
+import { Body, Equator, Horizon } from 'astronomy-engine';
 import type { GardenBed } from '@/core/model/types';
 import { normalizeDeg } from '@/core/geo/geo';
 import { startOfLocalDay, sunDay, type Place } from '@/modules/astronomy/sky';
 import { CROP_BY_ID } from './crops';
 import { cropHeightCm } from './heights';
 import { gridSize } from './logic';
-import { bedSectors, inSector, MIN_SUN_ALTITUDE } from './sun';
+import { bedSectors, inSector, MIN_SUN_ALTITUDE, observerAt } from './sun';
 
 /**
  * Distribución de varios cultivos en un cantero según el sol: los altos van del
@@ -24,7 +24,7 @@ const DAY_MS = 86_400_000;
 
 /** De dónde viene el sol directo del cantero (promedio de las horas que le llegan) y qué tan alto pasa al mediodía. */
 export function sunDirection(bed: GardenBed, place: Place, date: Date): SunDirection {
-  const o = new Observer(place.lat, place.lon, place.alt ?? 0);
+  const o = observerAt(place);
   const sectors = bedSectors(bed);
   const noon = sunDay(place, startOfLocalDay(date)).solarNoon.getTime();
   let x = 0;

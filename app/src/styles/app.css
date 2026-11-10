@@ -1061,71 +1061,13 @@ a.module-card:hover {
   color: var(--ok);
 }
 
-.ar-view {
-  position: relative;
-  overflow: hidden;
-  height: min(70dvh, 640px);
-  border-radius: 16px;
-  background: #000;
-}
 
-.ar-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
-.ar-horizon {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 1px dashed rgb(255 255 255 / 0.5);
-}
 
-.ar-marker {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transform: translate(-50%, -100%);
-  /* Ámbar con sombra: se ve sobre cielo, pasto o nieve. */
-  color: #ffb000;
-  filter: drop-shadow(0 0 3px #000) drop-shadow(0 0 1px #000);
-  transition: left 0.08s linear, top 0.08s linear;
-}
 
-.ar-label {
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: rgb(0 0 0 / 0.65);
-  color: #fff;
-  font-weight: 700;
-  text-align: center;
-}
 
-.ar-edge {
-  position: absolute;
-  top: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 40%;
-  padding: 8px;
-  transform: translateY(-50%);
-  border-radius: 12px;
-  background: rgb(0 0 0 / 0.6);
-  color: #fff;
-  font-weight: 700;
-  text-align: center;
-}
 
-.ar-edge-left {
-  left: 8px;
-}
 
-.ar-edge-right {
-  right: 8px;
-}
 
 /* ---------- Pantalla completa (realidad aumentada) ---------- */
 
@@ -4013,3 +3955,93 @@ a.module-card:hover {
 .timer-unit { display: flex; flex-direction: column; align-items: center; }
 .timer-colon { font-size: clamp(3rem, 14vw, 5rem); font-weight: 800; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Ir a un punto: elegir mapa o vista 3D. */
+.goto-choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 84px;
+  text-align: left;
+}
+
+.goto-choice .hint {
+  display: block;
+}
+
+/* Vista 3D de ir a un punto: fondo negro, trazos claros. */
+.hg {
+  position: relative;
+  height: min(70dvh, 640px);
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #000;
+}
+
+.hg svg {
+  display: block;
+}
+
+.hg-horizon {
+  stroke: #fff;
+  stroke-width: 2.5;
+}
+
+.hg-ladder {
+  stroke: rgb(255 255 255 / 0.3);
+  stroke-width: 1;
+  stroke-dasharray: 6 6;
+}
+
+.hg-tick {
+  stroke: rgb(255 255 255 / 0.8);
+  stroke-width: 1.5;
+}
+
+.hg-path {
+  stroke: #4ade80;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.hg-beacon {
+  stroke: #ffb000;
+  stroke-width: 3;
+}
+
+.hg-dot {
+  fill: #ffb000;
+}
+
+.hg-card {
+  fill: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.hg-small {
+  fill: rgb(255 255 255 / 0.6);
+  font-size: 11px;
+}
+
+.hg-name {
+  fill: #ffb000;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.hg-turn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-shadow: 0 0 4px #000;
+}

@@ -12,6 +12,12 @@ import { startOfLocalDay, sunDay, type Place } from '@/modules/astronomy/sky';
  */
 
 const STEP_MIN = 10;
+
+/** Observador del lugar; una altura ausente o absurda (un GPS de PC puede dar valores locos) se toma como 0. */
+export function observerAt(place: Place): Observer {
+  const alt = place.alt;
+  return new Observer(place.lat, place.lon, typeof alt === 'number' && Number.isFinite(alt) && alt > -500 && alt < 9000 ? alt : 0);
+}
 /** Con el sol más bajo que esto (rasante) no se cuenta como sol directo útil. */
 export const MIN_SUN_ALTITUDE = 5;
 
@@ -73,7 +79,7 @@ export interface SunHours {
 
 /** Sol directo en un día (el que contiene `date`), para un lugar y lo que tapa. */
 export function sunHoursOnDay(place: Place, date: Date, sectors: Sector[], shadePct = 0): SunHours {
-  const o = new Observer(place.lat, place.lon, place.alt ?? 0);
+  const o = observerAt(place);
   // Se arranca 12 h antes del mediodía solar: cubre el día entero en cualquier huso horario.
   const noon = sunDay(place, startOfLocalDay(date)).solarNoon.getTime();
   let seen = 0;

@@ -59,7 +59,7 @@ test('brújula: norte geográfico con declinación y magnético', async ({ page 
   await expect(page.getByTestId('compass-heading')).toHaveText('270° O');
 });
 
-test('ir al punto: flecha con el celular acostado y realidad aumentada parado', async ({ page }, testInfo) => {
+test('ir al punto: dos opciones (mapa o vista 3D sin cámara), flecha acostado y horizonte parado', async ({ page }, testInfo) => {
   await setup(page);
   await page.goto('/#/orientation/waypoints/new');
   await page.getByLabel('Nombre').fill('Refugio');
@@ -73,8 +73,12 @@ test('ir al punto: flecha con el celular acostado y realidad aumentada parado', 
   const declination = magvar(HERE.latitude, HERE.longitude, 0, new Date());
   const magneticToTarget = trueBearing - declination;
 
+  // Primero se elige cómo guiarse: no se prende la cámara.
+  await expect(page.getByTestId('goto-choose')).toBeVisible();
+  await expect(page.locator('video')).toHaveCount(0);
+  await page.getByTestId('goto-choose-3d').click();
+
   // Acostado, mirando al norte magnético: hay que girar a la derecha.
-  await page.getByRole('button', { name: 'Apagar la cámara' }).click();
   await setOrientation(page, 0, 0);
   await expect(page.getByTestId('goto-turn')).toHaveText(/Girá \d+° a la derecha/);
   await expect(page.getByTestId('rose-target')).toBeVisible();
@@ -82,35 +86,30 @@ test('ir al punto: flecha con el celular acostado y realidad aumentada parado', 
   await setOrientation(page, (360 - magneticToTarget) % 360, 0);
   await expect(page.getByTestId('goto-turn')).toHaveText('Seguí derecho');
 
-  // Parado con la cámara hacia el punto: marcador en el centro de la imagen.
-  await page.getByRole('button', { name: 'Ver con la cámara' }).click();
+  // Parado frente al punto: vista 3D negra con el faro en el centro.
   await setOrientation(page, (360 - magneticToTarget) % 360, 90);
-  const marker = page.getByTestId('ar-marker');
-  await expect(marker).toBeVisible();
-  await expect(marker).toContainText('Refugio');
-  const view = await page.locator('.ar-view').boundingBox();
-  const box = await marker.boundingBox();
-  expect(Math.abs(box!.x + box!.width / 2 - (view!.x + view!.width / 2))).toBeLessThan(view!.width * 0.05);
-  await page.waitForTimeout(500); // que la cámara falsa muestre imagen
-  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-13-ar.png` });
+  const guide = page.getByTestId('horizon-guide');
+  await expect(guide).toBeVisible();
+  const beacon = page.getByTestId('hg-beacon');
+  await expect(beacon).toBeVisible();
+  const view = await guide.boundingBox();
+  const box = await beacon.boundingBox();
+  expect(Math.abs(box!.x + box!.width / 2 - (view!.x + view!.width / 2))).toBeLessThan(view!.width * 0.08);
+  await expect(page.locator('video')).toHaveCount(0);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-13-3d.png` });
 
-  // Pantalla completa: la cámara ocupa toda la pantalla, con los datos encima.
-  await page.getByRole('button', { name: 'Pantalla completa' }).click();
-  await expect(page.locator('.fs-overlay')).toContainText(/Refugio · 1,\d+ km/);
-  await expect(page.locator('.fs-overlay')).toContainText('Seguí derecho');
-  const viewport = page.viewportSize()!;
-  await expect.poll(async () => (await page.locator('.ar-view').boundingBox())!.height).toBeGreaterThanOrEqual(viewport.height - 2);
-  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-13b-ar-fullscreen.png` });
-  await page.getByRole('button', { name: 'Salir de pantalla completa' }).click();
-  await expect(page.locator('.fs-overlay')).toHaveCount(0);
-
-  // De espaldas al punto: indicador al costado para girar.
+  // De espaldas al punto: flecha en el borde para girar.
   await setOrientation(page, (360 - magneticToTarget + 180) % 360, 90);
-  await expect(page.getByTestId('ar-edge')).toBeVisible();
-  await expect(marker).toHaveCount(0);
+  await expect(page.getByTestId('hg-edge')).toBeVisible();
+  await expect(beacon).toHaveCount(0);
+
+  // Cambiar de vista vuelve a las dos opciones; el mapa abre sin cámara.
+  await page.getByTestId('goto-change-view').click();
+  await page.getByTestId('goto-choose-map').click();
+  await expect(page.getByTestId('guide-map')).toBeVisible();
 });
 
-test('ahorro de batería: negro puro, sin animaciones y la realidad aumentada arranca sin cámara', async ({ page }, testInfo) => {
+test('ahorro de batería: negro puro, sin animaciones y ir al punto no prende la cámara', async ({ page }, testInfo) => {
   await setup(page);
   await page.getByRole('link', { name: 'Ajustes' }).click();
   await page.getByRole('button', { name: 'Ahorro de batería' }).click();
@@ -130,8 +129,8 @@ test('ahorro de batería: negro puro, sin animaciones y la realidad aumentada ar
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.getByRole('link', { name: 'Ir a este punto' }).click();
   await expect(page.getByTestId('goto-distance')).toHaveText(/^1,\d+ km$/);
-  // Puede usar la cámara, pero no la prende sola.
-  await expect(page.getByRole('button', { name: 'Ver con la cámara' })).toBeVisible();
+  // Ofrece mapa o vista 3D y no prende la cámara.
+  await expect(page.getByTestId('goto-choose')).toBeVisible();
   await expect(page.locator('video')).toHaveCount(0);
 
   // Al volver a otro tema, se apaga.

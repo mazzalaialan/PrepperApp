@@ -1411,21 +1411,22 @@
     "finished": "You've reached the end of the route"
   },
   "goto": {
+    "changeView": "Change view",
+    "chooseHint": "How do you want to be guided?",
+    "viewMap": "See it on the map",
+    "viewMapHint": "The map follows you and turns with the compass; a line shows the straight way to the point.",
+    "view3d": "3D view with compass and horizon",
+    "view3dHint": "Black background, no camera: artificial horizon, cardinal points and a path with a beacon toward the point. Hold the phone upright.",
+    "view3dLabel": "Simulated surroundings with the horizon and the direction to the point",
+    "raisePhone": "Hold the phone upright in front of you to see the horizon and the path.",
     "button": "Go to this point",
     "short": "Go",
     "title": "Go to {{name}}",
-    "cameraOn": "View with camera",
-    "cameraOff": "Turn camera off",
-    "raisePhone": "Hold the phone upright in front of you to see it through the camera.",
     "straight": "Keep going straight",
     "turnRight": "Turn {{degrees}}° right",
     "turnLeft": "Turn {{degrees}}° left",
     "arrived": "You've arrived",
-    "noCompass": "This device has no compass: use a hand compass and follow the bearing shown.",
-    "cameraError": {
-      "denied": "Camera permission denied. Enable it in the browser's site permissions or turn the camera off.",
-      "unavailable": "Couldn't open the camera."
-    }
+    "noCompass": "This device has no compass: use a hand compass and follow the bearing shown."
   },
   "geo": {
     "westLetter": "W",

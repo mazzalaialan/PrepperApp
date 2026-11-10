@@ -1,21 +1,29 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowUp, Camera, CameraOff, ChevronLeft, ChevronRight, CircleCheck, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Box, ChevronLeft, ChevronRight, CircleCheck, Map as MapIcon, Repeat } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, normalizeDeg } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import type { Waypoint } from '@/core/model/types';
 import { angleDiff } from '@/core/sensors/heading';
-import { useCamera, visibleFov } from '@/core/sensors/useCamera';
-import { useHeading, type Heading } from '@/core/sensors/useHeading';
-import { useBatterySaver } from '@/core/power/saver';
+import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
 import { CompassRose } from '@/modules/compass/CompassRose';
-import { FullscreenStage } from '@/ui/FullscreenStage';
 import { GpsStatus, useFormatBearing } from './components';
+import { HorizonGuide } from './HorizonGuide';
 import { useWaypoints } from './store';
+
+const GuideMap = lazy(() => import('@/modules/maps/GuideMap').then((m) => ({ default: m.GuideMap })));
+
+type GoMode = 'map' | '3d';
+/** Vista elegida al recorrer una ruta: se pregunta en el primer punto y vale para los demás. */
+let routeMode: GoMode | null = null;
+/** Al salir de la ruta (no al pasar de punto) se vuelve a preguntar la próxima vez. */
+export function resetRouteMode(): void {
+  routeMode = null;
+}
 
 /** Se considera que llegaste dentro de este radio (o de la precisión del GPS, si es peor). */
 const ARRIVAL_M = 15;
@@ -55,13 +63,11 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const formatBearing = useFormatBearing();
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
-  const canAr = (caps?.camera && caps.orientation) ?? false;
-  const saver = useBatterySaver();
-  // `null` = automático: prendida si el dispositivo puede (la detección de sensores tarda un instante),
-  // salvo con ahorro de batería, donde la cámara se prende a mano.
-  const [cameraChoice, setCameraOn] = useState<boolean | null>(null);
-  const cameraOn = cameraChoice ?? (canAr && !saver);
-
+  const [choice, setChoice] = useState<GoMode | null>(route ? routeMode : null);
+  function choose(mode: GoMode | null) {
+    setChoice(mode);
+    if (route) routeMode = mode;
+  }
   const distance = fix ? distanceMeters(fix, target) : null;
   const trueBearing = fix ? bearingDeg(fix, target) : null;
   const arrived = distance !== null && fix !== null && distance <= Math.max(ARRIVAL_M, fix.accuracy);
@@ -84,9 +90,9 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
             </p>
           )}
         </div>
-        {canAr && (
-          <button className="icon-btn" type="button" aria-pressed={cameraOn} onClick={() => setCameraOn(!cameraOn)} aria-label={cameraOn ? t('goto.cameraOff') : t('goto.cameraOn')} title={cameraOn ? t('goto.cameraOff') : t('goto.cameraOn')}>
-            {cameraOn ? <CameraOff size={22} /> : <Camera size={22} />}
+        {choice && (
+          <button className="icon-btn" type="button" onClick={() => choose(null)} aria-label={t('goto.changeView')} title={t('goto.changeView')} data-testid="goto-change-view">
+            <Repeat size={22} />
           </button>
         )}
       </div>
@@ -117,17 +123,59 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
         <p className="goto-arrived" role="status">
           <CircleCheck size={28} aria-hidden /> {route && !route.next ? t('routes.finished') : t('goto.arrived')}
         </p>
+      ) : !choice ? (
+        <div className="stack" data-testid="goto-choose">
+          <p className="hint" style={{ margin: 0 }}>{t('goto.chooseHint')}</p>
+          <button className="btn card goto-choice" type="button" onClick={() => choose('map')} data-testid="goto-choose-map">
+            <MapIcon size={28} aria-hidden />
+            <span>
+              <strong>{t('goto.viewMap')}</strong>
+              <span className="hint">{t('goto.viewMapHint')}</span>
+            </span>
+          </button>
+          <button className="btn card goto-choice" type="button" onClick={() => choose('3d')} data-testid="goto-choose-3d">
+            <Box size={28} aria-hidden />
+            <span>
+              <strong>{t('goto.view3d')}</strong>
+              <span className="hint">{caps?.orientation ? t('goto.view3dHint') : t('goto.noCompass')}</span>
+            </span>
+          </button>
+        </div>
+      ) : choice === 'map' ? (
+        fix ? (
+          <Suspense fallback={null}>
+            <GuideMap
+              target={target}
+              fix={fix}
+              heading={heading?.trueHeading ?? null}
+              overlay={
+                <>
+                  <span className="fs-big">
+                    {target.name} · {distance === null ? '' : formatDistance(distance, units, i18n.language)}
+                  </span>
+                  {turn !== null && <span>{turnLabel(t, turn)}</span>}
+                </>
+              }
+            />
+          </Suspense>
+        ) : null
       ) : !caps?.orientation ? (
         <p className="hint">{t('goto.noCompass')}</p>
       ) : !fix ? null : !heading ? (
         <p className="hint">{t('compass.waiting')}</p>
-      ) : cameraOn && heading.mode === 'upright' ? (
-        <ArView target={target} heading={heading} turn={turn} distanceLabel={distance === null ? '' : formatDistance(distance, units, i18n.language)} />
+      ) : heading.mode === 'upright' && trueBearing !== null ? (
+        <HorizonGuide
+          bearing={trueBearing}
+          place={fix}
+          name={target.name}
+          distanceLabel={distance === null ? '' : formatDistance(distance, units, i18n.language)}
+          turnText={turn === null ? null : turnLabel(t, turn)}
+        />
       ) : (
         <>
           <TurnHint turn={turn} />
           <CompassRose heading={heading.heading} target={shownBearing} />
-          {cameraOn && <p className="hint" style={{ textAlign: 'center' }}>{t('goto.raisePhone')}</p>}
+          <p className="hint" style={{ textAlign: 'center' }}>{t('goto.raisePhone')}</p>
         </>
       )}
 
@@ -159,59 +207,7 @@ function TurnHint({ turn }: { turn: number | null }) {
   );
 }
 
-/** Cámara con un marcador sobre el horizonte en la dirección del punto. */
-function ArView({ target, heading, turn, distanceLabel }: { target: Waypoint; heading: Heading; turn: number | null; distanceLabel: string }) {
-  const { t } = useTranslation();
-  const video = useRef<HTMLVideoElement>(null);
-  const { ready, error } = useCamera(video, true);
-  const fov = video.current && ready ? visibleFov(video.current) : { h: 50, v: 65 };
-  const inView = turn !== null && Math.abs(turn) < fov.h / 2;
-  // El punto se dibuja sobre el horizonte: si la cámara mira hacia arriba, baja en pantalla.
-  const x = turn === null ? 50 : 50 + (turn / fov.h) * 100;
-  const y = Math.max(8, Math.min(92, 50 + (heading.pitch / fov.v) * 100));
-
-  if (error) return <p className="error">{t(`goto.cameraError.${error}`)}</p>;
-
-  const turnText =
-    turn === null
-      ? null
-      : Math.abs(turn) <= ON_COURSE_DEG
-        ? t('goto.straight')
-        : turn > 0
-          ? t('goto.turnRight', { degrees: Math.round(turn) })
-          : t('goto.turnLeft', { degrees: Math.round(-turn) });
-
-  return (
-    <FullscreenStage
-      className="ar-view"
-      overlay={
-        <>
-          <span className="fs-big">
-            {target.name} · {distanceLabel}
-          </span>
-          {turnText && <span>{turnText}</span>}
-        </>
-      }
-    >
-      <video ref={video} className="ar-video" playsInline muted />
-      <div className="ar-horizon" style={{ top: `${y}%` }} />
-      {inView ? (
-        <div className="ar-marker" style={{ left: `${x}%`, top: `${y}%` }} data-testid="ar-marker">
-          <MapPin size={40} aria-hidden />
-          <span className="ar-label">
-            {target.name}
-            <br />
-            {distanceLabel}
-          </span>
-        </div>
-      ) : (
-        turn !== null && (
-          <div className={`ar-edge ${turn > 0 ? 'ar-edge-right' : 'ar-edge-left'}`} data-testid="ar-edge">
-            {turn > 0 ? <ChevronRight size={48} aria-hidden /> : <ChevronLeft size={48} aria-hidden />}
-            <span>{turn > 0 ? t('goto.turnRight', { degrees: Math.round(turn) }) : t('goto.turnLeft', { degrees: Math.round(-turn) })}</span>
-          </div>
-        )
-      )}
-    </FullscreenStage>
-  );
+function turnLabel(t: (k: string, o?: Record<string, unknown>) => string, turn: number): string {
+  if (Math.abs(turn) <= ON_COURSE_DEG) return t('goto.straight');
+  return turn > 0 ? t('goto.turnRight', { degrees: Math.round(turn) }) : t('goto.turnLeft', { degrees: Math.round(-turn) });
 }

@@ -1411,21 +1411,22 @@
     "finished": "Llegaste al final de la ruta"
   },
   "goto": {
+    "changeView": "Cambiar la vista",
+    "chooseHint": "¿Cómo querés que te guíe?",
+    "viewMap": "Verlo en el mapa",
+    "viewMapHint": "El mapa te sigue y gira con la brújula; una línea te marca el camino recto al punto.",
+    "view3d": "Vista 3D con brújula y horizonte",
+    "view3dHint": "Fondo negro, sin cámara: horizonte artificial, puntos cardinales y un camino con un faro en la dirección del punto. Usá el celular parado.",
+    "view3dLabel": "Entorno simulado con el horizonte y la dirección al punto",
+    "raisePhone": "Pará el celular frente a vos para ver el horizonte y el camino.",
     "button": "Ir a este punto",
     "short": "Ir",
     "title": "Ir a {{name}}",
-    "cameraOn": "Ver con la cámara",
-    "cameraOff": "Apagar la cámara",
-    "raisePhone": "Pará el celular frente a vos para verlo con la cámara.",
     "straight": "Seguí derecho",
     "turnRight": "Girá {{degrees}}° a la derecha",
     "turnLeft": "Girá {{degrees}}° a la izquierda",
     "arrived": "Llegaste",
-    "noCompass": "Este dispositivo no tiene brújula: usá una brújula de mano y seguí el rumbo indicado.",
-    "cameraError": {
-      "denied": "No hay permiso para usar la cámara. Habilitalo en los permisos del navegador o apagá la cámara.",
-      "unavailable": "No se pudo abrir la cámara."
-    }
+    "noCompass": "Este dispositivo no tiene brújula: usá una brújula de mano y seguí el rumbo indicado."
   },
   "geo": {
     "westLetter": "O",
