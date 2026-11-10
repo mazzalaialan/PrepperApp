@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import type { WorkoutKind } from '@/core/model/types';
 import { Flag, Pause, Play, Square, Volume2, VolumeX } from 'lucide-react';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
 import { FinishDialog, PocketButton } from '@/modules/tracks/Recording';
 import { elapsedS, useRecorder } from '@/modules/tracks/recorder';
-import { ACTIVITIES } from './activities';
+import { ACTIVITIES, ACTIVITY_KINDS } from './activities';
 import { calories } from './energy';
 import { useBodyWeight, useTrainingFormat } from './format';
 import { LapTable } from './LapTable';
@@ -44,7 +45,8 @@ export function LivePage() {
   const nowMs = segments ? currentSpeedMs(segments) : 0;
   const elapsed = elapsedS({ elapsedMs, since });
   const kind = track?.activity;
-  const def = kind ? ACTIVITIES[kind] : null;
+  // Sin actividad elegida se muestra como una caminata (ritmo); las calorías esperan a que se elija.
+  const def = ACTIVITIES[kind ?? 'walk'];
 
   // Voz: al cerrar cada kilómetro lee el tiempo y el ritmo de ese kilómetro.
   const spokenKm = useRef(0);
@@ -96,7 +98,7 @@ export function LivePage() {
     }
   }); // cada segundo
 
-  if (status === 'idle' || !track || !kind || !def || !stats) {
+  if (status === 'idle' || !track || !stats) {
     return (
       <p className="empty">
         {t('training.live.none')} <Link to="/training/workouts">{t('common.back')}</Link>
@@ -104,7 +106,7 @@ export function LivePage() {
     );
   }
 
-  const kcal = weight ? calories({ kind, weightKg: weight, packKg: track.activityPackKg ?? undefined, movingS: stats.movingS || elapsed, distanceM: stats.distanceM, ascentM: stats.ascentM }) : null;
+  const kcal = weight && kind ? calories({ kind, weightKg: weight, packKg: track.activityPackKg ?? undefined, movingS: stats.movingS || elapsed, distanceM: stats.distanceM, ascentM: stats.ascentM }) : null;
   const effortNow = nowMs > 0 ? (def.measure === 'pace' ? f.pace(paceFromMs(nowMs)) : f.speed(kmhFromMs(nowMs))) : '—';
   const effortAvg = def.measure === 'pace' ? f.pace(stats.paceSPerKm) : f.speed(stats.avgSpeedKmh);
   const [distNum, ...distUnit] = f.distance(stats.distanceM).split(' ');
@@ -112,8 +114,19 @@ export function LivePage() {
   return (
     <div className="live stack" data-testid="live">
       <p className="live-kind">
-        {f.kindName(kind)} · {status === 'recording' ? t('tracks.rec.recording') : t('tracks.rec.paused')}
+        {track.name} · {status === 'recording' ? t('tracks.rec.recording') : t('tracks.rec.paused')}
       </p>
+      <div className="field">
+        <label htmlFor="live-kind">{t('training.live.activity')}</label>
+        <select id="live-kind" className="select" value={kind ?? ''} onChange={(e) => useRecorder.getState().setActivity((e.target.value || null) as WorkoutKind | null)} data-testid="live-kind">
+          {!kind && <option value="">{t('training.live.activityNone')}</option>}
+          {ACTIVITY_KINDS.filter((k) => ACTIVITIES[k].gps).map((k) => (
+            <option key={k} value={k}>
+              {f.kindName(k)}
+            </option>
+          ))}
+        </select>
+      </div>
       <LapTable marks={track.laps} last={5} />
       {plan && now && (
         <div className={`live-phase live-phase-${now.done ? 'done' : now.phase!.kind}`} data-testid="live-phase" aria-live="polite">

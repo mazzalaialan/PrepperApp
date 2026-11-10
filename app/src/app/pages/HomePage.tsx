@@ -65,9 +65,9 @@ function QuickActions() {
   const { t } = useTranslation();
   const items = [
     { to: '/first-aid/location', icon: Siren, label: t('home.quick.emergency'), danger: true },
+    { to: '/first-aid/contacts/nearby', icon: Hospital, label: t('home.quick.nearby') },
     { to: '/orientation/tracks', icon: Circle, label: t('home.quick.record') },
     { to: '/orientation/waypoints', icon: Navigation, label: t('home.quick.goTo') },
-    { to: '/first-aid/contacts/nearby', icon: Hospital, label: t('home.quick.nearby') },
   ];
   return (
     <nav className="quick-actions" aria-label={t('home.quick.title')} data-testid="quick-actions">

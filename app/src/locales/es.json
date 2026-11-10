@@ -1535,9 +1535,10 @@
     "noWeight": "Sin tu peso no se calculan las calorías.",
     "noWeightLink": "Cargalo en tu ficha médica.",
     "followLabel": "Seguir una ruta o un track", "followNone": "Sin ruta", "followRoute": "Ruta: {{name}}", "followTrack": "Track: {{name}}",
-    "live": {"time": "Tiempo", "title": "Sesión en curso", "none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}}.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
+    "live": {"activity": "Actividad", "activityNone": "Elegir al terminar", "time": "Tiempo", "title": "Sesión en curso", "none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}}.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
     "how": {"title": "Cómo me fue", "feeling": "Cómo me sentí", "f1": "muy mal", "f2": "mal", "f3": "normal", "f4": "bien", "f5": "muy bien", "terrain": "Terreno o lugar", "weather": "Clima al terminar", "wind": "viento {{kmh}} km/h", "t": {"road": "Calle o ruta", "trail": "Sendero", "mountain": "Montaña", "sand": "Arena o playa", "track": "Pista", "water": "Agua", "indoor": "Bajo techo", "mixed": "Mixto"}},
     "goals": {"title": "Objetivos de la semana", "hint": "Dejá en blanco los que no quieras. El avance se ve acá arriba y se cuenta de lunes a domingo.", "distanceKm": "Distancia (km)", "minutes": "Tiempo (minutos)", "sessions": "Actividades", "reached": "¡cumplido!"},
+    "seeWorkout": "Ver la sesión de entrenamiento",
     "exportGpx": "Exportar GPX",
     "exportTcx": "Exportar TCX",
     "importFile": "Importar GPX, TCX o FIT",
@@ -1943,6 +1944,11 @@
       "whileLocked": "Se sigue grabando tu recorrido.",
       "discard": "Descartar",
       "discardTitle": "Descartar la grabación",
+      "activity": "Actividad",
+      "pack": "Peso de la mochila (kg)",
+      "weight": "Tu peso (kg)",
+      "weightHint": "Para calcular las calorías; no se guarda en tu ficha médica (cargala ahí para que valga siempre).",
+      "savesBoth": "Se guarda como recorrido en Tracks y como sesión de Entrenamiento.",
       "saveTitle": "Guardar la grabación",
       "keepRecording": "Seguir grabando"
     }

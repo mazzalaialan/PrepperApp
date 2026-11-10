@@ -24,6 +24,14 @@ export type RecStatus = 'idle' | 'recording' | 'paused';
 /** Cada cuánto se guarda lo grabado (y siempre al pausar o ir a segundo plano). */
 const SAVE_EVERY_MS = 20_000;
 
+/** Lo que se pide al terminar para que lo grabado valga como recorrido y como sesión de Entrenamiento. */
+export interface FinishOptions {
+  kind?: WorkoutKind;
+  packKg?: number | null;
+  /** Peso de quien entrena, si no hay ficha médica con peso (solo para las calorías de esta sesión). */
+  weightKg?: number | null;
+}
+
 interface RecorderState {
   status: RecStatus;
   /** El track que se está grabando (igual al guardado, con los puntos que llegaron después). */
@@ -48,8 +56,10 @@ interface RecorderState {
   lastWorkoutId: Id | null;
   pause: () => Promise<void>;
   resume: () => void;
-  /** Termina y guarda (con ese nombre, si se da); devuelve el track, o null si no llegó a grabar nada. */
-  finish: (name?: string) => Promise<Id | null>;
+  /** Termina y guarda (con ese nombre, si se da); devuelve el track, o null si no llegó a grabar nada. Con `kind` queda también como sesión de Entrenamiento. */
+  finish: (name?: string, opts?: FinishOptions) => Promise<Id | null>;
+  /** Elige (o cambia) la actividad de lo que se está grabando: sigue siendo un recorrido, y además una sesión de Entrenamiento. */
+  setActivity: (kind: WorkoutKind | null, packKg?: number | null) => void;
   /** Después de un corte: unir con una recta el tramo de antes y el de después (por defecto quedan separados). */
   joinGap: () => void;
   /** Marca una vuelta (botón de la pantalla en vivo): guarda el tiempo y la distancia acumulados. */
@@ -159,9 +169,17 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     startWatch();
   },
 
+  setActivity(kind, packKg) {
+    const s = get();
+    if (!s.track) return;
+    const { activity: _a, activityPackKg: _p, ...rest } = s.track;
+    set({ track: { ...rest, ...(kind ? { activity: kind, activityPackKg: packKg ?? s.track.activityPackKg ?? null } : {}) } });
+    void persist();
+  },
+
   lap() {
     const s = get();
-    if (s.status !== 'recording' || !s.track?.activity) return;
+    if (s.status !== 'recording' || !s.track) return;
     const mark = { elapsedS: elapsedS(s), distanceM: Math.round(s.track.distanceM) };
     set({ track: { ...s.track, laps: [...(s.track.laps ?? []), mark] } });
     void persist();
@@ -179,19 +197,20 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     set({ gapS: null, gapFrom: null, gapTo: null });
   },
 
-  async finish(name) {
+  async finish(name, opts) {
     const s = get();
     if (!s.track) return null;
     stopWatch();
     const finalName = name?.trim() || s.track.name;
     // Las estadísticas de la actividad, con todos los puntos y sus horas (antes de simplificar el recorrido).
     const raw = s.track.segments.map((seg) => (seg.length > 1 ? seg : []));
-    const stats = s.track.activity ? analyzeRecording(raw) : null;
-    const finished = finishedTrack({ ...s.track, name: finalName }, elapsedS(s));
+    const activity = opts?.kind ?? s.track.activity;
+    const stats = activity ? analyzeRecording(raw) : null;
+    const finished = finishedTrack({ ...s.track, name: finalName, ...(activity ? { activity, activityPackKg: opts?.packKg ?? s.track.activityPackKg ?? null } : {}) }, elapsedS(s));
     // La clave de la grabación ya no hace falta.
     const done = finished && { ...finished, recKey: undefined };
-    const kind = s.track.activity;
-    const packKg = s.track.activityPackKg ?? null;
+    const kind = activity;
+    const packKg = opts?.packKg ?? s.track.activityPackKg ?? null;
     set({ ...IDLE });
     void clearLocked();
     if (!done) {
@@ -201,7 +220,7 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     await useTracks.getState().saveTrack(done);
     if (kind && stats) {
       const me = [...useMedical.getState().profiles.values()].find((p) => p.isMe);
-      const workout = { ...workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? null, packKg), intervals: s.track.intervals ?? null, laps: s.track.laps ?? [] };
+      const workout = { ...workoutFromRecording(kind, finalName, done, stats, Date.parse(s.track.createdAt), me?.weightKg ?? opts?.weightKg ?? null, packKg), intervals: s.track.intervals ?? null, laps: s.track.laps ?? [] };
       const saved = await useTraining.getState().saveWorkout(workout);
       set({ lastWorkoutId: workout.id });
       // El clima se agrega después, sin demorar: si hay internet, queda en la actividad.

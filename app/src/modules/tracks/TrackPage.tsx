@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Check, Download, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Route as RouteIcon, Trash2, X } from 'lucide-react';
+import { Activity, Check, Download, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Route as RouteIcon, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -14,6 +14,7 @@ import { useWaypoints } from '@/modules/waypoints/store';
 import { ElevationProfile } from './ElevationProfile';
 import { useRecorder } from './recorder';
 import { formatDuration } from './Recording';
+import { useTraining } from '@/modules/training/store';
 import { useTracks } from './store';
 
 export function TrackPage() {
@@ -46,6 +47,8 @@ async function exportTrackGpx(track: Track): Promise<void> {
 function TrackDetail({ track }: { track: Track }) {
   const { t, i18n } = useTranslation();
   const exportGpx = () => exportTrackGpx(track);
+  // Si este recorrido también es una sesión de Entrenamiento, se llega a ella desde acá.
+  const workoutId = useTraining((s) => [...s.workouts.values()].find((w) => w.trackId === track.id && !w.deletedAt)?.id ?? null);
   const navigate = useNavigate();
   const units = useSettings((s) => s.settings.units);
   const { saveTrack, deleteTrack } = useTracks();
@@ -207,6 +210,11 @@ function TrackDetail({ track }: { track: Track }) {
           <Link className="btn" to={`/orientation/maps?track=${track.id}`}>
             <MapIcon size={18} /> {t('tracks.onMap')}
           </Link>
+          {workoutId && (
+            <Link className="btn" to={`/training/workouts/${workoutId}`} data-testid="track-workout">
+              <Activity size={18} /> {t('tracks.seeWorkout')}
+            </Link>
+          )}
           {track.segments.flat().length > 1 && (
             <button className="btn" type="button" data-testid="track-export-gpx" onClick={() => void exportGpx()}>
               <Download size={18} /> {t('tracks.exportGpx')}

@@ -6,6 +6,9 @@ import { usePocket } from '@/core/power/pocket';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
+import type { WorkoutKind } from '@/core/model/types';
+import { ACTIVITIES, ACTIVITY_KINDS } from '@/modules/training/activities';
+import { useBodyWeight, useTrainingFormat } from '@/modules/training/format';
 import { Dialog } from '@/ui/Dialog';
 import { MAX_ACCURACY_M } from './record';
 import { elapsedS, useRecorder } from './recorder';
@@ -209,12 +212,10 @@ export function RecordingBar() {
             <span className="rec-lbl">{t('tracks.rec.backShort')}</span>
           </Link>
         )}
-        {track.activity && (
-          <Link className="icon-btn rec-act" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
-            <Gauge size={20} />
-            <span className="rec-lbl">{t('tracks.rec.liveShort')}</span>
-          </Link>
-        )}
+        <Link className="icon-btn rec-act" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
+          <Gauge size={20} />
+          <span className="rec-lbl">{t('tracks.rec.liveShort')}</span>
+        </Link>
         <PocketButton labeled />
         <button className="icon-btn rec-act rec-finish" type="button" onClick={() => setNaming(track.name)} aria-label={t('tracks.rec.finish')} title={t('tracks.rec.finish')}>
           <Square size={18} fill="currentColor" />
@@ -257,16 +258,29 @@ export function RecWarning() {
   );
 }
 
-/** Al terminar se le pone nombre (mientras tanto sigue grabando); después se cambia en el track. */
+/**
+ * Al terminar, lo grabado vale a la vez como recorrido (Tracks) y como sesión de
+ * Entrenamiento: se pide lo que falte para las dos cosas (nombre, actividad, mochila
+ * y, si no hay ficha médica con peso, el peso para las calorías). Sin nada grabado se descarta.
+ */
 export function FinishDialog({ initialName, points, onClose }: { initialName: string; points: number; onClose: () => void }) {
   const { t } = useTranslation();
+  const f = useTrainingFormat();
   const navigate = useNavigate();
   const finish = useRecorder((s) => s.finish);
+  const recorded = useRecorder((s) => s.track?.activity);
+  const recordedPack = useRecorder((s) => s.track?.activityPackKg);
+  const bodyKg = useBodyWeight();
   const [name, setName] = useState(initialName);
+  const [kind, setKind] = useState<WorkoutKind>(recorded ?? 'walk');
+  const [pack, setPack] = useState(recordedPack ? String(recordedPack) : '');
+  const [weight, setWeight] = useState('');
   const nothing = points < 2;
+  const packKg = Number(pack.replace(',', '.'));
+  const weightKg = Number(weight.replace(',', '.'));
   async function stop() {
     onClose();
-    const id = await finish(name);
+    const id = await finish(name, nothing ? undefined : { kind, packKg: kind === 'trek' && packKg > 0 ? packKg : null, weightKg: !bodyKg && weightKg >= 20 && weightKg <= 400 ? weightKg : null });
     const workoutId = useRecorder.getState().lastWorkoutId;
     if (workoutId) navigate(`/training/workouts/${workoutId}`);
     else if (id) navigate(`/orientation/tracks/${id}`);
@@ -289,7 +303,7 @@ export function FinishDialog({ initialName, points, onClose }: { initialName: st
     >
       <form
         id="rec-save"
-        className="field"
+        className="stack"
         onSubmit={(e) => {
           e.preventDefault();
           void stop();
@@ -301,8 +315,34 @@ export function FinishDialog({ initialName, points, onClose }: { initialName: st
           </p>
         ) : (
           <>
-            <label htmlFor="rec-name">{t('tracks.name')}</label>
-            <input id="rec-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
+            <div className="field">
+              <label htmlFor="rec-name">{t('tracks.name')}</label>
+              <input id="rec-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus onFocus={(e) => e.target.select()} />
+            </div>
+            <div className="field">
+              <label htmlFor="rec-kind">{t('tracks.rec.activity')}</label>
+              <select id="rec-kind" className="select" value={kind} onChange={(e) => setKind(e.target.value as WorkoutKind)}>
+                {ACTIVITY_KINDS.filter((k) => ACTIVITIES[k].gps).map((k) => (
+                  <option key={k} value={k}>
+                    {f.kindName(k)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {kind === 'trek' && (
+              <div className="field">
+                <label htmlFor="rec-pack">{t('tracks.rec.pack')}</label>
+                <input id="rec-pack" className="input" inputMode="decimal" value={pack} onChange={(e) => setPack(e.target.value)} placeholder="0" />
+              </div>
+            )}
+            {!bodyKg && (
+              <div className="field">
+                <label htmlFor="rec-weight">{t('tracks.rec.weight')}</label>
+                <input id="rec-weight" className="input" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} />
+                <p className="hint">{t('tracks.rec.weightHint')}</p>
+              </div>
+            )}
+            <p className="hint" style={{ margin: 0 }}>{t('tracks.rec.savesBoth')}</p>
           </>
         )}
       </form>
