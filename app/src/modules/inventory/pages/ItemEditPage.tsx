@@ -23,6 +23,7 @@ import { formatDay, useCategoryOptions, useLocationOptions } from '../selectors'
 import { useInventory } from '../store';
 import { kmForInventoryItem } from '@/modules/training/gear';
 import { useTraining } from '@/modules/training/store';
+import { confirmAction } from '@/ui/confirm';
 
 function emptyItem(): Item {
   return newEntity<Item>({
@@ -112,7 +113,7 @@ function ItemForm({ stored, presetBarcode }: { stored: Item | undefined; presetB
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('items.confirmDelete', { name: stored.name }))) return;
+    if (!stored || !(await confirmAction(t('items.confirmDelete', { name: stored.name })))) return;
     await deleteItem(stored.id);
     navigate('/inventory/items', { replace: true });
   }

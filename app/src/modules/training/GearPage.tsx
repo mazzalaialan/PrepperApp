@@ -10,6 +10,7 @@ import type { Item } from '@/core/model/types';
 import { ACTIVITY_KINDS } from './activities';
 import { wear } from './gear';
 import { useTraining } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /**
  * Equipo: zapatillas, bici, bote… Suma los km de las actividades donde se usó
@@ -100,7 +101,7 @@ export function GearPage() {
                     <button className="btn" type="button" onClick={() => void saveGear({ ...g, retired: !g.retired })}>
                       {g.retired ? t('gear.reactivate') : t('gear.retire')}
                     </button>
-                    <button className="icon-btn" type="button" aria-label={t('common.delete')} title={t('common.delete')} onClick={() => window.confirm(t('gear.confirmDelete', { name: g.name })) && void deleteGear(g.id)}>
+                    <button className="icon-btn" type="button" aria-label={t('common.delete')} title={t('common.delete')} onClick={async () => (await confirmAction(t('gear.confirmDelete', { name: g.name }))) && void deleteGear(g.id)}>
                       <Trash2 size={18} />
                     </button>
                   </span>

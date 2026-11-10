@@ -4,6 +4,8 @@
     "motto": "Be ready so the unexpected never catches you off guard"
   },
   "common": {
+    "confirmTitle": "Are you sure?",
+    "confirm": "Yes, continue",
     "continue": "Continue",
     "cancel": "Cancel",
     "save": "Save",

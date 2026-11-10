@@ -26,6 +26,7 @@ import { useMapZones } from '@/modules/maps/store';
 import { listImported, type ImportedMap } from '@/modules/maps/imported';
 import { AccountSection } from './AccountSection';
 import { NotificationsSection } from './NotificationsSection';
+import { confirmAction } from '@/ui/confirm';
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -503,7 +504,7 @@ function StorageSection() {
 
   async function clearAll(kind: 'books' | 'zones') {
     const count = kind === 'books' ? books.size : zones.length;
-    if (!window.confirm(t(`settings.storageClear.${kind}`, { count }))) return;
+    if (!(await confirmAction(t(`settings.storageClear.${kind}`, { count })))) return;
     setBusy(true);
     try {
       if (kind === 'books') await removeBooks([...books.keys()]);

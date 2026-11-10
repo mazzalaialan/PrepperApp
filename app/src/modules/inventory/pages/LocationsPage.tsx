@@ -12,6 +12,7 @@ import { buildTree, canMoveTo, subtreeIds, type LocationNode } from '../domain/l
 import { weightAt } from '../domain/stock';
 import { useLocationOptions } from '../selectors';
 import { InventoryError, useInventory } from '../store';
+import { confirmAction } from '@/ui/confirm';
 
 type Editing = { location: Location; isNew: boolean } | null;
 
@@ -140,7 +141,7 @@ export function LocationDialog({
   }
 
   async function handleDelete() {
-    if (!window.confirm(t('locations.confirmDelete', { name: location.name }))) return;
+    if (!(await confirmAction(t('locations.confirmDelete', { name: location.name })))) return;
     try {
       await deleteLocation(location.id);
       onClose();

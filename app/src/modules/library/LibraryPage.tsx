@@ -7,6 +7,7 @@ import { useSettings } from '@/core/settings/settings';
 import { Dialog } from '@/ui/Dialog';
 import type { LibraryBook } from './books';
 import { useLibrary } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 const mb = (bytes: number, lang: string) => new Intl.NumberFormat(lang, { maximumFractionDigits: bytes < 10 * 2 ** 20 ? 1 : 0 }).format(bytes / 2 ** 20);
 
@@ -167,7 +168,7 @@ export function LibraryPage() {
     setToDelete(new Set());
   }
   async function deletePicked() {
-    if (!window.confirm(t('library.confirmRemoveMany', { count: delBooks.length, mb: mb(delBytes, lang) }))) return;
+    if (!(await confirmAction(t('library.confirmRemoveMany', { count: delBooks.length, mb: mb(delBytes, lang) })))) return;
     setDeleting(true);
     try {
       await removeMany(delBooks.map((b) => b.id));
@@ -318,7 +319,7 @@ export function LibraryPage() {
                               <button
                                 className="icon-btn"
                                 type="button"
-                                onClick={() => window.confirm(t('library.confirmRemove', { title: b.title })) && void remove(b.id)}
+                                onClick={async () => (await confirmAction(t('library.confirmRemove', { title: b.title }))) && void remove(b.id)}
                                 aria-label={t('library.remove', { title: b.title })}
                               >
                                 <Trash2 size={18} />

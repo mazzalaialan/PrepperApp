@@ -10,6 +10,7 @@ import { outingTrack } from './outings';
 import { OutingPlanSection } from './OutingPlanSection';
 import { ShareSection } from './ShareSection';
 import { useTraining } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /** Una salida: totales, mapa y perfil de altura de todas sus actividades. */
 export function OutingPage() {
@@ -164,7 +165,7 @@ function OutingDetail({ id }: { id: string }) {
             className="btn btn-danger-outline"
             type="button"
             onClick={async () => {
-              if (!window.confirm(t('outings.confirmDelete', { name: outing.name }))) return;
+              if (!(await confirmAction(t('outings.confirmDelete', { name: outing.name })))) return;
               await removeOuting(id);
               navigate('/training/outings', { replace: true });
             }}

@@ -7,6 +7,7 @@ import { currentPosition } from '@/core/geo/useGeolocation';
 import type { EmergencyContact } from '@/core/model/types';
 import { emptyContact } from './ContactEditPage';
 import { useContacts } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /** Frecuencia de radio propia: la que te dieron en un refugio, un club o una guardería de parque. */
 export function FrequencyEditPage() {
@@ -54,7 +55,7 @@ function FrequencyForm({ stored }: { stored: EmergencyContact | undefined }) {
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('emergency.confirmDelete', { name: stored.name }))) return;
+    if (!stored || !(await confirmAction(t('emergency.confirmDelete', { name: stored.name })))) return;
     await remove(stored.id);
     navigate('/first-aid/radio', { replace: true });
   }

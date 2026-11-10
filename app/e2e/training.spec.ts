@@ -138,8 +138,8 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
 
   // Borrar la salida deja las actividades sueltas.
   await page.getByRole('link', { name: /Salida al Platita/ }).click();
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page).toHaveURL(/#\/training\/outings$/);
   await page.goto('/#/training/workouts');
   await expect(page.getByTestId('train-row')).toHaveCount(2);

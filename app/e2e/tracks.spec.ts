@@ -90,8 +90,8 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
 
   // Se elimina desde la lista (con confirmación); el punto copiado queda en mis waypoints.
   await page.goto('/#/orientation/tracks');
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar Refugio Frey desde Villa Catedral' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page.getByTestId('tracks-list')).toHaveCount(0);
   await expect(page.getByText('Todavía no tenés tracks')).toBeVisible();
   await page.goto('/#/orientation/waypoints');
@@ -101,8 +101,8 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
   await page.goto('/#/orientation/tracks');
   await page.getByTestId('tracks-file').setInputFiles({ name: 'frey.gpx', mimeType: 'application/gpx+xml', buffer: Buffer.from(WIKILOC) });
   await expect(page.getByRole('heading', { name: 'Refugio Frey desde Villa Catedral' })).toBeVisible();
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar', exact: true }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page).toHaveURL(/#\/orientation\/tracks$/);
   await expect(page.getByText('Todavía no tenés tracks')).toBeVisible();
 });

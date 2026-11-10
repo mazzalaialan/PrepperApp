@@ -8,6 +8,7 @@ import { useMedical } from '@/modules/firstAid/medicalStore';
 import { useTraining } from './store';
 import { useSettings } from '@/core/settings/settings';
 import { bmi, bmiCategory, localDay, parseKg, sortedWeights, summarize } from './weight';
+import { confirmAction } from '@/ui/confirm';
 
 /** Gráfico de línea del peso a lo largo del tiempo (SVG, sin librerías). */
 function WeightChart({ list }: { list: WeightEntry[] }) {
@@ -180,7 +181,7 @@ export function WeightPage() {
                   <span className="list-title">{nf.format(e.kg)} kg</span>
                   <span className="list-sub">{new Date(`${e.day}T12:00:00`).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </span>
-                <button className="icon-btn" type="button" aria-label={t('common.delete')} title={t('common.delete')} onClick={() => window.confirm(t('weight.confirmDelete')) && void deleteWeight(e.id)}>
+                <button className="icon-btn" type="button" aria-label={t('common.delete')} title={t('common.delete')} onClick={async () => (await confirmAction(t('weight.confirmDelete'))) && void deleteWeight(e.id)}>
                   <Trash2 size={18} />
                 </button>
               </li>

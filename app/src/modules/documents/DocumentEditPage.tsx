@@ -11,6 +11,7 @@ import { Dialog } from '@/ui/Dialog';
 import { useBlobUrl } from '@/ui/useBlobUrl';
 import { DOCUMENT_LEAD_DAYS } from './expiry';
 import { documentPages, useDocuments } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 function emptyDocument(category: DocumentCategory, profileId: string | null): PersonalDocument {
   return newEntity<PersonalDocument>({ title: '', notes: '', tags: [], expiryDate: null, category, profileId });
@@ -68,7 +69,7 @@ function DocumentForm({ stored }: { stored: PersonalDocument | undefined }) {
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('documents.confirmDelete', { name: stored.title }))) return;
+    if (!stored || !(await confirmAction(t('documents.confirmDelete', { name: stored.title })))) return;
     await deleteDocument(stored.id);
     navigate(backTo, { replace: true });
   }
@@ -241,7 +242,7 @@ function PageViewer({
   const last = pages.length - 1;
 
   async function handleRemove() {
-    if (!window.confirm(t('documents.confirmRemovePhoto'))) return;
+    if (!(await confirmAction(t('documents.confirmRemovePhoto')))) return;
     await removePage(page.id);
     if (pages.length === 1) onClose();
     else onIndex(Math.min(index, last - 1));

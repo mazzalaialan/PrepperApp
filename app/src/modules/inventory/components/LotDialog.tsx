@@ -12,6 +12,7 @@ import { lotDueDate } from '../domain/alerts';
 import { isPackaged, packagedQuantity } from '../domain/stock';
 import { formatDay, useLocationOptions } from '../selectors';
 import { useInventory } from '../store';
+import { confirmAction } from '@/ui/confirm';
 
 interface Props {
   item: Item;
@@ -90,7 +91,7 @@ export function LotDialog({ item, controlType, lot, defaultLocationId, onClose }
   }
 
   async function handleDelete() {
-    if (!lot || !window.confirm(t('lots.confirmDelete'))) return;
+    if (!lot || !(await confirmAction(t('lots.confirmDelete')))) return;
     await deleteLot(lot.id);
     onClose();
   }

@@ -17,6 +17,7 @@ import { recalculated } from './history';
 import { toGpx, toTcx } from './interchange';
 import { blankOuting } from './outings';
 import { useTraining } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /** Una sesión: sus datos, parciales por kilómetro, mapa, perfil de altura, salida y borrado. */
 export function WorkoutPage() {
@@ -301,7 +302,7 @@ function WorkoutDetail({ id }: { id: string }) {
             className="btn btn-danger-outline"
             type="button"
             onClick={async () => {
-              if (!window.confirm(t(hasGps ? 'training.confirmDeleteGps' : 'training.confirmDelete', { name: w.name }))) return;
+              if (!(await confirmAction(t(hasGps ? 'training.confirmDeleteGps' : 'training.confirmDelete', { name: w.name })))) return;
               await remove(w.id);
               navigate('/training/workouts', { replace: true });
             }}

@@ -14,6 +14,7 @@ import { altitudeForInput, altitudeToMeters, altitudeUnit, formatDistance } from
 import { parseNum } from '@/ui/numbers';
 import { GpsStatus, useFormatBearing } from './components';
 import { useWaypoints } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /** Datos para arrancar un waypoint nuevo desde otra pantalla (p. ej. Mi ubicación), en el estado de la navegación. */
 export interface NewWaypointDraft {
@@ -106,7 +107,7 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('waypoints.confirmDelete', { name: stored.name }))) return;
+    if (!stored || !(await confirmAction(t('waypoints.confirmDelete', { name: stored.name })))) return;
     await deleteWaypoint(stored.id);
     navigate('/orientation/waypoints', { replace: true });
   }

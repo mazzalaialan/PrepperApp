@@ -12,6 +12,7 @@ import { distanceToCountry, loadBorders, type BordersData } from './borders';
 import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRepeaterList } from './officialRepeaters';
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /**
  * Radio en una emergencia: la emisora de Radio Nacional más cercana (para
@@ -476,7 +477,7 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
   }
 
   async function clearAll() {
-    if (!window.confirm(t('radio.repeaters.confirmClear'))) return;
+    if (!(await confirmAction(t('radio.repeaters.confirmClear')))) return;
     await saveRepeaters(null);
     setList(null);
     setMessage(null);

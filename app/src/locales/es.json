@@ -4,6 +4,8 @@
     "motto": "Hay que estar listo para que no te agarre un imprevisto"
   },
   "common": {
+    "confirmTitle": "¿Seguro?",
+    "confirm": "Sí, continuar",
     "continue": "Continuar",
     "cancel": "Cancelar",
     "save": "Guardar",

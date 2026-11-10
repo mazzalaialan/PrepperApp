@@ -14,6 +14,7 @@ import { toKml } from './kml';
 import { legsOf, lineLength, trackFromRoute } from './plan';
 import { useWaypoints } from './store';
 import type { NewWaypointDraft } from './WaypointEditPage';
+import { confirmAction } from '@/ui/confirm';
 
 /**
  * Una ruta planificada en el mapa: sus piernas (distancia y rumbo magnético),
@@ -159,7 +160,7 @@ export function PlannedRoutePage({ route }: { route: Route }) {
           className="btn btn-danger-outline"
           type="button"
           onClick={async () => {
-            if (!window.confirm(t('routes.confirmDelete', { name: route.name }))) return;
+            if (!(await confirmAction(t('routes.confirmDelete', { name: route.name })))) return;
             const existing = [...tracks.values()].find((x) => x.routeId === route.id);
             if (existing) await useTracks.getState().deleteTrack(existing.id);
             await deleteRoute(route.id);

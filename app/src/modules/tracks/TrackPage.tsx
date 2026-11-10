@@ -16,6 +16,7 @@ import { useRecorder } from './recorder';
 import { formatDuration } from './Recording';
 import { useTraining } from '@/modules/training/store';
 import { useTracks } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 export function TrackPage() {
   const { id } = useParams();
@@ -77,7 +78,7 @@ function TrackDetail({ track }: { track: Track }) {
   async function removeCopy(copy: Waypoint) {
     // Si lo usa alguna ruta, se avisa antes: la ruta sigue sin ese punto.
     const inRoutes = [...routes.values()].filter((r) => r.waypointIds.includes(copy.id));
-    if (inRoutes.length && !window.confirm(t('tracks.confirmUncopy', { name: copy.name, routes: inRoutes.map((r) => r.name).join(', ') }))) return;
+    if (inRoutes.length && !(await confirmAction(t('tracks.confirmUncopy', { name: copy.name, routes: inRoutes.map((r) => r.name).join(', ') })))) return;
     await deleteWaypoint(copy.id);
   }
 
@@ -100,7 +101,7 @@ function TrackDetail({ track }: { track: Track }) {
   }
 
   async function remove() {
-    if (!window.confirm(t('tracks.confirmDelete', { name: track.name }))) return;
+    if (!(await confirmAction(t('tracks.confirmDelete', { name: track.name })))) return;
     await deleteTrack(track.id);
     navigate('/orientation/tracks', { replace: true });
   }

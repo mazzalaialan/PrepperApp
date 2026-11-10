@@ -9,6 +9,7 @@ import { parseNum } from '@/ui/numbers';
 import { CONTROL_TYPES } from '../components/controlTypes';
 import { DEFAULT_CAPACITY_PCT, DEFAULT_LEAD_DAYS, categoryName } from '../domain/categories';
 import { useInventory } from '../store';
+import { confirmAction } from '@/ui/confirm';
 
 export function CategoriesPage() {
   const { t } = useTranslation();
@@ -81,7 +82,7 @@ function CategoryDialog({ category, isNew, onClose }: { category: Category; isNe
   }
 
   async function handleDelete() {
-    if (!window.confirm(t('categories.confirmDelete', { name: categoryName(category, t) }))) return;
+    if (!(await confirmAction(t('categories.confirmDelete', { name: categoryName(category, t) })))) return;
     await deleteCategory(category.id);
     onClose();
   }

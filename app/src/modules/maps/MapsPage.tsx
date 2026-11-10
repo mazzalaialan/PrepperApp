@@ -25,6 +25,7 @@ import { carryPrevailing, chooseSnowline, chooseWind, fetchFreezingSeries, fetch
 import { compassList, fetchPrevailing, leeAspects } from './wind';
 import { archiveContains, serverMaps, type ServerMaps } from './sources';
 import { DETAILS, downloadZone, planZone, zoneSource, type DetailId, type DownloadProgress } from './tiles';
+import { confirmAction } from '@/ui/confirm';
 
 // 100 y 200 km solo entran en el límite del servidor propio.
 const RADII = [2, 5, 10, 20, 50, 100, 200];
@@ -294,7 +295,7 @@ export function MapsPage() {
   }
 
   async function handleRemove(zone: MapZone) {
-    if (!window.confirm(t('maps.confirmDelete', { name: zone.name }))) return;
+    if (!(await confirmAction(t('maps.confirmDelete', { name: zone.name })))) return;
     await remove(zone.id);
   }
 

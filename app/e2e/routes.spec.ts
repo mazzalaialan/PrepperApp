@@ -68,8 +68,8 @@ test('rutas: lista de puntos con nombre, recorrido en orden y llegada', async ({
   // Borrar un punto lo saca de la ruta, sin romperla.
   await page.goto('/#/orientation/waypoints');
   await page.getByRole('link', { name: /^Puente/ }).first().click();
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page).toHaveURL(/#\/orientation\/waypoints$/);
   await page.goto('/#/orientation/routes');
   await expect(page.getByText(/^2 puntos/)).toBeVisible();

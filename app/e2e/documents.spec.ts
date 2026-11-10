@@ -78,8 +78,8 @@ test('documento con varias fotos: agregar, ver, reordenar y quitar', async ({ pa
   await expect(dialog.getByRole('heading', { name: 'DNI de Ana · 1/3' })).toBeVisible();
   expect((await firstPixel())[1]).toBeGreaterThan(150); // ahora la primera es la verde
 
-  page.once('dialog', (d) => void d.accept());
   await dialog.getByRole('button', { name: 'Quitar' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(dialog.getByRole('heading', { name: 'DNI de Ana · 1/2' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Cerrar' }).click();
   await expect(page.getByRole('button', { name: /^Foto \d$/ })).toHaveCount(2);

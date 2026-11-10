@@ -102,12 +102,12 @@ test('biblioteca: libres (verde) y con derechos (clave VikArg), bajar por catego
 
   // Borrar varios libros a la vez: modo "Elegir para borrar", elegir los dos y borrarlos.
   await page.goto('/#/library/books');
-  page.on('dialog', (d) => void d.accept());
   await page.getByTestId('library-delete-mode').click();
   await page.getByTestId('book-montanismo').getByRole('checkbox').check();
   await page.getByTestId('book-enciclopedia').getByRole('checkbox').check();
   await expect(page.getByTestId('library-delete-bar')).toContainText('2 libros para borrar');
   await page.getByTestId('library-delete').click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page.getByTestId('book-montanismo').getByLabel('En el dispositivo')).toHaveCount(0);
   await expect(page.getByTestId('book-enciclopedia').getByLabel('En el dispositivo')).toHaveCount(0);
   await expect(page.getByTestId('library-delete-mode')).toHaveCount(0);

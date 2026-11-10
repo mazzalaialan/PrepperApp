@@ -15,6 +15,7 @@ import { FAMILY_COLOR } from './parts';
 import { CropSelect, PlantingDialog } from './PlantingDialog';
 import { newPlanting, useGarden } from './store';
 import { useGardenZone, useZonePlace } from './status';
+import { confirmAction } from '@/ui/confirm';
 
 /** Dos letras para el cuadro (Ac, To, Ze…). */
 const abbr = (name: string) => name.slice(0, 2);
@@ -271,8 +272,8 @@ export function BedPage() {
             await saveBed(b);
             setEditing(false);
           }}
-          onDelete={() => {
-            if (!window.confirm(t('garden.confirmDeleteBed', { name: bed.name }))) return;
+          onDelete={async () => {
+            if (!(await confirmAction(t('garden.confirmDeleteBed', { name: bed.name })))) return;
             void deleteBed(bed.id).then(() => navigate('/garden/beds', { replace: true }));
           }}
         />

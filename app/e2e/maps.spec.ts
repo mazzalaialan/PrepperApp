@@ -171,8 +171,8 @@ test('mapas offline: descargar una zona, verla sin conexión y borrarla', async 
   await context.setOffline(false);
 
   // Borrar: se libera el espacio.
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Borrar Casa' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page.getByText('Todavía no descargaste ninguna zona.')).toBeVisible();
   expect((await cacheKeys(page)).filter((k) => k.startsWith('https://vikarg.local/tiles/'))).toHaveLength(0);
 });
@@ -338,8 +338,8 @@ test('mapas importados a mano: un .pmtiles se copia al dispositivo y se usa sin 
   await page.getByRole('button', { name: 'Desbloquear' }).click();
   await page.goto('/#/orientation/maps');
   await expect(page.getByTestId('imported-list')).toContainText('buenos-aires.pmtiles');
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Borrar buenos-aires.pmtiles' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(page.getByTestId('imported-list')).toHaveCount(0);
 });
 

@@ -9,6 +9,7 @@ import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
 import { PlannedRoutePage } from './PlannedRoutePage';
 import { routeLength, useWaypoints } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 export function RouteEditPage() {
   const { id } = useParams();
@@ -60,7 +61,7 @@ function RouteForm({ stored }: { stored: Route | undefined }) {
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('routes.confirmDelete', { name: stored.name }))) return;
+    if (!stored || !(await confirmAction(t('routes.confirmDelete', { name: stored.name })))) return;
     await deleteRoute(stored.id);
     navigate('/orientation/waypoints', { replace: true });
   }

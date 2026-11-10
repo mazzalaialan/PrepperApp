@@ -117,8 +117,8 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await expect(mine).not.toContainText('Comisaría 28');
   await page.getByRole('link', { name: 'Editar Comisaría 28' }).click();
   await expect(page.getByText('Fuente: OpenStreetMap')).toBeVisible();
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByTestId('confirm-ok').click();
   await expect(services).toHaveCount(0);
   await expect(page.getByText('Buscá los bomberos, comisarías, hospitales y ambulancias más cercanos')).toBeVisible();
 });
@@ -315,8 +315,8 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await page.goto('/#/first-aid');
   await page.goto('/#/first-aid/radio');
   await expect(rpt).toHaveCount(12);
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Borrar las importadas' }).click();
+  await page.getByTestId('confirm-ok').click();
   // Se borran las importadas; las del listado oficial siguen.
   await expect(rpt).toHaveCount(7);
   await expect(page.getByRole('button', { name: 'Borrar las importadas' })).toHaveCount(0);

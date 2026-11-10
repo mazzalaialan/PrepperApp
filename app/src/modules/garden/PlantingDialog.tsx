@@ -12,6 +12,7 @@ import { SinglePhoto } from '@/ui/SinglePhoto';
 import { CROP_BY_ID, CROPS, cropName, text } from './crops';
 import { harvestEnd, harvestStart, plantsFor } from './logic';
 import { harvestLocation, newPlanting, useGarden } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 const UNITS = ['kg', 'u', 'atados'] as const;
 
@@ -126,8 +127,8 @@ export function PlantingDialog({ plantingId, onClose }: { plantingId: string; on
         <button
           className="btn btn-danger-outline"
           type="button"
-          onClick={() => {
-            if (!window.confirm(t('garden.confirmDeletePlanting', { name }))) return;
+          onClick={async () => {
+            if (!(await confirmAction(t('garden.confirmDeletePlanting', { name })))) return;
             void deletePlanting(planting.id).then(onClose);
           }}
         >

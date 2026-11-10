@@ -7,6 +7,7 @@ import { useVault } from '@/core/security/useVault';
 import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
 import { BackButton } from '@/ui/BackButton';
+import { ConfirmHost } from '@/ui/confirm';
 import { Dialog } from '@/ui/Dialog';
 import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
 import { OutingPlanBar } from '@/modules/training/OutingPlanBar';
@@ -111,6 +112,7 @@ export function Shell() {
         <RecordingBar />
         <OutingPlanBar />
         <PocketScreen />
+        <ConfirmHost />
         <main className="content">
           <Suspense fallback={null}>
             <Outlet />

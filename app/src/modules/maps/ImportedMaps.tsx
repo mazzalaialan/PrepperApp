@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileUp, Trash2 } from 'lucide-react';
 import { ImportFailure, importPmtiles, listImported, removeImported, type ImportedMap } from './imported';
+import { confirmAction } from '@/ui/confirm';
 
 /** Vista que muestra todo lo que cubre un archivo. */
 export function boundsView(b: ImportedMap['bounds']): { lat: number; lon: number; zoom: number } {
@@ -50,7 +51,7 @@ export function ImportedMaps({ onShow, onChange }: { onShow: (view: { lat: numbe
   }
 
   async function handleRemove(m: ImportedMap) {
-    if (!window.confirm(t('maps.imported.confirmDelete', { name: m.name }))) return;
+    if (!(await confirmAction(t('maps.imported.confirmDelete', { name: m.name })))) return;
     await removeImported(m.name);
     await refresh();
   }

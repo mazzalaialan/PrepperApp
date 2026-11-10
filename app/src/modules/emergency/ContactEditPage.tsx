@@ -7,6 +7,7 @@ import type { ContactKind, EmergencyContact } from '@/core/model/types';
 import { InsurancePhonesEditor } from '@/modules/firstAid/InsurancePhonesEditor';
 import { CONTACT_KINDS } from './parts';
 import { useContacts } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 export function emptyContact(kind: ContactKind = 'other'): EmergencyContact {
   return newEntity<EmergencyContact>({ kind, name: '', phone: '', phone2: '', address: '', lat: null, lon: null, notes: '', source: null });
@@ -52,7 +53,7 @@ function ContactForm({ stored }: { stored: EmergencyContact | undefined }) {
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('emergency.confirmDelete', { name: stored.name }))) return;
+    if (!stored || !(await confirmAction(t('emergency.confirmDelete', { name: stored.name })))) return;
     await remove(stored.id);
     navigate('/first-aid/contacts', { replace: true });
   }

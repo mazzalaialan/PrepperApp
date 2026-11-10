@@ -15,6 +15,7 @@ import { emptyInsurance, emptyPetHealth, insurerKey, isMeRelationship, MED_FREQU
 import { InsurancePhonesEditor } from './InsurancePhonesEditor';
 import { COMMON_INSURERS } from './insurers';
 import { doctorLabel, medLine, phoneIn } from './medText';
+import { confirmAction } from '@/ui/confirm';
 
 const BLOOD_TYPES = ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -344,7 +345,7 @@ function ProfileForm({ stored }: { stored: MedicalProfile | undefined }) {
   }
 
   async function handleDelete() {
-    if (!stored || !window.confirm(t('medical.confirmDelete', { name: stored.name }))) return;
+    if (!stored || !(await confirmAction(t('medical.confirmDelete', { name: stored.name })))) return;
     await deleteProfile(stored.id);
     navigate('/first-aid/medical', { replace: true });
   }

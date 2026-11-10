@@ -9,6 +9,7 @@ import { useRecorder } from './recorder';
 import { formatDuration, useStartRecording } from './Recording';
 import { trackFromBytes } from './importTrack';
 import { useTracks } from './store';
+import { confirmAction } from '@/ui/confirm';
 
 /** Tracks importados de un GPX (Wikiloc u otra app) y grabados con la app: aparte de los waypoints y rutas propios. */
 export function TracksPage() {
@@ -21,7 +22,7 @@ export function TracksPage() {
   const saveTrack = useTracks((s) => s.saveTrack);
   const deleteTrack = useTracks((s) => s.deleteTrack);
   async function remove(id: string, name: string) {
-    if (window.confirm(t('tracks.confirmDelete', { name }))) await deleteTrack(id);
+    if ((await confirmAction(t('tracks.confirmDelete', { name })))) await deleteTrack(id);
   }
   const file = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
