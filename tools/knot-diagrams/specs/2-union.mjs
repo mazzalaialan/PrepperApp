@@ -1,55 +1,98 @@
 import { A, B, coilH, flipX, move, overhand } from '../helpers.mjs';
 
-// Media vuelta (primer paso de los cordones): dos puntas que se retuercen una vez.
-const twistA = [[40, 295], [130, 250], [190, 222], [236, 196], [240, 168], [205, 150], [170, 138]];
-const twistB = [[360, 295], [270, 250], [210, 222], [164, 196], [160, 168], [195, 150], [230, 138]];
-// Segunda media vuelta, al revés.
-const topA = [[200, 120], [236, 100], [240, 75], [205, 60], [150, 40], [100, 15]];
-const topB = [[200, 120], [164, 100], [160, 75], [195, 60], [250, 40], [300, 15]];
+/**
+ * Cruces de dos cuerdas que se retuercen (las dos puntas "se rodean"): cada cruce intercambia los lados y
+ * `aOver[i]` dice si en el cruce i va arriba la naranja (a) o la azul (b). Un giro completo son dos cruces
+ * que alternan (arriba, abajo) a lo largo de cada cuerda. Las cuerdas salen de abajo del lienzo y las puntas
+ * terminan arriba. `gap`: distancia vertical entre cruces; `amp`: cuánto se abren a cada lado.
+ */
+function twist({ H, gap, amp, aOver, tip = 0, lead = 60 }) {
+  const n = aOver.length;
+  const ys = aOver.map((_, i) => H - 90 - gap * i);
+  const mk = (s, mine) => {
+    const p = [[200 + s * 150, H + 15], [200 + s * (amp + 40), ys[0] + lead * 0.8]];
+    let side = s;
+    for (let i = 0; i < n; i++) {
+      p.push([200, ys[i], mine(i) ? 0.5 : -0.5]);
+      side = -side;
+      const ym = i < n - 1 ? (ys[i] + ys[i + 1]) / 2 : ys[i] - gap / 2;
+      p.push([200 + side * amp, ym]);
+    }
+    p.push([200 + side * (amp + 10), ys[n - 1] - gap / 2 - (tip || 70)]);
+    return p;
+  };
+  return { a: mk(-1, (i) => aOver[i]), b: mk(1, (i) => !aOver[i]), ys };
+}
 
-// Rizo terminado: dos senos enlazados.
-const reefA = [[-20, 120], [150, 120], [215, 125], [240, 150], [215, 175], [150, 180], [-20, 180]];
-const reefB = [[420, 105], [250, 105], [180, 108], [158, 150], [180, 192], [250, 195], [420, 195]];
+/*
+ * Rizo terminado (nudo llano), transcripto del cruce a cruce de "Square knot.svg" (CountingPine, dominio
+ * público, Wikimedia Commons): dos senos que se enganchan; cada punta sale del mismo lado que su firme.
+ * Naranja desde el firme: arriba, abajo, arriba, arriba, abajo, arriba (6 cruces); azul al revés en cada uno.
+ * Con las puntas unidas entre sí y los firmes entre sí da el nudo llano (determinante 9).
+ */
+const dy = 35; // baja la figura para centrarla
+const reefRed = [[-20, 152], [119, 152, 0.5], [152, 152], [196, 181, -0.5], [225, 202], [255, 205], [276, 190], [281, 152, 0.5], [281, 110], [281, 75, 0.5], [279, 48], [262, 28], [237, 22], [212, 33, -0.5], [180, 62, -0.5], [152, 75], [119, 75, 0.5], [56, 75]];
+const reefBlue = [[420, 152], [281, 152, -0.5], [248, 152], [196, 181, 0.5], [165, 203], [137, 198], [119, 176], [119, 152, -0.5], [119, 110], [119, 75, -0.5], [122, 48], [138, 28], [162, 22], [182, 32, 0.5], [215, 62, 0.5], [248, 75], [281, 75, -0.5], [335, 75]];
+const down = (p) => p.map(([x, y, z]) => [x, y + dy, ...(z === undefined ? [] : [z])]);
+const reefA = down(reefRed), reefB = down(reefBlue);
 
-// Escota: seno de la cuerda gruesa (naranja) y la fina (azul) que lo rodea.
-const bight = [[-20, 110], [150, 110], [240, 112], [282, 150], [240, 188], [150, 190], [-20, 190]];
-const sheet1 = [[420, 250], [330, 230], [272, 190], [262, 150, 1], [262, 120, 1], [270, 80]];
-const sheetWrap = [[290, 60], [325, 75], [320, 120, -1], [318, 175, -1], [300, 215], [240, 225], [212, 200], [212, 150, 1]];
+/*
+ * Escota doble. Referencias: dibujo de la app escota-doble-1.webp (estilo FM 5-125: la fina entra por debajo de la
+ * curva del seno, sube por dentro junto a la curva, pasa por encima de la pata de arriba, da las vueltas por detrás
+ * de las DOS patas, a la izquierda de la curva, vuelve por delante de las dos patas y termina pasando por debajo de
+ * sí misma), "Sheet bend.svg" y "Double sheet bend.svg" (Lucasbosch, CC BY-SA 3.0) y "Doppelter Schotstek.jpg"
+ * (Markus Baerlocher, dominio público). Recorrido de la fina desde el firme, escota simple: abajo (curva), arriba
+ * (pata de arriba), abajo (arriba), abajo (abajo), arriba (abajo), arriba (arriba), abajo de sí misma; la doble
+ * repite la vuelta (abajo, abajo, arriba, arriba) antes de pasar por debajo de sí misma.
+ */
+const LT = 115, LB = 205; // patas del seno (arriba / abajo)
+// Seno de la cuerda gruesa (naranja): el firme sale por la pata de abajo y la cola termina arriba, con punta visible.
+const bight = [[-20, LB], [150, LB], [262, LB + 2], [302, 160], [262, LT - 2], [150, LT], [40, LT]];
+// La fina entra por debajo de la curva y sube por dentro del seno, junto a la curva; pasa por encima de la pata de arriba.
+const sheetIn = [[420, 262], [350, 246], [318, 222], [292, 188, -0.5], [272, 152], [258, LT, 0.5], [256, 82]];
+// Vueltas alrededor de las dos patas (xb: baja por detrás, xf: sube por delante) y el chicote que pasa por debajo de sí misma.
+const back = (x) => [[x, LT, -0.5], [x, 160], [x, LB, -0.5]];
+const front = (x) => [[x, LB, 0.5], [x, 160], [x, LT, 0.5]];
+const bottom = (xb, xf) => [[xb + 1, 225], [xb + 6, 242], [(xb + xf) / 2, 252], [xf - 6, 242], [xf - 1, 225]];
+const arcTop1 = (xb) => [[248, 58], [215, 45], [165, 45], [xb + 22, 58], [xb + 2, 84]];
+const arcTop2 = (xf, xb) => [[xf, 92], [xf + 6, 78], [(xf + xb) / 2, 72], [xb - 6, 78], [xb, 92]];
+const tuck = (x) => [[x, 78, -0.5], [x, 22, -0.5]];
+const sheetOne = (xb, xf) => [...sheetIn, ...arcTop1(xb), ...back(xb), ...bottom(xb, xf), ...front(xf), ...tuck(xf)];
+const sheetTwo = (xb1, xf1, xb2, xf2) => [...sheetIn, ...arcTop1(xb1), ...back(xb1), ...bottom(xb1, xf1), ...front(xf1), ...arcTop2(xf1, xb2), ...back(xb2), ...bottom(xb2, xf2), ...front(xf2), ...tuck(xf2)];
+
 
 // Pescador: dos puntas paralelas, cada una con un simple alrededor de la otra.
-const fishA = [[-20, 135], [120, 135], [300, 135], [340, 135]];
-const fishB = [[420, 165], [280, 165], [100, 165], [60, 165]];
-const knotOn = (x, y, dir) => {
-  // nudo simple de una punta alrededor de la otra cuerda (eje horizontal en y)
-  const s = dir; // 1: la punta va a la derecha
-  return [[x, y], [x + s * 40, y - 5], [x + s * 70, y - 35], [x + s * 50, y - 62], [x + s * 20, y - 45, 1], [x + s * 30, y + 25, 1], [x + s * 55, y + 45], [x + s * 75, y + 20], [x + s * 60, y - 12, 2], [x + s * 40, y - 25, 2], [x + s * 95, y - 30]];
-};
-
+// Referencia: "Fisherman's knot diagram.png" (Hereford Brooke George, dominio público) y las fotos de la app pescador-1..3.webp.
 export default {
-  rizo: [
-    { ropes: [{ ...A, path: twistA }, { ...B, path: twistB }], under: [[200, 214]], arrows: [[[150, 120], [175, 80], [215, 60]]] },
-    { ropes: [{ ...A, path: [...twistA, ...topA] }, { ...B, path: [...twistB, ...topB] }], under: [[200, 214], [200, 70]] },
-    { ropes: [{ ...A, path: reefA }, { ...B, path: reefB }], under: [[161, 120]], arrows: [[[40, 230], [5, 230]], [[355, 240], [395, 240]]] },
-  ],
-  cirujano: (() => {
-    // Doble media vuelta (las puntas se rodean dos veces); después una media vuelta al revés.
-    const a2 = [[40, 295], [130, 255], [185, 230], [232, 210], [236, 188], [200, 178], [168, 168], [164, 150], [200, 140], [236, 130], [240, 110], [200, 100], [160, 90], [130, 60]];
-    const b2 = [[360, 295], [270, 255], [215, 230], [168, 210], [164, 188], [200, 178], [232, 168], [236, 150], [200, 140], [164, 130], [160, 110], [200, 100], [240, 90], [270, 60]];
-    const tight = (p) => p.map(([x, y]) => (y < 235 ? [200 + (x - 200) * 0.85, 235 - (235 - y) * 0.7] : [x, y]));
-    const U = [[200, 222], [200, 140]];
+  rizo: (() => {
+    // Primer medio nudo: derecha sobre izquierda (azul arriba) y vuelta por debajo; segundo, al revés (naranja arriba).
+    const t1 = twist({ H: 400, gap: 66, amp: 44, aOver: [false, true], tip: 150 });
+    const t2 = twist({ H: 400, gap: 66, amp: 44, aOver: [false, true, true, false], tip: 40 });
     return [
-      { ropes: [{ ...A, path: a2 }, { ...B, path: b2 }], under: U },
-      { ropes: [{ ...A, path: tight(a2) }, { ...B, path: tight(b2) }], under: [[200, 227], [200, 168]], arrows: [[[60, 270], [25, 290]], [[340, 270], [375, 290]]] },
-      { ropes: [{ ...A, path: [...tight(a2).slice(0, -2), [165, 120], [160, 95], [200, 80], [240, 65], [270, 40]] }, { ...B, path: [...tight(b2).slice(0, -2), [235, 120], [240, 95], [200, 80], [160, 65], [130, 40]] }], under: [[200, 227], [200, 168], [200, 80]] },
+      { height: 400, ropes: [{ ...A, path: t1.a }, { ...B, path: t1.b }], arrows: [[[262, 345], [238, 322], [214, 300]]] },
+      { height: 400, ropes: [{ ...A, path: t2.a }, { ...B, path: t2.b }], arrows: [[[160, 195], [180, 172], [200, 152]]] },
+      { ropes: [{ ...A, path: reefA }, { ...B, path: reefB }], arrows: [[[75, 187], [30, 187]], [[345, 187], [390, 187]], [[100, 110], [66, 110]], [[300, 110], [334, 110]]] },
+    ];
+  })(),
+  cirujano: (() => {
+    // Doble media vuelta (cuatro cruces que alternan) y después una media vuelta al revés (dos cruces).
+    const o1 = [false, true, false, true], o3 = [...o1, true, false];
+    const t1 = twist({ H: 400, gap: 56, amp: 42, aOver: o1, tip: 40 });
+    const t2 = twist({ H: 400, gap: 46, amp: 34, aOver: o1, tip: 40 });
+    const t3 = twist({ H: 400, gap: 46, amp: 34, aOver: o3, tip: 40 });
+    const pull = [[[70, 372], [35, 392]], [[330, 372], [365, 392]]];
+    return [
+      { height: 400, ropes: [{ ...A, path: t1.a }, { ...B, path: t1.b }] },
+      { height: 400, ropes: [{ ...A, path: t2.a }, { ...B, path: t2.b }], arrows: pull },
+      { height: 400, ropes: [{ ...A, path: t3.a }, { ...B, path: t3.b }], arrows: pull },
     ];
   })(),
   'escota-doble': [
     { ropes: [{ ...A, path: bight }] },
-    { ropes: [{ ...A, path: bight }, { ...B, path: sheet1 }], under: [[264, 182]], arrows: [[[285, 70], [330, 80], [335, 150]]] },
-    { ropes: [{ ...A, path: bight }, { ...B, path: [...sheet1, ...sheetWrap, [205, 100], [175, 60]] }], under: [[264, 182], [221, 112]] },
-    { ropes: [{ ...A, path: bight }, { ...B, path: [...sheet1, ...sheetWrap.slice(0, 5), [345, 70], [345, 210, -1], [300, 230], [230, 236], [200, 210], [200, 150, 1], [195, 100], [165, 60]] }], under: [[264, 182]] },
-    { width: 400, ropes: [{ ...A, path: [[-20, 120], [150, 120], [228, 125], [252, 150], [228, 175], [150, 180], [-20, 180]] }, { ...B, path: [[420, 230], [320, 210], [262, 170], [262, 150, 1], [268, 120], [285, 105], [295, 120, -1], [292, 170, -1], [270, 195], [230, 192], [215, 160, 1], [210, 140], [180, 95], [150, 75]] }],
-      arrows: [[[40, 230], [5, 230]], [[370, 260], [400, 270]]] },
+    { ropes: [{ ...A, path: bight }, { ...B, path: sheetIn }], arrows: [[[250, 72], [208, 46], [150, 56], [118, 100], [114, 160]]] },
+    { ropes: [{ ...A, path: bight }, { ...B, path: sheetOne(100, 140) }] },
+    { ropes: [{ ...A, path: bight }, { ...B, path: sheetTwo(100, 140, 180, 222) }] },
+    { ropes: [{ ...A, path: bight }, { ...B, path: sheetTwo(100, 140, 180, 222) }], arrows: [[[60, LB], [25, LB]], [[370, 258], [398, 266]]] },
   ],
   pescador: (() => {
     const oa = overhand({ x: 250, y: 130, k: 0.55 }); // firme naranja en y = 168
@@ -57,19 +100,39 @@ export default {
     const blueLine = [[420, 130], [300, 130], [120, 130], [60, 130]];
     return [
       { ropes: [{ ...A, path: [[-20, 168], [120, 168], [300, 168], [340, 168]] }, { ...B, path: [[420, 130], [280, 130], [100, 130], [60, 130]] }] },
-      { ropes: [{ ...A, path: [[-20, 168], [80, 168], ...oa.path, [330, 90]] }, { ...B, path: blueLine }], under: [[253, 130], ...oa.under], arrows: [[[70, 100], [115, 85], [150, 105]]] },
+      // La flecha va sobre el simple de la naranja (arriba del nudo, hacia donde pasa la punta).
+      { ropes: [{ ...A, path: [[-20, 168], [80, 168], ...oa.path, [330, 90]] }, { ...B, path: blueLine }], under: [[253, 130], ...oa.under], arrows: [[[215, 62], [262, 46], [312, 66]]] },
+      // Las flechas van sobre los firmes: naranja (y = 168) a la izquierda, azul (y = 130) a la derecha.
       { ropes: [{ ...A, path: [[-20, 168], [80, 168], ...oa.path, [330, 90]] }, { ...B, path: [[420, 130], [320, 130], ...ob.path, [70, 208]] }], under: [[253, 130], [147, 168], ...oa.under, ...ob.under],
-        arrows: [[[40, 230], [5, 230]], [[355, 230], [395, 230]]] },
+        arrows: [[[75, 168], [30, 168]], [[345, 130], [392, 130]]] },
     ];
   })(),
   'pescador-doble': (() => {
-    // Naranja por y = 168: da dos vueltas a la azul (y = 130) hacia la izquierda y vuelve por dentro.
-    const a = [[-20, 168], [150, 168], [250, 168], [272, 160], ...coilH({ x: 282, y: 130, n: 2, pitch: 32, r: 28, from: 'bottom', left: true }), [200, 152], [222, 138, 0.5], [282, 138, 0.5], [312, 125], [345, 95]];
-    const mirror = (p) => p.map(([x, y, zz]) => [400 - x, 298 - y, ...(zz === undefined ? [] : [zz])]);
+    /*
+     * Cada mitad es un double overhand alrededor de la otra cuerda (control de knots.ts: "dos X de un lado y cuatro trazos
+     * paralelos del otro"). Referencias: fotos de la app pescador-doble-2/3.webp, "Double fisherman's knot cordelette.png"
+     * (ScrubbedFalcon, CC BY-SA 4.0) y "Noeud de pecheur double serre.jpg" (Malta, CC BY-SA 2.5).
+     * Recorrido de la naranja: el firme (y = 188) sigue recto, da una U, da DOS vueltas hacia la izquierda alrededor de tres
+     * cuerdas (la azul arriba, su propia punta en el medio y su propio firme abajo; por delante al subir, por detrás al
+     * bajar) y la punta vuelve por dentro de las dos vueltas, por encima del firme, hasta salir a la derecha.
+     */
+    const W = 600, C = 149, R = 48, P = 90, TILT = 0.2, XR = 520, YS = 174, XL = XR - 2 * P;
+    const half = () => {
+      const path = [[-20, YS], [250, YS], [XR - 20, YS], [XR + 18, YS + 2], [XR + 32, YS + 12], [XR + 22, C + R + 1]];
+      for (let i = 0; i <= 16; i++) {
+        const th = (i / 8) * Math.PI * 2, sn = Math.sin(th);
+        path.push([XR - P * (th / (2 * Math.PI)) - TILT * R * sn, C + R * Math.cos(th), Math.abs(sn) < 1e-9 ? 0 : sn > 0 ? 1 : -1]);
+      }
+      path.push([XL - 14, C + R - 14], [XL - 16, YS, 0.3], [XL - 8, C + 8, 0.3], [XL + 4, C, 0.3], [XR, C, 0.3], [XR + 52, C, 0.3]);
+      return path;
+    };
+    const a = half();
+    const mirror = (p) => p.map(([x, y, zz]) => [W - x, 298 - y, ...(zz === undefined ? [] : [zz])]);
+    const yb = 298 - YS;
     return [
-      { ropes: [{ ...A, path: [[-20, 168], [120, 168], [300, 168], [340, 168]] }, { ...B, path: [[420, 130], [280, 130], [100, 130], [60, 130]] }] },
-      { ropes: [{ ...A, path: a }, { ...B, path: [[420, 130], [300, 130], [120, 130], [60, 130]] }], arrows: [[[70, 100], [115, 85], [150, 105]]] },
-      { ropes: [{ ...A, path: a }, { ...B, path: mirror(a) }], arrows: [[[40, 230], [5, 230]], [[355, 230], [395, 230]]] },
+      { width: W, ropes: [{ ...A, path: [[-20, YS], [250, YS], [450, YS], [490, YS]] }, { ...B, path: [[W + 20, yb], [350, yb], [150, yb], [110, yb]] }] },
+      { width: W, ropes: [{ ...A, path: a }, { ...B, path: [[W + 20, yb], [450, yb], [250, yb], [110, yb]] }], arrows: [[[440, 68], [500, 54], [560, 84]]] },
+      { width: W, ropes: [{ ...A, path: a }, { ...B, path: mirror(a) }], arrows: [[[70, YS], [30, YS]], [[530, yb], [570, yb]]] },
     ];
   })(),
 };

@@ -117,8 +117,8 @@ export function trace(spec) {
   const { strands, xs, W } = resolve(spec);
   // Un cruce es ambiguo si las cuerdas casi van en paralelo o si hay otro cruce tan cerca que los huecos se pisan.
   for (const c of xs) {
-    const near = xs.some((o) => o !== c && Math.hypot(o.x - c.x, o.y - c.y) < W * 2.2);
-    c.ambiguo = c.ang < 35 ? `ángulo de ${Math.round(c.ang)}° (casi paralelas)` : near ? 'otro cruce a menos de 2 grosores (los huecos se pisan)' : null;
+    const near = xs.some((o) => o !== c && Math.hypot(o.x - c.x, o.y - c.y) < W * 1.6);
+    c.ambiguo = c.ang < 35 ? `ángulo de ${Math.round(c.ang)}° (casi paralelas)` : near ? 'otro cruce a menos de 1,6 grosores (los huecos se pisan)' : null;
   }
   return strands.map((r) => {
     const mine = [];
@@ -199,7 +199,11 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
       // Sombra de la cuerda de arriba sobre la de abajo: solo se ve encima de la de abajo (máscara con su trazo).
       const lower = strands[c.under.k];
       const lowerPts = lower.pts.filter((p) => p.s >= c.under.s - W * 2.2 && p.s <= c.under.s + W * 2.2 && (layered ? (p.z >= 0) === (c.over.z >= 0) : true));
-      if (pts.length >= 2 && lowerPts.length >= 2) {
+      // En un nudo doble (dos cuerdas paralelas) la sombra caería sobre la cuerda vecina y se vería como una mancha: ahí no se dibuja.
+      const crowded = strands.some((st) =>
+        st.pts.some((p) => Math.hypot(p.x - c.x, p.y - c.y) < W * 1.3 && !(st.k === c.over.k && Math.abs(p.s - c.over.s) < W * 2.5) && !(st.k === c.under.k && Math.abs(p.s - c.under.s) < W * 2.5)),
+      );
+      if (pts.length >= 2 && lowerPts.length >= 2 && !crowded) {
         const m = `${P}m${defs.length}`;
         const sh = `${P}s${defs.length}`;
         defs.push(`<path id="${sh}" d="${pathD(near(W * 1.5))}"/>`);
@@ -211,13 +215,13 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
     }
   };
   const layered = poles.length > 0;
-  pass(layered ? (r, p) => p.z < 0 : () => true);
+  pass(layered ? (r, p) => p.z <= -1 : () => true);
   for (const pole of poles) {
     if (pole.kind === 'ring') body.push(`<circle cx="${pole.x}" cy="${pole.y}" r="${pole.r}" fill="none" stroke="#7b818c" stroke-width="${pole.w ?? 11}"/><circle cx="${pole.x}" cy="${pole.y}" r="${pole.r}" fill="none" stroke="#b8bec8" stroke-width="${(pole.w ?? 11) * 0.35}"/>`);
     else if (pole.kind === 'path') body.push(`<path d="${pole.d}" fill="${pole.fill ?? '#9aa1ab'}" stroke="${pole.stroke ?? '#5c626b'}" stroke-width="3"/>`);
     else body.push(`<rect x="${pole.x}" y="${pole.y}" width="${pole.w}" height="${pole.h}" rx="${pole.rx ?? Math.min(pole.w, pole.h) / 5}" fill="${pole.fill ?? '#a07c55'}" stroke="${pole.stroke ?? '#6b5136'}" stroke-width="3"${pole.rotate ? ` transform="rotate(${pole.rotate} ${pole.x + pole.w / 2} ${pole.y + pole.h / 2})"` : ''}/>`);
   }
-  if (layered) pass((r, p) => p.z >= 0);
+  if (layered) pass((r, p) => p.z > -1);
   for (const a of arrows) {
     body.push(`<path d="${pathD(catmull(a, 4))}" fill="none" class="kda" stroke-width="4" stroke-dasharray="10 7" marker-end="url(#${P}ah)"/>`);
   }

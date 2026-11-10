@@ -22,7 +22,7 @@ const escapeStart = escT([...escapeBody, [900, 225], [980, 185], [1020, 150], [9
 
 export default {
   simple: [
-    { ropes: [{ ...A, path: [...loop, [190, 260], [205, 290]] }], arrows: [[[222, 283], [262, 262], [258, 228], [236, 165]]] },
+    { ropes: [{ ...A, path: [...loop, [190, 252], [205, 280]] }], arrows: [[[222, 273], [262, 258], [262, 232]]] },
     { ropes: [{ ...A, path: [...loop, ...thru, [345, 105]] }], under: U },
     { ropes: [{ ...A, path: [[-20, 170], [60, 170], ...scale(loop.slice(2).concat(thru), 0.75).map(([x, y]) => [x + 45, y + 25]), [320, 104], [420, 108]] }], under: [[216, 179]],
       arrows: [[[45, 215], [5, 215]], [[350, 155], [390, 155]]] },
@@ -39,17 +39,22 @@ export default {
     { ropes: [{ ...A, path: escapeFull }], under: escapeUnder, arrows: [[[222, 62], [198, 38], [175, 30]]] },
   ],
   'ocho-simple': [
-    { ropes: [{ ...A, path: [...eight.slice(0, 9), [215, 265], [230, 292]] }], arrows: [[[245, 288], [180, 296], [135, 260]]] },
-    { ropes: [{ ...A, path: [...eight.slice(0, 13), [168, 196]] }], under: [[150, 220]], arrows: [[[190, 185], [225, 162], [262, 148]]] },
+    { ropes: [{ ...A, path: [...eight.slice(0, 9), [215, 265], [230, 292]] }], arrows: [[[210, 294], [180, 292], [150, 276], [140, 252]]] },
+    { ropes: [{ ...A, path: [...eight.slice(0, 13), [160, 202]] }], under: [[150, 220]], arrows: [[[198, 185], [230, 162], [262, 148]]] },
     { ropes: [{ ...A, path: eight }], under: [[150, 220], [298, 135]] },
   ],
+  // Tope (doble simple, ABOK #516 / 5_1): el chicote se enrolla dos veces en el firme y vuelve por dentro de las vueltas.
+  // Referencia: fotos de dominio público de Markus Bärlocher en Wikimedia Commons, Doppelter_Spierenstich-1..4.jpg
+  // (Public domain): la punta se enrolla dos veces y vuelve por dentro de las vueltas en sentido contrario; en -4 (nudo
+  // ajustado) las dos vueltas quedan paralelas, lado a lado. Esquema propio del recorrido (no es copia de la foto).
+  // Paso 3: pitch 64, r 38, tilt 0 (con menos pitch o con tilt los cruces de firme y retorno se pisan: ⚠ AMBIGUO).
   tope: [
-    // Vueltas bien abiertas (paso largo) para que cada cruce con el firme se lea solo.
-    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [300, 150], [340, 160], [352, 196], [326, 226], ...coilH({ x: 290, y: 150, n: 2, pitch: 110, r: 56, from: 'bottom', left: true }), [60, 214], [38, 222]] }],
+    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [300, 150], [340, 160], [352, 196], [326, 226], ...coilH({ x: 290, y: 150, n: 2, pitch: 110, r: 56, from: 'bottom', left: true, tilt: 0.2 }).map(([x, y, z]) => [x, y, z / 2]), [60, 214], [38, 222]] }],
       arrows: [[[150, 252], [95, 252]]] },
-    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [300, 150], [340, 160], [352, 196], [326, 226], ...coilH({ x: 290, y: 150, n: 2, pitch: 110, r: 56, from: 'bottom', left: true }), [58, 208, 0], [46, 192, 0], [70, 183, 0], [150, 183, 0], [250, 183, 0], [305, 178, 0], [326, 130], [338, 90]] }] },
-    // Ajustado: dos vueltas parejas lado a lado; el chicote sale por debajo de ellas y cruza el firme en ángulo.
-    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [236, 150], [272, 152], [298, 172], [290, 200], [262, 196], ...coilH({ x: 252, y: 150, n: 2, pitch: 40, r: 28, from: 'bottom', left: true }), [158, 196, 0], [168, 180, 0], [200, 174, 0], [246, 172, 0], [274, 138], [298, 112], [320, 98]] }], zoom: [1.3, 200, 150],
-      arrows: [[[110, 195], [60, 195]], [[312, 128], [345, 100]]] },
+    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [300, 150], [340, 160], [352, 196], [326, 226], ...coilH({ x: 290, y: 150, n: 2, pitch: 110, r: 56, from: 'bottom', left: true, tilt: 0.2 }).map(([x, y, z]) => [x, y, z / 2]), [58, 208, 0], [46, 192, 0], [70, 183, 0], [150, 183, 0], [250, 183, 0], [305, 178, 0], [326, 130], [338, 90]] }],
+      arrows: [[[110, 262], [190, 262], [262, 262]]] },
+    // Ajustado: las dos vueltas quedan pegadas, una al lado de la otra (el barril), centradas en el haz firme + vuelta del chicote.
+    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [250, 150], [330, 150], [350, 174], [324, 202], ...coilH({ x: 290, y: 166, n: 2, pitch: 64, r: 38, from: 'bottom', left: true, tilt: 0 }).map(([x, y, z]) => [x, y, z / 2]), [150, 206, 0], [128, 196, 0], [134, 184, 0], [170, 183, 0], [230, 183, 0], [305, 181, 0], [326, 130], [338, 90]] }],
+      arrows: [[[110, 150], [60, 150]], [[312, 128], [345, 100]]] },
   ],
 };

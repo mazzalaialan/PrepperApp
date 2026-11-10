@@ -26,7 +26,7 @@ Un diagrama de nudo se transcribe de una referencia real, no se construye "con l
 
 El objetivo NO es que `trace.mjs` o el analista den OK: es que el dibujo se entienda y enseñe a hacer el nudo. Está prohibido:
 - Cambiar solo un `z` o un `under` para que el dato "dé bien" mientras el dibujo sigue sin leerse.
-- Dejar cruces apretados, casi paralelos o a menos de 2 grosores de otro cruce, donde los huecos se pisan y no se sabe cuál cuerda va arriba (`trace.mjs` los marca `⚠ AMBIGUO`).
+- Dejar cruces apretados, casi paralelos o a menos de 1,6 grosores de otro cruce, donde los huecos se pisan y no se sabe cuál cuerda va arriba (`trace.mjs` los marca `⚠ AMBIGUO`).
 - Esconder el problema achicando la figura, sacando una cuerda o una flecha, o cortando una cuerda para que no se vea el cruce.
 
 Lo que sí tenés que hacer: rediseñar la geometría (más separación entre vueltas, que las cuerdas se crucen casi en perpendicular, ampliar con `zoom`, ensanchar el paso entre espiras, dar perspectiva con `tilt`, separar los pasos en figuras claras). Después de cada cambio corré `node trace.mjs <id> <paso>` (no puede quedar ningún `⚠ AMBIGUO` sin justificar) y `node crops.mjs <id> <paso> /tmp/nudos-revision/<carpeta>`, y abrí con Read los recortes de cada cruce y la figura completa: la cuerda de arriba tiene que verse continua y la de abajo con un hueco claro a cada lado. Si un cruce no puede dejar de ser apretado (por ejemplo, en un nudo muy compacto), ampliá esa zona con `zoom` o mostrala en un paso aparte hasta que se entienda. En tu informe decí qué recortes miraste y cómo quedó cada cruce.
