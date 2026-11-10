@@ -6,12 +6,14 @@ import { simplify, trackStats, type TrackPoint } from './gpx';
 export const MAX_ACCURACY_M = 50;
 /** Paso mínimo entre puntos: quieto, el GPS dibuja una maraña alrededor. */
 const MIN_STEP_M = 8;
+/** Con batería baja o en ahorro, menos puntos (el celular escribe y cifra menos); el recorrido casi no cambia. */
+export const SAVER_STEP_M = 20;
 
 /** ¿Este punto suma al recorrido? Ni con mala precisión ni a menos de un paso del anterior. */
-export function shouldAdd(last: TrackPoint | undefined, fix: { lat: number; lon: number; accuracy: number }): boolean {
+export function shouldAdd(last: TrackPoint | undefined, fix: { lat: number; lon: number; accuracy: number }, minStepM = MIN_STEP_M): boolean {
   if (fix.accuracy > MAX_ACCURACY_M) return false;
   if (!last) return true;
-  return distanceMeters({ lat: last[0], lon: last[1] }, fix) >= Math.max(MIN_STEP_M, fix.accuracy / 2);
+  return distanceMeters({ lat: last[0], lon: last[1] }, fix) >= Math.max(minStepM, fix.accuracy / 2);
 }
 
 /** Agrega el punto al último tramo (cada pausa abre uno nuevo). */

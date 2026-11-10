@@ -10,7 +10,8 @@ import type { IntervalPlan } from '@/modules/training/intervals';
 import { analyzeRecording } from '@/modules/training/stats';
 import { trackStats, type TrackPoint } from './gpx';
 import { addLocked, clearLocked, newRecKey, prepareLocked, readLocked } from './lockedBuffer';
-import { addPoint, finishedTrack, joinLastSegments, shouldAdd } from './record';
+import { addPoint, finishedTrack, joinLastSegments, SAVER_STEP_M, shouldAdd } from './record';
+import { useSettings } from '@/core/settings/settings';
 import { useTracks } from './store';
 
 /**
@@ -73,6 +74,26 @@ const GAP_NOTICE_MS = 20_000;
 let hiddenAt: number | null = null;
 
 let watchId: number | null = null;
+
+// Batería baja (20 % o menos y sin cargar): se toman menos puntos. Con el tema de ahorro, siempre.
+let batteryLow = false;
+let batteryWatched = false;
+function watchBattery() {
+  if (batteryWatched) return;
+  batteryWatched = true;
+  const nav = navigator as Navigator & { getBattery?: () => Promise<{ level: number; charging: boolean; addEventListener: (e: string, f: () => void) => void }> };
+  void nav.getBattery?.().then((b) => {
+    const update = () => {
+      batteryLow = !b.charging && b.level <= 0.2;
+    };
+    update();
+    b.addEventListener('levelchange', update);
+    b.addEventListener('chargingchange', update);
+  }).catch(() => undefined);
+}
+function lowPower(): boolean {
+  return batteryLow || useSettings.getState().settings.theme === 'saver';
+}
 let lastSaved = 0;
 
 export function elapsedS(s: Pick<RecorderState, 'elapsedMs' | 'since'>, now = Date.now()): number {
@@ -92,7 +113,7 @@ function onPosition(p: GeolocationPosition) {
   const fix = { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy };
   if (s.error || s.accuracy !== fix.accuracy) useRecorder.setState({ error: null, accuracy: fix.accuracy });
   const segments = s.track.segments;
-  if (!shouldAdd(segments[segments.length - 1]?.at(-1), fix)) return;
+  if (!shouldAdd(segments[segments.length - 1]?.at(-1), fix, lowPower() ? SAVER_STEP_M : undefined)) return;
   // Con la hora (segundos): de ahí salen el tiempo en movimiento, el ritmo y los parciales del Entrenamiento.
   const point: TrackPoint = [fix.lat, fix.lon, p.coords.altitude ?? null, Math.round(p.timestamp / 1000)];
   const next = addPoint(segments, point);
@@ -105,6 +126,7 @@ function onPosition(p: GeolocationPosition) {
 
 function startWatch() {
   stopWatch();
+  watchBattery();
   if (!('geolocation' in navigator)) {
     useRecorder.setState({ error: 'unsupported' });
     return;

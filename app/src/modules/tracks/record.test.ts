@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Track } from '@/core/model/types';
-import { addPoint, finishedTrack, firstPoints, joinLastSegments, shouldAdd } from './record';
+import { addPoint, finishedTrack, firstPoints, joinLastSegments, SAVER_STEP_M, shouldAdd } from './record';
 import { trackStats } from './gpx';
 
 const track = (segments: Track['segments']): Track =>
@@ -15,6 +15,12 @@ describe('grabación del recorrido', () => {
     // ~11 m con buena precisión, sí; con 30 m de error hace falta más paso.
     expect(shouldAdd([-41, -71, null], { lat: -41.0001, lon: -71, accuracy: 5 })).toBe(true);
     expect(shouldAdd([-41, -71, null], { lat: -41.0001, lon: -71, accuracy: 30 })).toBe(false);
+  });
+
+  it('con batería baja pide un paso más largo (menos puntos)', () => {
+    // ~11 m: suma con el paso normal, no con el de ahorro (20 m); ~33 m, sí.
+    expect(shouldAdd([-41, -71, null], { lat: -41.0001, lon: -71, accuracy: 5 }, SAVER_STEP_M)).toBe(false);
+    expect(shouldAdd([-41, -71, null], { lat: -41.0003, lon: -71, accuracy: 5 }, SAVER_STEP_M)).toBe(true);
   });
 
   it('agrega al último tramo', () => {
