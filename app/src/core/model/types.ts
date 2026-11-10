@@ -527,6 +527,8 @@ export interface Planting extends BaseEntity {
   endedOn: IsoDay | null;
   notes: string;
   harvests: HarvestEntry[];
+  /** Almácigo que está AFUERA, en este lugar (un waypoint): recibe los avisos de helada y riego. Sin valor = adentro de casa, sin avisos. */
+  nurseryWaypointId?: Id | null;
 }
 
 /** Punto con nombre que trae un track importado (refugio, agua, mirador…). No es un waypoint propio. */

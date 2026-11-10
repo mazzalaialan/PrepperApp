@@ -2308,6 +2308,9 @@
     "offlineReady": "Lista para usar sin conexión."
   },
   "garden": {
+    "nurseryOutside": "El almácigo está afuera",
+    "nurseryPlace": "Dónde está el almácigo",
+    "nurseryPlaceHint": "Con un lugar, la app te avisa si hay helada o si hay que regarlo. Si está adentro de casa, no hace falta.",
     "weeksRange": "{{from}} a {{to}} semanas",
     "harvestIfSow": "Si sembrás hoy: cosecha entre el {{from}} y el {{to}}.",
     "harvestIfTransplant": "Si trasplantás hoy: cosecha entre el {{from}} y el {{to}} (sin contar el almácigo).",

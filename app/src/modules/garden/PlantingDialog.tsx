@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react';
 import type { Planting } from '@/core/model/types';
 import { today as todayIso } from '@/modules/inventory/domain/dates';
 import { useInventory } from '@/modules/inventory/store';
+import { WaypointField } from '@/modules/waypoints/WaypointField';
 import { Dialog } from '@/ui/Dialog';
 import { numToInput, parseNum } from '@/ui/numbers';
 import { SinglePhoto } from '@/ui/SinglePhoto';
@@ -166,6 +167,7 @@ export function PlantingDialog({ plantingId, onClose }: { plantingId: string; on
       </dl>
       <p className="hint" style={{ margin: 0 }}>{text(crop.harvest, i18n.language)}</p>
 
+      {planting.status === 'nursery' && <NurseryPlace value={planting.nurseryWaypointId ?? null} onChange={(id) => set({ nurseryWaypointId: id })} name={cropName(crop, i18n.language)} />}
       {planting.status === 'nursery' && (
         <button className="btn btn-primary" type="button" onClick={() => {
             onClose();
@@ -250,13 +252,32 @@ export function CropSelect({ id, value, onChange, preferred }: { id: string; val
   );
 }
 
+/**
+ * ¿El almácigo está afuera? Solo así recibe los avisos de helada y riego (adentro de casa no hacen falta):
+ * se marca y se elige dónde está (un waypoint, o uno nuevo con el GPS).
+ */
+function NurseryPlace({ value, onChange, name }: { value: string | null; onChange: (id: string | null) => void; name: string }) {
+  const { t } = useTranslation();
+  const [outside, setOutside] = useState(!!value);
+  return (
+    <div className="stack">
+      <label className="check">
+        <input type="checkbox" checked={outside} onChange={(e) => { setOutside(e.target.checked); if (!e.target.checked) onChange(null); }} data-testid="nursery-outside" />
+        {t('garden.nurseryOutside')}
+      </label>
+      {outside && <WaypointField id="nursery-place" label={t('garden.nurseryPlace')} value={value} onChange={onChange} newName={name} hint={t('garden.nurseryPlaceHint')} />}
+    </div>
+  );
+}
+
 /** Nuevo almácigo (todavía sin cantero). */
 export function NurseryDialog({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const savePlanting = useGarden((s) => s.savePlanting);
   const [cropId, setCropId] = useState('');
   const [variety, setVariety] = useState('');
   const [date, setDate] = useState(todayIso());
+  const [placeId, setPlaceId] = useState<string | null>(null);
   const nurseryCrops = CROPS.filter((c) => c.nurseryDays && !c.perennial).map((c) => c.id);
   return (
     <Dialog
@@ -267,7 +288,7 @@ export function NurseryDialog({ onClose }: { onClose: () => void }) {
           className="btn btn-primary"
           type="button"
           disabled={!cropId || !date}
-          onClick={() => void savePlanting(newPlanting(cropId, date, { method: 'nursery', status: 'nursery', variety: variety.trim() })).then(onClose)}
+          onClick={() => void savePlanting(newPlanting(cropId, date, { method: 'nursery', status: 'nursery', variety: variety.trim(), nurseryWaypointId: placeId })).then(onClose)}
         >
           {t('common.save')}
         </button>
@@ -285,6 +306,7 @@ export function NurseryDialog({ onClose }: { onClose: () => void }) {
         <label htmlFor="nursery-date">{t('garden.nurseryOn')}</label>
         <input id="nursery-date" className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
+      <NurseryPlace value={placeId} onChange={setPlaceId} name={CROP_BY_ID.get(cropId) ? cropName(CROP_BY_ID.get(cropId)!, i18n.language) : ''} />
     </Dialog>
   );
 }

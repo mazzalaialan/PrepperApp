@@ -57,7 +57,7 @@ export interface PlaceGroup {
   key: string;
   place: GardenPlace;
   beds: GardenBed[];
-  outdoor: { planting: Planting; crop: Crop }[];
+  outdoor: { planting: Planting; crop: Crop; waypointId?: string }[];
 }
 
 /**
@@ -76,15 +76,17 @@ export function placeGroups(
   const names = new Map<string, Set<string>>();
   const unplaced = new Set<GardenBed>();
   for (const o of outdoorPlantings(beds, plantings)) {
-    const bed = beds.get(o.planting.bedId!)!;
-    const place = bed.waypointId ? waypointPlace(bed.waypointId) : null;
+    // Un almácigo de afuera trae su propio lugar; lo demás, el del cantero.
+    const bed = o.planting.bedId ? beds.get(o.planting.bedId) : undefined;
+    const wpId = o.waypointId ?? bed?.waypointId ?? null;
+    const place = wpId ? waypointPlace(wpId) : null;
     if (!place) {
-      unplaced.add(bed);
+      if (bed) unplaced.add(bed);
       continue;
     }
     const key = weatherKey(place.lat, place.lon);
     const g = groups.get(key) ?? { key, place: { ...place }, beds: [], outdoor: [] };
-    if (!g.beds.includes(bed)) g.beds.push(bed);
+    if (bed && !g.beds.includes(bed)) g.beds.push(bed);
     g.outdoor.push(o);
     groups.set(key, g);
     names.set(key, (names.get(key) ?? new Set()).add(place.label ?? ''));

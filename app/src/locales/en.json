@@ -2308,6 +2308,9 @@
     "offlineReady": "Ready to use offline."
   },
   "garden": {
+    "nurseryOutside": "The seedbed is outdoors",
+    "nurseryPlace": "Where the seedbed is",
+    "nurseryPlaceHint": "With a place, the app warns you about frost or when to water it. Indoors, it is not needed.",
     "weeksRange": "{{from}} to {{to}} weeks",
     "harvestIfSow": "If you sow today: harvest between {{from}} and {{to}}.",
     "harvestIfTransplant": "If you transplant today: harvest between {{from}} and {{to}} (not counting the nursery).",

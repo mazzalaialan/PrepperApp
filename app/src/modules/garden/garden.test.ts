@@ -52,6 +52,23 @@ describe('fichas', () => {
   });
 });
 
+describe('almácigos al aire libre', () => {
+  const beds = new Map<string, GardenBed>([['b1', bed()]]);
+  const nursery = (over: Partial<Planting> = {}) => planting({ id: 'n1', cropId: 'tomate', bedId: null, status: 'nursery', method: 'nursery', ...over });
+
+  it('un almácigo cuenta para helada y riego solo si se marcó que está afuera, y trae su lugar', () => {
+    expect(outdoorPlantings(beds, [nursery()])).toHaveLength(0); // adentro de casa
+    const out = outdoorPlantings(beds, [nursery({ nurseryWaypointId: 'wp1' })]);
+    expect(out).toHaveLength(1);
+    expect(out[0]!.waypointId).toBe('wp1');
+  });
+
+  it('un almácigo de afuera sin su lugar no cuenta, y uno terminado tampoco', () => {
+    expect(outdoorPlantings(beds, [nursery({ nurseryWaypointId: null })])).toHaveLength(0);
+    expect(outdoorPlantings(beds, [nursery({ nurseryWaypointId: 'wp1', status: 'done' })])).toHaveLength(0);
+  });
+});
+
 describe('calendario', () => {
   it('lee meses y rangos que cruzan el año', () => {
     expect([...parseMonths('8-11,2')]).toEqual([8, 9, 10, 11, 2]);

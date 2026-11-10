@@ -176,14 +176,23 @@ export function recommendForBed(bed: GardenBed, plantings: Planting[], opts: Rec
 
 // ------------------------------------------------------------- agua y helada
 
-/** Lo que hay plantado al aire libre (los canteros en invernadero no cuentan para la helada ni para el riego por lluvia). */
-export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): { planting: Planting; crop: Crop }[] {
-  const out: { planting: Planting; crop: Crop }[] = [];
+/**
+ * Lo que hay plantado al aire libre (los canteros en invernadero no cuentan para la helada ni para el riego por lluvia).
+ * Un almácigo cuenta solo si se marcó que está afuera y en qué lugar (`nurseryWaypointId`): puede estar adentro de casa.
+ */
+export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): { planting: Planting; crop: Crop; waypointId?: string }[] {
+  const out: { planting: Planting; crop: Crop; waypointId?: string }[] = [];
   for (const p of plantings) {
-    if (p.deletedAt || p.status === 'done' || p.status === 'nursery' || !p.bedId) continue;
-    const bed = beds.get(p.bedId);
+    if (p.deletedAt || p.status === 'done') continue;
     const crop = CROP_BY_ID.get(p.cropId);
-    if (!bed || bed.deletedAt || bed.greenhouse || !crop) continue;
+    if (!crop) continue;
+    if (p.status === 'nursery') {
+      if (p.nurseryWaypointId) out.push({ planting: p, crop, waypointId: p.nurseryWaypointId });
+      continue;
+    }
+    if (!p.bedId) continue;
+    const bed = beds.get(p.bedId);
+    if (!bed || bed.deletedAt || bed.greenhouse) continue;
     out.push({ planting: p, crop });
   }
   return out;
