@@ -456,6 +456,55 @@ export function deviceRoutes(app: FastifyInstance, db: Db, push: PushSender): vo
     },
   );
 
+  /**
+   * Hora límite de regreso de una salida (una por dispositivo): si pasa sin que la app la
+   * extienda o la cierre, el servidor avisa al dispositivo (ver outings/watch.ts). Solo
+   * se guardan la hora y el texto del aviso, escrito por la app en su idioma.
+   */
+  app.put<{ Params: { id: string }; Body: { outingId: string; returnBy: string; title: string; body: string } }>(
+    '/api/devices/:id/deadline',
+    {
+      bodyLimit: 2048,
+      schema: {
+        body: {
+          type: 'object',
+          required: ['outingId', 'returnBy', 'title', 'body'],
+          additionalProperties: false,
+          properties: {
+            outingId: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,64}$' },
+            returnBy: { type: 'string', format: 'date-time' },
+            title: { type: 'string', minLength: 1, maxLength: 120 },
+            body: { type: 'string', minLength: 1, maxLength: 300 },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
+      const returnBy = Date.parse(req.body.returnBy);
+      const now = Date.now();
+      // Ni de hace más de un día ni de dentro de más de un mes: no es una salida razonable.
+      if (!Number.isFinite(returnBy) || returnBy < now - 24 * 3_600_000 || returnBy > now + 30 * 24 * 3_600_000) return reply.code(400).send({ error: 'invalid' });
+      const { outingId, title, body } = req.body;
+      // Si cambia la hora (la extendió) o es otra salida, se vuelve a empezar a contar los avisos.
+      db.prepare(
+        `INSERT INTO outing_deadlines (device_id, outing_id, return_by, title, body, notified_count, last_notified)
+         VALUES (?, ?, ?, ?, ?, 0, NULL)
+         ON CONFLICT(device_id) DO UPDATE SET
+           notified_count = CASE WHEN outing_deadlines.outing_id = excluded.outing_id AND outing_deadlines.return_by = excluded.return_by THEN outing_deadlines.notified_count ELSE 0 END,
+           last_notified = CASE WHEN outing_deadlines.outing_id = excluded.outing_id AND outing_deadlines.return_by = excluded.return_by THEN outing_deadlines.last_notified ELSE NULL END,
+           outing_id = excluded.outing_id, return_by = excluded.return_by, title = excluded.title, body = excluded.body`,
+      ).run(req.params.id, outingId, returnBy, title, body);
+      return reply.code(204).send();
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>('/api/devices/:id/deadline', async (req, reply) => {
+    if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });
+    db.prepare('DELETE FROM outing_deadlines WHERE device_id = ?').run(req.params.id);
+    return reply.code(204).send();
+  });
+
   app.delete<{ Params: { id: string } }>('/api/devices/:id', async (req, reply) => {
     // Eliminar mi cuenta: las demás tablas del dispositivo se borran en cascada.
     if (!authorize(req)) return reply.code(401).send({ error: 'unauthorized' });

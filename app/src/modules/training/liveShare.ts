@@ -5,6 +5,8 @@ import type { WorkoutKind } from '@/core/model/types';
 import { elapsedS, useRecorder } from '@/modules/tracks/recorder';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { currentSpeedMs } from './live';
+import { activeOuting } from './outingPlan';
+import { useTraining } from './store';
 import { buildChunks, type LiveUpdate } from './liveChunks';
 import type { PrivateZone } from './share';
 import { analyzeRecording } from './stats';
@@ -59,6 +61,15 @@ export async function endLive(serverUrl: string, id: string, token: string): Pro
   await fetch(`${normalizeServerUrl(serverUrl)}/api/live/${id}`, { method: 'DELETE', headers: { authorization: `Bearer ${token}` } }).catch(() => null);
 }
 
+/** La hora límite de la salida en curso (si hay una con plan), para mostrarla en la página de la familia. */
+function liveDeadline(): Pick<LiveUpdate, 'deadline'> {
+  const active = activeOuting(useTraining.getState().outings.values(), new Date());
+  const plan = active?.outing.plan;
+  if (!plan?.returnBy) return {};
+  const last = plan.checkIns.at(-1)?.at;
+  return { deadline: { returnBy: Date.parse(plan.returnBy), lastCheckIn: last ? Date.parse(last) : null } };
+}
+
 /** Monta el envío periódico (va una sola vez, en la estructura de la app). */
 export function useLiveSender(): void {
   const live = useSettings((s) => s.settings.liveShare);
@@ -102,6 +113,7 @@ export function useLiveSender(): void {
           status: rec.status === 'recording' ? 'active' : 'paused',
           stats: { distanceM: stats.distanceM, elapsedS: elapsedS(rec), ascentM: stats.ascentM, paceSPerKm: stats.paceSPerKm, speedKmh: stats.avgSpeedKmh },
           chunks,
+          ...liveDeadline(),
         });
         await useSettings.getState().update({ liveShare: { ...current, sentSeg: next.seg, sentPt: next.pt, lastSentAt: nowMs, failing: false } });
       } catch (err) {

@@ -78,7 +78,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush; volcano?: VolcanoPush };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush; volcano?: VolcanoPush; outing?: { outingId: string; title: string; body: string } };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -148,6 +148,19 @@ self.addEventListener('push', (event) => {
           tag: g.kind === 'tasks' ? 'garden-tasks' : `garden-${g.kind}-${g.placeId}`,
           ...(g.kind === 'frost' ? { renotify: true, vibrate: [300, 150, 300] } : {}),
           data: { url: '#/garden/beds' },
+        } as NotificationOptions);
+      } else if (payload.type === 'outing' && payload.outing) {
+        // Pasó la hora límite de regreso de una salida: el texto ya viene escrito por la app en su idioma.
+        const o = payload.outing;
+        await self.registration.showNotification(o.title, {
+          body: o.body,
+          icon: ICON,
+          badge: ICON,
+          tag: 'outing-plan',
+          renotify: true,
+          requireInteraction: true,
+          vibrate: [500, 200, 500, 200, 500],
+          data: { url: `#/training/outings/${encodeURIComponent(o.outingId)}` },
         } as NotificationOptions);
       } else if (payload.type === 'update' && payload.update) {
         // Al abrir la app, el service worker baja la versión nueva (y la app ofrece actualizar).

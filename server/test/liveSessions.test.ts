@@ -100,3 +100,34 @@ describe('seguimiento en vivo', () => {
     assert.equal((await app.inject({ method: 'POST', url: '/api/live', payload: { name: 'tercero', durationMin: 60 } })).statusCode, 503);
   });
 });
+
+describe('hora límite en la página de la familia', () => {
+  const data = (deadline?: unknown): LiveData => ({ name: 'Cerro', lang: 'es', kind: 'trek', status: 'active', segments: [], stats: { distanceM: 0, elapsedS: 0, ascentM: 0, paceSPerKm: 0, speedKmh: 0 }, ...(deadline ? { deadline: deadline as LiveData['deadline'] } : {}) });
+  const now = 1_800_000_000_000;
+
+  it('valida la hora límite del envío', () => {
+    assert.equal(parseUpdate(update({ deadline: { returnBy: now, lastCheckIn: null } }))?.deadline?.returnBy, now);
+    assert.equal(parseUpdate(update({ deadline: { returnBy: 'ayer' } })), null);
+    assert.equal(parseUpdate(update({ deadline: { returnBy: now, lastCheckIn: 'x' } })), null);
+    assert.equal(parseUpdate(update({ deadline: 5 })), null);
+    assert.equal(parseUpdate(update())?.deadline, undefined);
+  });
+
+  it('un envío sin hora límite la saca de la página', () => {
+    const withDl = applyUpdate(data({ returnBy: now, lastCheckIn: null }), parseUpdate(update({ deadline: { returnBy: now + 60_000, lastCheckIn: now - 1000 } }))!);
+    assert.deepEqual(withDl.deadline, { returnBy: now + 60_000, lastCheckIn: now - 1000 });
+    assert.equal(applyUpdate(withDl, parseUpdate(update())!).deadline, undefined);
+  });
+
+  it('antes de la hora dice cuánto falta; pasada, da la alarma con el último "estoy bien" y qué hacer', () => {
+    const soon = renderLivePage(data({ returnBy: now + 3_600_000, lastCheckIn: null }), now, now);
+    assert.match(soon, /Hora límite de regreso: faltan 1 h 00 min/);
+    assert.doesNotMatch(soon, /class="alarm"/);
+    const late = renderLivePage(data({ returnBy: now - 2 * 3_600_000, lastCheckIn: now - 40 * 60_000 }), now, now);
+    assert.match(late, /class="alarm"/);
+    assert.match(late, /Pasó la hora límite de regreso hace 2 h 00 min/);
+    assert.match(late, /Último «estoy bien»: hace 40 min/);
+    assert.match(late, /llamá a los servicios de emergencia/);
+    assert.match(renderLivePage(data({ returnBy: now - 1000, lastCheckIn: null }), now, now), /Todavía no dio ningún «estoy bien»/);
+  });
+});

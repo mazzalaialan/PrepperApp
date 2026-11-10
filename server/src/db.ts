@@ -143,6 +143,16 @@ const MIGRATIONS = [
      updated_at INTEGER NOT NULL,
      expires_at INTEGER NOT NULL
    );`,
+  // Hora límite de regreso de una salida (routes/devices.ts, outings/watch.ts): una por dispositivo, solo horas y el texto del aviso.
+  `CREATE TABLE IF NOT EXISTS outing_deadlines (
+     device_id TEXT PRIMARY KEY REFERENCES devices(id) ON DELETE CASCADE,
+     outing_id TEXT NOT NULL,
+     return_by INTEGER NOT NULL,
+     title TEXT NOT NULL,
+     body TEXT NOT NULL,
+     notified_count INTEGER NOT NULL DEFAULT 0,
+     last_notified INTEGER
+   );`,
 ];
 
 export type Db = DatabaseSync;

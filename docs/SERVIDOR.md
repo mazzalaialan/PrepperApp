@@ -178,6 +178,10 @@ docker compose logs -f vikarg
 - **Riego:** a la hora de aviso, balance de agua del suelo (ET0 × Kc menos la lluvia útil desde el último "regué"); si falta más que lo que las raíces sacan fácil, un aviso por episodio. Al marcar "Regué" en la app se vuelve a contar.
 - **Tareas** (trasplantar, empezar a cosechar, terminar): a la hora de aviso, todas las que ya corresponden juntas en un solo aviso, una vez.
 
+## Hora límite de regreso de una salida
+
+En Entrena → Salidas, cada salida puede tener un plan con hora límite de regreso. Con las notificaciones activadas, la app le avisa al servidor **solo la hora límite, el nombre de la salida (para el título del aviso) y un texto ya escrito** (`PUT /api/devices/:id/deadline`, con el código del dispositivo; una por dispositivo). Integrantes, contactos y plan B **nunca salen del dispositivo** (salvo que el usuario mande el plan por SMS o WhatsApp). Si la hora pasa sin que la app la extienda ni cierre la salida, el servidor (`outings/watch.ts`, cada minuto) manda un push al propio dispositivo: el primero al pasar la hora y después cada 30 minutos, hasta tres. Se borra al cerrar la salida (`DELETE` del mismo camino), al borrar la cuenta (cascada) o 12 horas después de vencida. La hora debe estar entre un día atrás y un mes adelante, y el texto tiene tope (120 y 300 caracteres). Si hay un seguimiento en vivo en curso, la página pública para la familia suma la hora límite en relativo ("faltan 2 h" o "pasó hace 40 min, último «estoy bien» hace 20 min") y, si se pasó, el consejo de llamar a emergencias; solo lleva horas, no datos personales.
+
 ## Biblioteca (opcional)
 
 La app lista los libros del servidor por categoría: los **libres** (dominio público o licencia libre) en verde, y los **con derechos** con candado. Estos últimos se bajan solo con la **clave VikArg** y llegan **cifrados** (PBKDF2-SHA256 + AES-256-GCM): se descifran en el celular. Si los archivos terminaran en git o copiados en otro lado, sin la clave no se pueden abrir.

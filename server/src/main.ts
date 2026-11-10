@@ -12,6 +12,7 @@ import { createRainMapStore, RAIN_MAP_ACTIVE_MS, updateRainMap } from './rain/ma
 import { irObserver, withObservedRain } from './rain/observer.ts';
 import { openMeteoSource } from './rain/source.ts';
 import { runScheduler } from './scheduler.ts';
+import { runOutingWatch } from './outings/watch.ts';
 import { fetchGdacs, fetchQuakes, type HazardEvent } from './hazards/sources.ts';
 import { HAZARD_DEFAULTS, runHazardWatch } from './hazards/watch.ts';
 import { openMeteoGarden, runGardenWatch } from './garden/watch.ts';
@@ -280,6 +281,17 @@ async function gardenTick() {
     app.log.error(err, 'fallaron los avisos de la huerta');
   }
 }
+// Hora límite de regreso de una salida: cada minuto (una consulta a una tabla chica, sin red).
+async function outingTick() {
+  try {
+    const { sent, removed } = await runOutingWatch(db, push);
+    if (sent || removed) app.log.info({ sent, removed }, 'avisos de hora límite de salidas enviados');
+  } catch (err) {
+    app.log.error(err, 'fallaron los avisos de hora límite de salidas');
+  }
+}
+const outingTimer = setInterval(() => void outingTick(), 60_000);
+
 // Cada 15 minutos: la helada se avisa a partir de las 17 y el riego y las tareas a la hora de aviso de cada uno.
 const gardenTimer = setInterval(() => void gardenTick(), 15 * 60_000);
 setTimeout(() => void hazardTick(), 30_000);
@@ -303,6 +315,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     clearInterval(hazardTimer);
     clearInterval(officialTimer);
     clearInterval(gardenTimer);
+    clearInterval(outingTimer);
     await app.close();
     db.close();
     process.exit(0);

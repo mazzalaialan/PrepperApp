@@ -8,6 +8,8 @@ export interface LiveUpdate {
   status: 'active' | 'paused';
   stats: { distanceM: number; elapsedS: number; ascentM: number; paceSPerKm: number; speedKmh: number };
   chunks: { newSegment: boolean; points: [number, number, number][] }[];
+  /** Hora límite de regreso de la salida en curso, para que la familia la vea (solo horas, en ms). */
+  deadline?: { returnBy: number; lastCheckIn: number | null };
 }
 
 /**

@@ -20,4 +20,21 @@ describe('migraciones', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('una base de la versión anterior (sin salidas con hora límite) suma la tabla sin tocar lo demás', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mig-'));
+    try {
+      const db = openDb(dir);
+      const latest = (db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version;
+      db.prepare("INSERT INTO settings (key, value) VALUES ('antes', 'sigue')").run();
+      db.exec(`DROP TABLE outing_deadlines; PRAGMA user_version = ${latest - 1};`);
+      db.close();
+      const again = openDb(dir);
+      assert.ok(again.prepare("SELECT name FROM sqlite_master WHERE name = 'outing_deadlines'").get());
+      assert.equal((again.prepare("SELECT value FROM settings WHERE key = 'antes'").get() as { value: string }).value, 'sigue');
+      again.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

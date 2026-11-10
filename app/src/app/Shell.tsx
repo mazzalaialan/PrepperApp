@@ -10,6 +10,7 @@ import { BackButton } from '@/ui/BackButton';
 import { Dialog } from '@/ui/Dialog';
 import { PocketScreen, RecordingBar } from '@/modules/tracks/Recording';
 import { OutingPlanBar } from '@/modules/training/OutingPlanBar';
+import { useOutingDeadlineSync } from '@/modules/training/outingDeadlineSync';
 import { useLiveSender } from '@/modules/training/liveShare';
 import { RainNotices } from '@/modules/weather/RainNotices';
 import { useZoneForecastRefresh } from '@/modules/maps/zoneForecast';
@@ -50,6 +51,7 @@ export function Shell() {
   useStockServerSync();
   useZoneForecastRefresh();
   useLiveSender();
+  useOutingDeadlineSync();
 
   return (
     <div className="shell">

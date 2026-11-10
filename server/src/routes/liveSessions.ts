@@ -32,7 +32,15 @@ interface Stats {
   speedKmh: number;
 }
 
+/** Hora límite de regreso de la salida en curso (solo horas: nada de integrantes ni contactos). */
+export interface LiveDeadline {
+  returnBy: number;
+  lastCheckIn: number | null;
+}
+
 export interface LiveData {
+  /** Si la persona dejó una hora límite de regreso, la familia la ve en la página. */
+  deadline?: LiveDeadline;
   name: string;
   lang: 'es' | 'en';
   kind: string;
@@ -67,7 +75,17 @@ function parseStats(raw: unknown): Stats | null {
 }
 
 /** Un envío: datos y trozos de recorrido a sumar. `newSegment` empieza un tramo nuevo (después de un corte o de una zona privada). */
-export function parseUpdate(raw: unknown): { status: 'active' | 'paused'; stats: Stats; chunks: { newSegment: boolean; points: Pt[] }[] } | null {
+function parseDeadline(raw: unknown): LiveDeadline | undefined | null {
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw !== 'object') return null;
+  const d = raw as Record<string, unknown>;
+  const returnBy = num(d.returnBy, 0, 4_102_444_800_000);
+  const lastCheckIn = d.lastCheckIn === null || d.lastCheckIn === undefined ? null : num(d.lastCheckIn, 0, 4_102_444_800_000);
+  if (returnBy === null || (d.lastCheckIn !== null && d.lastCheckIn !== undefined && lastCheckIn === null)) return null;
+  return { returnBy: Math.round(returnBy), lastCheckIn: lastCheckIn === null ? null : Math.round(lastCheckIn) };
+}
+
+export function parseUpdate(raw: unknown): { status: 'active' | 'paused'; stats: Stats; chunks: { newSegment: boolean; points: Pt[] }[]; deadline?: LiveDeadline } | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const r = raw as Record<string, unknown>;
   const stats = parseStats(r.stats);
@@ -89,7 +107,9 @@ export function parseUpdate(raw: unknown): { status: 'active' | 'paused'; stats:
     if (total > MAX_CHUNK_POINTS) return null;
     chunks.push({ newSegment: (c as { newSegment?: unknown }).newSegment === true, points: pts });
   }
-  return { status: r.status, stats, chunks };
+  const deadline = parseDeadline(r.deadline);
+  if (deadline === null) return null;
+  return { status: r.status, stats, chunks, ...(deadline ? { deadline } : {}) };
 }
 
 /** Suma los trozos al recorrido guardado y, si pasa del tope, descarta lo más viejo. */
@@ -108,14 +128,16 @@ export function applyUpdate(data: LiveData, update: NonNullable<ReturnType<typeo
     count -= drop;
     if (first.length === 0) segments.shift();
   }
-  return { ...data, status: update.status, stats: update.stats, segments };
+  // Cada envío trae la hora límite de ese momento: sin ella (cerró la salida o la sacó), la página deja de mostrarla.
+  const { deadline: _old, ...rest } = data;
+  return { ...rest, status: update.status, stats: update.stats, segments, ...(update.deadline ? { deadline: update.deadline } : {}) };
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 const TEXT = {
-  es: { live: 'En vivo', paused: 'En pausa', ago: 'Última posición hace', now: 'hace instantes', distance: 'Distancia', time: 'Tiempo', pace: 'Ritmo', speed: 'Velocidad', ascent: 'Subida', route: 'Recorrido', start: 'Salida', end: 'Última posición', refresh: 'Esta página se actualiza sola cada medio minuto.', stale: 'Hace rato que no llegan posiciones: puede haber perdido señal o tener la app cerrada.', by: 'Seguimiento en vivo de VikArg, una app de preparación y supervivencia.', gone: 'Este seguimiento terminó o venció.', noPoints: 'Todavía no llegó ninguna posición.', min: 'min', h: 'h' },
-  en: { live: 'Live', paused: 'Paused', ago: 'Last position', now: 'just now', distance: 'Distance', time: 'Time', pace: 'Pace', speed: 'Speed', ascent: 'Ascent', route: 'Route', start: 'Start', end: 'Last position', refresh: 'This page refreshes itself every half minute.', stale: 'No positions have arrived for a while: they may have lost signal or closed the app.', by: 'Live tracking by VikArg, an offline preparedness and survival app.', gone: 'This tracking has ended or expired.', noPoints: 'No position has arrived yet.', min: 'min', h: 'h' },
+  es: { live: 'En vivo', paused: 'En pausa', ago: 'Última posición hace', now: 'hace instantes', distance: 'Distancia', time: 'Tiempo', pace: 'Ritmo', speed: 'Velocidad', ascent: 'Subida', route: 'Recorrido', start: 'Salida', end: 'Última posición', refresh: 'Esta página se actualiza sola cada medio minuto.', stale: 'Hace rato que no llegan posiciones: puede haber perdido señal o tener la app cerrada.', by: 'Seguimiento en vivo de VikArg, una app de preparación y supervivencia.', gone: 'Este seguimiento terminó o venció.', noPoints: 'Todavía no llegó ninguna posición.', min: 'min', h: 'h', dueIn: 'Hora límite de regreso: faltan', overdue: 'Pasó la hora límite de regreso hace', lastOk: 'Último «estoy bien»: hace', noOk: 'Todavía no dio ningún «estoy bien».', advice: 'Si no hay noticias, llamá a los servicios de emergencia y pasales la última posición de abajo.' },
+  en: { live: 'Live', paused: 'Paused', ago: 'Last position', now: 'just now', distance: 'Distance', time: 'Time', pace: 'Pace', speed: 'Speed', ascent: 'Ascent', route: 'Route', start: 'Start', end: 'Last position', refresh: 'This page refreshes itself every half minute.', stale: 'No positions have arrived for a while: they may have lost signal or closed the app.', by: 'Live tracking by VikArg, an offline preparedness and survival app.', gone: 'This tracking has ended or expired.', noPoints: 'No position has arrived yet.', min: 'min', h: 'h', dueIn: 'Return deadline: in', overdue: 'The return deadline passed', lastOk: "Last 'I'm OK':", noOk: "No 'I'm OK' yet.", advice: 'If there is no news, call the emergency services and give them the last position below.' },
 };
 
 const KIND_NAMES: Record<'es' | 'en', Record<string, string>> = {
@@ -134,6 +156,15 @@ const fmt = (n: number, lang: 'es' | 'en', d = 0) => new Intl.NumberFormat(lang 
 /** Más que esto sin posiciones, se avisa que puede haber perdido la señal. */
 const STALE_MS = 5 * 60_000;
 
+/** La hora límite se dice en relativo ("faltan 2 h", "hace 40 min"): la página no sabe en qué zona horaria la lee la familia. */
+function renderDeadline(dl: LiveDeadline, lang: 'es' | 'en', now: number): string {
+  const t = TEXT[lang];
+  const left = Math.round((dl.returnBy - now) / 1000);
+  if (left >= 0) return `<p class="due">${esc(t.dueIn)} ${esc(clock(left))}</p>`;
+  const lastOk = dl.lastCheckIn === null ? esc(t.noOk) : `${esc(t.lastOk)} ${esc(clock(Math.max(0, Math.round((now - dl.lastCheckIn) / 1000))))}`;
+  return `<p class="alarm">${esc(t.overdue)} ${esc(clock(-left))}.<br>${lastOk}<br>${esc(t.advice)}</p>`;
+}
+
 export function renderLivePage(d: LiveData, updatedAt: number, now: number): string {
   const t = TEXT[d.lang];
   const ageS = Math.max(0, Math.round((now - updatedAt) / 1000));
@@ -142,6 +173,7 @@ export function renderLivePage(d: LiveData, updatedAt: number, now: number): str
   const effort = d.kind && ['run', 'walk', 'trek'].includes(d.kind) ? `<div><dt>${t.pace}</dt><dd>${d.stats.paceSPerKm > 0 ? `${mmss(d.stats.paceSPerKm)} /km` : '—'}</dd></div>` : `<div><dt>${t.speed}</dt><dd>${d.stats.speedKmh > 0 ? `${fmt(d.stats.speedKmh, d.lang, 1)} km/h` : '—'}</dd></div>`;
   const route = routeSvg(d.segments.map((s) => s.map((p) => [p[0], p[1]] as [number, number])), { start: t.start, end: t.end });
   const kind = KIND_NAMES[d.lang][d.kind] ?? '';
+  const deadline = d.deadline ? renderDeadline(d.deadline, d.lang, now) : '';
   return `<!doctype html>
 <html lang="${d.lang}">
 <head>
@@ -159,6 +191,8 @@ h1{font-size:1.6rem;margin:8px 0 4px}
 .badge.paused{background:#7a8696}
 .sub{color:#9aa7b6;margin:4px 0 16px}
 .warn{background:#4a3a1a;border-radius:8px;padding:8px 12px;color:#f0d9a8}
+.alarm{background:#6b1d14;border:2px solid #ff6b5e;border-radius:8px;padding:10px 12px;color:#fff;font-weight:700}
+.due{background:#1f3a2a;border-radius:8px;padding:8px 12px}
 dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:16px 0}
 dt{color:#9aa7b6;font-size:.85rem}dd{margin:0;font-size:1.25rem;font-weight:700}
 h2{font-size:1rem;color:#9aa7b6;margin:20px 0 8px}
@@ -171,6 +205,7 @@ footer{margin-top:24px;color:#9aa7b6;font-size:.9rem}
 <h1>${esc(d.name)}</h1>
 <p class="sub"><span class="badge${d.status === 'paused' ? ' paused' : ''}">${esc(d.status === 'paused' ? t.paused : t.live)}</span>${kind ? ` · ${esc(kind)}` : ''}</p>
 <p class="sub">${esc(t.ago)} ${esc(ago)}</p>
+${deadline}
 ${stale ? `<p class="warn">${esc(t.stale)}</p>` : ''}
 <dl>
 <div><dt>${t.distance}</dt><dd>${esc(fmt(d.stats.distanceM / 1000, d.lang, d.stats.distanceM < 10_000 ? 2 : 1))} km</dd></div>
