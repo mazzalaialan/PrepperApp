@@ -553,12 +553,12 @@
     "callsHere": "Números de {{country}}, según tu ubicación.",
     "callsSettings": "Números de {{country}} (el país elegido en Ajustes; sin ubicación todavía).",
     "call911": "Llamar al {{number}}",
+    "escapeNear": "Punto de escape más cercano (tuyo): {{name}}, a {{distance}} al {{dir}}",
+    "shelterNear": "Refugio más cercano (tuyo): {{name}}, a {{distance}} al {{dir}}",
     "ageNow": "Posición tomada recién.",
     "age": "Posición tomada hace {{min}} min.",
     "ageStale": "Esta es la última posición conocida, de hace {{min}} min: si te moviste, puede estar desactualizada.",
     "msg": {
-      "escape": "Punto de escape más cercano: {{name}}, a {{distance}} al {{dir}}",
-      "shelter": "Refugio más cercano: {{name}}, a {{distance}} al {{dir}}",
       "takenAt": "Posición tomada a las {{time}}",
       "intro": "Necesito ayuda. Mi ubicación:",
       "coords": "Coordenadas: {{decimal}} ({{dms}}), precisión ±{{accuracy}} m",
@@ -1667,7 +1667,7 @@
     }
   },
   "waypoints": {
-    "role": {"label": "Tipo de lugar", "none": "Un lugar común", "escape": "Punto de escape", "shelter": "Refugio", "water": "Agua", "danger": "Peligro", "hint": "Marcá los lugares que importan en una emergencia: en «Mi ubicación» el mensaje dice cuál es el punto de escape o el refugio más cercano.", "filter": "Filtrar por tipo", "all": "Todos"},
+    "role": {"label": "Tipo de lugar", "none": "Un lugar común", "escape": "Punto de escape", "shelter": "Refugio", "water": "Agua", "danger": "Peligro", "hint": "Marcá los lugares que importan en una emergencia: en «Mi ubicación» vas a ver cuál es tu punto de escape o tu refugio más cercano (esto es para vos: no va en el mensaje para los socorristas).", "filter": "Filtrar por tipo", "all": "Todos"},
     "privacy": "Privacidad", "privateZone": "Zona privada", "privateRadius": "Radio", "privateHint": "Al compartir una salida con un enlace público, se saca de su recorrido todo lo que pasa dentro de este radio (tu casa, el trabajo…). Podés desmarcarlo en cada enlace.", "privateBadge": "Zona privada · {{m}} m",
     "new": "Nuevo",
     "markHere": "Marcar acá",

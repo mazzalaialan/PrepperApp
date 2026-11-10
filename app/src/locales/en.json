@@ -553,12 +553,12 @@
     "callsHere": "{{country}} numbers, based on your location.",
     "callsSettings": "{{country}} numbers (the country chosen in Settings; no location yet).",
     "call911": "Call {{number}}",
+    "escapeNear": "Nearest escape point (yours): {{name}}, {{distance}} to the {{dir}}",
+    "shelterNear": "Nearest shelter (yours): {{name}}, {{distance}} to the {{dir}}",
     "ageNow": "Position just taken.",
     "age": "Position taken {{min}} min ago.",
     "ageStale": "This is the last known position, from {{min}} min ago: if you moved, it may be out of date.",
     "msg": {
-      "escape": "Nearest escape point: {{name}}, {{distance}} to the {{dir}}",
-      "shelter": "Nearest shelter: {{name}}, {{distance}} to the {{dir}}",
       "takenAt": "Position taken at {{time}}",
       "intro": "I need help. My location:",
       "coords": "Coordinates: {{decimal}} ({{dms}}), accuracy ±{{accuracy}} m",
@@ -1667,7 +1667,7 @@
     }
   },
   "waypoints": {
-    "role": {"label": "Type of place", "none": "An ordinary place", "escape": "Escape point", "shelter": "Shelter", "water": "Water", "danger": "Hazard", "hint": "Mark the places that matter in an emergency: in “My location” the message names the nearest escape point or shelter.", "filter": "Filter by type", "all": "All"},
+    "role": {"label": "Type of place", "none": "An ordinary place", "escape": "Escape point", "shelter": "Shelter", "water": "Water", "danger": "Hazard", "hint": "Mark the places that matter in an emergency: in “My location” you will see your nearest escape point or shelter (this is for you: it is not in the message for rescuers).", "filter": "Filter by type", "all": "All"},
     "privacy": "Privacy", "privateZone": "Private zone", "privateRadius": "Radius", "privateHint": "When you share an outing with a public link, everything within this radius (your home, work…) is removed from its route. You can uncheck it on each link.", "privateBadge": "Private zone · {{m}} m",
     "new": "New",
     "markHere": "Mark here",
