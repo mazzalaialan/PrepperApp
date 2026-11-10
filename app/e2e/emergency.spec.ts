@@ -48,7 +48,7 @@ async function mockOsm(page: Page) {
 test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap), guardar, editar y borrar', async ({ page, context }) => {
   await mockOsm(page);
   await setup(page);
-  await page.getByRole('link', { name: 'Emergencias' }).first().click();
+  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Emergencia', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Emergencias' })).toBeVisible();
   await page.getByRole('link', { name: /Contactos de emergencia/ }).click();
 

@@ -25,7 +25,7 @@ test('botiquín de trauma: contenido, vencimientos y faltantes', async ({ page }
   await page.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Emergencias' }).click();
+  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Emergencia', exact: true }).click();
   await page.getByRole('link', { name: /Botiquines/ }).click();
   await expect(page.getByText('Todavía no armaste botiquines')).toBeVisible();
   await page.getByRole('button', { name: 'Nuevo botiquín' }).click();

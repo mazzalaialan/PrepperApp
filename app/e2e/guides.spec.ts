@@ -13,7 +13,7 @@ test('guía de primeros auxilios: lo primero, evaluación paso a paso y entorno'
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
 
   // En Emergencias, la guía va antes de los botiquines.
-  await page.getByRole('link', { name: 'Emergencias' }).click();
+  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Emergencia', exact: true }).click();
   const links = await page.locator('main a').allTextContents();
   const guide = links.findIndex((x) => x.includes('Guías de primeros auxilios'));
   const kits = links.findIndex((x) => x.includes('Botiquines'));
