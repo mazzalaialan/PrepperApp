@@ -63,9 +63,12 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const formatBearing = useFormatBearing();
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
-  const [choice, setChoice] = useState<GoMode | null>(route ? routeMode : null);
+  const [picked, setPicked] = useState<GoMode | null>(route ? routeMode : null);
+  const hasCompass = caps?.orientation ?? false;
+  // Sin brújula (una PC) la vista 3D no sirve: solo queda el mapa, sin preguntar.
+  const choice: GoMode | null = caps && !caps.orientation ? 'map' : picked === '3d' && !hasCompass ? null : picked;
   function choose(mode: GoMode | null) {
-    setChoice(mode);
+    setPicked(mode);
     if (route) routeMode = mode;
   }
   const distance = fix ? distanceMeters(fix, target) : null;
@@ -90,7 +93,7 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
             </p>
           )}
         </div>
-        {choice && (
+        {choice && hasCompass && (
           <button className="icon-btn" type="button" onClick={() => choose(null)} aria-label={t('goto.changeView')} title={t('goto.changeView')} data-testid="goto-change-view">
             <Repeat size={22} />
           </button>
@@ -124,6 +127,7 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
           <CircleCheck size={28} aria-hidden /> {route && !route.next ? t('routes.finished') : t('goto.arrived')}
         </p>
       ) : !choice ? (
+        !caps ? null : (
         <div className="stack" data-testid="goto-choose">
           <p className="hint" style={{ margin: 0 }}>{t('goto.chooseHint')}</p>
           <button className="btn card goto-choice" type="button" onClick={() => choose('map')} data-testid="goto-choose-map">
@@ -137,10 +141,11 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
             <Box size={28} aria-hidden />
             <span>
               <strong>{t('goto.view3d')}</strong>
-              <span className="hint">{caps?.orientation ? t('goto.view3dHint') : t('goto.noCompass')}</span>
+              <span className="hint">{t('goto.view3dHint')}</span>
             </span>
           </button>
         </div>
+        )
       ) : choice === 'map' ? (
         fix ? (
           <Suspense fallback={null}>
