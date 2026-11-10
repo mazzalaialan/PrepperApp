@@ -83,7 +83,11 @@ function crossings(strands, W) {
           const za = (h.t < 0.5 ? A[i] : A[i + 1]).z, zb = (h.u < 0.5 ? B[j] : B[j + 1]).z;
           const pa = { k: a, s: sa, z: za }, pb = { k: b, s: sb, z: zb };
           const [earlier, later] = a === b ? (sa < sb ? [pa, pb] : [pb, pa]) : [pa, pb];
-          xs.push({ x, y, earlier, later });
+          // Ángulo entre las dos cuerdas en el cruce (0° = casi paralelas: no se entiende cuál va arriba).
+          const d1 = Math.atan2(A[i + 1].y - A[i].y, A[i + 1].x - A[i].x), d2 = Math.atan2(B[j + 1].y - B[j].y, B[j + 1].x - B[j].x);
+          let ang = Math.abs(((d1 - d2) * 180) / Math.PI) % 180;
+          if (ang > 90) ang = 180 - ang;
+          xs.push({ x, y, earlier, later, ang });
         }
     }
   return xs;
@@ -108,7 +112,12 @@ function resolve(spec) {
  * "por arriba" o "por debajo" de qué cuerda y en qué lugar (x, y). Sirve para revisar el nudo sin mirar el dibujo.
  */
 export function trace(spec) {
-  const { strands, xs } = resolve(spec);
+  const { strands, xs, W } = resolve(spec);
+  // Un cruce es ambiguo si las cuerdas casi van en paralelo o si hay otro cruce tan cerca que los huecos se pisan.
+  for (const c of xs) {
+    const near = xs.some((o) => o !== c && Math.hypot(o.x - c.x, o.y - c.y) < W * 2.2);
+    c.ambiguo = c.ang < 35 ? `ángulo de ${Math.round(c.ang)}° (casi paralelas)` : near ? 'otro cruce a menos de 2 grosores (los huecos se pisan)' : null;
+  }
   return strands.map((r) => {
     const mine = [];
     for (const c of xs) {
@@ -117,7 +126,7 @@ export function trace(spec) {
         const other = side === 'over' ? c.under : c.over;
         // Una cuerda que se cruza consigo misma aparece dos veces (una por cada pasada).
         if (c.over.k === c.under.k && c[side].s !== (side === 'over' ? c.over.s : c.under.s)) continue;
-        mine.push({ s: c[side].s, pos: side === 'over' ? 'ARRIBA' : 'ABAJO', cruzaCon: other.k === r.k ? 'sí misma' : `cuerda ${other.k}`, x: Math.round(c.x), y: Math.round(c.y), mismaProfundidad: c.over.z === c.under.z });
+        mine.push({ s: c[side].s, pos: side === 'over' ? 'ARRIBA' : 'ABAJO', cruzaCon: other.k === r.k ? 'sí misma' : `cuerda ${other.k}`, x: Math.round(c.x), y: Math.round(c.y), mismaProfundidad: c.over.z === c.under.z, angulo: Math.round(c.ang), ambiguo: c[side].k === r.k || true ? c.ambiguo : null });
       }
     }
     mine.sort((a, b) => a.s - b.s);

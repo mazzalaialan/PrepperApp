@@ -30,7 +30,7 @@ all[id].forEach((fig, n) => {
   console.log(`\n== ${id} paso ${n + 1}`);
   for (const r of trace(fig)) {
     console.log(`cuerda ${r.cuerda}: de (${r.desde}) a (${r.hasta})${r.puntaLibre ? ' [con punta]' : ''}`);
-    r.cruces.forEach((c, i) => console.log(`  ${i + 1}. (${c.x},${c.y}) pasa ${c.pos} de ${c.cruzaCon}${c.mismaProfundidad ? '' : ' [por profundidad z]'}`));
+    r.cruces.forEach((c, i) => console.log(`  ${i + 1}. (${c.x},${c.y}) pasa ${c.pos} de ${c.cruzaCon}${c.mismaProfundidad ? '' : ' [por profundidad z]'} · ángulo ${c.angulo}°${c.ambiguo ? `  ⚠ AMBIGUO: ${c.ambiguo}` : ''}`));
     if (!r.cruces.length) console.log('  sin cruces');
   }
 });
