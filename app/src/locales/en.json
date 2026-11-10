@@ -48,7 +48,7 @@
     "quick": {
       "title": "Quick access",
       "emergency": "Emergency",
-      "record": "Record",
+      "record": "Record a route",
       "goTo": "Go to a point",
       "nearby": "Nearby services"
     },
