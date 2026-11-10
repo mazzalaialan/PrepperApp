@@ -79,6 +79,11 @@ export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; 
           </div>
         </div>
         {size && <p className="hint" style={{ margin: 0 }}>{t('garden.gridHint', { cols: size.cols, rows: size.rows })}</p>}
+        {size && (size.cols * 30 !== w || size.rows * 30 !== l) && (
+          <p className="hint" style={{ margin: 0 }} data-testid="grid-rounded">
+            {t('garden.gridRounded', { w: size.cols * 30, l: size.rows * 30 })}
+          </p>
+        )}
         <WaypointField
           id="bed-place"
           label={t('garden.bedPlace')}

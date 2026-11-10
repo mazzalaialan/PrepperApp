@@ -32,11 +32,13 @@ export function cellOwners(bed: GardenBed, plantings: Iterable<Planting>): Map<n
   return out;
 }
 
-/** Cuántas plantas entran en tantos cuadros. */
+/**
+ * Cuántas plantas entran en tantos cuadros, por superficie real: un cuadro mide 30 × 30 cm y
+ * cada planta ocupa distancia × distancia (tomate a 40 cm = 6,25 plantas por m², no una por cuadro).
+ */
 export function plantsFor(crop: Crop, cells: number): number {
-  if (crop.spacingCm <= CELL_CM) return Math.max(1, Math.floor(CELL_CM / crop.spacingCm) ** 2) * cells;
-  const side = Math.max(1, Math.round(crop.spacingCm / CELL_CM));
-  return Math.max(cells > 0 ? 1 : 0, Math.floor(cells / (side * side)));
+  if (cells <= 0) return 0;
+  return Math.max(1, Math.floor((cells * CELL_CM * CELL_CM) / (crop.spacingCm * crop.spacingCm)));
 }
 
 // ---------------------------------------------------------------- tareas

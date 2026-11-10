@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { GoTo, resetRouteMode } from './GoToPage';
+import { GoTo } from './GoToPage';
 import { routePoints, useWaypoints } from './store';
 
 /** Recorre una ruta punto por punto: `/orientation/routes/:id/go/:step` (desde 1). */
@@ -12,7 +11,6 @@ export function RouteGoPage() {
   const route = useWaypoints((s) => (id ? s.routes.get(id) : undefined));
   const waypoints = useWaypoints((s) => s.waypoints);
   const loaded = useWaypoints((s) => s.loaded);
-  useEffect(() => resetRouteMode, []);
   if (!loaded) return null;
 
   const points = route ? routePoints(route, waypoints) : [];

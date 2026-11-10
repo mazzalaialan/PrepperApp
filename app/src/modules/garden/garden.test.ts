@@ -45,6 +45,10 @@ describe('fichas', () => {
     expect(gridFootprint(CROP_BY_ID.get('zapallo')!).side).toBe(4);
     expect(plantsFor(CROP_BY_ID.get('zapallo')!, 16)).toBe(1);
     expect(plantsFor(CROP_BY_ID.get('rabanito')!, 2)).toBe(72);
+    // Por superficie real: tomate a 40 cm son 6,25 plantas por m² (no una por cuadro de 30 cm).
+    expect(plantsFor(CROP_BY_ID.get('tomate')!, 4)).toBe(2);
+    expect(plantsFor(CROP_BY_ID.get('tomate')!, 11)).toBe(6);
+    expect(plantsFor(CROP_BY_ID.get('lechuga')!, 4)).toBe(5);
   });
 });
 

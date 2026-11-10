@@ -56,3 +56,14 @@ Sin muro social.
 
 - Barómetro en el altímetro (sensor de presión de Android y CMAltimeter de iPhone).
 - Relojes: Health Connect (Android) y HealthKit (iPhone), con actividades y pulso.
+
+## 5. Auditoría de los cinco evaluadores (2026-11-09)
+
+Hechos (sin publicar): dial del rumbo del cantero; contraste y tamaños (bordes de controles de 3:1, rojo nocturno, riesgo del inclinómetro, barra inferior a 12 px, botón de llamar de 48 px); "ir a un punto" recuerda la última vista; plantas por cuadro por superficie real; aviso de que la grilla se redondea.
+
+Pendientes, por prioridad (las que dijo el usuario que vienen después de la lista inicial):
+- **Montaña:** salida planificada con hora límite, responsable, integrantes, plan de contingencia y check-in "estoy bien" (aviso por el servidor con la app cerrada); seguimiento en vivo también desde Tracks; rol de waypoint (escape, refugio, agua, peligro) con el escape más cercano en Mi ubicación; botón de Emergencia en el inicio; grabar con pantalla negra (wake lock) al empezar; antigüedad de la posición en Mi ubicación; aviso de poca luz según el atardecer; sonido y voz en el desvío de un track; pronóstico con la altura; ahorro de GPS al grabar; brújula sin sensor.
+- **Uso:** etiquetas visibles y 44 px en la barra de grabación; exportar GPX de un track (verificar si ya existe); tarjeta "Primeros pasos"; accesos directos a Grabar e Ir a un punto; simplificar Brújula, Seguir un track, alta de waypoint y Clima; aviso de hueco de grabación sin preguntar; "Bloquear ahora" lejos de Ajustes; reemplazar los window.confirm por un diálogo propio; accesibilidad (un solo h1, cuenta regresiva, gráfico de peso, salir del modo bolsillo, nombres de la barra); Compartir con SMS/WhatsApp primero.
+- **Diseño:** colores fijos a variables (verde/amarillo/rojo puro rompen el rojo nocturno), transiciones suaves apagadas en ahorro, theme-color inicial.
+- **Huerta:** almácigos sin helada ni riego (hoy no tienen cantero ni lugar; hace falta marcar si el almácigo está afuera); recomendación del mes siguiente sin control de última helada; datos a revisar (agua crítica de cebolla y verdeo, rendimiento del pimiento, renovar frutilla a los 2–3 años, zanahoria–apio, grupos de rotación, siembra de zanahoria y lechuga todo el año, trasplante de cebolla); reserva de agua con textura de suelo; semanas y fecha estimada de cosecha en la ficha; grilla que se redondea (hoy solo avisa).
+- **Infraestructura:** subir las acciones del workflow (checkout, setup-node, upload/download-artifact, deploy-pages) a versiones que corran en Node 24; el deploy a Pages se canceló una vez y hubo que relanzarlo a mano.

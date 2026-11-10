@@ -18,12 +18,6 @@ import { useWaypoints } from './store';
 const GuideMap = lazy(() => import('@/modules/maps/GuideMap').then((m) => ({ default: m.GuideMap })));
 
 type GoMode = 'map' | '3d';
-/** Vista elegida al recorrer una ruta: se pregunta en el primer punto y vale para los demás. */
-let routeMode: GoMode | null = null;
-/** Al salir de la ruta (no al pasar de punto) se vuelve a preguntar la próxima vez. */
-export function resetRouteMode(): void {
-  routeMode = null;
-}
 
 /** Se considera que llegaste dentro de este radio (o de la precisión del GPS, si es peor). */
 const ARRIVAL_M = 15;
@@ -63,13 +57,16 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const formatBearing = useFormatBearing();
   const { fix, error } = useGeolocation();
   const heading = useHeading(fix, caps?.orientation ?? false);
-  const [picked, setPicked] = useState<GoMode | null>(route ? routeMode : null);
+  const lastView = useSettings((s) => s.settings.gotoView);
+  const updateSettings = useSettings((s) => s.update);
+  // La última vista elegida se recuerda (también entre puntos de una ruta); "cambiar la vista" vuelve a preguntar.
+  const [picked, setPicked] = useState<GoMode | null>(lastView);
   const hasCompass = caps?.orientation ?? false;
   // Sin brújula (una PC) la vista 3D no sirve: solo queda el mapa, sin preguntar.
   const choice: GoMode | null = caps && !caps.orientation ? 'map' : picked === '3d' && !hasCompass ? null : picked;
   function choose(mode: GoMode | null) {
     setPicked(mode);
-    if (route) routeMode = mode;
+    if (mode) void updateSettings({ gotoView: mode });
   }
   const distance = fix ? distanceMeters(fix, target) : null;
   const trueBearing = fix ? bearingDeg(fix, target) : null;
