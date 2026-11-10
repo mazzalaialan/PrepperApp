@@ -1,4 +1,4 @@
-import { A, coilH, move, scale } from '../helpers.mjs';
+import { A, coilH, move, offset, rev, scale } from '../helpers.mjs';
 
 const loop = [[-20, 210], [100, 210], [200, 210], [270, 175], [285, 110], [235, 60], [170, 72], [148, 130], [172, 210]];
 const thru = [[185, 250], [212, 270], [238, 248], [228, 205], [215, 150], [232, 112], [290, 95]];
@@ -7,6 +7,12 @@ const U = [[228, 205]]; // el chicote pasa por debajo del firme
 // Ocho: gaza, vuelta por detrás del firme y entra a la gaza desde adelante.
 const eight = [[-20, 220], [120, 220], [230, 218], [290, 180], [295, 110], [245, 65], [185, 80], [170, 140], [195, 225], [215, 265], [180, 290], [140, 270], [150, 220], [190, 170], [245, 140], [300, 135], [350, 142]];
 
+
+// Escape (simple corredizo = nudo simple con la punta doblada en seno). Se parte del nudo simple: la vuelta (loop) y el
+// tramo que la atraviesa (thru) se duplican en una pata paralela unida por un seno; la punta sale del otro lado.
+const legA = [[185, 248], [206, 262], [232, 246], [228, 205], [215, 150], [232, 112], [262, 98], [290, 92]];
+const legB = rev(offset(legA, -46));
+const bight = (apexPts) => [...loop, ...legA, ...apexPts, ...legB, [150, 276]];
 export default {
   simple: [
     { ropes: [{ ...A, path: [...loop, [190, 260], [205, 290]] }], arrows: [[[222, 283], [262, 262], [258, 228], [236, 165]]] },
@@ -15,10 +21,12 @@ export default {
       arrows: [[[45, 215], [5, 215]], [[350, 155], [390, 155]]] },
   ],
   escape: [
-    { ropes: [{ ...A, path: [...loop, [190, 255], [215, 285], [262, 292], [292, 268], [296, 238], [284, 218]] }], arrows: [[[326, 262], [322, 222], [286, 192], [252, 186]]] },
-    { ropes: [{ ...A, path: [...loop, [185, 250], [204, 272], [224, 252], [212, 208], [210, 160], [222, 112], [248, 100], [261, 132], [253, 176], [253, 232], [256, 290]] }], under: [[212, 204], [254, 184]], arrows: [[[70, 240], [25, 240]], [[300, 235], [300, 280]]] },
-    { ropes: [{ ...A, path: [...loop, [185, 250], [204, 272], [224, 252], [212, 208], [210, 160], [222, 112], [248, 100], [261, 132], [253, 176], [253, 232], [256, 290]] }], under: [[212, 204], [254, 184]],
-      arrows: [[[300, 245], [302, 290]]] },
+    // 1) El nudo simple empezado: la vuelta y la punta ya doblada en seno, lista para pasar por la vuelta.
+    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: [...loop, [185, 250], [205, 280], [240, 292], [262, 278], [250, 262]] }], arrows: [[[296, 268], [270, 232], [236, 205]]] },
+    // 2) El seno entra por la vuelta (las dos patas pasan por debajo del firme).
+    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[310, 92], [330, 104], [326, 124]]) }], under: [[228, 205], [200, 205]], arrows: [[[60, 240], [20, 240]], [[330, 165], [330, 215]]] },
+    // 3) Ajustado: el seno asoma del otro lado; tirando de la punta (abajo) sale y se deshace.
+    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[316, 80], [344, 92], [346, 124]]) }], under: [[228, 205], [200, 205]], arrows: [[[168, 288], [128, 296]]] },
   ],
   'ocho-simple': [
     { ropes: [{ ...A, path: [...eight.slice(0, 9), [215, 265], [230, 292]] }], arrows: [[[245, 288], [180, 296], [135, 260]]] },
