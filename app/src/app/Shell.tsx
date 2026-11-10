@@ -102,7 +102,7 @@ export function Shell() {
           <Link className="icon-btn" to="/settings" aria-label={t('nav.settings')} title={t('nav.settings')}>
             <Settings size={22} />
           </Link>
-          <button className="icon-btn" type="button" onClick={lock} aria-label={t('settings.lockNow')} title={t('settings.lockNow')}>
+          <button className="icon-btn topbar-lock" type="button" onClick={lock} aria-label={t('settings.lockNow')} title={t('settings.lockNow')}>
             <Lock size={22} />
           </button>
         </header>

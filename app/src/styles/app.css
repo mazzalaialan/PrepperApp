@@ -4224,3 +4224,45 @@ a.module-card:hover {
   min-height: 32px;
   padding: 4px 0;
 }
+
+/* Rojo nocturno: todo en tonos rojos (los verdes, azules y ámbar fijos de arriba rompen la visión nocturna). */
+[data-theme='red'] .garden-bar.on.garden-bar-nursery {
+  background: var(--scale-2);
+}
+[data-theme='red'] .garden-bar.on.garden-bar-sow {
+  background: var(--scale-3);
+}
+[data-theme='red'] .garden-bar.on.garden-bar-transplant {
+  background: var(--scale-4);
+}
+[data-theme='red'] .garden-bar.on.garden-bar-harvest {
+  background: var(--scale-6);
+}
+
+[data-theme='red'] .pill-free {
+  color: #000;
+  background: var(--ok);
+}
+
+[data-theme='red'] .hg-path {
+  stroke: var(--accent-strong);
+}
+
+[data-theme='red'] .hg-beacon {
+  stroke: var(--warn);
+}
+
+[data-theme='red'] .hg-dot,
+[data-theme='red'] .hg-name {
+  fill: var(--warn);
+}
+
+[data-theme='red'] .bd-sun {
+  stroke: var(--accent-strong);
+}
+
+/* Bloquear ahora: separado de Ajustes y con borde, para no tocarlo sin querer (bloquea al instante). */
+.topbar-lock {
+  margin-left: 20px;
+  border: 1px solid var(--control-border);
+}
