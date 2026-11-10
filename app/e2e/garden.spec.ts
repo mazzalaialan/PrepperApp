@@ -187,7 +187,15 @@ test('huerta: sol del cantero según su entorno y distribución de varias planta
 
   // Sol calculado: el frente mira al norte; sin nada que tape da el día largo.
   await dialog.getByRole('button', { name: 'Calcular según el entorno' }).click();
-  await dialog.getByLabel(/Hacia dónde mira el frente/).fill('0');
+  // El dial: tocar a la derecha (este) da un rumbo cerca de 90°.
+  const dial = dialog.getByTestId('bearing-dial');
+  await dial.scrollIntoViewIfNeeded();
+  const dbox = (await dial.boundingBox())!;
+  await page.mouse.click(dbox.x + dbox.width * 0.95, dbox.y + dbox.height / 2);
+  const bearingInput = dialog.getByLabel(/Hacia dónde mira el frente/);
+  await expect.poll(async () => Number(await bearingInput.inputValue())).toBeGreaterThan(80);
+  await expect.poll(async () => Number(await bearingInput.inputValue())).toBeLessThan(100);
+  await bearingInput.fill('0');
   const result = dialog.getByTestId('bed-sun-result');
   await expect(result).toContainText('Sol directo');
   const open = Number((await result.locator('strong').innerText()).match(/unas ([\d.,]+) h/)![1]!.replace(',', '.'));

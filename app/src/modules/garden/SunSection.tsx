@@ -8,6 +8,7 @@ import { useHeading } from '@/core/sensors/useHeading';
 import { numToInput, parseNum } from '@/ui/numbers';
 import { Segmented } from '@/ui/Segmented';
 import type { Place } from '@/modules/astronomy/sky';
+import { BearingDial } from './BearingDial';
 import { BED_SIDES, bedSun, roundHalf } from './sun';
 
 const OBSTACLE_HEIGHTS = [15, 30, 45, 60] as const;
@@ -108,7 +109,9 @@ export function SunSection({ draft, setDraft, place }: { draft: GardenBed; setDr
       {!place && <p className="warning-box">{t('garden.sun.needPlace')}</p>}
 
       <div className="field" key={`bearing-${bearingKey}`}>
+        <BearingDial value={bearing} onChange={(deg) => setDraft((d) => ({ ...d, bearingDeg: deg }))} widthCm={draft.widthCm} lengthCm={draft.lengthCm} place={place} />
         <DegInput id="bed-bearing" label={t('garden.sun.bearing')} value={bearing} onChange={(v) => setDraft((d) => ({ ...d, bearingDeg: v }))} />
+        <p className="hint">{t('garden.sun.dialHint')}</p>
         <HeadingCapture place={place} label={t('garden.sun.useCompass')} onPick={(deg) => setDraft((d) => ({ ...d, bearingDeg: deg }))} />
         <p className="hint">{bearing === null ? t('garden.sun.bearingHint') : t('garden.sun.bearingIs', { dir: t(`geo.cardinal.${cardinalOf(bearing)}`) })}</p>
       </div>

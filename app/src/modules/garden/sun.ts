@@ -128,3 +128,17 @@ export function bedSun(bed: GardenBed, place: Place, now = new Date()): BedSun {
 export function roundHalf(h: number): number {
   return Math.round(h * 2) / 2;
 }
+
+/** Rumbos por donde pasa el sol (altura de 5° o más) en un día, cada 30 minutos: el arco para dibujar en el dial. */
+export function sunPathAzimuths(place: Place, date: Date): number[] {
+  const o = observerAt(place);
+  const noon = sunDay(place, startOfLocalDay(date)).solarNoon.getTime();
+  const out: number[] = [];
+  for (let i = 0; i < 48; i++) {
+    const when = new Date(noon - 12 * 3_600_000 + (i + 0.5) * 30 * 60_000);
+    const eq = Equator(Body.Sun, when, o, true, true);
+    const h = Horizon(when, o, eq.ra, eq.dec, 'normal');
+    if (h.altitude >= MIN_SUN_ALTITUDE) out.push(h.azimuth);
+  }
+  return out;
+}

@@ -2405,6 +2405,9 @@
     "lengthCm": "Largo (cm)",
     "gridHint": "Grilla de {{cols}} × {{rows}} cuadros de 30 cm.",
     "sun": {
+      "dialLabel": "Dial del rumbo del frente del cantero",
+      "dialNone": "sin rumbo",
+      "dialHint": "Tocá o arrastrá sobre el círculo (norte arriba). La flecha es el frente; la línea clara de afuera es el recorrido del sol hoy.",
       "mode": "Horas de sol",
       "modeManual": "A mano",
       "modeCalculated": "Calcular según el entorno",

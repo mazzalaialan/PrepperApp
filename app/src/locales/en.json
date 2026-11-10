@@ -2405,6 +2405,9 @@
     "lengthCm": "Length (cm)",
     "gridHint": "Grid of {{cols}} × {{rows}} squares of 30 cm.",
     "sun": {
+      "dialLabel": "Bed front bearing dial",
+      "dialNone": "no bearing",
+      "dialHint": "Tap or drag on the circle (north at top). The arrow is the front; the light line outside is the sun's path today.",
       "mode": "Sun hours",
       "modeManual": "Manual",
       "modeCalculated": "Calculate from surroundings",
