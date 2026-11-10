@@ -4210,3 +4210,17 @@ a.module-card:hover {
 .pocket-exit:focus-visible {
   outline: 2px solid #888;
 }
+
+.first-steps-list {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.first-steps-list a {
+  display: inline-block;
+  min-height: 32px;
+  padding: 4px 0;
+}

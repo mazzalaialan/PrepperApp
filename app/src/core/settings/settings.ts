@@ -74,6 +74,10 @@ export interface Settings {
   trackFollowView: 'drawing' | 'map';
   /** Cómo guiarse hasta un punto: la última vista elegida (`null` = preguntar). */
   gotoView: 'map' | '3d' | null;
+  /** Sonido y voz al salirte del track que seguís y al llegar (además de la vibración). */
+  followSound: boolean;
+  /** Ya descartó la tarjeta de primeros pasos del inicio. */
+  firstStepsDone: boolean;
   /** El dibujo del track gira con la brújula (lo que tenés adelante, arriba); si no, el norte va arriba. */
   trackDrawingRotate: boolean;
   /** Leer en voz alta los pasos de las guías de primeros auxilios. */
@@ -223,6 +227,8 @@ export const DEFAULT_SETTINGS: Settings = {
   snowlineFallback: 1500,
   trackFollowView: 'drawing',
   gotoView: null,
+  followSound: true,
+  firstStepsDone: false,
   trackDrawingRotate: false,
   guideVoice: false,
   firstAidEnv: 'city',

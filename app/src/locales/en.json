@@ -42,6 +42,7 @@
   "outingPlan": {"title": "Outing plan", "hint": "Say when you will be back, who is going and what to do if you do not make it. It is the best safety you have: past the deadline the app warns you and your family knows when to worry.", "start": "Departure", "returnBy": "Return deadline", "leader": "Leader", "members": "Members", "membersHint": "One per line", "contact": "Who to notify", "contactHint": "Name and phone", "contingency": "If I do not return or I am late", "contingencyHint": "For example: go down the same way, hut to wait at, who to call and from what time", "checkIn": "I'm OK", "extend": "+{{min}} min", "close": "I'm back", "reopen": "Reopen", "sendSms": "SMS", "sendWhatsapp": "WhatsApp", "share": "Share", "open": "See plan", "bar": "Outing in progress", "status": {"left": "{{time}} left until the deadline", "overdue": "Deadline passed {{time}} ago", "planned": "Not started yet", "closed": "Outing finished", "last": "last 'I'm OK': {{time}}"}, "notify": {"soonTitle": "{{name}}: deadline approaching", "soonBody": "{{time}} left. If you will be late, extend the deadline or let someone know.", "overdueTitle": "{{name}}: deadline passed", "overdueServerBody": "The return deadline of your outing has passed. Send an 'I'm OK' or tell whoever is waiting.",
       "overdueBody": "It passed {{time}} ago. Send an 'I'm OK' or tell whoever is waiting."}, "msg": {"title": "Outing plan", "members": "We are", "start": "Departure", "returnBy": "Back by (deadline)", "contact": "Notify", "contingency": "If I do not return", "lastCheckIn": "Last 'I'm OK'", "tail": "If the deadline passes with no news, call the emergency services."}},
   "home": {
+    "first": {"title": "First steps", "hint": "To start using VikArg, try these four things. The card disappears by itself once you save a place or a route.", "compass": "Try the compass", "waypoint": "Save a place (for example your home or a hut)", "record": "Record a route or import one", "medical": "Fill in your medical profile (used for emergencies and calories)", "dismiss": "Do not show again"},
     "quick": {
       "title": "Quick access",
       "emergency": "Emergency",
@@ -1890,6 +1891,9 @@
     "confirmDelete": "Delete track \"{{name}}\"? Points you copied to your waypoints stay.",
     "delete": "Delete {{name}}",
     "follow": {
+      "offVoice": "You left the track",
+      "soundOn": "Sound and voice when off track: on",
+      "soundOff": "Sound and voice when off track: off",
       "start": "Follow the track",
       "title": "Following {{name}}",
       "reverse": "Walk it in reverse",

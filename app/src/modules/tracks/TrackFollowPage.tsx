@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowLeftRight, Circle, CircleCheck, Footprints, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Circle, CircleCheck, Footprints, TriangleAlert, Volume2, VolumeX } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { bearingDeg } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
@@ -12,6 +12,7 @@ import { angleDiff } from '@/core/sensors/heading';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
+import { beep, say } from '@/modules/training/cues';
 import { LiveSummary } from '@/modules/training/LiveSummary';
 import { GpsStatus, useFormatBearing } from '@/modules/waypoints/components';
 import { followState, isOffTrack, prepareFollow, walkingMinutes, type FollowLine } from './follow';
@@ -82,6 +83,7 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
   useHoldLock();
 
   // Fuera del track, con margen para que el aviso no titile; vibra al salir y al llegar.
+  const sound = useSettings((s) => s.settings.followSound);
   const [off, setOff] = useState(false);
   const arrivedRef = useRef(false);
   useEffect(() => {
@@ -89,9 +91,24 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
     const nowOff = isOffTrack(state.offTrackM, fix.accuracy, off);
     if (nowOff !== off) {
       setOff(nowOff);
-      if (nowOff) navigator.vibrate?.([300, 150, 300]);
+      if (nowOff) {
+        navigator.vibrate?.([300, 150, 300]);
+        // Con guantes, viento o el celular en el bolsillo la vibración no alcanza: también suena y avisa por voz.
+        if (sound) {
+          beep(440, 250);
+          setTimeout(() => beep(440, 250), 350);
+          say(t('tracks.follow.offVoice'), i18n.language, { interrupt: true });
+        }
+      }
     }
-    if (state.arrived && !arrivedRef.current) navigator.vibrate?.([150, 100, 150, 100, 400]);
+    if (state.arrived && !arrivedRef.current) {
+      navigator.vibrate?.([150, 100, 150, 100, 400]);
+      if (sound) {
+        beep(880, 150);
+        setTimeout(() => beep(1100, 300), 220);
+        say(t(back ? 'tracks.follow.arrivedBack' : 'tracks.follow.arrived'), i18n.language, { interrupt: true });
+      }
+    }
     arrivedRef.current = state.arrived;
     // Solo cuando llega una posición nueva o se da vuelta el sentido.
   }, [fix, line]);
@@ -200,6 +217,9 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
         </section>
       )}
 
+      <button className="btn" type="button" aria-pressed={sound} onClick={() => void update({ followSound: !sound })} data-testid="follow-sound">
+        {sound ? <Volume2 size={18} aria-hidden /> : <VolumeX size={18} aria-hidden />} {t(sound ? 'tracks.follow.soundOn' : 'tracks.follow.soundOff')}
+      </button>
       <div className="chips" role="group" aria-label={t('tracks.follow.view')}>
         {(['drawing', 'map'] as const).map((v) => (
           <button key={v} type="button" className="chip" aria-pressed={view === v} onClick={() => void update({ trackFollowView: v })}>

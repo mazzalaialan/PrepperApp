@@ -10,6 +10,9 @@ import { RecommendationShortageList, useRecommendationShortages } from '@/module
 import { SECTIONS } from '@/modules/registry';
 import { GardenTaskList, GardenWeatherNotices } from '@/modules/garden/GardenPage';
 import { gardenAlertCount, useGardenStatus } from '@/modules/garden/status';
+import { useSettings } from '@/core/settings/settings';
+import { useTracks } from '@/modules/tracks/store';
+import { useWaypoints } from '@/modules/waypoints/store';
 import { ModuleGrid } from '@/ui/ModuleGrid';
 
 const HOME_ALERT_LIMIT = 5;
@@ -81,11 +84,46 @@ function QuickActions() {
   );
 }
 
+/** Primeros pasos: para quien recién empieza (sin lugares ni recorridos guardados); se puede descartar. */
+function FirstSteps() {
+  const { t } = useTranslation();
+  const dismissed = useSettings((s) => s.settings.firstStepsDone);
+  const update = useSettings((s) => s.update);
+  const waypoints = useWaypoints((s) => s.waypoints.size);
+  const tracks = useTracks((s) => s.tracks.size);
+  if (dismissed || waypoints > 0 || tracks > 0) return null;
+  const steps = [
+    { to: '/orientation/compass', label: t('home.first.compass') },
+    { to: '/orientation/waypoints/new', label: t('home.first.waypoint') },
+    { to: '/orientation/tracks', label: t('home.first.record') },
+    { to: '/first-aid/medical', label: t('home.first.medical') },
+  ];
+  return (
+    <section className="card stack" aria-labelledby="first-steps" data-testid="first-steps">
+      <h2 id="first-steps" className="section-title" style={{ margin: 0 }}>{t('home.first.title')}</h2>
+      <p className="hint" style={{ margin: 0 }}>{t('home.first.hint')}</p>
+      <ol className="first-steps-list">
+        {steps.map((st) => (
+          <li key={st.to}>
+            <Link to={st.to}>{st.label}</Link>
+          </li>
+        ))}
+      </ol>
+      <div className="row-end">
+        <button className="btn" type="button" onClick={() => void update({ firstStepsDone: true })} data-testid="first-steps-dismiss">
+          {t('home.first.dismiss')}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
   const { t } = useTranslation();
   return (
     <>
       <QuickActions />
+      <FirstSteps />
       <AlertSummary />
       {SECTIONS.map((section) => (
         <Fragment key={section}>
