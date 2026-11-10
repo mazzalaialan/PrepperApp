@@ -321,6 +321,7 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   await page.getByRole('link', { name: 'Seguir el track' }).click();
   await expect(page.getByTestId('offline-map').locator('canvas')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Mapa en 3D' })).toHaveAttribute('aria-pressed', 'true');
+  await page.evaluate(() => (window as unknown as { stopCompass?: () => void }).stopCompass?.());
   // Lo que sigue, en 2D: sin GPU, el relieve en 3D se dibuja por software y traba la página.
   await page.getByRole('button', { name: 'Mapa en 3D' }).click();
   await expect(page.getByTestId('offline-map')).toHaveAttribute('data-terrain', 'off');
