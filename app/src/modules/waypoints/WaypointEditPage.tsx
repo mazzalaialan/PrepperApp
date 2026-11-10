@@ -176,21 +176,9 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
           {gpsError && <p className="error" role="alert">{gpsError}</p>}
         </div>
         <div className="field">
-          <label htmlFor="alt">{t('waypoints.altitude', { unit: altitudeUnit(units) })}</label>
-          <input id="alt" className="input" inputMode="decimal" value={alt} onChange={(e) => { setAlt(e.target.value); dirty(); }} />
-        </div>
-        <div className="field">
           <label htmlFor="notes">{t('waypoints.notes')}</label>
           <textarea id="notes" className="input textarea" value={notes} onChange={(e) => { setNotes(e.target.value); dirty(); }} />
         </div>
-        <fieldset className="fieldset stack">
-          <legend>{t('waypoints.alerts')}</legend>
-          <label className="check">
-            <input type="checkbox" checked={rainAlerts} onChange={(e) => { setRainAlerts(e.target.checked); dirty(); }} />
-            {t('waypoints.rainAlerts')}
-          </label>
-          <p className="hint" style={{ margin: 0 }}>{t('waypoints.lightningSoon')}</p>
-        </fieldset>
         <div className="field">
           <label htmlFor="wp-role">{t('waypoints.role.label')}</label>
           <select id="wp-role" className="select" value={role} onChange={(e) => { setRole(e.target.value as WaypointRole | ''); dirty(); }} data-testid="wp-role">
@@ -203,6 +191,22 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
           </select>
           <p className="hint">{t('waypoints.role.hint')}</p>
         </div>
+        {/* Lo que casi nadie toca va plegado; se abre solo si este lugar ya tiene algo cargado ahí. */}
+        <details className="more-options" open={alt.trim() !== '' || rainAlerts || privateOn} data-testid="wp-more">
+          <summary>{t('waypoints.moreOptions')}</summary>
+          <div className="stack" style={{ marginTop: 12 }}>
+        <div className="field">
+          <label htmlFor="alt">{t('waypoints.altitude', { unit: altitudeUnit(units) })}</label>
+          <input id="alt" className="input" inputMode="decimal" value={alt} onChange={(e) => { setAlt(e.target.value); dirty(); }} />
+        </div>
+        <fieldset className="fieldset stack">
+          <legend>{t('waypoints.alerts')}</legend>
+          <label className="check">
+            <input type="checkbox" checked={rainAlerts} onChange={(e) => { setRainAlerts(e.target.checked); dirty(); }} />
+            {t('waypoints.rainAlerts')}
+          </label>
+          <p className="hint" style={{ margin: 0 }}>{t('waypoints.lightningSoon')}</p>
+        </fieldset>
         <fieldset className="fieldset stack">
           <legend>{t('waypoints.privacy')}</legend>
           <label className="check">
@@ -223,6 +227,8 @@ function WaypointForm({ stored }: { stored: Waypoint | undefined }) {
           )}
           <p className="hint" style={{ margin: 0 }}>{t('waypoints.privateHint')}</p>
         </fieldset>
+          </div>
+        </details>
         {saved &&<p className="success" role="status">{t('common.saved')}</p>}
         <div className="row-end">
           {stored && (

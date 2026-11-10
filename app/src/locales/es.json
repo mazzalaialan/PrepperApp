@@ -1388,6 +1388,7 @@
     }
   },
   "compass": {
+    "advanced": "Norte verdadero o magnético, declinación y calibración",
     "roseLabel": "Rosa de los vientos",
     "waiting": "Esperando la brújula del celular…",
     "flat": "Rumbo hacia donde apunta la parte de arriba del celular.",
@@ -1667,6 +1668,7 @@
     }
   },
   "waypoints": {
+    "moreOptions": "Más opciones (altura, avisos de lluvia, zona privada)",
     "role": {"label": "Tipo de lugar", "none": "Un lugar común", "escape": "Punto de escape", "shelter": "Refugio", "water": "Agua", "danger": "Peligro", "hint": "Marcá los lugares que importan en una emergencia: en «Mi ubicación» vas a ver cuál es tu punto de escape o tu refugio más cercano (esto es para vos: no va en el mensaje para los socorristas).", "filter": "Filtrar por tipo", "all": "Todos"},
     "privacy": "Privacidad", "privateZone": "Zona privada", "privateRadius": "Radio", "privateHint": "Al compartir una salida con un enlace público, se saca de su recorrido todo lo que pasa dentro de este radio (tu casa, el trabajo…). Podés desmarcarlo en cada enlace.", "privateBadge": "Zona privada · {{m}} m",
     "new": "Nuevo",

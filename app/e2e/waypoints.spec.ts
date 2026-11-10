@@ -34,6 +34,7 @@ test('waypoints: marcar acá, cargar por coordenadas y cómo llegar', async ({ p
   await expect(page.getByText('No reconozco esas coordenadas.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar' })).toBeDisabled();
   await coords.fill(`31°25'12.3"S 64°11'19.6"O`);
+  await page.getByTestId('wp-more').getByText('Más opciones').click();
   await page.getByLabel('Altitud (m)').fill('390');
   // "Usar mi ubicación" con otra lectura de GPS en curso, y vuelta a las coordenadas a mano.
   await page.getByRole('button', { name: 'Usar mi ubicación actual' }).click();

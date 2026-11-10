@@ -21,8 +21,8 @@ jobs:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -32,7 +32,7 @@ jobs:
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: app/dist
 
@@ -42,8 +42,8 @@ jobs:
       run:
         working-directory: server
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 26
           cache: npm
@@ -56,7 +56,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build -t vikarg-survival .
       - run: |
           docker run -d --name vikarg -p 8080:8080 vikarg-survival
@@ -71,8 +71,8 @@ jobs:
     outputs:
       version: ${{ steps.pack.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -94,7 +94,7 @@ jobs:
           chmod +x "$DIR/iniciar.sh" "$DIR/servidor.py"
           zip -rq "vikarg-survival-portable-$VERSION.zip" "$DIR"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: portable
           path: vikarg-survival-portable-*.zip
@@ -107,7 +107,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # Una Release por versión, con el paquete portable; si ya existe, se reemplaza el archivo.
   # Solo queda publicada la última: las anteriores se borran (sus tags quedan en el historial).
@@ -120,7 +120,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       VERSION: ${{ needs.portable.outputs.version }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: portable
       - run: |

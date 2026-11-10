@@ -198,6 +198,7 @@ test('entrenamiento: sesión bajo techo, grabar con GPS y armar una salida', asy
   await page.goto('/#/orientation/waypoints/new');
   await page.getByLabel('Nombre').fill('Mi casa');
   await page.getByLabel('Coordenadas').fill('-41.1612, -71.4201');
+  await page.getByTestId('wp-more').getByText('Más opciones').click();
   await page.getByTestId('wp-private').check();
   await page.getByLabel('Radio').selectOption('500');
   await page.getByRole('button', { name: 'Guardar' }).click();

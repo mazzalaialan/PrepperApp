@@ -1388,6 +1388,7 @@
     }
   },
   "compass": {
+    "advanced": "True or magnetic north, declination and calibration",
     "roseLabel": "Compass rose",
     "waiting": "Waiting for the phone's compass…",
     "flat": "Heading of the top of the phone.",
@@ -1667,6 +1668,7 @@
     }
   },
   "waypoints": {
+    "moreOptions": "More options (altitude, rain alerts, private zone)",
     "role": {"label": "Type of place", "none": "An ordinary place", "escape": "Escape point", "shelter": "Shelter", "water": "Water", "danger": "Hazard", "hint": "Mark the places that matter in an emergency: in “My location” you will see your nearest escape point or shelter (this is for you: it is not in the message for rescuers).", "filter": "Filter by type", "all": "All"},
     "privacy": "Privacy", "privateZone": "Private zone", "privateRadius": "Radius", "privateHint": "When you share an outing with a public link, everything within this radius (your home, work…) is removed from its route. You can uncheck it on each link.", "privateBadge": "Private zone · {{m}} m",
     "new": "New",

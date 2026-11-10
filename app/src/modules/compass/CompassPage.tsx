@@ -42,7 +42,10 @@ export function CompassPage() {
         <p className="empty">{t('compass.waiting')}</p>
       )}
 
-      <section className="card stack">
+      {/* Lo que casi nadie cambia (norte verdadero o magnético, declinación, calibrar) queda plegado debajo de la brújula. */}
+      <details className="card more-options" data-testid="compass-advanced">
+        <summary>{t('compass.advanced')}</summary>
+        <div className="stack" style={{ marginTop: 12 }}>
         <Segmented<NorthReference>
           label={t('compass.reference')}
           value={reference}
@@ -64,7 +67,8 @@ export function CompassPage() {
           <Link to="/orientation/declination">{t('compass.moreDeclination')}</Link>
         </p>
         <p className="hint">{t('compass.calibrate')}</p>
-      </section>
+        </div>
+      </details>
     </div>
   );
 }

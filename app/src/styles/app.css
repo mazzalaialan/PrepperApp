@@ -4266,3 +4266,18 @@ a.module-card:hover {
   margin-left: 20px;
   border: 1px solid var(--control-border);
 }
+
+/* Opciones que casi nadie toca: plegadas, con un título que se ve tocable. */
+.more-options {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.more-options > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
