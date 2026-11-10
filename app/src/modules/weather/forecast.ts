@@ -89,7 +89,11 @@ const DAILY =
 export const FORECAST_DAYS = 16;
 export const RELIABLE_DAYS = 7;
 
-export function forecastUrl(base: string, lat: number, lon: number): string {
+/**
+ * `elevationM`: la altura real del lugar. Open-Meteo corrige la temperatura según esa altura (sin ella usa
+ * la del punto de su malla, que en la montaña puede estar cientos de metros más abajo o más arriba).
+ */
+export function forecastUrl(base: string, lat: number, lon: number, elevationM?: number | null): string {
   const params = new URLSearchParams({
     latitude: lat.toFixed(4),
     longitude: lon.toFixed(4),
@@ -100,6 +104,7 @@ export function forecastUrl(base: string, lat: number, lon: number): string {
     forecast_days: String(FORECAST_DAYS),
     ...nowcastParams(),
   });
+  if (typeof elevationM === 'number' && Number.isFinite(elevationM) && elevationM > -400 && elevationM < 8900) params.set('elevation', String(Math.round(elevationM)));
   return `${base.replace(/\/+$/, '')}/v1/forecast?${params}`;
 }
 
@@ -120,11 +125,11 @@ interface ApiResponse {
   minutely_15?: { time?: unknown[]; precipitation?: unknown[] };
 }
 
-export async function fetchForecast(base: string, lat: number, lon: number, now = new Date()): Promise<Forecast> {
+export async function fetchForecast(base: string, lat: number, lon: number, now = new Date(), elevationM?: number | null): Promise<Forecast> {
   if (!navigator.onLine) throw new WeatherError('offline');
   let res: Response;
   try {
-    res = await fetch(forecastUrl(base, lat, lon), { signal: AbortSignal.timeout(15_000) });
+    res = await fetch(forecastUrl(base, lat, lon, elevationM), { signal: AbortSignal.timeout(15_000) });
   } catch {
     throw new WeatherError('unreachable');
   }

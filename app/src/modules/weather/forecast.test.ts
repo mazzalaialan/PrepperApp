@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { forecastUrl, parseForecast, periodSummaries, placeNow, skyOf, stormRisk, warningsOf, type Forecast } from './forecast';
 
+describe('forecastUrl con altura', () => {
+  it('pasa la altura real del lugar para corregir la temperatura, y se salta una absurda o ausente', () => {
+    expect(new URL(forecastUrl('https://x.org', -41.1, -71.3, 1850.4)).searchParams.get('elevation')).toBe('1850');
+    expect(new URL(forecastUrl('https://x.org', -41.1, -71.3)).searchParams.has('elevation')).toBe(false);
+    expect(new URL(forecastUrl('https://x.org', -41.1, -71.3, null)).searchParams.has('elevation')).toBe(false);
+    expect(new URL(forecastUrl('https://x.org', -41.1, -71.3, -Number.MAX_VALUE)).searchParams.has('elevation')).toBe(false);
+  });
+});
+
 describe('forecastUrl', () => {
   it('usa la URL configurada (con o sin barra final) y pide 16 días en la zona del lugar', () => {
     const url = new URL(forecastUrl('https://clima.mio.ar/', -34.60372, -58.38159));

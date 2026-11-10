@@ -37,6 +37,7 @@ export function WeatherPage() {
 
   const lat = place?.lat ?? null;
   const lon = place?.lon ?? null;
+  const alt = place?.alt ?? null;
   const key = lat === null || lon === null ? null : placeKey(lat, lon);
 
   const refresh = useCallback(async () => {
@@ -44,7 +45,7 @@ export function WeatherPage() {
     setLoading(true);
     setError(null);
     try {
-      const fresh = await fetchForecast(base, lat, lon);
+      const fresh = await fetchForecast(base, lat, lon, new Date(), alt);
       await storeForecast(key, fresh);
       setForecast(fresh);
     } catch (e) {
@@ -53,7 +54,7 @@ export function WeatherPage() {
       setLoading(false);
     }
     // Depende de la celda del lugar (`key`), no de cada metro que se mueve el GPS.
-  }, [key, base]);
+  }, [key, base, alt]);
 
   useEffect(() => {
     if (!key) return;
