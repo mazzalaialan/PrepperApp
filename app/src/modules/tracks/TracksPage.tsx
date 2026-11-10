@@ -47,6 +47,7 @@ export function TracksPage() {
           <Upload size={18} /> {t('tracks.import')}
         </button>
       </div>
+      <p className="hint" style={{ margin: 0 }}>{t('tracks.importFormats')}</p>
       <input
         ref={file}
         type="file"
