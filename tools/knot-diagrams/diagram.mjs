@@ -196,6 +196,16 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
       if (!filter(r, { z: c.over.z })) continue;
       const near = (d) => r.pts.filter((p) => p.s >= c.over.s - d && p.s <= c.over.s + d && filter(r, p));
       const pts = near(W * 1.3);
+      // Sombra de la cuerda de arriba sobre la de abajo: solo se ve encima de la de abajo (máscara con su trazo).
+      const lower = strands[c.under.k];
+      const lowerPts = lower.pts.filter((p) => p.s >= c.under.s - W * 2.2 && p.s <= c.under.s + W * 2.2 && (layered ? (p.z >= 0) === (c.over.z >= 0) : true));
+      if (pts.length >= 2 && lowerPts.length >= 2) {
+        const m = `${P}m${defs.length}`;
+        const sh = `${P}s${defs.length}`;
+        defs.push(`<path id="${sh}" d="${pathD(near(W * 1.5))}"/>`);
+        defs.push(`<mask id="${m}" maskUnits="userSpaceOnUse" x="-50" y="-50" width="${width + 100}" height="${height + 100}"><path d="${pathD(lowerPts)}" fill="none" stroke="#fff" stroke-width="${W}"/></mask>`);
+        body.push(`<g mask="url(#${m})"><use href="#${sh}" fill="none" stroke="#000" stroke-opacity="0.32" stroke-width="${W + 10}" filter="url(#${P}blur)"/></g>`);
+      }
       draw(r, pts, near(W * 0.8), near(W * 1.3 + 4));
       if (pts.includes(r.pts[r.pts.length - 1])) endCap(r);
     }
@@ -216,5 +226,5 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
     for (const c of xs) body.push(`<text x="${r1(c.x)}" y="${r1(c.y + 5)}" font-size="15" font-weight="bold" fill="red" text-anchor="middle">${Math.round(c.x)},${Math.round(c.y)}</text>`);
   }
   const marker = arrows.length ? `<marker id="${P}ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" class="kdaf"/></marker>` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><defs>${marker}${defs.join('')}</defs><style>.kdb{stroke:${BG}}.kde{stroke:${EDGE}}.kdbf{fill:${BG}}.kdef{fill:${EDGE}}.kda{stroke:${ARROW}}.kdaf{fill:${ARROW}}</style><rect width="100%" height="100%" class="kdbf"/><g fill="none" stroke-linejoin="round"${spec.zoom ? ` transform="translate(${spec.zoom[1]} ${spec.zoom[2]}) scale(${spec.zoom[0]}) translate(${-spec.zoom[1]} ${-spec.zoom[2]})"` : ''}>${body.join('')}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><defs>${marker}<filter id="${P}blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>${defs.join('')}</defs><style>.kdb{stroke:${BG}}.kde{stroke:${EDGE}}.kdbf{fill:${BG}}.kdef{fill:${EDGE}}.kda{stroke:${ARROW}}.kdaf{fill:${ARROW}}</style><rect width="100%" height="100%" class="kdbf"/><g fill="none" stroke-linejoin="round"${spec.zoom ? ` transform="translate(${spec.zoom[1]} ${spec.zoom[2]}) scale(${spec.zoom[0]}) translate(${-spec.zoom[1]} ${-spec.zoom[2]})"` : ''}>${body.join('')}</g></svg>`;
 }
