@@ -80,8 +80,13 @@ export function PocketScreen() {
   const units = useSettings((s) => s.settings.units);
   const { status, track, elapsedMs, since } = useRecorder();
   const lastTap = useRef(0);
+  const exitRef = useRef<HTMLButtonElement>(null);
   const [, tick] = useState(0);
   useWakeLock(on);
+  // Al abrirse, el foco va al botón de salir (con teclado o lector de pantalla se puede volver).
+  useEffect(() => {
+    if (on) exitRef.current?.focus();
+  }, [on]);
   useEffect(() => {
     if (!on) return;
     // Lo de abajo deja de dibujarse; el tiempo se actualiza cada medio minuto.
@@ -99,6 +104,7 @@ export function PocketScreen() {
     <div
       className="pocket"
       role="dialog"
+      aria-modal="true"
       aria-label={t('pocket.title')}
       data-testid="pocket"
       onPointerDown={() => {
@@ -117,6 +123,9 @@ export function PocketScreen() {
       )}
       {status === 'recording' && <p>{t('pocket.dontLock')}</p>}
       <p>{t('pocket.exit')}</p>
+      <button ref={exitRef} className="pocket-exit" type="button" onClick={() => set(false)}>
+        {t('pocket.exitButton')}
+      </button>
     </div>
   );
 }

@@ -28,8 +28,9 @@ export function Countdown({ seconds, onDone, onCancel }: { seconds: number; onDo
   }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="countdown" role="dialog" aria-label={t('countdown.title')} data-testid="countdown">
-      <p className="countdown-label">{t('countdown.title')}</p>
-      <p className="countdown-number" aria-live="assertive" data-testid="countdown-number">{Math.max(0, left)}</p>
+      {/* Los lectores de pantalla oyen solo el título (y la voz de la app cuenta los últimos segundos): no cada número. */}
+      <p className="countdown-label" role="status">{t('countdown.title')}</p>
+      <p className="countdown-number" aria-hidden data-testid="countdown-number">{Math.max(0, left)}</p>
       <button className="btn" type="button" onClick={onCancel} data-testid="countdown-cancel">
         {t('common.cancel')}
       </button>

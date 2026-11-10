@@ -11,6 +11,7 @@ import { bmi, bmiCategory, localDay, parseKg, sortedWeights, summarize } from '.
 
 /** Gráfico de línea del peso a lo largo del tiempo (SVG, sin librerías). */
 function WeightChart({ list }: { list: WeightEntry[] }) {
+  const { t } = useTranslation();
   if (list.length < 2) return null;
   const W = 320;
   const H = 120;
@@ -23,8 +24,9 @@ function WeightChart({ list }: { list: WeightEntry[] }) {
   const x = (day: string) => pad + (t1 === t0 ? 0 : ((Date.parse(day) - t0) / (t1 - t0)) * (W - 2 * pad));
   const y = (kg: number) => H - pad - ((kg - lo) / (hi - lo)) * (H - 2 * pad);
   const points = list.map((e) => `${x(e.day).toFixed(1)},${y(e.kg).toFixed(1)}`).join(' ');
+  const last = list[list.length - 1]!;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="" style={{ width: '100%', height: 'auto' }} data-testid="weight-chart">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t('weight.chartLabel', { from: list[0]!.day, to: last.day, kg: last.kg })} style={{ width: '100%', height: 'auto' }} data-testid="weight-chart">
       <polyline points={points} fill="none" stroke="var(--accent, currentColor)" strokeWidth="2" strokeLinejoin="round" />
       {list.map((e) => (
         <circle key={e.id} cx={x(e.day)} cy={y(e.kg)} r="3" fill="var(--accent, currentColor)" />

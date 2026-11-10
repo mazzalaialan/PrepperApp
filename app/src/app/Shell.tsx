@@ -98,7 +98,7 @@ export function Shell() {
         <header className="topbar">
           <BackButton />
           <BrandMark />
-          <h1>{t('app.name')}</h1>
+          <p className="topbar-title">{t('app.name')}</p>
           <Link className="icon-btn" to="/settings" aria-label={t('nav.settings')} title={t('nav.settings')}>
             <Settings size={22} />
           </Link>

@@ -80,7 +80,7 @@
     "stopwatch": {"title": "Cronómetro", "desc": "Cronómetro con vueltas y temporizador"},
     "metronome": {"title": "Metrónomo", "desc": "Cadencia de pasos y ritmo de respiración, con sonido"},
     "tools": {"title": "Herramientas", "desc": "Calculadora de ritmo, zonas de pulso y metrónomo de cadencia"},
-    "weight": {"title": "Peso", "desc": "Tu peso, su historial y tu IMC"},
+    "weight": {"chartLabel": "Gráfico del peso del {{from}} al {{to}}; el último registro es {{kg}} kg.", "title": "Peso", "desc": "Tu peso, su historial y tu IMC"},
     "outings": {"title": "Salidas", "desc": "Agrupá varias actividades en una salida, con su mapa y desnivel"},
     "compass": { "title": "Brújula", "desc": "Rumbo magnético y geográfico" },
     "declination": { "title": "Declinómetro", "desc": "Declinación, rumbos y machete" },
@@ -1844,6 +1844,7 @@
     }
   },
   "tracks": {
+    "exportGpx": "Exportar GPX",
     "toRoute": "Crear ruta planificada",
     "import": "Importar GPX",
     "empty": "Todavía no tenés tracks. Grabá tu recorrido, o bajá el GPX de una ruta de Wikiloc (o de otra app) e importalo.",
@@ -1946,7 +1947,7 @@
       "keepRecording": "Seguir grabando"
     }
   },
-  "pocket": {
+  "pocket": { "exitButton": "Salir",
     "on": "Pantalla negra (ahorra batería)",
     "title": "Pantalla negra",
     "exit": "Tocá dos veces para volver",

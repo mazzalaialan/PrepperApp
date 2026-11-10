@@ -80,7 +80,7 @@
     "stopwatch": {"title": "Stopwatch", "desc": "Stopwatch with laps and a timer"},
     "metronome": {"title": "Metronome", "desc": "Step cadence and breathing rhythm, with sound"},
     "tools": {"title": "Tools", "desc": "Pace calculator, heart-rate zones and cadence metronome"},
-    "weight": {"title": "Weight", "desc": "Your weight, its history and your BMI"},
+    "weight": {"chartLabel": "Weight chart from {{from}} to {{to}}; the latest entry is {{kg}} kg.", "title": "Weight", "desc": "Your weight, its history and your BMI"},
     "outings": {"title": "Outings", "desc": "Group several activities into an outing, with its map and elevation"},
     "compass": { "title": "Compass", "desc": "Magnetic and true heading" },
     "declination": { "title": "Declinometer", "desc": "Declination, bearings and cheat sheet" },
@@ -1844,6 +1844,7 @@
     }
   },
   "tracks": {
+    "exportGpx": "Export GPX",
     "toRoute": "Create planned route",
     "import": "Import GPX",
     "empty": "No tracks yet. Record your trip, or download the GPX of a Wikiloc trail (or from another app) and import it.",
@@ -1946,7 +1947,7 @@
       "keepRecording": "Keep recording"
     }
   },
-  "pocket": {
+  "pocket": { "exitButton": "Exit",
     "on": "Black screen (saves battery)",
     "title": "Black screen",
     "exit": "Tap twice to go back",

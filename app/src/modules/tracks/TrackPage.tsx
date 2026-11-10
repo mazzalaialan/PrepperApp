@@ -1,13 +1,15 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Route as RouteIcon, Trash2, X } from 'lucide-react';
+import { Check, Download, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Route as RouteIcon, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
+import { toGpx } from '@/modules/training/interchange';
 import { routeFromTrack } from '@/modules/waypoints/importRoute';
+import { deliverFile } from '@/ui/files';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { ElevationProfile } from './ElevationProfile';
 import { useRecorder } from './recorder';
@@ -30,8 +32,20 @@ export function TrackPage() {
   return <TrackDetail key={track.id} track={track} />;
 }
 
+/** El recorrido grabado en GPX (con altura y hora de cada punto): sirve en Strava, Garmin, Wikiloc u otra app. */
+async function exportTrackGpx(track: Track): Promise<void> {
+  const text = toGpx({ name: track.name, kind: track.activity ?? 'walk', startedAt: track.createdAt, segments: track.segments });
+  const file = `${track.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'recorrido'}.gpx`;
+  try {
+    await deliverFile(new TextEncoder().encode(text) as Uint8Array<ArrayBuffer>, file, 'application/gpx+xml');
+  } catch (err) {
+    if (!(err instanceof DOMException && err.name === 'AbortError')) throw err;
+  }
+}
+
 function TrackDetail({ track }: { track: Track }) {
   const { t, i18n } = useTranslation();
+  const exportGpx = () => exportTrackGpx(track);
   const navigate = useNavigate();
   const units = useSettings((s) => s.settings.units);
   const { saveTrack, deleteTrack } = useTracks();
@@ -193,6 +207,11 @@ function TrackDetail({ track }: { track: Track }) {
           <Link className="btn" to={`/orientation/maps?track=${track.id}`}>
             <MapIcon size={18} /> {t('tracks.onMap')}
           </Link>
+          {track.segments.flat().length > 1 && (
+            <button className="btn" type="button" data-testid="track-export-gpx" onClick={() => void exportGpx()}>
+              <Download size={18} /> {t('tracks.exportGpx')}
+            </button>
+          )}
           {track.segments.flat().length > 1 && (
             <Link className="btn btn-primary" to={`/orientation/tracks/${track.id}/follow`}>
               <Footprints size={18} /> {t('tracks.follow.start')}

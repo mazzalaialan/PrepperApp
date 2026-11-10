@@ -262,7 +262,8 @@ a {
   border-radius: 50%;
 }
 
-.topbar h1 {
+.topbar h1,
+.topbar .topbar-title {
   font-size: 1.1rem;
   flex: 1;
 }
@@ -4192,4 +4193,20 @@ a.module-card:hover {
   flex: 1;
   flex-direction: column;
   min-width: 140px;
+}
+
+/* Salir del modo bolsillo: un botón apenas visible (la pantalla sigue casi negra para ahorrar batería). */
+.pocket-exit {
+  margin-top: 16px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  background: none;
+  color: #777;
+  font: inherit;
+}
+
+.pocket-exit:focus-visible {
+  outline: 2px solid #888;
 }
