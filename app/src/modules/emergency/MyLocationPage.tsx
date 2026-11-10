@@ -193,6 +193,122 @@ export function MyLocationPage() {
           )}
         </div>
       )}
+      <p className="hint" style={{ margin: 0 }} data-testid="calls-country">
+        {t(here ? 'location.callsHere' : 'location.callsSettings', { country: t(`country.${callCountry}`) })}
+      </p>
+      <p className="hint" style={{ margin: 0 }}>{t('location.intro')}</p>
+
+      {!fix ? (
+        <p className={error ? 'error' : 'hint'} role="status">
+          {error ? t(`location.gpsError.${error}`) : t('location.waiting')}
+        </p>
+      ) : (
+        <>
+          <section className="card stack location-card" aria-label={t('location.coordsTitle')}>
+            <h2 className="section-title" style={{ margin: 0 }}>{t('location.coordsTitle')}</h2>
+            <p className="location-big" data-testid="location-decimal">
+              {decimal}
+            </p>
+            <p className="location-dms" data-testid="location-dms">{formatDms(fix, west)}</p>
+            <p className="hint" style={{ margin: 0 }}>
+              {t('location.accuracy', { m: Math.round(fix.accuracy) })}
+              {fix.alt !== null && ` · ${t('location.altitude', { m: Math.round(fix.alt) })}`}
+            </p>
+            <p className={ageMin >= 5 ? 'warning-box' : 'hint'} style={{ margin: 0 }} data-testid="location-age">
+              {ageMin < 1 ? t('location.ageNow') : t(ageMin >= 5 ? 'location.ageStale' : 'location.age', { min: ageMin })}
+            </p>
+            <div className="row-end">
+              <CopyButton text={decimal} label={t('location.copyCoords')} />
+              <a className="btn" href={mapUrl} target="_blank" rel="noreferrer">
+                {t('emergency.openMaps')}
+              </a>
+              {/* Las coordenadas van en el estado de la navegación, no en la URL (no quedan en el historial). */}
+              <Link
+                className="btn"
+                to="/orientation/waypoints/new"
+                state={{ lat: fix.lat, lon: fix.lon, alt: fix.alt, notes: [info?.address, info?.locality].filter(Boolean).join(', ') } satisfies NewWaypointDraft}
+              >
+                <MapPinPlus size={18} /> {t('location.saveWaypoint')}
+              </Link>
+            </div>
+          </section>
+
+          <section className="card stack" aria-labelledby="ref-title">
+            <div className="row-between">
+              <h2 id="ref-title" className="section-title" style={{ margin: 0 }}>{t('location.referencesTitle')}</h2>
+              <button className="icon-btn" type="button" onClick={() => void lookup(fix.lat, fix.lon)} disabled={state === 'loading'} aria-label={t('location.refresh')}>
+                <RefreshCw size={18} />
+              </button>
+            </div>
+            {state === 'loading' && <p className="hint">{t('location.searching')}</p>}
+            {state === 'offline' && <p className="hint">{t('location.offline')}</p>}
+            {state === 'error' && <p className="hint">{t('location.lookupError')}</p>}
+            {info && (
+              <dl className="location-refs" data-testid="location-refs">
+                {(info.address || info.locality) && (
+                  <>
+                    <dt>{t('location.address')}</dt>
+                    <dd>{[info.address, info.locality].filter(Boolean).join(', ')}</dd>
+                  </>
+                )}
+                {info.nearbyStreets.length > 0 && (
+                  <>
+                    <dt>{t('location.streets')}</dt>
+                    <dd>{info.nearbyStreets.join(t('location.and'))}</dd>
+                  </>
+                )}
+                {info.roads.length > 0 && (
+                  <>
+                    <dt>{t('location.road')}</dt>
+                    <dd>
+                      {info.roads.join(' / ')}
+                      {info.milestone && ` · ${t('location.km', { km: info.milestone.km, distance: formatDistance(info.milestone.distance, i18n.language) })}`}
+                    </dd>
+                  </>
+                )}
+              </dl>
+            )}
+            {fix && (['escape', 'shelter'] as const).map((role) => {
+              const near = nearestWithRole(waypoints.values(), role, fix);
+              return near ? (
+                <p key={role} className="hint" style={{ margin: 0 }} data-testid={`location-${role}`}>
+                  {t(`location.${role}Near`, { name: near.waypoint.name, distance: formatDistance(near.distanceM, i18n.language), dir: t(`geo.cardinal.${cardinalOf(near.bearing)}`) })}
+                </p>
+              ) : null;
+            })}
+            {nearestWp && (
+              <p className="hint" style={{ margin: 0 }} data-testid="location-waypoint">
+                {t('location.fromWaypoint', { distance: formatDistance(nearestWp.d, i18n.language), dir: t(`geo.cardinal.${cardinalOf(nearestWp.bearing)}`), name: nearestWp.name })}
+              </p>
+            )}
+          </section>
+
+          <section className="card stack" aria-labelledby="msg-title">
+            <h2 id="msg-title" className="section-title" style={{ margin: 0 }}>{t('location.messageTitle')}</h2>
+            <pre className="location-message" data-testid="location-message">{message}</pre>
+            <div className="row-end wrap">
+              <CopyButton text={message} label={t('location.copyMessage')} />
+              {voice && (
+                <button className="btn" type="button" onClick={toggleRead} aria-pressed={reading}>
+                  {reading ? <Square size={18} /> : <Volume2 size={18} />} {t(reading ? 'location.stopReading' : 'location.readAloud')}
+                </button>
+              )}
+              {'share' in navigator && (
+                <button className="btn" type="button" onClick={() => void share()}>
+                  <Share2 size={18} /> {t('location.share')}
+                </button>
+              )}
+              <a className="btn" href={`sms:?&body=${encodeURIComponent(message)}`}>
+                <MessageSquare size={18} /> {t('location.sms')}
+              </a>
+              <a className="btn" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">
+                {t('location.whatsapp')}
+              </a>
+            </div>
+          </section>
+        </>
+      )}
+
       <p className="hint">{t('location.sources')}</p>
     </div>
   );
