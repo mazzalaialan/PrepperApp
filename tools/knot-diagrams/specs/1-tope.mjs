@@ -8,11 +8,18 @@ const U = [[228, 205]]; // el chicote pasa por debajo del firme
 const eight = [[-20, 220], [120, 220], [230, 218], [290, 180], [295, 110], [245, 65], [185, 80], [170, 140], [195, 225], [215, 265], [180, 290], [140, 270], [150, 220], [190, 170], [245, 140], [300, 135], [350, 142]];
 
 
-// Escape (simple corredizo = nudo simple con la punta doblada en seno). Se parte del nudo simple: la vuelta (loop) y el
-// tramo que la atraviesa (thru) se duplican en una pata paralela unida por un seno; la punta sale del otro lado.
-const legA = [[185, 248, -0.5], [206, 262, -0.5], [232, 246, -0.5], [228, 205, -0.5], [215, 150, -0.5], [232, 112, 0.5], [262, 98, 0.5], [290, 92, 0.5]];
-const legB = rev(offset(legA, -46));
-const bight = (apexPts) => [...loop, ...legA, ...apexPts, ...legB, [150, 276]];
+// Escape: puntos tomados del diagrama de referencia (coordenadas de la imagen) y llevados al lienzo (x0,24 + 40; y0,24 + 60).
+const escT = (pts) => pts.map(([x, y]) => [Math.round(x * 0.24 + 40), Math.round(y * 0.24 + 60)]);
+// Firme (a la izquierda), óvalo de la derecha, arco de abajo, gaza grande y arco de arriba.
+const escapeBody = [[-80, 580], [60, 570], [300, 552], [450, 520], [590, 470], [700, 420], [800, 375], [900, 325], [1000, 270], [1100, 235], [1180, 228], [1240, 270], [1275, 350], [1262, 430], [1225, 500], [1160, 545], [1100, 580], [1040, 612], [900, 660], [760, 650], [650, 590], [600, 500], [598, 400], [640, 310], [710, 250], [780, 240], [840, 275]];
+// El seno: la pata que baja en diagonal, la vuelta abajo a la derecha y la pata que vuelve hasta la punta (arriba).
+const escapeBight = [[900, 335], [960, 400], [1030, 490], [1100, 580], [1180, 660], [1260, 725], [1335, 740], [1375, 700], [1350, 625], [1290, 540], [1220, 460], [1140, 385], [1060, 315], [980, 245], [900, 170], [840, 100], [800, 66]];
+const escapeFull = escT([...escapeBody, ...escapeBight]);
+// Dónde el firme pasa POR ENCIMA de las patas del seno (el resto lo decide el orden: lo que se hizo después va arriba).
+const escapeUnder = escT([[880, 335], [1010, 262]]);
+// Paso 1: la punta se dobla en seno, todavía sin pasar por la vuelta.
+const escapeStart = escT([...escapeBody, [900, 225], [980, 185], [1020, 150], [995, 118], [940, 135]]);
+
 export default {
   simple: [
     { ropes: [{ ...A, path: [...loop, [190, 260], [205, 290]] }], arrows: [[[222, 283], [262, 262], [258, 228], [236, 165]]] },
@@ -20,13 +27,16 @@ export default {
     { ropes: [{ ...A, path: [[-20, 170], [60, 170], ...scale(loop.slice(2).concat(thru), 0.75).map(([x, y]) => [x + 45, y + 25]), [320, 104], [420, 108]] }], under: [[216, 179]],
       arrows: [[[45, 215], [5, 215]], [[350, 155], [390, 155]]] },
   ],
+  // Escape (simple corredizo, ABOK #529): recorrido transcrito del diagrama "slip knot" de Wikimedia Commons
+  // (Overhand-slip-noose.png, CC BY-SA 4.0, Buz11) y de la foto ABOK 529 (USCG, CC BY-SA 4.0), cruce por cruce:
+  // el firme pasa por debajo de la gaza y por encima del seno y de la punta; el óvalo pasa por debajo de las dos patas del seno.
   escape: [
-    // 1) El nudo simple empezado: la vuelta y la punta ya doblada en seno, lista para pasar por la vuelta.
-    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: [...loop, [185, 250], [205, 280], [240, 292], [262, 278], [250, 262]] }], arrows: [[[296, 268], [270, 232], [236, 205]]] },
-    // 2) El seno entra por la vuelta (las dos patas pasan por debajo del firme).
-    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[310, 92, 0.5], [330, 104, 0.5], [326, 124, 0.5]]) }], arrows: [[[60, 240], [20, 240]], [[330, 165], [330, 215]]] },
-    // 3) Ajustado: el seno asoma del otro lado; tirando de la punta (abajo) sale y se deshace.
-    { zoom: [0.82, 200, 150], ropes: [{ ...A, path: bight([[316, 80, 0.5], [344, 92, 0.5], [346, 124, 0.5]]) }], arrows: [[[168, 288], [128, 296]]] },
+    // 1) El nudo simple empezado (firme, óvalo y gaza); la punta se dobla en seno sin cruzar todavía.
+    { ropes: [{ ...A, path: escapeStart }], arrows: [[[262, 112], [240, 132], [222, 150]]] },
+    // 2) El seno pasa por dentro de la vuelta (las dos patas cruzan el firme y el óvalo): ajustar tirando del firme y del seno.
+    { ropes: [{ ...A, path: escapeFull }], under: escapeUnder, arrows: [[[75, 225], [30, 225]], [[330, 262], [368, 255]]] },
+    // 3) Para soltarlo, se tira de la punta: el seno sale por donde entró.
+    { ropes: [{ ...A, path: escapeFull }], under: escapeUnder, arrows: [[[222, 62], [198, 38], [175, 30]]] },
   ],
   'ocho-simple': [
     { ropes: [{ ...A, path: [...eight.slice(0, 9), [215, 265], [230, 292]] }], arrows: [[[245, 288], [180, 296], [135, 260]]] },

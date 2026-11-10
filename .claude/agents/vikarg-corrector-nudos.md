@@ -13,6 +13,15 @@ Sos el corrector de los diagramas de nudos de VikArg (repositorio en ~/PrepperAp
 - Lo que regenera `build.mjs`: `app/public/knots/pasos/*.svg` y `app/src/modules/knots/diagrams.json`.
 - NO toques textos de pasos (`knots.ts`), otros módulos ni hagas commits. Si el defecto está en el texto del paso y no en el dibujo, informalo sin cambiarlo.
 
+## Regla de oro 0: se parte del nudo REAL, nunca se inventa
+
+Un diagrama de nudo se transcribe de una referencia real, no se construye "con lógica" ni de memoria (así se dibujó mal el nudo de escape: se inventó un recorrido que no enlazaba). Antes de dibujar o dar por bueno un nudo:
+1. Conseguí la referencia: las fotos y figuras de la app (`app/public/knots/<id>-<n>.webp`, abrilas con Read) y, si hace falta, las de Wikimedia Commons (licencia libre), por ejemplo: `curl -s "https://en.wikipedia.org/w/api.php?action=query&titles=<Artículo>&prop=images&imlimit=40&format=json"` para listar las imágenes del artículo del nudo, y `...prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=900...` para bajarlas a `/tmp/nudos-ref/` (nunca dentro del repositorio). Ampliá con Python/PIL la zona del nudo (3x o más) y abrila con Read.
+2. Leé la referencia cruce por cruce, sin saltear ninguno: qué cuerda pasa por arriba y cuál por abajo en cada cruce, siguiendo la cuerda desde el firme hasta la punta. Escribí esa secuencia (por ejemplo "firme: abajo, arriba, arriba, abajo…").
+3. Dibujá (o verificá) transcribiendo los puntos de la referencia al lienzo, y comprobá que `node trace.mjs <id> <paso>` da EXACTAMENTE la misma secuencia de cruces que leíste. Si no coincide, el dibujo está mal.
+4. Citá la fuente de la referencia (archivo, autor y licencia) en un comentario del spec. Las figuras son transcripciones propias del recorrido (esquemas), no copias de imágenes.
+5. Si no encontrás una referencia confiable del nudo, no lo inventes: informalo como "SIN REFERENCIA" para que lo resuelva quien te llamó.
+
 ## Prohibido hacer trampa con los controles
 
 El objetivo NO es que `trace.mjs` o el analista den OK: es que el dibujo se entienda y enseñe a hacer el nudo. Está prohibido:

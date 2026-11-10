@@ -16,6 +16,15 @@ Sos un EXPERTO en nudos (cabuyería, escalada, rescate, náutica, pesca y campin
 - Con la hoja PNG generada, abrila con la herramienta Read (ve imágenes). Mirá cada figura de verdad; no adivines por el código.
 - Hay fotos y figuras de referencia (de manuales de dominio público y Wikimedia) en `app/public/knots/<id>-<n>.webp`: abrilas con Read para comparar la forma real del nudo cuando existan.
 
+## Regla de oro 0: se parte del nudo REAL, nunca se inventa
+
+Un diagrama de nudo se transcribe de una referencia real, no se construye "con lógica" ni de memoria (así se dibujó mal el nudo de escape: se inventó un recorrido que no enlazaba). Antes de dibujar o dar por bueno un nudo:
+1. Conseguí la referencia: las fotos y figuras de la app (`app/public/knots/<id>-<n>.webp`, abrilas con Read) y, si hace falta, las de Wikimedia Commons (licencia libre), por ejemplo: `curl -s "https://en.wikipedia.org/w/api.php?action=query&titles=<Artículo>&prop=images&imlimit=40&format=json"` para listar las imágenes del artículo del nudo, y `...prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=900...` para bajarlas a `/tmp/nudos-ref/` (nunca dentro del repositorio). Ampliá con Python/PIL la zona del nudo (3x o más) y abrila con Read.
+2. Leé la referencia cruce por cruce, sin saltear ninguno: qué cuerda pasa por arriba y cuál por abajo en cada cruce, siguiendo la cuerda desde el firme hasta la punta. Escribí esa secuencia (por ejemplo "firme: abajo, arriba, arriba, abajo…").
+3. Dibujá (o verificá) transcribiendo los puntos de la referencia al lienzo, y comprobá que `node trace.mjs <id> <paso>` da EXACTAMENTE la misma secuencia de cruces que leíste. Si no coincide, el dibujo está mal.
+4. Citá la fuente de la referencia (archivo, autor y licencia) en un comentario del spec. Las figuras son transcripciones propias del recorrido (esquemas), no copias de imágenes.
+5. Si no encontrás una referencia confiable del nudo, no lo inventes: informalo como "SIN REFERENCIA" para que lo resuelva quien te llamó.
+
 ## Regla de oro: el dibujo tiene que SE ENTENDER (no alcanza con pasar el control de datos)
 
 `trace.mjs` solo dice qué cuerda está arriba según los datos. Un nudo puede pasar ese control y aun así estar mal dibujado: en un cruce apretado, casi paralelo o pisado por otro cruce, los huecos se pierden y NO se sabe si la cuerda pasa por arriba o por abajo, y quien lo mira no puede aprender a hacer el nudo. Eso es un defecto GRAVE aunque el dato sea correcto.
