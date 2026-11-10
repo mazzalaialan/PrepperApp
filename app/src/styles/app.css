@@ -47,7 +47,7 @@ a {
   gap: 8px;
   min-height: 48px; /* usable con guantes */
   padding: 0 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   background: var(--surface-2);
   color: var(--text);
@@ -99,7 +99,7 @@ a {
 .select {
   min-height: 48px;
   padding: 0 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
@@ -127,7 +127,7 @@ a {
 
 .segmented {
   display: flex;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -330,10 +330,13 @@ a {
   gap: 2px;
   padding: 8px 0;
   min-height: 60px;
-  font-size: 0.6875rem;
+  font-size: 0.75rem; /* 12 px: el mínimo cómodo de leer a la intemperie */
+  line-height: 1.1;
+  text-align: center;
   color: var(--text-muted);
   text-decoration: none;
-  white-space: nowrap;
+  /* Si una etiqueta no entra (pantallas de 320 px), baja a otra línea en vez de cortarse. */
+  overflow-wrap: anywhere;
 }
 
 .bottomnav a.active,
@@ -1288,6 +1291,19 @@ a.module-card:hover {
   color: #1b1b1b;
 }
 
+/* Texto con contraste suficiente sobre cada color de pendiente (por tema). */
+.incl-card[data-zone='steep'] .incl-risk {
+  color: var(--on-steep);
+}
+
+.incl-card[data-zone='extreme'] .incl-risk {
+  color: var(--on-extreme);
+}
+
+:root[data-theme='red'] .incl-risk {
+  color: #000;
+}
+
 .incl-risk strong {
   text-transform: uppercase;
 }
@@ -2224,8 +2240,8 @@ a.module-card:hover {
 }
 
 .btn-call {
-  min-height: 40px;
-  padding: 6px 12px;
+  min-height: 48px;
+  padding: 6px 16px;
   white-space: nowrap;
   font-weight: 600;
 }

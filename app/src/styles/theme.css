@@ -14,6 +14,7 @@
   --surface: #1b2633;
   --surface-2: #243243;
   --border: #314257;
+  --control-border: #6b819a; /* bordes de campos y botones: 3:1 sobre la tarjeta */
   --text: #e8e2d6;
   --text-muted: #9aa7b6;
   --accent: #c47d45; /* cobre */
@@ -22,11 +23,13 @@
   --ok: #6f9e4c; /* verde */
   --info: #5f85ad; /* azul acero */
   --warn: #d0a03c;
-  --danger: #b84a30; /* rojo óxido */
+  --danger: #e0664a; /* rojo óxido */
   /* Pendiente (inclinómetro y capa de avalanchas): 30–45° rojo puro, 45–55° naranja, más de 55° gris. */
   --slope-avalanche: #e8231b;
   --slope-steep: #f07c1a;
   --slope-extreme: #8c939b;
+  --on-steep: #1b1b1b; /* texto sobre el color de pendiente */
+  --on-extreme: #1b1b1b;
   /* Límites en los mapas: países de un color y provincias de otro, para distinguirlos. */
   --map-country: #e070d0;
   --map-province: #7d8a99;
@@ -50,8 +53,9 @@
   --surface: #ffffff;
   --surface-2: #ece6da;
   --border: #d5cbb9;
+  --control-border: #857a68;
   --text: #1c2531;
-  --text-muted: #5b6878;
+  --text-muted: #4e5a6a;
   --accent: #9b5629;
   --accent-strong: #84461d;
   --on-accent: #ffffff;
@@ -63,6 +67,8 @@
   --slope-avalanche: #c8100c;
   --slope-steep: #c25f00;
   --slope-extreme: #7b828b;
+  --on-steep: #ffffff;
+  --on-extreme: #1b1b1b;
   /* Límites en los mapas: países de un color y provincias de otro, para distinguirlos. */
   --map-country: #a02890;
   --map-province: #8a929c;
@@ -88,8 +94,9 @@
   color-scheme: dark;
   --bg: #000000;
   --surface: #000000;
-  --surface-2: #0d0d0d;
-  --border: #333333;
+  --surface-2: #1a1a1a;
+  --border: #4a4a4a;
+  --control-border: #6a6a6a;
   --text: #f2f2f2;
   --text-muted: #9e9e9e;
   --accent: #b9773f;
@@ -98,11 +105,13 @@
   --ok: #5f8a40;
   --info: #557aa0;
   --warn: #c0932f;
-  --danger: #b04a32;
+  --danger: #e06a50;
   /* Pendiente (inclinómetro y capa de avalanchas): 30–45° rojo puro, 45–55° naranja, más de 55° gris. */
   --slope-avalanche: #d9261d;
   --slope-steep: #ff8c1a;
   --slope-extreme: #9e9e9e;
+  --on-steep: #1b1b1b;
+  --on-extreme: #1b1b1b;
   /* Límites en los mapas: países de un color y provincias de otro, para distinguirlos. */
   --map-country: #c866c0;
   --map-province: #7a7a7a;
@@ -125,9 +134,10 @@
   --bg: #000000;
   --surface: #120202;
   --surface-2: #1d0404;
-  --border: #3a0a0a;
+  --border: #8a1f16;
+  --control-border: #b8301f;
   --text: #e0382a;
-  --text-muted: #9a2418;
+  --text-muted: #dd4430;
   --accent: #ff3b24;
   --accent-strong: #ff5a45;
   --on-accent: #000000;
@@ -139,6 +149,8 @@
   --slope-avalanche: #ff0000;
   --slope-steep: #ff7a45;
   --slope-extreme: #6b2a22;
+  --on-steep: #1b1b1b;
+  --on-extreme: #ffb4a8;
   /* Límites en los mapas: países de un color y provincias de otro, para distinguirlos. */
   --map-country: #ff5a45;
   --map-province: #6e1a10;
