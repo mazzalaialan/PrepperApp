@@ -1894,6 +1894,7 @@
     "confirmDelete": "¿Eliminar el track \"{{name}}\"? Los puntos que copiaste a tus waypoints quedan.",
     "delete": "Eliminar {{name}}",
     "follow": {
+      "lightShort": "Te queda poca luz para lo que falta: el sol se pone en {{sunset}} y te faltan unos {{walk}} de marcha (más un margen de media hora). Pensá en acortar o en volver, y llevá la linterna a mano.",
       "offVoice": "Te saliste del track",
       "soundOn": "Sonido y voz al salirte: sí",
       "soundOff": "Sonido y voz al salirte: no",

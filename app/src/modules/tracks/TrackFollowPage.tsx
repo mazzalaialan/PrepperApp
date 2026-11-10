@@ -12,6 +12,7 @@ import { angleDiff } from '@/core/sensors/heading';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
+import { startOfLocalDay, sunDay } from '@/modules/astronomy/sky';
 import { beep, say } from '@/modules/training/cues';
 import { LiveSummary } from '@/modules/training/LiveSummary';
 import { GpsStatus, useFormatBearing } from '@/modules/waypoints/components';
@@ -117,6 +118,13 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
   const turn = backBearing !== null && heading?.trueHeading != null ? angleDiff(heading.trueHeading, backBearing) : null;
   const minutes = state ? walkingMinutes(state.remainingM, state.upLeftM, state.downLeftM) : null;
   const timeText = minutes === null ? '' : minutes >= 60 ? t('tracks.follow.hours', { h: Math.floor(minutes / 60), m: minutes % 60 }) : t('tracks.follow.minutes', { m: minutes });
+  // ¿Alcanza la luz? Se compara lo que falta caminar con lo que falta para el atardecer (con un margen de media hora).
+  const sunsetMin = (() => {
+    if (!fix) return null;
+    const sunset = sunDay({ lat: fix.lat, lon: fix.lon }, startOfLocalDay(new Date())).sunset;
+    return sunset ? Math.round((sunset.getTime() - Date.now()) / 60_000) : null;
+  })();
+  const lightShort = minutes !== null && sunsetMin !== null && sunsetMin > 0 && !state?.arrived && minutes + 30 > sunsetMin;
   const statusClass = !state ? '' : state.arrived ? ' follow-arrived' : off ? ' follow-off' : ' follow-on';
   const turnText =
     turn === null ? null : Math.abs(turn) <= 15 ? t('goto.straight') : turn > 0 ? t('goto.turnRight', { degrees: Math.round(turn) }) : t('goto.turnLeft', { degrees: Math.round(-turn) });
@@ -185,6 +193,11 @@ function Follow({ track: current, back }: { track: Track; back: boolean }) {
       <p className={`follow-status${statusClass}`} role="status" data-testid="follow-status">
         {status}
       </p>
+      {lightShort && (
+        <p className="warning-box" role="alert" data-testid="follow-light">
+          {t('tracks.follow.lightShort', { sunset: sunsetMin! >= 60 ? t('tracks.follow.hours', { h: Math.floor(sunsetMin! / 60), m: sunsetMin! % 60 }) : t('tracks.follow.minutes', { m: sunsetMin }), walk: timeText })}
+        </p>
+      )}
 
       {state && (
         <section className="card stack">

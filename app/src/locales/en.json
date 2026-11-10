@@ -1894,6 +1894,7 @@
     "confirmDelete": "Delete track \"{{name}}\"? Points you copied to your waypoints stay.",
     "delete": "Delete {{name}}",
     "follow": {
+      "lightShort": "Daylight is short for what is left: the sun sets in {{sunset}} and you have about {{walk}} of walking left (plus a half-hour margin). Consider shortening the route or turning back, and keep a flashlight handy.",
       "offVoice": "You left the track",
       "soundOn": "Sound and voice when off track: on",
       "soundOff": "Sound and voice when off track: off",
