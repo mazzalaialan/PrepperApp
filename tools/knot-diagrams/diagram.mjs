@@ -13,6 +13,8 @@
 // (variables --kd-*); como imagen suelta quedan los colores claros de respaldo.
 const BG = 'var(--kd-bg, #ffffff)';
 const EDGE = 'var(--kd-edge, #5f5a52)';
+/** Grosor extra del filo claro que separa la cuerda de arriba de la de abajo en un cruce. */
+const HALO = 2;
 const ARROW = 'var(--kd-arrow, #d42a2a)';
 
 function catmull(pts, step = 5) {
@@ -143,7 +145,7 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
   // Fondo y borde con clase (colores del tema); el resto, color fijo.
   const use = (id, stroke, w) =>
     stroke === BG ? `<use href="#${id}" class="kdb" stroke-width="${w}"/>` : stroke === EDGE ? `<use href="#${id}" class="kde" stroke-width="${w}"/>` : `<use href="#${id}" stroke="${stroke}" stroke-width="${w}"/>`;
-  const draw = (r, pts, casing = pts) => {
+  const draw = (r, pts, casing = pts, fillPts = pts) => {
     if (pts.length < 2) return;
     const id = `${P}p${defs.length}`;
     defs.push(`<path id="${id}" d="${pathD(pts)}"/>`);
@@ -152,9 +154,16 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
       cid = `${P}p${defs.length}`;
       defs.push(`<path id="${cid}" d="${pathD(casing)}"/>`);
     }
-    if (casing.length >= 2) body.push(use(cid, BG, W + 7));
+    // La cuerda de arriba se apoya sobre la de abajo: solo un filo claro entre las dos, sin un hueco ancho que haga dudar.
+    if (casing.length >= 2) body.push(use(cid, BG, W + HALO));
     const back = pts[Math.floor(pts.length / 2)].z <= -1;
-    body.push(use(id, EDGE, W), use(id, back ? shade(r.color) : r.color, W - 5), use(id, back ? shade(r.light) : r.light, W * 0.28));
+    let fid = id;
+    if (fillPts !== pts && fillPts.length >= 2) {
+      // El relleno sigue un poco más allá del borde: tapa la costura donde empalma con el resto de la cuerda.
+      fid = `${P}p${defs.length}`;
+      defs.push(`<path id="${fid}" d="${pathD(fillPts)}"/>`);
+    }
+    body.push(use(id, EDGE, W), use(fid, back ? shade(r.color) : r.color, W - 5), use(fid, back ? shade(r.light) : r.light, W * 0.28));
   };
   const endCap = (r) => {
     if (r.end === false) return;
@@ -187,7 +196,7 @@ export function render(spec, { debug = false, id: P = "" } = {}) {
       if (!filter(r, { z: c.over.z })) continue;
       const near = (d) => r.pts.filter((p) => p.s >= c.over.s - d && p.s <= c.over.s + d && filter(r, p));
       const pts = near(W * 1.3);
-      draw(r, pts, near(W * 0.8));
+      draw(r, pts, near(W * 0.8), near(W * 1.3 + 4));
       if (pts.includes(r.pts[r.pts.length - 1])) endCap(r);
     }
   };
