@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGeolocation } from '@/core/geo/useGeolocation';
-import type { GardenBed, Planting } from '@/core/model/types';
+import type { GardenBed, Planting, SoilKind } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { today as todayIso } from '@/modules/inventory/domain/dates';
 import { useWaypoints } from '@/modules/waypoints/store';
@@ -57,7 +57,7 @@ export interface PlaceGroup {
   key: string;
   place: GardenPlace;
   beds: GardenBed[];
-  outdoor: { planting: Planting; crop: Crop; waypointId?: string }[];
+  outdoor: { planting: Planting; crop: Crop; waypointId?: string; soil?: SoilKind }[];
 }
 
 /**

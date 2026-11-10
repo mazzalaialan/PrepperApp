@@ -2308,6 +2308,7 @@
     "offlineReady": "Ready to use offline."
   },
   "garden": {
+    "soil": {"label": "Soil", "sandy": "Sandy", "loam": "Loam", "clay": "Clay", "hint": "Used for the watering alert: sandy soil holds little water and dries sooner (it warns sooner); clay holds more and lasts more days. If unsure, leave «Loam»: squeezed in your hand it neither falls apart nor molds like putty."},
     "nurseryOutside": "The seedbed is outdoors",
     "nurseryPlace": "Where the seedbed is",
     "nurseryPlaceHint": "With a place, the app warns you about frost or when to water it. Indoors, it is not needed.",

@@ -6,7 +6,7 @@ import { useSettings, type Settings } from '@/core/settings/settings';
 import { today as todayIso } from '@/modules/inventory/domain/dates';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { cropName } from './crops';
-import { cropKc, frostThreshold, plantingTasks, READILY_AVAILABLE_MM } from './logic';
+import { cropKc, frostThreshold, plantingTasks, readilyAvailableMm } from './logic';
 import { placeGroups } from './status';
 import { useGarden } from './store';
 
@@ -58,7 +58,7 @@ export function gardenServerBody(
       const water = settings.gardenWaterAlerts
         ? {
             kc: Math.max(...g.outdoor.map((o) => cropKc(o.planting, o.crop, today))),
-            thresholdMm: Math.min(...g.outdoor.map((o) => READILY_AVAILABLE_MM[o.crop.rootDepth])),
+            thresholdMm: Math.min(...g.outdoor.map((o) => readilyAvailableMm(o.crop, o.soil))),
             wateredOn: watered ? todayIso(new Date(watered)) : null,
           }
         : null;

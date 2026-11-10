@@ -1,4 +1,4 @@
-import type { GardenBed, IsoDay, Planting } from '@/core/model/types';
+import type { GardenBed, IsoDay, Planting, SoilKind } from '@/core/model/types';
 import { cropCalendar, type Zone } from './calendar';
 import { CELL_CM, CROP_BY_ID, CROPS, type Crop, type RootDepth } from './crops';
 
@@ -180,8 +180,8 @@ export function recommendForBed(bed: GardenBed, plantings: Planting[], opts: Rec
  * Lo que hay plantado al aire libre (los canteros en invernadero no cuentan para la helada ni para el riego por lluvia).
  * Un almácigo cuenta solo si se marcó que está afuera y en qué lugar (`nurseryWaypointId`): puede estar adentro de casa.
  */
-export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): { planting: Planting; crop: Crop; waypointId?: string }[] {
-  const out: { planting: Planting; crop: Crop; waypointId?: string }[] = [];
+export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): { planting: Planting; crop: Crop; waypointId?: string; soil?: SoilKind }[] {
+  const out: { planting: Planting; crop: Crop; waypointId?: string; soil?: SoilKind }[] = [];
   for (const p of plantings) {
     if (p.deletedAt || p.status === 'done') continue;
     const crop = CROP_BY_ID.get(p.cropId);
@@ -193,7 +193,7 @@ export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterab
     if (!p.bedId) continue;
     const bed = beds.get(p.bedId);
     if (!bed || bed.deletedAt || bed.greenhouse) continue;
-    out.push({ planting: p, crop });
+    out.push({ planting: p, crop, soil: bed.soil });
   }
   return out;
 }
@@ -227,6 +227,17 @@ export function frostRisk(outdoor: { crop: Crop }[], days: { date: IsoDay; min: 
 
 /** Agua que la planta saca sin esfuerzo de la zona de raíces, mm (FAO-56: ~40 % del agua útil de un suelo franco). */
 export const READILY_AVAILABLE_MM: Record<RootDepth, number> = { shallow: 15, medium: 25, deep: 35 };
+
+/**
+ * Cuánta agua guarda cada tierra respecto de una franca (FAO-56, tabla 19: agua útil de ~95 mm por metro en una arena,
+ * ~155 en una franca y ~165 en una franco-arcillosa): en una arenosa la reserva es menor y conviene regar más seguido.
+ */
+export const SOIL_FACTOR: Record<SoilKind, number> = { sandy: 0.6, loam: 1, clay: 1.1 };
+
+/** Reserva fácilmente aprovechable de un cultivo (mm) en esa tierra. */
+export function readilyAvailableMm(crop: Crop, soil?: SoilKind): number {
+  return Math.round(READILY_AVAILABLE_MM[crop.rootDepth] * SOIL_FACTOR[soil ?? 'loam'] * 10) / 10;
+}
 
 /** Coeficiente de cultivo según la etapa: inicio, desarrollo pleno o final. */
 export function cropKc(p: Planting, crop: Crop, today: IsoDay): number {
@@ -267,10 +278,10 @@ const RAIN_LOSS_MM = 2;
  * escurre). Avisa cuando falta más que lo fácilmente aprovechable de las
  * raíces más cortas que haya.
  */
-export function waterBalance(outdoor: { planting: Planting; crop: Crop }[], days: WaterDay[], today: IsoDay, wateredOn: IsoDay | null): WaterBalance | null {
+export function waterBalance(outdoor: { planting: Planting; crop: Crop; soil?: SoilKind }[], days: WaterDay[], today: IsoDay, wateredOn: IsoDay | null): WaterBalance | null {
   if (!outdoor.length) return null;
   const kc = Math.max(...outdoor.map((o) => cropKc(o.planting, o.crop, today)));
-  const thresholdMm = Math.min(...outdoor.map((o) => READILY_AVAILABLE_MM[o.crop.rootDepth]));
+  const thresholdMm = Math.min(...outdoor.map((o) => readilyAvailableMm(o.crop, o.soil)));
   const tenDaysAgo = addDays(today, -10);
   const since = wateredOn && wateredOn > tenDaysAgo ? wateredOn : tenDaysAgo;
   let deficit = 0;

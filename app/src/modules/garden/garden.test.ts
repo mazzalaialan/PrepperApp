@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { GardenBed, Planting } from '@/core/model/types';
 import { cropCalendar, harvestMonths, missingInZone, monthPlan, parseMonths, ZONE_TABLES, ZONES, zoneFor } from './calendar';
 import { CROP_BY_ID, CROPS, gridFootprint } from './crops';
-import { beforeLastFrost, dueTasks, frostRisk, gridSize, outdoorPlantings, plantsFor, recommendForBed, waterBalance, type WaterDay } from './logic';
+import { readilyAvailableMm, beforeLastFrost, dueTasks, frostRisk, gridSize, outdoorPlantings, plantsFor, recommendForBed, waterBalance, type WaterDay } from './logic';
 
 const base = { createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null };
 
@@ -66,6 +66,24 @@ describe('almácigos al aire libre', () => {
   it('un almácigo de afuera sin su lugar no cuenta, y uno terminado tampoco', () => {
     expect(outdoorPlantings(beds, [nursery({ nurseryWaypointId: null })])).toHaveLength(0);
     expect(outdoorPlantings(beds, [nursery({ nurseryWaypointId: 'wp1', status: 'done' })])).toHaveLength(0);
+  });
+});
+
+describe('reserva de agua según la tierra', () => {
+  const tomate = CROP_BY_ID.get('tomate')!;
+  it('una tierra arenosa guarda menos que una franca y una arcillosa algo más', () => {
+    const franca = readilyAvailableMm(tomate);
+    expect(readilyAvailableMm(tomate, 'loam')).toBe(franca);
+    expect(readilyAvailableMm(tomate, 'sandy')).toBeLessThan(franca);
+    expect(readilyAvailableMm(tomate, 'clay')).toBeGreaterThan(franca);
+  });
+  it('en arena el aviso de riego salta antes con la misma sequía', () => {
+    const days = Array.from({ length: 8 }, (_, i) => ({ date: `2026-11-0${i + 1}`, et0: 5, rain: 0 }));
+    const p = planting({ cropId: 'tomate', status: 'growing', bedId: 'b1', sownOn: '2026-10-01', transplantedOn: '2026-10-01' });
+    const sandy = waterBalance([{ planting: p, crop: tomate, soil: 'sandy' }], days, '2026-11-08', null)!;
+    const clay = waterBalance([{ planting: p, crop: tomate, soil: 'clay' }], days, '2026-11-08', null)!;
+    expect(sandy.thresholdMm).toBeLessThan(clay.thresholdMm);
+    expect(sandy.deficitMm).toBe(clay.deficitMm);
   });
 });
 

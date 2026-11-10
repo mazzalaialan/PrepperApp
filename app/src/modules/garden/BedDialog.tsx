@@ -111,6 +111,13 @@ export function BedDialog({ bed, onClose, onSave, onDelete }: { bed: GardenBed; 
             <p className="hint">{t('garden.sunHint')}</p>
           </div>
         )}
+        <Segmented
+          label={t('garden.soil.label')}
+          value={draft.soil ?? 'loam'}
+          options={(['sandy', 'loam', 'clay'] as const).map((k) => ({ value: k, label: t(`garden.soil.${k}`) }))}
+          onChange={(soil) => setDraft({ ...draft, soil })}
+        />
+        <p className="hint" style={{ margin: 0 }}>{t('garden.soil.hint')}</p>
         <label className="check">
           <input type="checkbox" checked={draft.greenhouse} onChange={(e) => setDraft({ ...draft, greenhouse: e.target.checked })} data-testid="bed-greenhouse" />
           {t('garden.inGreenhouse')}

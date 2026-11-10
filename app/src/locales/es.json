@@ -2308,6 +2308,7 @@
     "offlineReady": "Lista para usar sin conexión."
   },
   "garden": {
+    "soil": {"label": "Tierra", "sandy": "Arenosa", "loam": "Franca", "clay": "Arcillosa", "hint": "Sirve para el aviso de riego: una tierra arenosa guarda poca agua y se seca antes (avisa antes); una arcillosa guarda más y aguanta más días. Si no sabés, dejá «Franca»: apretada en la mano no se desarma ni queda como plastilina."},
     "nurseryOutside": "El almácigo está afuera",
     "nurseryPlace": "Dónde está el almácigo",
     "nurseryPlaceHint": "Con un lugar, la app te avisa si hay helada o si hay que regarlo. Si está adentro de casa, no hace falta.",

@@ -460,6 +460,9 @@ export interface OutingPlan {
   closedAt: string | null;
 }
 
+/** Tierra del cantero: cuánta agua guarda (arenosa poca, franca la media, arcillosa algo más). */
+export type SoilKind = 'sandy' | 'loam' | 'clay';
+
 export type BedSide = 'front' | 'back' | 'left' | 'right';
 
 /** Algo que tapa el sol entre dos rumbos, hasta cierta altura sobre el horizonte. */
@@ -490,6 +493,8 @@ export interface GardenBed extends BaseEntity {
   walls?: Partial<Record<BedSide, number>>;
   /** Obstáculos a distancia (árbol, edificio, cerro): un sector del horizonte con su altura aparente. */
   obstacles?: SunObstacle[];
+  /** Tierra del cantero (para el aviso de riego); sin valor = franca. */
+  soil?: SoilKind;
   /** Media sombra (malla) encima: porcentaje de sol que frena (0 = sin malla). */
   shadePct?: number;
   /** Dónde está (uno de "Mis waypoints"); `null` = el lugar general de la huerta. */
