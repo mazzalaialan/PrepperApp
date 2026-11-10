@@ -209,10 +209,17 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
   await expect(bar).toContainText('Grabando');
   await bar.getByRole('button', { name: 'Terminar y guardar la grabación' }).click();
   await dialog.getByLabel('Nombre').fill('Ida y vuelta');
+  // El cuadro también pide la actividad: lo grabado es a la vez un recorrido y una sesión de Entrenamiento.
+  await expect(dialog.getByLabel('Actividad')).toHaveValue('walk');
   await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/#\/training\/workouts\/[0-9a-f-]{36}$/);
+  await expect(bar).toHaveCount(0);
+  // El recorrido está en Tracks, con un enlace a su sesión.
+  await page.goto('/#/orientation/tracks');
+  await page.getByRole('link', { name: /Ida y vuelta/ }).click();
   await expect(page.getByRole('heading', { name: 'Ida y vuelta' })).toBeVisible();
   await expect(page.getByText(/^Grabado el/)).toBeVisible();
-  await expect(bar).toHaveCount(0);
+  await expect(page.getByTestId('track-workout')).toBeVisible();
   // Y el nombre y las notas se cambian después, en el track, con el lápiz.
   await page.getByRole('button', { name: 'Editar el nombre' }).click();
   await page.getByLabel('Nombre').fill('Nombre descartado');
