@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Printer } from 'lucide-react';
+import { Download, ExternalLink, Printer, Share2 } from 'lucide-react';
 import { Dialog } from '@/ui/Dialog';
 import { deliverFile } from '@/ui/files';
 import { gridLabel, gridStepM, PAPERS, paperMm, scaleEquivalence, zoomForScale, type Orientation, type PaperId } from './geometry';
@@ -8,6 +8,12 @@ import { mapCoverage, sheetBounds, type Coverage } from './coverage';
 import { DEFAULT_SCALE, planSheet, scaleChoices, type TopoSheetInput } from './plan';
 
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'mapa';
+function saveAs(url: string, name: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+}
 const fmtScale = (n: number) => n.toLocaleString('es-AR');
 
 /**
@@ -22,7 +28,8 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
   const [scale, setScale] = useState<number | null>(null);
   const [latLon, setLatLon] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
+  const [result, setResult] = useState<{ pdf: Uint8Array<ArrayBuffer>; name: string; pages: number } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const base = useMemo<TopoSheetInput>(() => ({ ...input, title: title.trim() || input.title, orientation, paper, latLonTicks: latLon }), [input, title, orientation, paper, latLon]);
@@ -69,18 +76,44 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
     if (chosen === null) return;
     setBusy(true);
     setError(null);
-    setDone(false);
+    setResult(null);
+    setNotice(null);
     try {
       const { makeTopoPdf } = await import('./compose');
-      const { pdf, scale: used } = await makeTopoPdf({ ...base, scale: chosen });
-      await deliverFile(pdf as Uint8Array<ArrayBuffer>, `${slug(base.title)}-${PAPERS[paper].label}-1-${used}.pdf`, 'application/pdf');
-      setDone(true);
+      const { pdf, scale: used, pages } = await makeTopoPdf({ ...base, scale: chosen });
+      setResult({ pdf: pdf as Uint8Array<ArrayBuffer>, name: `${slug(base.title)}-${PAPERS[paper].label}-1-${used}.pdf`, pages });
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
       const code = err instanceof Error ? err.message : '';
       setError(t(code === 'NO_FIT' ? 'topoPrint.fitError' : code === 'MAP_TIMEOUT' ? 'topoPrint.mapTimeout' : 'topoPrint.failed'));
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** Abre el PDF en el visor del mismo celular (sin pasar por el menú de compartir). */
+  function openPdf() {
+    if (!result) return;
+    const url = URL.createObjectURL(new Blob([result.pdf], { type: 'application/pdf' }));
+    const win = window.open(url, '_blank');
+    // Si el navegador bloquea la pestaña, se baja el archivo.
+    if (!win) {
+      saveAs(url, result.name);
+      setNotice(t('topoPrint.openBlocked'));
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
+  }
+  function download() {
+    if (!result) return;
+    const url = URL.createObjectURL(new Blob([result.pdf], { type: 'application/pdf' }));
+    saveAs(url, result.name);
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+  async function share() {
+    if (!result) return;
+    try {
+      await deliverFile(result.pdf, result.name, 'application/pdf');
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) setError(t('topoPrint.failed'));
     }
   }
 
@@ -169,7 +202,17 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
         )}
         <p className="hint" style={{ margin: 0 }}>{t('topoPrint.notOfficial')}</p>
         {error && <p className="error" role="alert" data-testid="topo-error">{error}</p>}
-        {done && <p className="ok" role="status" data-testid="topo-done">{t('topoPrint.done')}</p>}
+        {result && (
+          <div className="stack" data-testid="topo-result">
+            <p className="ok" role="status" data-testid="topo-done">{t('topoPrint.ready', { count: result.pages })}</p>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <button className="btn btn-primary" type="button" onClick={openPdf} data-testid="topo-open"><ExternalLink size={18} aria-hidden /> {t('topoPrint.open')}</button>
+              <button className="btn" type="button" onClick={() => void share()} data-testid="topo-share"><Share2 size={18} aria-hidden /> {t('topoPrint.share')}</button>
+              <button className="btn" type="button" onClick={download} data-testid="topo-download"><Download size={18} aria-hidden /> {t('topoPrint.download')}</button>
+            </div>
+            {notice && <p className="hint" style={{ margin: 0 }}>{notice}</p>}
+          </div>
+        )}
         {busy && <p className="hint" role="status" data-testid="topo-busy">{t('topoPrint.generating')}</p>}
         <div className="row-end">
           <button className="btn" type="button" onClick={onClose}>{t('common.close')}</button>

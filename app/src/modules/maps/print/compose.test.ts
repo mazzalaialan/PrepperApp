@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convergenceDeg } from './compose';
+import { convergenceDeg, detailPages } from './compose';
 import { legsBetween, planSheet, scaleChoices, type TopoSheetInput } from './plan';
 
 const base = (over: Partial<TopoSheetInput> = {}): TopoSheetInput => ({
@@ -128,5 +128,30 @@ describe('escalas disponibles', () => {
     expect(scaleChoices({ ...r, orientation: 'portrait', paper: 'a4' }).find((x) => x.scale === 50_000)!.fits).toBe(false);
     expect(scaleChoices({ ...r, orientation: 'portrait', paper: 'oficio' }).find((x) => x.scale === 50_000)!.fits).toBe(true);
     expect(planSheet({ ...r, paper: 'oficio', scale: 50_000 }).layout.paper).toEqual({ w: 216, h: 330 });
+  });
+});
+
+describe('hojas de detalle', () => {
+  const many = (n: number, over: Partial<TopoSheetInput> = {}) => {
+    const points = Array.from({ length: n }, (_, i) => ({ n: i + 1, name: `P${i + 1}`, lat: -41.17 - 0.0035 * i, lon: -71.44 - 0.004 * i }));
+    return base({ points, legs: legsBetween(points, 5), ...over });
+  };
+  it('una ruta corta entra entera en la hoja del mapa: sin hojas extra', () => {
+    const i = many(3, { scale: 50_000 });
+    expect(detailPages(planSheet(i), i)).toEqual([]);
+  });
+  it('con 12 puntos en horizontal se agrega una hoja con los 11 tramos y las 12 coordenadas', () => {
+    const i = many(12, { scale: 50_000, orientation: 'landscape' });
+    const pages = detailPages(planSheet(i), i);
+    expect(pages.length).toBeGreaterThanOrEqual(1);
+    expect(pages.reduce((s, p) => s + (p.legs?.count ?? 0), 0)).toBe(11);
+    expect(pages.reduce((s, p) => s + (p.coords?.count ?? 0), 0)).toBe(12);
+  });
+  it('con muchísimos puntos reparte todo en varias hojas sin perder ninguno', () => {
+    const i = many(60, { scale: 250_000, orientation: 'portrait' });
+    const pages = detailPages(planSheet(i), i);
+    expect(pages.length).toBeGreaterThan(1);
+    expect(pages.reduce((s, p) => s + (p.legs?.count ?? 0), 0)).toBe(59);
+    expect(pages.reduce((s, p) => s + (p.coords?.count ?? 0), 0)).toBe(60);
   });
 });

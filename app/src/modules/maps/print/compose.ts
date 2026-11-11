@@ -260,8 +260,9 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
   text(ctx, `${input.subtitle ? input.subtitle + ' · ' : ''}${input.date}`, h.x, h.y + mm(12.2), { size: 3.4, color: '#444' });
   text(ctx, `1:${scale.toLocaleString('es-AR')}`, h.x + h.w, h.y + mm(7), { size: 6.5, bold: true, align: 'right' });
 
-  drawTable(ctx, rectPx(layout.table), input);
-  if (layout.coords) drawCoords(ctx, rectPx(layout.coords), input, plan.zone, layout.orientation);
+  const more = detailPages(plan, input).length > 0 ? 'siguen en la hoja 2' : undefined;
+  drawTable(ctx, rectPx(layout.table), input, { moreOn: more ? 'todos, en la hoja 2' : undefined });
+  if (layout.coords) drawCoords(ctx, rectPx(layout.coords), input, plan.zone, layout.orientation, { moreOn: more ? 'todos, en la hoja 2' : undefined });
   drawFooter(ctx, rectPx(layout.footer), plan, input, scale);
   return canvas;
 }
@@ -274,9 +275,23 @@ function fit(ctx: Ctx, s: string, maxW: number): string {
   return `${t}…`;
 }
 
-function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
+interface TableOpts {
+  /** Índice del primer tramo a dibujar (hojas de detalle). */
+  from?: number;
+  /** Cuántos tramos como máximo (por defecto, los que entran). */
+  count?: number;
+  /** Siempre la tabla ancha (una línea por tramo). */
+  wide?: boolean;
+  /** Aviso de que el resto sigue en otra hoja. */
+  moreOn?: string;
+}
+
+/** Tramos que entran en un rectángulo de tabla. */
+const tableCapacity = (r: Rect, narrow: boolean) => Math.max(1, Math.floor((r.h - mm(6.2) - mm(7)) / (narrow ? mm(9.6) : mm(5.2))));
+
+function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput, opts: TableOpts = {}) {
   const name = (n: number) => input.points.find((p) => p.n === n)?.name || `Punto ${n}`;
-  const narrow = r.w < mm(120);
+  const narrow = !opts.wide && r.w < mm(120);
   const headH = mm(6.2);
   ctx.fillStyle = '#e9e5da';
   ctx.fillRect(r.x, r.y, r.w, headH);
@@ -289,8 +304,9 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
   const deg3 = (v: number | null) => (v === null ? '—' : `${String(Math.round(v) % 360).padStart(3, '0')}°`);
   const gain = (l: TopoLeg) => (l.ascentM === undefined && l.descentM === undefined ? '—' : `+${Math.round(l.ascentM ?? 0)} / −${Math.round(l.descentM ?? 0)} m`);
   const rowH = narrow ? mm(9.6) : mm(5.2);
-  const maxRows = Math.max(1, Math.floor((r.h - headH - mm(7)) / rowH));
-  const legs = input.legs.slice(0, maxRows);
+  const maxRows = tableCapacity(r, narrow);
+  const from = opts.from ?? 0;
+  const legs = input.legs.slice(from, from + Math.min(maxRows, opts.count ?? maxRows));
 
   if (narrow) {
     // Tabla angosta (hoja horizontal): dos líneas por tramo, el nombre arriba y los datos abajo.
@@ -298,7 +314,7 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
     legs.forEach((leg, i) => {
       const y = r.y + headH + rowH * i;
       ctx.font = `700 ${mm(3.1)}px ${FONT}`;
-      const title = fit(ctx, `${i + 1}.  ${name(leg.from)} → ${name(leg.to)}`, r.w - mm(3));
+      const title = fit(ctx, `${from + i + 1}.  ${name(leg.from)} → ${name(leg.to)}`, r.w - mm(3));
       text(ctx, title, r.x + mm(1.5), y + mm(4.2), { size: 3.1, bold: true });
       text(ctx, `${fmtDist(leg.distanceM)} · geog. ${deg3(leg.bearingTrueDeg)} · mag. ${deg3(leg.bearingMagDeg)} · ${gain(leg)}`, r.x + mm(1.5), y + mm(8), { size: 2.7, color: '#333' });
       ctx.strokeStyle = '#c9c4b6';
@@ -318,7 +334,7 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
     legs.forEach((leg, i) => {
       const y = r.y + headH + rowH * i + mm(3.8);
       ctx.font = `${mm(3)}px ${FONT}`;
-      const cells = [String(i + 1), fit(ctx, `${name(leg.from)} → ${name(leg.to)}`, cols[1]! * r.w - mm(2.4)), fmtDist(leg.distanceM), deg3(leg.bearingTrueDeg), deg3(leg.bearingMagDeg), gain(leg)];
+      const cells = [String(from + i + 1), fit(ctx, `${name(leg.from)} → ${name(leg.to)}`, cols[1]! * r.w - mm(2.4)), fmtDist(leg.distanceM), deg3(leg.bearingTrueDeg), deg3(leg.bearingMagDeg), gain(leg)];
       let cx = r.x;
       cells.forEach((c, k) => {
         text(ctx, c, cx + mm(1.2), y, { size: 3 });
@@ -331,12 +347,15 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
       ctx.stroke();
     });
   }
-  const more = input.legs.length > legs.length ? ` (se muestran ${legs.length} de ${input.legs.length} tramos)` : '';
+  const more = legs.length < input.legs.length ? (from === 0 && opts.moreOn ? ` · ${opts.moreOn}` : ` (tramos ${from + 1} a ${from + legs.length} de ${input.legs.length})`) : '';
   text(ctx, `Total: ${fmtDist(total)}${up || down ? ` · +${Math.round(up)} / −${Math.round(down)} m` : ''}${more}`, r.x + mm(1.5), r.y + r.h - mm(1.8), { size: 3, bold: true });
 }
 
 /** Lista de los puntos con sus coordenadas UTM (para cargarlas en un GPS o dictarlas por radio). */
-function drawCoords(ctx: Ctx, r: Rect, input: TopoSheetInput, zone: number, orientation: 'portrait' | 'landscape') {
+/** Puntos que entran en el rectángulo de la lista de coordenadas. */
+const coordsCapacity = (r: Rect, cols: number) => Math.max(1, Math.floor((r.h - mm(5.4)) / mm(4.4))) * cols;
+
+function drawCoords(ctx: Ctx, r: Rect, input: TopoSheetInput, zone: number, orientation: 'portrait' | 'landscape', opts: { from?: number; count?: number; moreOn?: string; cols?: number } = {}) {
   const grp = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
   ctx.strokeStyle = '#111';
   ctx.lineWidth = mm(0.3);
@@ -347,8 +366,9 @@ function drawCoords(ctx: Ctx, r: Rect, input: TopoSheetInput, zone: number, orie
   const head = r.w < mm(120) ? `Coordenadas UTM · zona ${zone} ${hemi} · m` : `Coordenadas UTM de los puntos · zona ${zone} ${hemi} · WGS84 · metros`;
   ctx.font = `700 ${mm(2.8)}px ${FONT}`;
   text(ctx, fit(ctx, head, r.w - mm(3)), r.x + mm(1.5), r.y + mm(3.9), { size: 2.8, bold: true });
-  const list = input.points.slice(0, MAX_COORD_POINTS);
-  const cols = orientation === 'portrait' ? 2 : 1;
+  const cols = opts.cols ?? (orientation === 'portrait' ? 2 : 1);
+  const from = opts.from ?? 0;
+  const list = input.points.slice(from, from + (opts.count ?? Math.min(MAX_COORD_POINTS, coordsCapacity(r, cols))));
   const perCol = Math.ceil(list.length / cols);
   const colW = r.w / cols;
   list.forEach((p, i) => {
@@ -365,7 +385,7 @@ function drawCoords(ctx: Ctx, r: Rect, input: TopoSheetInput, zone: number, orie
     text(ctx, label, x, y, { size: 2.6, bold: true });
     text(ctx, coords, x + colW - mm(3), y, { size: 2.6, align: 'right' });
   });
-  if (input.points.length > list.length) text(ctx, `(se muestran ${list.length} de ${input.points.length} puntos)`, r.x + r.w - mm(1.5), r.y + r.h - mm(0.8), { size: 2.2, color: '#444', align: 'right' });
+  if (list.length < input.points.length) text(ctx, from === 0 && opts.moreOn ? `(${opts.moreOn})` : `(puntos ${from + 1} a ${from + list.length} de ${input.points.length})`, r.x + r.w - mm(1.5), r.y + r.h - mm(0.8), { size: 2.2, color: '#444', align: 'right' });
 }
 
 function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, scale: number) {
@@ -468,8 +488,86 @@ export function convergenceDeg(p: LatLon, zone: number): number {
   return (Math.atan(Math.tan(dl) * Math.sin((p.lat * Math.PI) / 180)) * 180) / Math.PI;
 }
 
+interface DetailPage {
+  legs: { from: number; count: number } | null;
+  coords: { from: number; count: number } | null;
+}
+
+/**
+ * Hojas de detalle (2, 3…) con TODOS los tramos y TODAS las coordenadas, cuando no entran enteros en la hoja del mapa.
+ * Vacío si en la hoja 1 entra todo.
+ */
+export function detailPages(plan: SheetPlan, input: TopoSheetInput): DetailPage[] {
+  const { layout } = plan;
+  const narrow = layout.table.w < 120;
+  const shownLegs = Math.min(tableCapacity(rectPx(layout.table), narrow), input.legs.length);
+  const cols = layout.orientation === 'portrait' ? 2 : 1;
+  const shownPoints = layout.coords ? Math.min(MAX_COORD_POINTS, coordsCapacity(rectPx(layout.coords), cols), input.points.length) : 0;
+  if (shownLegs >= input.legs.length && shownPoints >= input.points.length) return [];
+  const pages: DetailPage[] = [];
+  const area = layout.paper.h - 2 * layout.margin - layout.header.h - 4;
+  const dcols = layout.orientation === 'portrait' ? 2 : 3;
+  let legFrom = 0;
+  let ptFrom = 0;
+  while (legFrom < input.legs.length || ptFrom < input.points.length) {
+    let left = area;
+    let legs: DetailPage['legs'] = null;
+    let coords: DetailPage['coords'] = null;
+    if (legFrom < input.legs.length) {
+      const rows = Math.max(1, Math.min(input.legs.length - legFrom, Math.floor((left - 6.2 - 7) / 5.2)));
+      legs = { from: legFrom, count: rows };
+      legFrom += rows;
+      left -= 6.2 + rows * 5.2 + 7 + 4;
+    }
+    if (legFrom >= input.legs.length && ptFrom < input.points.length) {
+      const perCol = Math.max(1, Math.floor((left - 5.4 - 2) / 4.4));
+      if (!legs || perCol >= 3) {
+        const count = Math.min(input.points.length - ptFrom, perCol * dcols);
+        coords = { from: ptFrom, count };
+        ptFrom += count;
+      }
+    }
+    pages.push({ legs, coords });
+  }
+  return pages;
+}
+
+/** Dibuja una hoja de detalle: cabecera, tabla de tramos (ancha) y lista de coordenadas. */
+export function drawDetailPage(plan: SheetPlan, input: TopoSheetInput, page: DetailPage, pageNo: number, pageTotal: number): HTMLCanvasElement {
+  const { layout } = plan;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(mm(layout.paper.w));
+  canvas.height = Math.round(mm(layout.paper.h));
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const x = layout.margin;
+  const w = layout.paper.w - 2 * layout.margin;
+  text(ctx, input.title, mm(x), mm(layout.margin + 6), { size: 6.5, bold: true });
+  text(ctx, `Hoja ${pageNo} de ${pageTotal} · tramos y coordenadas de la ruta · escala del mapa 1:${(plan.scale ?? 0).toLocaleString('es-AR')}`, mm(x), mm(layout.margin + 11.5), { size: 3.2, color: '#333' });
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = mm(0.4);
+  ctx.beginPath();
+  ctx.moveTo(mm(x), mm(layout.margin + layout.header.h));
+  ctx.lineTo(mm(x + w), mm(layout.margin + layout.header.h));
+  ctx.stroke();
+  let y = layout.margin + layout.header.h + 4;
+  if (page.legs) {
+    const h = 6.2 + page.legs.count * 5.2 + 7;
+    drawTable(ctx, rectPx({ x, y, w, h }), input, { wide: true, from: page.legs.from, count: page.legs.count });
+    y += h + 4;
+  }
+  if (page.coords) {
+    const dcols = layout.orientation === 'portrait' ? 2 : 3;
+    const h = 5.4 + Math.ceil(page.coords.count / dcols) * 4.4 + 2;
+    drawCoords(ctx, rectPx({ x, y, w, h }), input, plan.zone, layout.orientation, { from: page.coords.from, count: page.coords.count, cols: dcols });
+  }
+  text(ctx, 'Mapa de ruta de VikArg: no es una carta oficial. Verificá con las cartas oficiales.', mm(x), mm(layout.paper.h - layout.margin + 3), { size: 2.5, color: '#444' });
+  return canvas;
+}
+
 /** Arma el PDF del mapa topográfico (una hoja A4). Lanza `NO_FIT` si la ruta no entra, `NO_ROUTE` si no hay puntos. */
-export async function makeTopoPdf(input: TopoSheetInput): Promise<{ pdf: Uint8Array; scale: number }> {
+export async function makeTopoPdf(input: TopoSheetInput): Promise<{ pdf: Uint8Array; scale: number; pages: number }> {
   const plan = planSheet(input);
   if (!plan.scale) throw new Error('NO_FIT');
   const r = DEFAULT_DPI / 96;
@@ -484,10 +582,14 @@ export async function makeTopoPdf(input: TopoSheetInput): Promise<{ pdf: Uint8Ar
     pixelRatio: r,
   });
   try {
-    const sheet = drawSheet(base, plan, input);
-    const blob = await new Promise<Blob>((resolve, reject) => sheet.toBlob((b) => (b ? resolve(b) : reject(new Error('JPEG'))), 'image/jpeg', 0.92));
-    const jpeg = new Uint8Array(await blob.arrayBuffer());
-    return { pdf: jpegPagePdf({ jpeg, widthPx: sheet.width, heightPx: sheet.height, pageWmm: plan.layout.paper.w, pageHmm: plan.layout.paper.h, title: input.title }), scale: plan.scale };
+    const toJpeg = async (c: HTMLCanvasElement) => {
+      const blob = await new Promise<Blob>((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('JPEG'))), 'image/jpeg', 0.92));
+      return { jpeg: new Uint8Array(await blob.arrayBuffer()), widthPx: c.width, heightPx: c.height };
+    };
+    const pages = [await toJpeg(drawSheet(base, plan, input))];
+    const details = detailPages(plan, input);
+    for (let i = 0; i < details.length; i++) pages.push(await toJpeg(drawDetailPage(plan, input, details[i]!, i + 2, details.length + 1)));
+    return { pdf: jpegPagePdf({ pages, pageWmm: plan.layout.paper.w, pageHmm: plan.layout.paper.h, title: input.title }), scale: plan.scale, pages: pages.length };
   } finally {
     base.dispose();
   }

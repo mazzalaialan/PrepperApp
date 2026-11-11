@@ -6,7 +6,7 @@ const latin1 = (b: Uint8Array) => Array.from(b, (c) => String.fromCharCode(c)).j
 const FAKE_JPEG = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5, 0xff, 0xd9]);
 
 describe('PDF de una página con un JPEG', () => {
-  const pdf = jpegPagePdf({ jpeg: FAKE_JPEG, widthPx: 2480, heightPx: 3508, title: 'Refugio López · Bariloche' });
+  const pdf = jpegPagePdf({ pages: [{ jpeg: FAKE_JPEG, widthPx: 2480, heightPx: 3508 }], title: 'Refugio López · Bariloche' });
   const text = latin1(pdf);
 
   it('empieza y termina como un PDF', () => {
@@ -37,5 +37,16 @@ describe('PDF de una página con un JPEG', () => {
   it('el título con acentos va en UTF-16 hexadecimal', () => {
     expect(text).toMatch(/\/Title <FEFF[0-9a-f]+>/);
     expect(text).toContain('00f3'); // la «ó»
+  });
+
+  it('con varias páginas, cada una tiene su imagen y el índice de objetos es válido', () => {
+    const two = latin1(jpegPagePdf({ pages: [{ jpeg: FAKE_JPEG, widthPx: 10, heightPx: 20 }, { jpeg: FAKE_JPEG, widthPx: 30, heightPx: 40 }] }));
+    expect(two).toContain('/Count 2');
+    expect(two).toContain('/Width 10 /Height 20');
+    expect(two).toContain('/Width 30 /Height 40');
+    const start = Number(/startxref\n(\d+)\n/.exec(two)![1]);
+    const entries = [...two.slice(start).matchAll(/(\d{10}) 00000 n /g)].map((m) => Number(m[1]));
+    expect(entries).toHaveLength(9);
+    entries.forEach((off, i) => expect(two.slice(off, off + `${i + 1} 0 obj`.length)).toBe(`${i + 1} 0 obj`));
   });
 });
