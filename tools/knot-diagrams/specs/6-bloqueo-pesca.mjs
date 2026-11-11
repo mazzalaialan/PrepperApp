@@ -17,19 +17,23 @@ const LP = { rope: 8 };
 
 export default {
   prusik: (() => {
-    // El anillo va DOBLE alrededor de la cuerda (referencia: Ankerstich/Prusik A–D, StromBer, CC BY-SA 2.0 de, Commons):
-    // una hebra sube en espiral, da la vuelta arriba (el seno del anillo) y la otra baja pegada a ella; las dos patas
-    // salen juntas por abajo y se cruzan una vez antes de bajar.
-    const cord = (n, y = 262, pitch = 30, r = 26, gap = 9) => {
-      const up = coilV({ x: X, y, n, pitch, r, up: true });
-      const down = rev(coilV({ x: X, y: y + gap, n, pitch, r, up: true }));
-      const top = up[up.length - 1], back = down[0];
-      return [[X - 40, 350], [X - 34, 310], ...up, [(top[0] + back[0]) / 2 - 14, (top[1] + back[1]) / 2 - 4], ...down, [X - 30, y + gap + 32], [X + 36, 350]];
+    // Estructura leída de la foto del manual («Prusik knot.jpg», Commons; también «Three turn Prusik knot.jpg»):
+    // UN solo cordino. Una pata sale por el costado, da vueltas a la cuerda hacia arriba, hace una D por la izquierda
+    // (afuera de la cuerda), baja y vuelve con vueltas hacia el medio, donde sale la otra pata. Las dos patas
+    // quedan juntas, entre los dos grupos de vueltas, y las vueltas no se cruzan entre sí.
+    const cord = ({ n = 1.5, r = 26, pitch = 26, legA = 178, legB = 204 } = {}) => {
+      const upA = coilV({ x: X, y: legA, n, pitch, r, from: 'right', up: true });
+      const topY = upA[upA.length - 1][1];
+      const lowY = legB + n * pitch;
+      const upB = coilV({ x: X, y: lowY, n, pitch, r, from: 'left', up: true });
+      const dx = X - r - 52;
+      return [[X + 120, legA], ...upA, [X - r - 14, topY - 12], [dx, topY + 2], [dx - 6, (topY + lowY) / 2], [dx, lowY - 2], [X - r - 14, lowY + 12], ...upB, [X + 120, legB]];
     };
-    const tight = { ...G, path: cord(3, 262, 22, 20, 7), end: false };
+    const loose = { ...G, path: cord({ n: 1.5, r: 30, pitch: 32 }), end: false };
+    const tight = { ...G, path: cord({ n: 1.5, r: 22, pitch: 22, legA: 188, legB: 208 }), end: false };
     return [
       { ...H, ropes: [main, { ...G, path: [[150, 330], [160, 260], [175, 215], [200, 200, -1], [225, 215], [240, 260], [250, 330]], end: false }] },
-      { ...H, ropes: [main, { ...G, path: cord(3), end: false }] },
+      { ...H, ropes: [main, loose] },
       { ...H, ropes: [main, tight] },
       { ...H, ropes: [main, tight], arrows: [[[250, 270], [250, 330]]] },
     ];
