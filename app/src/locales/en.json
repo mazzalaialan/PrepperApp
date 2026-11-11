@@ -1917,7 +1917,6 @@
     "gapItemJoined": "{{from}} to {{to}}: screen off, joined with a straight line.",
     "gapItemKept": "{{from}} to {{to}}: screen off, left as a gap.",
     "seeWorkout": "See the training session",
-    "exportGpx": "Export GPX",
     "importFormats": "You can import GPX, KML, KMZ and TCX files, also compressed (.gz).",
     "toRoute": "Create planned route",
     "import": "Import a route",
