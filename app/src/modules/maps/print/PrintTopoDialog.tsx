@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Printer } from 'lucide-react';
 import { Dialog } from '@/ui/Dialog';
 import { deliverFile } from '@/ui/files';
-import { gridLabel, gridStepM, paperMm, scaleEquivalence, type Orientation } from './geometry';
+import { gridLabel, gridStepM, PAPERS, paperMm, scaleEquivalence, type Orientation, type PaperId } from './geometry';
 import { DEFAULT_SCALE, planSheet, scaleChoices, type TopoSheetInput } from './plan';
 
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'mapa';
@@ -16,6 +16,7 @@ const fmtScale = (n: number) => n.toLocaleString('es-AR');
 export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onClose: () => void }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState(input.title);
+  const [paper, setPaper] = useState<PaperId>('a4');
   const [orientation, setOrientation] = useState<'auto' | Orientation>('auto');
   const [scale, setScale] = useState<number | null>(null);
   const [latLon, setLatLon] = useState(false);
@@ -23,7 +24,7 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const base = useMemo<TopoSheetInput>(() => ({ ...input, title: title.trim() || input.title, orientation, latLonTicks: latLon }), [input, title, orientation, latLon]);
+  const base = useMemo<TopoSheetInput>(() => ({ ...input, title: title.trim() || input.title, orientation, paper, latLonTicks: latLon }), [input, title, orientation, paper, latLon]);
   const choices = useMemo(() => scaleChoices(base), [base]);
   const extent = useMemo(() => planSheet(base).extentM, [base]);
   const defaultScale = choices.find((c) => c.fits && c.scale >= DEFAULT_SCALE)?.scale ?? null;
@@ -39,7 +40,7 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
     try {
       const { makeTopoPdf } = await import('./compose');
       const { pdf, scale: used } = await makeTopoPdf({ ...base, scale: chosen });
-      await deliverFile(pdf as Uint8Array<ArrayBuffer>, `${slug(base.title)}-1-${used}.pdf`, 'application/pdf');
+      await deliverFile(pdf as Uint8Array<ArrayBuffer>, `${slug(base.title)}-${PAPERS[paper].label}-1-${used}.pdf`, 'application/pdf');
       setDone(true);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -90,6 +91,17 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
               {t('topoPrint.scaleInfo', { scale: fmtScale(chosen), equivalence: scaleEquivalence(chosen), grid: gridLabel(chosen), mm: Math.round(paperMm(gridStepM(chosen), chosen)) })}
             </p>
           )}
+        </div>
+
+        <div className="field">
+          <label id="topo-paper-label">{t('topoPrint.paper')}</label>
+          <div className="segmented" role="group" aria-labelledby="topo-paper-label">
+            {(Object.keys(PAPERS) as PaperId[]).map((id) => (
+              <button key={id} type="button" aria-pressed={paper === id} onClick={() => setPaper(id)} data-testid={`topo-paper-${id}`}>
+                {PAPERS[id].label} ({PAPERS[id].w} × {PAPERS[id].h} mm)
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="field">

@@ -1440,6 +1440,7 @@
     "finished": "Llegaste al final de la ruta"
   },
   "topoPrint": {
+    "paper": "Papel",
     "button": "Imprimir mapa topográfico",
     "title": "Imprimir mapa topográfico",
     "intro": "Arma un PDF de una hoja A4 con la zona de la ruta: cuadrícula UTM, curvas de nivel, escala, norte, la ruta con sus puntos y la tabla de tramos con el rumbo geográfico y el magnético.",

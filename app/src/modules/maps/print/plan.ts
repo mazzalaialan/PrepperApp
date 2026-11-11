@@ -1,6 +1,6 @@
 import { bearingDeg, distanceMeters, type LatLon } from '@/core/geo/geo';
 import { fromUtm, toUtm } from '@/core/geo/utm';
-import { fitsScale, type Orientation, type SheetLayout, SCALES, sheetLayout } from './geometry';
+import { fitsScale, type Orientation, type PaperId, type SheetLayout, SCALES, sheetLayout } from './geometry';
 
 /**
  * Planificación de la hoja (sin dibujar nada ni cargar el motor de mapas): qué escalas y orientaciones entran para una ruta.
@@ -40,6 +40,8 @@ export interface TopoSheetInput {
   scale?: number;
   /** Sin valor o 'auto': la que mejor aprovecha la hoja para la escala elegida. */
   orientation?: Orientation | 'auto';
+  /** Tamaño de la hoja: A4 (por defecto) u Oficio. */
+  paper?: PaperId;
   /** Además de la cuadrícula UTM, marcas de latitud y longitud dentro del marco (apagado por defecto). */
   latLonTicks?: boolean;
 }
@@ -89,7 +91,7 @@ export function scaleChoices(input: TopoSheetInput): ScaleChoice[] {
   const pref = input.orientation && input.orientation !== 'auto' ? [input.orientation] : [natural, natural === 'portrait' ? 'landscape' : 'portrait'];
   return SCALES.map((scale) => {
     for (const orientation of pref as Orientation[]) {
-      const frame = sheetLayout(orientation, input.legs.length + 1).map;
+      const frame = sheetLayout(orientation, input.legs.length + 1, input.paper).map;
       if (fitsScale(extentM.east, extentM.north, frame, scale)) return { scale, fits: true, orientation };
     }
     return { scale, fits: false, orientation: pref[0] as Orientation };
@@ -104,7 +106,7 @@ export function planSheet(input: TopoSheetInput): SheetPlan {
   // Una escala pedida que no entra deja la hoja sin escala (NO_FIT).
   const chosen = input.scale ? choices.find((c) => c.scale === input.scale && c.fits) : choices.find((c) => c.fits && c.scale >= DEFAULT_SCALE);
   const orientation = chosen?.orientation ?? choices[0]?.orientation ?? 'portrait';
-  return { scale: chosen?.scale ?? null, layout: sheetLayout(orientation, input.legs.length + 1), center, zone, extentM };
+  return { scale: chosen?.scale ?? null, layout: sheetLayout(orientation, input.legs.length + 1, input.paper), center, zone, extentM };
 }
 
 /** Piernas de una lista de puntos en orden: distancia y rumbo magnético (rumbo verdadero menos la declinación). */

@@ -57,7 +57,7 @@ test('mapa topográfico: opciones antes de generar (las escalas que no entran, g
   // Generar en vertical: baja un PDF A4 (595,28 × 841,89 pt).
   await page.getByTestId('topo-orient-portrait').click();
   const [portrait] = await Promise.all([page.waitForEvent('download', { timeout: 200_000 }), page.getByTestId('topo-generate').click()]);
-  expect(portrait.suggestedFilename()).toBe('Cruce-de-prueba-1-50000.pdf');
+  expect(portrait.suggestedFilename()).toBe('Cruce-de-prueba-A4-1-50000.pdf');
   const portraitPdf = pdfText((await portrait.path())!);
   expect(portraitPdf.startsWith('%PDF-1.4')).toBe(true);
   expect(portraitPdf).toContain('/MediaBox [0 0 595.28 841.89]');
@@ -66,10 +66,12 @@ test('mapa topográfico: opciones antes de generar (las escalas que no entran, g
 
   // Sin conexión también se arma (el código ya está cargado y el mapa de la zona viene de lo descargado): ahora en horizontal.
   await context.setOffline(true);
+  await page.getByTestId('topo-paper-oficio').click();
   await page.getByTestId('topo-orient-landscape').click();
   await page.getByTestId('topo-latlon').check();
   const [landscape] = await Promise.all([page.waitForEvent('download', { timeout: 200_000 }), page.getByTestId('topo-generate').click()]);
   const landscapePdf = pdfText((await landscape.path())!);
-  expect(landscapePdf).toContain('/MediaBox [0 0 841.89 595.28]');
+  // Oficio de la Argentina (216 × 330 mm) apaisado: 935,43 × 612,28 pt.
+  expect(landscapePdf).toContain('/MediaBox [0 0 935.43 612.28]');
   await expect(page.getByTestId('topo-error')).toHaveCount(0);
 });

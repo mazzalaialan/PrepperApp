@@ -122,4 +122,11 @@ describe('escalas disponibles', () => {
     expect(planSheet({ ...route(8), scale: 10_000 }).scale).toBeNull();
     expect(planSheet({ ...route(8), scale: 50_000 }).scale).toBe(50_000);
   });
+
+  it('el papel Oficio es más largo: una ruta de 10 km de norte a sur entra a 1:50.000 en Oficio pero no en A4', () => {
+    const r = route(10);
+    expect(scaleChoices({ ...r, orientation: 'portrait', paper: 'a4' }).find((x) => x.scale === 50_000)!.fits).toBe(false);
+    expect(scaleChoices({ ...r, orientation: 'portrait', paper: 'oficio' }).find((x) => x.scale === 50_000)!.fits).toBe(true);
+    expect(planSheet({ ...r, paper: 'oficio', scale: 50_000 }).layout.paper).toEqual({ w: 216, h: 330 });
+  });
 });

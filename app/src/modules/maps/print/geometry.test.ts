@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contourInterval, edgeTicks, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
+import { PAPERS, contourInterval, edgeTicks, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
 
 describe('geometría de la hoja topográfica', () => {
   it('la cuadrícula mide en el papel lo que dice la escala', () => {
@@ -96,5 +96,15 @@ describe('geometría de la hoja topográfica', () => {
     const down = edgeTicks([{ pos: 0, value: -41.0 }, { pos: 100, value: -41.4 }], 0.25);
     expect(down.map((t) => t.value)).toEqual([-41.25, -41]);
     expect(down.every((t) => t.pos >= 0 && t.pos <= 100)).toBe(true);
+  });
+
+  it('papel Oficio (Argentina): 216 × 330 mm, con más mapa que el A4 y todo dentro de la hoja', () => {
+    expect(PAPERS.oficio).toMatchObject({ w: 216, h: 330 });
+    const a4 = sheetLayout('portrait', 8);
+    const of = sheetLayout('portrait', 8, 'oficio');
+    expect(of.paper).toEqual({ w: 216, h: 330 });
+    expect(of.map.h).toBeGreaterThan(a4.map.h + 25);
+    expect(of.footer.y + of.footer.h).toBeLessThanOrEqual(330 - of.margin + 1e-9);
+    expect(sheetLayout('landscape', 8, 'oficio').paper).toEqual({ w: 330, h: 216 });
   });
 });

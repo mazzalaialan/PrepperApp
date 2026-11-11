@@ -3,7 +3,9 @@
  * para una escala real y diseño de la hoja A4. Todo en milímetros de papel o metros del terreno.
  */
 export const MM_PER_INCH = 25.4;
-export const PAPER = { w: 210, h: 297 } as const;
+/** Papeles que se pueden elegir: A4 y Oficio (el de la Argentina: 216 × 330 mm). Medidas en milímetros, en vertical. */
+export const PAPERS = { a4: { w: 210, h: 297, label: 'A4' }, oficio: { w: 216, h: 330, label: 'Oficio' } } as const;
+export type PaperId = keyof typeof PAPERS;
 export const SCALES = [10_000, 15_000, 25_000, 50_000, 75_000, 100_000, 150_000, 250_000] as const;
 export const DEFAULT_DPI = 300;
 const EARTH_CIRCUMFERENCE_M = 40_075_016.686;
@@ -94,9 +96,10 @@ export interface SheetLayout {
  * Diseño de la hoja A4 en milímetros. En vertical la tabla va debajo del mapa y su alto depende de la cantidad de filas;
  * en horizontal va a la derecha, con ancho fijo.
  */
-export function sheetLayout(orientation: Orientation, legRows: number): SheetLayout {
+export function sheetLayout(orientation: Orientation, legRows: number, paperId: PaperId = 'a4'): SheetLayout {
   const margin = 10;
-  const paper = orientation === 'portrait' ? { w: PAPER.w, h: PAPER.h } : { w: PAPER.h, h: PAPER.w };
+  const size = PAPERS[paperId];
+  const paper = orientation === 'portrait' ? { w: size.w, h: size.h } : { w: size.h, h: size.w };
   const headerH = 14;
   const footerH = 30;
   const rowH = 5.2;

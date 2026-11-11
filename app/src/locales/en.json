@@ -1440,6 +1440,7 @@
     "finished": "You've reached the end of the route"
   },
   "topoPrint": {
+    "paper": "Paper",
     "button": "Print topographic map",
     "title": "Print topographic map",
     "intro": "Builds a one-sheet A4 PDF of the route area: UTM grid, contour lines, scale, north, the route with its points and the table of legs with true and magnetic bearings.",
