@@ -1,15 +1,16 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Activity, Check, Download, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Printer, Route as RouteIcon, Trash2, X } from 'lucide-react';
+import { Activity, Check, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Printer, Route as RouteIcon, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { toGpx } from '@/modules/training/interchange';
+import { toKml } from '@/modules/waypoints/kml';
+import { ExportPathButton } from './ExportPathButton';
 import { routeFromTrack } from '@/modules/waypoints/importRoute';
-import { deliverFile } from '@/ui/files';
 import { trackSheetInput } from '@/modules/maps/print/data';
 import { PrintTopoDialog } from '@/modules/maps/print/PrintTopoDialog';
 import { useWaypoints } from '@/modules/waypoints/store';
@@ -36,20 +37,8 @@ export function TrackPage() {
   return <TrackDetail key={track.id} track={track} />;
 }
 
-/** El recorrido grabado en GPX (con altura y hora de cada punto): sirve en Strava, Garmin, Wikiloc u otra app. */
-async function exportTrackGpx(track: Track): Promise<void> {
-  const text = toGpx({ name: track.name, kind: track.activity ?? 'walk', startedAt: track.createdAt, segments: track.segments });
-  const file = `${track.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'recorrido'}.gpx`;
-  try {
-    await deliverFile(new TextEncoder().encode(text) as Uint8Array<ArrayBuffer>, file, 'application/gpx+xml');
-  } catch (err) {
-    if (!(err instanceof DOMException && err.name === 'AbortError')) throw err;
-  }
-}
-
 function TrackDetail({ track }: { track: Track }) {
   const { t, i18n } = useTranslation();
-  const exportGpx = () => exportTrackGpx(track);
   // Si este recorrido también es una sesión de Entrenamiento, se llega a ella desde acá.
   const workoutId = useTraining((s) => [...s.workouts.values()].find((w) => w.trackId === track.id && !w.deletedAt)?.id ?? null);
   const navigate = useNavigate();
@@ -237,9 +226,15 @@ function TrackDetail({ track }: { track: Track }) {
             </Link>
           )}
           {track.segments.flat().length > 1 && (
-            <button className="btn" type="button" data-testid="track-export-gpx" onClick={() => void exportGpx()}>
-              <Download size={18} /> {t('tracks.exportGpx')}
-            </button>
+            <ExportPathButton
+              kind="track"
+              testId="track-export"
+              formats={{
+                name: track.name,
+                gpx: () => toGpx({ name: track.name, kind: track.activity ?? 'walk', startedAt: track.createdAt, segments: track.segments }),
+                kml: () => toKml(track.name, track.segments.flat().map(([lat, lon, ele]) => ({ lat, lon, ele }))),
+              }}
+            />
           )}
           {track.segments.flat().length > 1 && (
             <Link className="btn btn-primary" to={`/orientation/tracks/${track.id}/follow`}>

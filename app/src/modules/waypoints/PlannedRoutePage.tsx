@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Download, Footprints, Map as MapIcon, MapPinPlus, Printer, Trash2 } from 'lucide-react';
+import { Footprints, Map as MapIcon, MapPinPlus, Printer, Trash2 } from 'lucide-react';
 import type { Route } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
@@ -9,8 +9,8 @@ import { Profile } from '@/modules/maps/MapTools';
 import { summarizePath, type PathSummary } from '@/modules/maps/measure';
 import { toGpx } from '@/modules/training/interchange';
 import { useTracks } from '@/modules/tracks/store';
-import { deliverFile } from '@/ui/files';
 import { toKml } from './kml';
+import { ExportPathButton } from '@/modules/tracks/ExportPathButton';
 import { legsOf, lineLength, trackFromRoute } from './plan';
 import { useWaypoints } from './store';
 import type { NewWaypointDraft } from './WaypointEditPage';
@@ -55,25 +55,6 @@ export function PlannedRoutePage({ route }: { route: Route }) {
     const track = trackFromRoute(route, existing);
     await saveTrack(track);
     return track;
-  }
-
-  async function exportKml() {
-    const file = `${route.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'ruta'}.kml`;
-    try {
-      await deliverFile(new TextEncoder().encode(toKml(route.name, line)) as Uint8Array<ArrayBuffer>, file, 'application/vnd.google-earth.kml+xml');
-    } catch (err) {
-      if (!(err instanceof DOMException && err.name === 'AbortError')) throw err;
-    }
-  }
-
-  async function exportGpx() {
-    const text = toGpx({ name: route.name, kind: 'walk', startedAt: new Date().toISOString(), segments: [line.map((p) => [p.lat, p.lon, null])] });
-    const file = `${route.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'ruta'}.gpx`;
-    try {
-      await deliverFile(new TextEncoder().encode(text) as Uint8Array<ArrayBuffer>, file, 'application/gpx+xml');
-    } catch (err) {
-      if (!(err instanceof DOMException && err.name === 'AbortError')) throw err;
-    }
   }
 
   return (
@@ -125,12 +106,15 @@ export function PlannedRoutePage({ route }: { route: Route }) {
           >
             <MapIcon size={18} /> {t('routes.viewOnMap')}
           </button>
-          <button className="btn" type="button" data-testid="planned-gpx" onClick={() => void exportGpx()}>
-            <Download size={18} /> {t('training.exportGpx')}
-          </button>
-          <button className="btn" type="button" data-testid="planned-kml" onClick={() => void exportKml()}>
-            <Download size={18} /> {t('routes.exportKml')}
-          </button>
+          <ExportPathButton
+            kind="route"
+            testId="planned-export"
+            formats={{
+              name: route.name,
+              gpx: () => toGpx({ name: route.name, kind: 'walk', startedAt: new Date().toISOString(), segments: [line.map((p) => [p.lat, p.lon, null])] }),
+              kml: () => toKml(route.name, line),
+            }}
+          />
           {line.length > 1 && (
             <button className="btn" type="button" data-testid="planned-print-map" onClick={() => {
                 const base = plannedRouteSheetInput(route);

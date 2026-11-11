@@ -1439,6 +1439,13 @@
     "lastPoint": "Último punto",
     "finished": "Llegaste al final de la ruta"
   },
+  "exportPath": {
+    "track": "Exportar recorrido",
+    "route": "Exportar ruta",
+    "intro": "Elegí el formato del archivo.",
+    "gpxHint": "GPX: con altura y hora de cada punto. Sirve en Strava, Garmin, Wikiloc y la mayoría de las apps de actividad.",
+    "kmlHint": "KML: la línea del recorrido. Sirve en Google Earth, Google Maps y muchas apps de mapas."
+  },
   "topoPrint": {
     "coverageOk": "Mapa y relieve de la zona descargados: se puede imprimir sin conexión.",
     "coverageOnline": "Faltan {{missing}} de {{total}} teselas de mapa y relieve en el dispositivo: se bajan de internet al generar. Para imprimir sin conexión, descargá la zona en Mapas.",

@@ -486,7 +486,7 @@ test('planificar una ruta en el mapa: piernas con rumbo magnético, sin crear lu
   await expect(page).toHaveURL(/#\/orientation\/routes\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('planned-route')).toBeVisible();
   await expect(page.getByTestId('planned-legs').getByRole('listitem')).toHaveCount(3);
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('planned-gpx').click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('planned-export').click().then(() => page.getByTestId('export-gpx').click())]);
   expect(download.suggestedFilename()).toBe('Ruta-al-Platita.gpx');
   await page.goto('/#/orientation/waypoints');
   await expect(page.getByText('Ruta al Platita')).toBeVisible(); // la ruta sí está en la lista de rutas
@@ -515,12 +515,17 @@ test('importar un KML en Tracks y convertirlo en ruta planificada: sin crear lug
   await page.getByTestId('tracks-file').setInputFiles({ name: 'platita.kml', mimeType: 'application/vnd.google-earth.kml+xml', buffer: Buffer.from(kml) });
   await expect(page).toHaveURL(/#\/orientation\/tracks\/[0-9a-f-]{36}$/);
   await expect(page.getByRole('heading', { name: 'Cerro Platita' })).toBeVisible();
+  // El track se exporta desde un solo botón que deja elegir GPX o KML.
+  await page.getByTestId('track-export').click();
+  await expect(page.getByTestId('export-dialog')).toBeVisible();
+  const [trackKml] = await Promise.all([page.waitForEvent('download'), page.getByTestId('export-kml').click()]);
+  expect(trackKml.suggestedFilename()).toBe('Cerro-Platita.kml');
   // Para tener las piernas con rumbo magnético, se crea la ruta planificada desde el track.
   await page.getByTestId('track-to-route').click();
   await expect(page).toHaveURL(/#\/orientation\/routes\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('planned-route')).toBeVisible();
   await expect(page.getByTestId('planned-legs').getByRole('listitem')).toHaveCount(3);
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('planned-kml').click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByTestId('planned-export').click().then(() => page.getByTestId('export-kml').click())]);
   expect(download.suggestedFilename()).toBe('Cerro-Platita.kml');
   // El punto del KML quedó en el track; no en la lista de lugares.
   await page.goto('/#/orientation/waypoints');

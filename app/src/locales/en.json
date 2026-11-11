@@ -1439,6 +1439,13 @@
     "lastPoint": "Last point",
     "finished": "You've reached the end of the route"
   },
+  "exportPath": {
+    "track": "Export track",
+    "route": "Export route",
+    "intro": "Choose the file format.",
+    "gpxHint": "GPX: with elevation and time for each point. Works in Strava, Garmin, Wikiloc and most activity apps.",
+    "kmlHint": "KML: the track line. Works in Google Earth, Google Maps and many map apps."
+  },
   "topoPrint": {
     "coverageOk": "Map and terrain of the area are downloaded: you can print offline.",
     "coverageOnline": "{{missing}} of {{total}} map and terrain tiles are missing on the device: they will be downloaded when you generate. To print offline, download the area in Maps.",
