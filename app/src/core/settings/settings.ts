@@ -119,7 +119,7 @@ export interface Settings {
   readerFontPct: number;
 }
 
-export type GardenZone = 'pampeana' | 'nea' | 'noa' | 'cuyo' | 'patagoniaNorte' | 'patagoniaSur' | 'vallesBolivia' | 'tropicoBolivia';
+export type GardenZone = 'pampeana' | 'nea' | 'noa' | 'cuyo' | 'patagoniaNorte' | 'patagoniaSur' | 'vallesBolivia' | 'tropicoBolivia' | 'sierraPeru';
 
 export type FirstAidEnv = 'city' | 'wild';
 export type Country = 'AR' | 'CL' | 'UY' | 'BO' | 'PE';

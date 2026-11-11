@@ -20,6 +20,7 @@ export const FAMILY_COLOR: Record<Family, string> = {
   rose: '#e8607a',
   gourd: '#e3a43a',
   asparagus: '#6e9e58',
+  oxalis: '#b07cc6',
 };
 
 export const MONTHS_SHORT = (lang: string) =>
@@ -61,7 +62,7 @@ export function ZonePicker({ place, zone, suggested, manual }: { place: GardenPl
       {country !== 'AR' && <p className="hint" style={{ margin: 0 }}>{t(`garden.zoneCountry.${country}`, { zone: t(`garden.zones.${zone}`) })}</p>}
       {ESTIMATED_ZONES.has(zone) && (
         <p className="warning-box" style={{ margin: 0 }} data-testid="zone-estimated">
-          {t(zone === 'vallesBolivia' ? 'garden.zoneEstimatedValles' : zone === 'tropicoBolivia' ? 'garden.zoneEstimatedTropico' : 'garden.zoneEstimated')}
+          {t(zone === 'vallesBolivia' ? 'garden.zoneEstimatedValles' : zone === 'tropicoBolivia' ? 'garden.zoneEstimatedTropico' : zone === 'sierraPeru' ? 'garden.zoneEstimatedSierraPeru' : 'garden.zoneEstimated')}
         </p>
       )}
     </div>

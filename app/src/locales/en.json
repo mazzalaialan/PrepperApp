@@ -2385,9 +2385,10 @@
       "CL": "Chile has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}}).",
       "UY": "Uruguay has no official home-garden calendar: the Argentine zone with a similar climate is used ({{zone}}).",
       "BO": "Bolivia has no official garden calendar by crop and month (INIAF does not publish one). There are two estimated zones: \"Bolivian valleys (Tarija)\", built from an NGO manual, and \"Bolivian tropics and Yungas\", from a table of a cooperation project (12 crops); on the altiplano pick the closest one by hand and treat the months as a reference.",
-      "PE": "Peru has no official garden calendar by crop and month (INIA does not publish an open one): the climate of the coast, highlands and jungle matches no Argentine zone. Pick the closest by hand (\"Bolivian valleys\" is a temperate valley climate) and treat the months as a reference."
+      "PE": "Peru has no official garden calendar by crop and month (INIA does not publish an open one): the climate of the coast, highlands and jungle matches no Argentine zone. There is an estimated \"Peruvian highlands\" zone (7 Andean crops, from the INIA highlands calendar); for the coast and jungle pick the closest by hand (\"Bolivian valleys\" is a temperate valley climate) and treat the months as a reference."
     },
     "zoneEstimatedValles": "This zone comes from an NGO manual for the Central Tarija Valley (2016), not an official source: months were read from graphic tables and may be off by a month. It suits temperate valleys; on the altiplano or in the tropics the months change. Use it as guidance and check what is done locally.",
+    "zoneEstimatedSierraPeru": "This zone comes from the INIA Peru \"Highlands agricultural calendar\" (September to November; copied by hand from its publication, without the document at hand) and has only 7 Andean crops, rainfed. Harvest months were computed from each crop's cycle and change with altitude and variety (the higher, the longer the cycle). Use it as guidance and ask your local agricultural agency.",
     "zoneEstimatedTropico": "This zone comes from a sowing table of a cooperation project for the Cochabamba tropics and the La Paz Yungas (Jatun Sacha, supported by UNODC): a single, unofficial source, not validated by INIAF. It does not tell direct sowing from seedbeds nor the Yungas from the tropics, and has only 12 crops. Use it as guidance and check what is done in your area.",
     "zoneEstimated": "There is no INTA guide for this zone: the calendar is an estimate (mild frosts, very hot and humid summer). Use it as a guideline.",
     "zones": {
@@ -2398,6 +2399,7 @@
       "patagoniaNorte": "Northern Patagonia",
       "patagoniaSur": "Southern and Andean Patagonia",
       "tropicoBolivia": "Bolivian tropics and Yungas (estimated)",
+      "sierraPeru": "Peruvian highlands (estimated)",
       "vallesBolivia": "Bolivian valleys (Tarija, estimated)"
     },
     "thisMonth": "This month: {{month}}",
@@ -2451,7 +2453,8 @@
       "daisy": "Daisy family (lettuce, chicory)",
       "rose": "Rose family",
       "gourd": "Gourd family (squash, melon, cucumber)",
-      "asparagus": "Asparagus family"
+      "asparagus": "Asparagus family",
+      "oxalis": "Oxalis family (oca)"
     },
     "sowing": {
       "direct": "Direct",

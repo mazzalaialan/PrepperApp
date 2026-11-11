@@ -31,14 +31,14 @@ import type { Country, GardenZone } from '@/core/settings/settings';
  * Yungas del trópico. La cosecha se calcula con los días a cosecha de cada ficha.
  */
 
-export const ZONES = ['pampeana', 'nea', 'noa', 'cuyo', 'patagoniaNorte', 'patagoniaSur', 'vallesBolivia', 'tropicoBolivia'] as const;
+export const ZONES = ['pampeana', 'nea', 'noa', 'cuyo', 'patagoniaNorte', 'patagoniaSur', 'vallesBolivia', 'tropicoBolivia', 'sierraPeru'] as const;
 export type Zone = (typeof ZONES)[number];
 // El tipo de Ajustes tiene que coincidir con esta lista.
 const _sameZones: Zone extends GardenZone ? (GardenZone extends Zone ? true : never) : never = true;
 void _sameZones;
 
 /** Zonas sin cartilla del INTA: el calendario es una estimación. */
-export const ESTIMATED_ZONES: ReadonlySet<Zone> = new Set(['nea', 'vallesBolivia', 'tropicoBolivia']);
+export const ESTIMATED_ZONES: ReadonlySet<Zone> = new Set(['nea', 'vallesBolivia', 'tropicoBolivia', 'sierraPeru']);
 
 export interface ZoneEntry {
   /** Siembra directa. */
@@ -313,6 +313,26 @@ const TROPICO_BOLIVIA: ZoneTable = {
   sandia: { S: '11-12' },
 };
 
+/**
+ * Sierra de Perú: meses de siembra del «Calendario agrícola de la sierra» del INIA
+ * (publicado en sus redes; leído a mano, sin el documento a la vista): setiembre,
+ * quinua, papa, maíz amiláceo, oca y haba; octubre, cañihua, cebada, maíz amiláceo,
+ * oca y haba; noviembre, quinua, cañihua, cebada y papa. Es secano (siembra con las
+ * primeras lluvias). La cosecha sale del ciclo de cada cultivo (fichas del INIA:
+ * quinua 150-200 días, cañihua 140-160, maíz amiláceo 170 en choclo y 210 en grano seco,
+ * oca de 7 a 8 meses); la papa lleva la cosecha a mano porque su ficha general es de
+ * clima templado y en la sierra el ciclo es de 5 a 7 meses.
+ */
+const SIERRA_PERU: ZoneTable = {
+  quinua: { S: '9,11' },
+  papa: { S: '9,11', H: '3-6' },
+  'maiz-amilaceo': { S: '9-10' },
+  oca: { S: '9-10' },
+  haba: { S: '9-10' },
+  canihua: { S: '10-11' },
+  cebada: { S: '10-11' },
+};
+
 export const ZONE_TABLES: Record<Zone, ZoneTable> = {
   pampeana: PAMPEANA,
   nea: NEA,
@@ -322,6 +342,7 @@ export const ZONE_TABLES: Record<Zone, ZoneTable> = {
   patagoniaSur: PATAGONIA_SUR,
   vallesBolivia: VALLES_BOLIVIA,
   tropicoBolivia: TROPICO_BOLIVIA,
+  sierraPeru: SIERRA_PERU,
 };
 
 /** "8-11,2" → {8,9,10,11,2}; los rangos pueden cruzar el año ("11-2"). Meses 1–12. */

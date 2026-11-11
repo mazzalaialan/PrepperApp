@@ -7,7 +7,9 @@
  * (INTA EEA Alto Valle); Calendario del Valle Inferior del río Negro (INTA EEA
  * Valle Inferior); Planificador de huerta del sur de Santa Cruz (INTA EEA Santa
  * Cruz). Son solo datos (distancias, días, comportamiento); los textos son
- * propios. Los coeficientes de cultivo (Kc) son los de FAO-56 (tabla 12).
+ * propios. Quinua, cañihua, oca, maíz amiláceo y cebada: ciclos de las fichas del INIA
+ * de Perú (quinua, maíz amiláceo) y de INIA, DESCO y PROINPA (cañihua, oca); la cebada
+ * y las distancias de cañihua, oca y cebada son estimadas. Los coeficientes de cultivo (Kc) son los de FAO-56 (tabla 12).
  */
 
 export type Family =
@@ -23,7 +25,8 @@ export type Family =
   | 'daisy' // Asteráceas / compuestas
   | 'rose' // Rosáceas (frutilla)
   | 'gourd' // Cucurbitáceas
-  | 'asparagus'; // Asparagáceas
+  | 'asparagus' // Asparagáceas
+  | 'oxalis'; // Oxalidáceas (oca)
 
 /** Grupo para la rotación clásica de la huerta: hojas, raíces, bulbos, frutos, legumbres. */
 export type CropGroup = 'leaf' | 'root' | 'bulb' | 'fruit' | 'legume';
@@ -1001,6 +1004,121 @@ export const CROPS: Crop[] = [
     yield: tx('10 a 12 frutos por planta', '10 to 12 fruits per plant'),
     harvest: tx('Fruto tierno de tamaño mediano, con las semillas tiernas', 'Tender medium fruit with soft seeds'),
     harvestUnit: 'u',
+  },
+  {
+    id: 'quinua',
+    name: tx('Quinua', 'Quinoa'),
+    family: 'amaranth',
+    group: 'fruit',
+    frost: 'half',
+    shade: false,
+    container: false,
+    sowing: 'direct',
+    spacingCm: 20,
+    rowCm: 70,
+    daysToHarvest: [170, 200],
+    harvestMonths: 1,
+    rootDepth: 'deep',
+    kc: [0.3, 1, 0.7],
+    companions: ['haba', 'papa'],
+    avoid: [],
+    rotateAfter: ['legume', 'root'],
+    waterCritical: tx('Desde la panoja hasta el grano lechoso; antes aguanta la sequía', 'From panicle to milky grain; before that it tolerates drought'),
+    yield: tx('0,2 a 0,35 kg/m² de grano', '0.2 to 0.35 kg/m² of grain'),
+    harvest: tx('Cuando la planta amarillea, pierde las hojas y el grano no se marca con la uña; secar la panoja antes de trillar', 'When the plant yellows, drops its leaves and the grain resists a fingernail; dry the panicle before threshing'),
+    harvestUnit: 'kg',
+  },
+  {
+    id: 'canihua',
+    name: tx('Cañihua', 'Cañihua'),
+    family: 'amaranth',
+    group: 'fruit',
+    frost: 'hardy',
+    shade: false,
+    container: false,
+    sowing: 'direct',
+    spacingCm: 15,
+    rowCm: 40,
+    daysToHarvest: [140, 160],
+    harvestMonths: 1,
+    rootDepth: 'medium',
+    kc: [0.3, 1, 0.7],
+    companions: [],
+    avoid: [],
+    rotateAfter: ['legume', 'root'],
+    waterCritical: tx('En la floración; es de las más resistentes a la sequía y al frío', 'At flowering; one of the most drought and cold tolerant'),
+    yield: tx('0,1 a 0,25 kg/m² de grano', '0.1 to 0.25 kg/m² of grain'),
+    harvest: tx('Cuando la planta pasa a rosado o anaranjado y se seca; cortar y secar en parvas porque el grano se desgrana fácil', 'When the plant turns pink or orange and dries; cut and dry in stacks because the grain sheds easily'),
+    harvestUnit: 'kg',
+  },
+  {
+    id: 'oca',
+    name: tx('Oca', 'Oca'),
+    family: 'oxalis',
+    group: 'root',
+    frost: 'half',
+    shade: false,
+    container: true,
+    sowing: 'direct',
+    spacingCm: 30,
+    rowCm: 80,
+    daysToHarvest: [210, 240],
+    harvestMonths: 1,
+    rootDepth: 'shallow',
+    kc: [0.5, 1.15, 0.75],
+    companions: ['papa', 'haba'],
+    avoid: [],
+    rotateAfter: ['legume', 'leaf'],
+    waterCritical: tx('Cuando empiezan a formarse los tubérculos', 'When tubers start to form'),
+    yield: tx('1 a 2 kg/m²', '1 to 2 kg/m²'),
+    harvest: tx('Con la planta seca; dejar los tubérculos al sol unos días para que se endulcen', 'When the plant has died back; leave the tubers in the sun a few days to sweeten'),
+    harvestUnit: 'kg',
+  },
+  {
+    id: 'maiz-amilaceo',
+    name: tx('Maíz amiláceo (choclo y grano seco)', 'Floury maize (green and dry)'),
+    family: 'grass',
+    group: 'fruit',
+    frost: 'tender',
+    shade: false,
+    container: false,
+    sowing: 'direct',
+    spacingCm: 40,
+    rowCm: 80,
+    daysToHarvest: [170, 210],
+    harvestMonths: 1.5,
+    rootDepth: 'deep',
+    kc: [0.3, 1.2, 0.6],
+    companions: ['haba', 'quinua'],
+    avoid: [],
+    rotateAfter: ['legume', 'leaf'],
+    waterCritical: tx('Antes y después de la floración (aparición de la barba)', 'Before and after flowering (silk)'),
+    yield: tx('Unos 2 choclos por planta, o 0,3 a 0,5 kg/m² de grano seco', 'About 2 ears per plant, or 0.3 to 0.5 kg/m² of dry grain'),
+    harvest: tx('Choclo a los 170 días (grano lechoso); grano seco a los 210 días, con la chala seca', 'Green ear at 170 days (milky kernels); dry grain at 210 days, with dry husks'),
+    harvestUnit: 'u',
+  },
+  {
+    id: 'cebada',
+    name: tx('Cebada', 'Barley'),
+    family: 'grass',
+    group: 'fruit',
+    frost: 'hardy',
+    shade: false,
+    container: false,
+    sowing: 'direct',
+    spacingCm: 10,
+    rowCm: 25,
+    daysToHarvest: [150, 180],
+    harvestMonths: 1,
+    rootDepth: 'medium',
+    kc: [0.3, 1.15, 0.25],
+    companions: [],
+    avoid: [],
+    rotateAfter: ['legume', 'root'],
+    waterCritical: tx('En el macollaje y el espigado', 'At tillering and heading'),
+    yield: tx('0,3 a 0,5 kg/m² de grano', '0.3 to 0.5 kg/m² of grain'),
+    harvest: tx('Con la espiga dorada y el grano duro; cortar, secar en gavillas y trillar', 'With golden ears and hard grain; cut, dry in sheaves and thresh'),
+    harvestUnit: 'kg',
   },
 ];
 

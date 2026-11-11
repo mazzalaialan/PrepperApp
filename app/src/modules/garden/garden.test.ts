@@ -274,3 +274,33 @@ describe('zona estimada del trópico y los Yungas de Bolivia', () => {
     expect([...parseMonths(ZONE_TABLES.tropicoBolivia.lechuga!.S)].sort((a, b) => a - b)).toEqual([1, 9, 10, 11, 12]);
   });
 });
+
+describe('zona estimada de la sierra de Perú', () => {
+  const t = ZONE_TABLES.sierraPeru;
+  const sorted = (spec: string | undefined) => [...parseMonths(spec)].sort((a, b) => a - b);
+  it('tiene los 7 cultivos andinos del calendario del INIA, está marcada como estimada y se elige a mano', () => {
+    expect(Object.keys(t).sort()).toEqual(['canihua', 'cebada', 'haba', 'maiz-amilaceo', 'oca', 'papa', 'quinua']);
+    expect(ESTIMATED_ZONES.has('sierraPeru')).toBe(true);
+    expect(zoneFor(-13.5, -72, 'PE')).toBeNull();
+  });
+  it('siembra en los meses del INIA: setiembre, octubre y noviembre', () => {
+    expect(sorted(t.quinua!.S)).toEqual([9, 11]);
+    expect(sorted(t.papa!.S)).toEqual([9, 11]);
+    expect(sorted(t['maiz-amilaceo']!.S)).toEqual([9, 10]);
+    expect(sorted(t.oca!.S)).toEqual([9, 10]);
+    expect(sorted(t.haba!.S)).toEqual([9, 10]);
+    expect(sorted(t.canihua!.S)).toEqual([10, 11]);
+    expect(sorted(t.cebada!.S)).toEqual([10, 11]);
+  });
+  it('la cosecha cae de febrero a junio según el ciclo de cada cultivo', () => {
+    for (const id of Object.keys(t)) {
+      const h = cropCalendar('sierraPeru', id)!.harvest;
+      expect(h.size, id).toBeGreaterThan(0);
+      for (const m of h) expect([1, 2, 3, 4, 5, 6, 7], `${id} ${m}`).toContain(m);
+    }
+    expect(sorted(t.papa!.H)).toEqual([3, 4, 5, 6]);
+    // La oca, de setiembre/octubre, se cosecha en abril y mayo (INIA).
+    const oca = cropCalendar('sierraPeru', 'oca')!.harvest;
+    expect(oca.has(4) && oca.has(5)).toBe(true);
+  });
+});
