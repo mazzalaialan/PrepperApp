@@ -107,3 +107,9 @@ Pendiente: probarlo en un celular real y con una zona realmente descargada sin c
 Decisión: el repositorio sigue público bajo GPL-3.0-or-later; a clientes (la escuela) se les da una licencia comercial **no exclusiva** más un contrato de servicios; la adaptación va en un fork privado, con el código en depósito (sin cesión de titularidad). Las contribuciones de terceros solo con el acuerdo de contribución de `CONTRIBUTING.md` (que permite relicenciar).
 
 Pendiente: que un abogado matriculado valide el texto de `CONTRIBUTING.md`, el contrato marco, la licencia comercial y el EULA; política de privacidad y contrato de encargado del tratamiento (Ley 25.326); pantalla de licencias y créditos de terceros; registrar la marca «VikArg» en el INPI (clases 9 y 42) y depositar el software en la DNDA (más adelante); revisar que ningún archivo del plugin de ubicación en segundo plano lleve el aviso «Incompatible With Secondary Licenses».
+
+## Unificar tracks y rutas (analizado 2026-11-11; no se hará en el corto plazo)
+
+Hay duplicación de información: un Track (línea con altura, hora, distancia y desnivel; grabado, importado o hecho desde una ruta) y una Ruta (línea planificada o lista de waypoints, con tramos y rumbos). Al seguir o ver una ruta en el mapa se crea un track «espejo» (`routeId`, `modules/waypoints/plan.ts`) que hay que mantener sincronizado; al importar un KML hay que convertir el track en ruta para ver los rumbos. Por eso exportar, imprimir y seguir existen en los dos lados (se unificó solo el botón de exportar: «Exportar recorrido» / «Exportar ruta», con GPX o KML).
+
+Idea: una sola entidad «Recorrido» con una línea y un origen (grabado, importado, planificado); los tramos con rumbo se calculan al mostrarlos; las rutas de solo waypoints, como otro tipo. Costo: migración de datos delicada (Dexie, sincronización con el servidor, seguimiento, mapa, pruebas, datos existentes); varios días. Decisión: se deja como pendiente, sin fecha.
