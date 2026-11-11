@@ -32,7 +32,8 @@ export default {
     const loose = { ...G, path: cord({ n: 1.5, r: 30, pitch: 32 }), end: false };
     const tight = { ...G, path: cord({ n: 1.5, r: 22, pitch: 22, legA: 188, legB: 208 }), end: false };
     return [
-      { ...H, ropes: [main, { ...G, path: [[150, 330], [160, 260], [175, 215], [200, 200, -1], [225, 215], [240, 260], [250, 330]], end: false }] },
+      // Paso 1: el anillo (dos tramos y el seno a la izquierda) se apoya POR DETRÁS de la cuerda, cruzándola de costado.
+      { ...H, ropes: [main, { ...G, path: [[340, 214], [240, 214], [214, 214, 0], [200, 214, -1], [186, 214, 0], [160, 214], [110, 214], [62, 214], [44, 200], [62, 186], [110, 186], [160, 186], [186, 186, 0], [200, 186, -1], [214, 186, 0], [240, 186], [270, 186], [340, 186]], end: false }] },
       { ...H, ropes: [main, loose] },
       { ...H, ropes: [main, tight] },
       { ...H, ropes: [main, tight], arrows: [[[250, 270], [250, 330]]] },
