@@ -1,0 +1,9 @@
+{
+  "fuente": "Dubbelehalvesteek.svg, Sawims (nl.wikipedia), dominio público, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Dubbelehalvesteek.svg",
+  "pasos": {
+    "3": [
+      "BABABABABABA"
+    ]
+  },
+  "notas": "Leído con script sin mirar (Playwright): path principal de la cuerda, autointersecciones, y en cada cruce la pieza que Sawims redibuja encima (dirección del trozo de arriba comparada con las dos tangentes; separación clara en los 6 cruces, |ci-cj|>=0.57). 6 cruces cuerda-cuerda, alternan perfecto. Firme = la pata recta que sale abajo a la derecha; sube, pasa por delante del palo una vez (no hay vuelta redonda) y la punta hace dos medios cotes iguales alrededor del firme y sale abajo a la izquierda. Confianza alta (la secuencia alternada es la esperable para dos cotes bien hechos)."
+}

@@ -1,0 +1,5 @@
+{
+  "fuente": "SIN REFERENCIA",
+  "pasos": {},
+  "notas": "Ankersteek.svg (Sawims, dominio público, https://commons.wikimedia.org/wiki/File:Ankersteek.svg) es vectorial pero el path principal no coincide con las piezas redibujadas encima (desfase de ~20-50 px), así que el script no es confiable, y la lectura a ojo quedó incompleta. Leído con seguridad: el firme, de abajo hacia arriba, BABA (B: pasa debajo del lado de abajo del cote de abajo; A: encima del lado de arriba; B y A igual en el cote de arriba) y el primer cote pasa por DEBAJO de las dos patas de la vuelta redonda (lo que lo hace nudo de ancla). Sin leer con seguridad: los cruces de la punta con el segundo cote y con la bajada derecha (casi paralelos). Para completarlo: transcribir Ankersteek.svg a mano a 3x o usar la secuencia de piezas en vez del path principal."
+}
