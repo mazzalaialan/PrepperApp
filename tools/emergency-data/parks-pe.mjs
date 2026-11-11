@@ -9,8 +9,9 @@
  *   información es de dominio público y se autorizan los mapas derivados
  *   citando al SERNANP como fuente; no se redistribuyen los datos originales
  *   (por eso van simplificados). VikArg es gratuito y sin fines de lucro.
- * - Contacto: la sede central (gob.pe/sernanp): el SERNANP no publica el
- *   teléfono de la jefatura de cada área.
+ * - Contacto: la oficina y el teléfono de cada jefatura, del «Directorio de jefes
+ *   de ANP» del SERNANP (junio de 2024; ver parks-pe-contacts.mjs; sin nombres ni
+ *   correos). Las áreas sin teléfono publicado quedan con la sede central.
  * - No se incluyen las áreas de conservación privadas: la capa trae el
  *   nombre del titular (personas), que no corresponde mostrar.
  *
@@ -20,6 +21,7 @@
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { centerOf, r4, ringArea, simplified } from '../lib/osm-geo.mjs';
+import { contactFor } from './parks-pe-contacts.mjs';
 
 // Con VIKARG_DATA_OUT escribe en la carpeta que sirve el servidor (actualización mensual).
 const OUT = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/parks-PE.json` : fileURLToPath(new URL('../../app/public/data/parks-PE.json', import.meta.url));
@@ -58,13 +60,14 @@ for (const [code, g] of groups) {
   const area = simplified(g.polys.map((poly) => poly.map((ring) => ring.map(([x, y]) => [r4(x), r4(y)]))), 0, 1e-8).filter((poly) => ringArea(poly[0]) > 0);
   const at = centerOf(area);
   if (!at) continue;
-  parks.push({ country: 'PE', name: g.name, url: `${PAGE}#${code}`, office: 'SERNANP', address: '', phone: '', phones: '', emergency: EMERGENCY, lat: at.lat, lon: at.lon, area });
+  const c = contactFor(g.name);
+  parks.push({ country: 'PE', name: g.name, url: `${PAGE}#${code}`, office: c ? `SERNANP: jefatura del área` : 'SERNANP', address: c?.[1] ?? '', phone: c?.[2] ?? '', phones: '', emergency: EMERGENCY, lat: at.lat, lon: at.lon, area });
 }
 parks.sort((a, b) => a.name.localeCompare(b.name, 'es'));
 
 const data = {
   generatedAt: new Date().toISOString().slice(0, 10),
-  source: 'Límites: SERNANP (MINAM), mapa derivado y simplificado (geo.sernanp.gob.pe). Contacto: sede central del SERNANP (gob.pe/sernanp).',
+  source: 'Límites: SERNANP (MINAM), mapa derivado y simplificado (geo.sernanp.gob.pe). Contacto: directorio de jefes de ANP del SERNANP (junio de 2024) y sede central (gob.pe/sernanp).',
   parks,
 };
 await writeFile(OUT, JSON.stringify(data));

@@ -44,7 +44,7 @@ test('Perú y Bolivia: números, radio, parques y la red de radioaficionados de 
   await context.setGeolocation(SAJAMA);
   await page.goto('/#/first-aid/contacts');
   await page.getByRole('group', { name: 'País' }).getByRole('button', { name: 'Bolivia' }).click();
-  await expect(page.getByTestId('national-numbers').getByTestId('unconfirmed-boPolice')).toBeVisible();
+  await expect(page.getByTestId('national-numbers').getByTestId('unconfirmed-boAmbulance')).toBeVisible();
   await page.goto('/#/first-aid/radio');
   await expect(page.getByTestId('park-here')).toContainText('Parque Nacional Sajama · estás adentro');
   await expect(page.getByTestId('park-here')).toContainText('El SERNAP no publica una frecuencia de radio');

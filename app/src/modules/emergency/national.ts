@@ -14,8 +14,9 @@ import type { Country } from '@/core/settings/settings';
  *   de Clínicas); Línea Vida (ASSE) y la línea de violencia doméstica (Inmujeres).
  * - Perú: lista oficial de gob.pe/547 (Presidencia del Consejo de Ministros).
  *   La Policía de Alta Montaña (USAM, Yungay) sale de guías de montaña: sin confirmar.
- * - Bolivia: no hay una lista oficial publicada; 110, 118 y 119 salen de
- *   guías de viaje de otros gobiernos (Canadá, República Checa): sin confirmar.
+ * - Bolivia: 110 (policía) y 119 (bomberos) figuran en el sitio oficial de la
+ *   Policía Boliviana (policia.bo, leído el 2026-11-11); el 118 (ambulancia) sale
+ *   de guías de viaje de otros gobiernos (Canadá, República Checa): sin confirmar.
  *   Familia Segura: línea de apoyo psicológico de UNICEF Bolivia.
  *
  * Los `unconfirmed` se muestran con esa aclaración y un enlace para avisar si no andan.
@@ -60,9 +61,9 @@ export const NATIONAL_NUMBERS: Record<Country, NationalNumber[]> = {
     { id: 'uyGender', number: '0800 4141', kind: 'other' },
   ],
   BO: [
-    { id: 'boPolice', number: '110', kind: 'police', unconfirmed: true },
+    { id: 'boPolice', number: '110', kind: 'police' },
     { id: 'boAmbulance', number: '118', kind: 'medical', unconfirmed: true },
-    { id: 'boFire', number: '119', kind: 'fire', unconfirmed: true },
+    { id: 'boFire', number: '119', kind: 'fire' },
     { id: 'boMentalHealth', number: '800 11 3040', kind: 'medical' },
     { id: 'boGender', number: '800 14 0348', kind: 'other', unconfirmed: true },
   ],
