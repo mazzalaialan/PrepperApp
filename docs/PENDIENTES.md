@@ -101,3 +101,9 @@ La hoja lleva: mapa a escala real con curvas de nivel, relieve, ríos, caminos y
 Pruebas: unitarias (UTM contra el arco del meridiano, PDF, geometría, escalas que entran, datos de track y rutas, cobertura) y e2e (`e2e/topo-print.spec.ts`, desktop y android: escalas grisadas, PDF vertical y horizontal Oficio sin conexión, aviso de zona sin descargar).
 
 Pendiente: probarlo en un celular real y con una zona realmente descargada sin conexión; el desnivel de las rutas planificadas sale del relieve que haya en el dispositivo (sin datos, queda en «—»); una ruta que cruza el límite entre dos zonas UTM se dibuja en la zona de su centro; las curvas de nivel salen cada 20 m a 1:25.000 (el relieve disponible es de unos 30 m por píxel); la lista de coordenadas muestra hasta 12 puntos.
+
+## Licencia: doble licencia (decidido 2026-11-11)
+
+Decisión: el repositorio sigue público bajo GPL-3.0-or-later; a clientes (la escuela) se les da una licencia comercial **no exclusiva** más un contrato de servicios; la adaptación va en un fork privado, con el código en depósito (sin cesión de titularidad). Las contribuciones de terceros solo con el acuerdo de contribución de `CONTRIBUTING.md` (que permite relicenciar).
+
+Pendiente: que un abogado matriculado valide el texto de `CONTRIBUTING.md`, el contrato marco, la licencia comercial y el EULA; política de privacidad y contrato de encargado del tratamiento (Ley 25.326); pantalla de licencias y créditos de terceros; registrar la marca «VikArg» en el INPI (clases 9 y 42) y depositar el software en la DNDA (más adelante); revisar que ningún archivo del plugin de ubicación en segundo plano lleve el aviso «Incompatible With Secondary Licenses».

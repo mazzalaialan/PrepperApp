@@ -51,6 +51,8 @@ Para probar en un celular Android en la misma red: `npm run dev -- --host` y abr
 
 [GPL-3.0-or-later](LICENSE). Podés usar, estudiar, modificar y redistribuir el código; las versiones modificadas que se distribuyan deben publicarse bajo la misma licencia.
 
+También está disponible bajo una licencia comercial no exclusiva para quien no pueda o no quiera cumplir la GPL: contacto.vikarg@gmail.com. Para colaborar con código, ver [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Deploy
 
 Cada push a `main` publica la app en GitHub Pages mediante [.github/workflows/deploy.yml](.github/workflows/deploy.yml). Hay que habilitarlo una vez en *Settings → Pages → Source: GitHub Actions*.
