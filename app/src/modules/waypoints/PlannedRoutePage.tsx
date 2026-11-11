@@ -139,7 +139,7 @@ export function PlannedRoutePage({ route }: { route: Route }) {
                   {t('routes.legTo', { n: i + 1 })}
                   {i > 0 && ` · ${dist(legs[i - 1]!.distanceM)}`}
                 </span>
-                {i > 0 && <span className="list-sub">{t('mapTools.legBearing', { magnetic: Math.round(legs[i - 1]!.magneticBearing), cardinal: legs[i - 1]!.cardinal })}</span>}
+                {i > 0 && <span className="list-sub">{t('mapTools.legBearing', { true: Math.round(legs[i - 1]!.trueBearing), magnetic: Math.round(legs[i - 1]!.magneticBearing), cardinal: legs[i - 1]!.cardinal })}</span>}
               </span>
               <Link
                 className="icon-btn"

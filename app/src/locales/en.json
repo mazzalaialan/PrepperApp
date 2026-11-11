@@ -728,7 +728,7 @@
     "securityNote": "The park ranger, CONAF and Radio Club de Carabineros frequencies are only for calling for help when a life is in danger: with a life at risk you may ask for help by any means. Gendarmerie and police frequencies aren't included: they aren't public and many are encrypted. Listening to forces or services without authorization may be a crime (in Argentina, Penal Code, art. 153)."
   },
   "mapTools": {
-    "legBearing": "Bearing {{magnetic}}° magnetic ({{cardinal}})",
+    "legBearing": "True bearing {{true}}° · magnetic {{magnetic}}° ({{cardinal}})",
     "title": "Tools",
     "measure": "Measure and plan",
     "target": "Direction to a point",

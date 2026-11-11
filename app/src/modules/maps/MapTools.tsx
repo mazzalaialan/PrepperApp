@@ -214,7 +214,7 @@ export function useMapTools(fix: (LatLon & { alt: number | null }) | null) {
                 <span className="route-index">{l.n}</span>
                 <span className="list-main">
                   <span className="list-title">{dist(l.distanceM)}</span>
-                  <span className="list-sub">{t('mapTools.legBearing', { magnetic: Math.round(l.magneticBearing), cardinal: l.cardinal })}</span>
+                  <span className="list-sub">{t('mapTools.legBearing', { true: Math.round(l.trueBearing), magnetic: Math.round(l.magneticBearing), cardinal: l.cardinal })}</span>
                 </span>
               </li>
             ))}
