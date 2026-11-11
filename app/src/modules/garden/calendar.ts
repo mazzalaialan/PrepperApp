@@ -13,6 +13,9 @@ import type { Country, GardenZone } from '@/core/settings/settings';
  * Calendario de cultivo a campo para el norte de la Patagonia (INTA EEA Alto
  * Valle) y del Valle Inferior del río Negro (INTA EEA Valle Inferior). Cuyo,
  * temporadas de Mendoza (INTA AER Rivadavia) sobre el calendario de Alto Valle.
+ * Zanahoria y lechuga de Patagonia norte, ampliadas con el Calendario de siembra otoño-invierno
+ * y primavera-verano del Valle Inferior (Cecchini y Guerrero, INTA EEA Valle Inferior, 2023;
+ * repositorio.inta.gob.ar/handle/20.500.12123/14512, CC BY-NC-SA: solo se toman los meses).
  * NOA, Calendario de huerta agroecológica de La Rioja (INTA EEA La Rioja).
  * Patagonia sur y andina, Planificador de huerta del sur de Santa Cruz (INTA
  * EEA Santa Cruz). NEA: sin cartilla regional; estimado.
@@ -115,7 +118,7 @@ const PATAGONIA_NORTE: ZoneTable = {
   frutilla: { T: '3-4', H: '11-1' },
   haba: { S: '3-5,8' },
   hinojo: { S: '1-3' },
-  lechuga: { S: '2-4,8-11', A: '2-5,8' },
+  lechuga: { S: '8-5', A: '8-5' },
   melon: { S: '10-11' },
   papa: { S: '10-11' },
   pepino: { S: '10-12' },
@@ -129,7 +132,7 @@ const PATAGONIA_NORTE: ZoneTable = {
   rucula: { S: '2-5,8' },
   sandia: { S: '10-11' },
   tomate: { A: '8-9', T: '10-11' },
-  zanahoria: { S: '8-12,1' },
+  zanahoria: { S: '8-3' },
   zapallo: { S: '10-11' },
   zapallito: { S: '10-12,1' },
 };
