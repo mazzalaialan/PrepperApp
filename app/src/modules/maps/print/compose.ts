@@ -310,49 +310,73 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
   return canvas;
 }
 
+/** Recorta un texto con «…» para que entre en `maxW` píxeles (con la fuente que tenga el contexto). */
+function fit(ctx: Ctx, s: string, maxW: number): string {
+  if (ctx.measureText(s).width <= maxW) return s;
+  let t = s;
+  while (t.length > 1 && ctx.measureText(`${t}…`).width > maxW) t = t.slice(0, -1);
+  return `${t}…`;
+}
+
 function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
-  const rowH = mm(5.2);
   const name = (n: number) => input.points.find((p) => p.n === n)?.name ?? String(n);
-  const cols = [0.07, 0.43, 0.15, 0.15, 0.2];
-  const heads = ['N.°', 'Tramo', 'Distancia', 'Rumbo mag.', 'Desnivel'];
+  const narrow = r.w < mm(120);
+  const headH = mm(6.2);
   ctx.fillStyle = '#e9e5da';
-  ctx.fillRect(r.x, r.y, r.w, rowH + mm(1));
+  ctx.fillRect(r.x, r.y, r.w, headH);
   ctx.strokeStyle = '#111';
   ctx.lineWidth = mm(0.3);
   ctx.strokeRect(r.x, r.y, r.w, r.h);
-  let x = r.x;
-  heads.forEach((hd, i) => {
-    text(ctx, hd, x + mm(1.2), r.y + mm(4), { size: 3, bold: true });
-    x += cols[i]! * r.w;
-  });
-  const maxRows = Math.max(1, Math.floor((r.h - mm(1) - rowH) / rowH));
-  const legs = input.legs.slice(0, maxRows - 1);
-  legs.forEach((leg, i) => {
-    const y = r.y + mm(1) + rowH * (i + 1) + mm(3.9);
-    const cells = [
-      String(i + 1),
-      `${name(leg.from)} → ${name(leg.to)}`,
-      fmtDist(leg.distanceM),
-      leg.bearingMagDeg === null ? '—' : `${String(Math.round(leg.bearingMagDeg) % 360).padStart(3, '0')}°`,
-      leg.ascentM === undefined && leg.descentM === undefined ? '—' : `+${Math.round(leg.ascentM ?? 0)} / −${Math.round(leg.descentM ?? 0)} m`,
-    ];
-    let cx = r.x;
-    cells.forEach((c, k) => {
-      text(ctx, c, cx + mm(1.2), y, { size: 3 });
-      cx += cols[k]! * r.w;
-    });
-    ctx.strokeStyle = '#c9c4b6';
-    ctx.beginPath();
-    ctx.moveTo(r.x, y + mm(1.3));
-    ctx.lineTo(r.x + r.w, y + mm(1.3));
-    ctx.stroke();
-  });
   const total = input.legs.reduce((s, l) => s + l.distanceM, 0);
   const up = input.legs.reduce((s, l) => s + (l.ascentM ?? 0), 0);
   const down = input.legs.reduce((s, l) => s + (l.descentM ?? 0), 0);
+  const bearing = (l: TopoLeg) => (l.bearingMagDeg === null ? '—' : `${String(Math.round(l.bearingMagDeg) % 360).padStart(3, '0')}°`);
+  const gain = (l: TopoLeg) => (l.ascentM === undefined && l.descentM === undefined ? '—' : `+${Math.round(l.ascentM ?? 0)} / −${Math.round(l.descentM ?? 0)} m`);
+  const rowH = narrow ? mm(9.6) : mm(5.2);
+  const maxRows = Math.max(1, Math.floor((r.h - headH - mm(7)) / rowH));
+  const legs = input.legs.slice(0, maxRows);
+
+  if (narrow) {
+    // Tabla angosta (hoja horizontal): dos líneas por tramo, el nombre arriba y los datos abajo.
+    text(ctx, 'Tramos: distancia · rumbo magnético · desnivel', r.x + mm(1.5), r.y + mm(4.3), { size: 3, bold: true });
+    legs.forEach((leg, i) => {
+      const y = r.y + headH + rowH * i;
+      ctx.font = `700 ${mm(3.1)}px ${FONT}`;
+      const title = fit(ctx, `${i + 1}.  ${name(leg.from)} → ${name(leg.to)}`, r.w - mm(3));
+      text(ctx, title, r.x + mm(1.5), y + mm(4.2), { size: 3.1, bold: true });
+      text(ctx, `${fmtDist(leg.distanceM)}  ·  ${bearing(leg)}  ·  ${gain(leg)}`, r.x + mm(1.5), y + mm(8), { size: 2.9, color: '#333' });
+      ctx.strokeStyle = '#c9c4b6';
+      ctx.beginPath();
+      ctx.moveTo(r.x, y + rowH);
+      ctx.lineTo(r.x + r.w, y + rowH);
+      ctx.stroke();
+    });
+  } else {
+    const cols = [0.07, 0.43, 0.15, 0.15, 0.2];
+    const heads = ['N.°', 'Tramo', 'Distancia', 'Rumbo mag.', 'Desnivel'];
+    let x = r.x;
+    heads.forEach((hd, i) => {
+      text(ctx, hd, x + mm(1.2), r.y + mm(4.3), { size: 3, bold: true });
+      x += cols[i]! * r.w;
+    });
+    legs.forEach((leg, i) => {
+      const y = r.y + headH + rowH * i + mm(3.8);
+      ctx.font = `${mm(3)}px ${FONT}`;
+      const cells = [String(i + 1), fit(ctx, `${name(leg.from)} → ${name(leg.to)}`, cols[1]! * r.w - mm(2.4)), fmtDist(leg.distanceM), bearing(leg), gain(leg)];
+      let cx = r.x;
+      cells.forEach((c, k) => {
+        text(ctx, c, cx + mm(1.2), y, { size: 3 });
+        cx += cols[k]! * r.w;
+      });
+      ctx.strokeStyle = '#c9c4b6';
+      ctx.beginPath();
+      ctx.moveTo(r.x, y + mm(1.4));
+      ctx.lineTo(r.x + r.w, y + mm(1.4));
+      ctx.stroke();
+    });
+  }
   const more = input.legs.length > legs.length ? ` (se muestran ${legs.length} de ${input.legs.length} tramos)` : '';
-  const ty = r.y + r.h - mm(1.6);
-  text(ctx, `Total: ${fmtDist(total)}${up || down ? ` · +${Math.round(up)} / −${Math.round(down)} m` : ''}${more}`, r.x + mm(1.2), ty, { size: 3, bold: true });
+  text(ctx, `Total: ${fmtDist(total)}${up || down ? ` · +${Math.round(up)} / −${Math.round(down)} m` : ''}${more}`, r.x + mm(1.5), r.y + r.h - mm(1.8), { size: 3, bold: true });
 }
 
 function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, scale: number) {
