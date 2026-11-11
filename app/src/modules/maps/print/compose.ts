@@ -51,6 +51,8 @@ export interface TopoSheetInput {
   /** Escala (denominador); sin valor, la de más detalle a la que entra la ruta. */
   scale?: number;
   orientation?: Orientation;
+  /** Además de la cuadrícula UTM, marcas de latitud y longitud dentro del marco (apagado por defecto). */
+  latLonTicks?: boolean;
 }
 
 export interface SheetPlan {
@@ -97,7 +99,6 @@ const dm = (deg: number, seconds = false) => {
   const sec = seconds ? rest % 60 : 0;
   return `${d}°${String(m).padStart(2, '0')}′${seconds ? `${String(sec).padStart(2, '0')}″` : ''}`;
 };
-const km = (v: number, step: number) => (step >= 1000 ? String(Math.round(v / 1000)) : (v / 1000).toFixed(1));
 const fmtDist = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(2).replace('.', ',')} km` : `${Math.round(m)} m`);
 
 type Ctx = CanvasRenderingContext2D;
@@ -175,32 +176,20 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
   const GRID_COLOR = '#1d4e89';
   ctx.strokeStyle = GRID_COLOR;
   ctx.lineWidth = mm(0.18);
-  const gridLabels: { x: number; y: number; s: string; edge: 'top' | 'bottom' | 'left' | 'right' }[] = [];
   const line = (pts: { x: number; y: number }[]) => {
     ctx.beginPath();
     pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.stroke();
   };
-  const inside = (p: { x: number; y: number }) => p.x >= map.x && p.x <= map.x + map.w && p.y >= map.y && p.y <= map.y + map.h;
   for (const e of grid.eastings) {
     const pts: { x: number; y: number }[] = [];
     for (let n = minN - 2000; n <= maxN + 2000; n += 250) pts.push(toXY(e, n));
     line(pts);
-    const vis = pts.filter(inside);
-    if (vis.length) {
-      gridLabels.push({ ...vis.reduce((a, b) => (b.y < a.y ? b : a)), s: km(e, step), edge: 'top' });
-      gridLabels.push({ ...vis.reduce((a, b) => (b.y > a.y ? b : a)), s: km(e, step), edge: 'bottom' });
-    }
   }
   for (const n of grid.northings) {
     const pts: { x: number; y: number }[] = [];
     for (let e = minE - 2000; e <= maxE + 2000; e += 250) pts.push(toXY(e, n));
     line(pts);
-    const vis = pts.filter(inside);
-    if (vis.length) {
-      gridLabels.push({ ...vis.reduce((a, b) => (b.x < a.x ? b : a)), s: km(n, step), edge: 'left' });
-      gridLabels.push({ ...vis.reduce((a, b) => (b.x > a.x ? b : a)), s: km(n, step), edge: 'right' });
-    }
   }
   // Ruta y waypoints
   if (input.line.length > 1) {
@@ -228,67 +217,86 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
   }
   ctx.restore();
 
-  // Valores de la cuadrícula (km) pegados al borde, dentro del marco: los de este, horizontales; los de norte, en vertical.
-  // Se omiten los que quedan a menos de 7 mm de una esquina (se cortarían o pisarían los del otro eje).
-  const corner = mm(7);
-  const GL = { size: 2.6, bold: true, color: GRID_COLOR, halo: 'rgba(255,255,255,0.92)' } as const;
-  for (const l of gridLabels) {
-    if (l.edge === 'top' || l.edge === 'bottom') {
-      if (l.x < map.x + corner || l.x > map.x + map.w - corner) continue;
-      text(ctx, l.s, l.x, l.edge === 'top' ? map.y + mm(3.4) : map.y + map.h - mm(1.2), { ...GL, align: 'center' });
-    } else {
-      if (l.y < map.y + corner || l.y > map.y + map.h - corner) continue;
-      vtext(ctx, l.s, l.edge === 'left' ? map.x + mm(3.5) : map.x + map.w - mm(1), l.y, { ...GL, align: 'center' });
-    }
-  }
-
-  // Marco del mapa y marcas de latitud y longitud en el borde
+  // Marco del mapa
   ctx.strokeStyle = '#111';
   ctx.lineWidth = mm(0.4);
   ctx.strokeRect(map.x, map.y, map.w, map.h);
-  // Con el mapa girado (norte de la cuadrícula arriba), los meridianos y paralelos quedan inclinados: las marcas se ubican
-  // donde cada uno cruza el borde del marco.
-  const ll = latLonStepDeg(scale);
-  const secs = ll < 1 / 60 - 1e-9;
-  const tickOpt = { size: 2.5, color: '#111' } as const;
-  const N = 240;
-  const along = (from: { x: number; y: number }, to: { x: number; y: number }, key: 'lat' | 'lon', axis: 'x' | 'y') =>
-    Array.from({ length: N + 1 }, (_, i) => {
-      const x = from.x + ((to.x - from.x) * i) / N;
-      const y = from.y + ((to.y - from.y) * i) / N;
-      return { pos: axis === 'x' ? x : y, value: unproj(x, y)[key] };
-    });
-  const L = { x: map.x, y: map.y };
-  const R = { x: map.x + map.w, y: map.y };
-  const BL = { x: map.x, y: map.y + map.h };
-  const BR = { x: map.x + map.w, y: map.y + map.h };
-  for (const t of edgeTicks(along(L, BL, 'lat', 'y'), ll)) {
+
+  // Valores de la cuadrícula UTM afuera del marco, con la marca donde cada línea lo cruza: los de este arriba y abajo
+  // (horizontales); los de norte a los costados (en vertical). El valor va completo, en metros.
+  const grp = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
+  const midN = (minN + maxN) / 2;
+  const midE = (minE + maxE) / 2;
+  const UT = { size: 2.7, bold: true, color: GRID_COLOR } as const;
+  ctx.strokeStyle = GRID_COLOR;
+  ctx.lineWidth = mm(0.3);
+  for (const e of grid.eastings) {
+    const x = toXY(e, midN).x;
+    if (x < map.x + mm(6) || x > map.x + map.w - mm(6)) continue;
     ctx.beginPath();
-    ctx.moveTo(map.x - mm(1.8), t.pos);
-    ctx.lineTo(map.x, t.pos);
+    ctx.moveTo(x, map.y - mm(1.8));
+    ctx.lineTo(x, map.y);
+    ctx.moveTo(x, map.y + map.h);
+    ctx.lineTo(x, map.y + map.h + mm(1.8));
     ctx.stroke();
-    vtext(ctx, dm(t.value, secs), map.x - mm(2.2), t.pos, { ...tickOpt, align: 'center' });
+    text(ctx, grp(e), x, map.y - mm(2.4), { ...UT, align: 'center', base: 'bottom' });
+    text(ctx, grp(e), x, map.y + map.h + mm(2.4), { ...UT, align: 'center', base: 'top' });
   }
-  for (const t of edgeTicks(along(R, BR, 'lat', 'y'), ll)) {
+  for (const n of grid.northings) {
+    const y = toXY(midE, n).y;
+    if (y < map.y + mm(6) || y > map.y + map.h - mm(6)) continue;
     ctx.beginPath();
-    ctx.moveTo(map.x + map.w, t.pos);
-    ctx.lineTo(map.x + map.w + mm(1.8), t.pos);
+    ctx.moveTo(map.x - mm(1.8), y);
+    ctx.lineTo(map.x, y);
+    ctx.moveTo(map.x + map.w, y);
+    ctx.lineTo(map.x + map.w + mm(1.8), y);
     ctx.stroke();
-    vtext(ctx, dm(t.value, secs), map.x + map.w + mm(5), t.pos, { ...tickOpt, align: 'center' });
+    vtext(ctx, grp(n), map.x - mm(2.4), y, { ...UT, align: 'center' });
+    vtext(ctx, grp(n), map.x + map.w + mm(5.2), y, { ...UT, align: 'center' });
   }
-  for (const t of edgeTicks(along(L, R, 'lon', 'x'), ll)) {
-    ctx.beginPath();
-    ctx.moveTo(t.pos, map.y - mm(1.8));
-    ctx.lineTo(t.pos, map.y);
-    ctx.stroke();
-    text(ctx, dm(t.value, secs), t.pos, map.y - mm(2.2), { ...tickOpt, align: 'center', base: 'bottom' });
-  }
-  for (const t of edgeTicks(along(BL, BR, 'lon', 'x'), ll)) {
-    ctx.beginPath();
-    ctx.moveTo(t.pos, map.y + map.h);
-    ctx.lineTo(t.pos, map.y + map.h + mm(1.8));
-    ctx.stroke();
-    text(ctx, dm(t.value, secs), t.pos, map.y + map.h + mm(2.2), { ...tickOpt, align: 'center', base: 'top' });
+  text(ctx, 'E (m)', map.x - mm(1), map.y - mm(5), { size: 2.2, color: GRID_COLOR, align: 'right', base: 'bottom' });
+  vtext(ctx, 'N (m)', map.x + map.w + mm(8), map.y + mm(1), { size: 2.2, color: GRID_COLOR, align: 'right' });
+
+  // Marcas de latitud y longitud (opcionales), hacia adentro del marco: con el mapa girado quedan inclinadas
+  if (input.latLonTicks) {
+    const ll = latLonStepDeg(scale);
+    const secs = ll < 1 / 60 - 1e-9;
+    const N = 240;
+    const along = (from: { x: number; y: number }, to: { x: number; y: number }, key: 'lat' | 'lon', axis: 'x' | 'y') =>
+      Array.from({ length: N + 1 }, (_, i) => {
+        const x = from.x + ((to.x - from.x) * i) / N;
+        const y = from.y + ((to.y - from.y) * i) / N;
+        return { pos: axis === 'x' ? x : y, value: unproj(x, y)[key] };
+      });
+    const L = { x: map.x, y: map.y };
+    const R = { x: map.x + map.w, y: map.y };
+    const BL = { x: map.x, y: map.y + map.h };
+    const BR = { x: map.x + map.w, y: map.y + map.h };
+    const LL = { size: 2.3, color: '#111', halo: 'rgba(255,255,255,0.9)' } as const;
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = mm(0.3);
+    const tick = (x1: number, y1: number, x2: number, y2: number) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    };
+    for (const t of edgeTicks(along(L, BL, 'lat', 'y'), ll)) {
+      tick(map.x, t.pos, map.x + mm(2), t.pos);
+      vtext(ctx, dm(t.value, secs), map.x + mm(5), t.pos, { ...LL, align: 'center' });
+    }
+    for (const t of edgeTicks(along(R, BR, 'lat', 'y'), ll)) {
+      tick(map.x + map.w, t.pos, map.x + map.w - mm(2), t.pos);
+      vtext(ctx, dm(t.value, secs), map.x + map.w - mm(2.6), t.pos, { ...LL, align: 'center' });
+    }
+    for (const t of edgeTicks(along(L, R, 'lon', 'x'), ll)) {
+      tick(t.pos, map.y, t.pos, map.y + mm(2));
+      text(ctx, dm(t.value, secs), t.pos, map.y + mm(5), { ...LL, align: 'center' });
+    }
+    for (const t of edgeTicks(along(BL, BR, 'lon', 'x'), ll)) {
+      tick(t.pos, map.y + map.h, t.pos, map.y + map.h - mm(2));
+      text(ctx, dm(t.value, secs), t.pos, map.y + map.h - mm(2.6), { ...LL, align: 'center' });
+    }
   }
 
   // Título
@@ -379,11 +387,12 @@ function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, s
   const lines = [
     `Cuadrícula UTM de ${gridLabel(scale)}`,
     `(1 cuadro = ${paperMmLabel(scale)} en el papel)`,
-    `WGS84 · zona ${plan.zone}${plan.center.lat < 0 ? ' Sur' : ' Norte'} · valores en km`,
+    `Proyección UTM (Mercator transversal) · WGS84`,
+    `Zona ${plan.zone} ${plan.center.lat < 0 ? 'Sur' : 'Norte'} (${plan.zone}${toUtm(plan.center, plan.zone).band}) · meridiano central ${Math.abs(-183 + 6 * plan.zone)}° ${-183 + 6 * plan.zone < 0 ? 'O' : 'E'}`,
     `Centro: ${formatUtm(toUtm(plan.center, plan.zone))}`,
     `Curvas de nivel cada ${ci.minor} m (destacadas cada ${ci.major} m)`,
   ];
-  lines.forEach((s, i) => text(ctx, s, mx, r.y + mm(4.8 + i * 3.4), { size: 2.5 }));
+  lines.forEach((s, i) => text(ctx, s, mx, r.y + mm(3.9 + i * 2.85), { size: 2.3 }));
 
   // Norte: de la cuadrícula (NC), verdadero (NV) y magnético (NM)
   const ncx = r.x + r.w - mm(14);
@@ -411,10 +420,10 @@ function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, s
     ctx.restore();
   };
   // Las diferencias entre los tres nortes son de pocos grados: las flechas son largas para que se distingan.
-  arrow(0, 14, '#1d4e89');
-  arrow(-conv, 14, '#111', true);
-  arrow(input.declinationDeg - conv, 14, '#b3261e');
-  text(ctx, 'N', ncx, r.y + mm(2.6), { size: 3, bold: true, align: 'center', base: 'bottom' });
+  arrow(0, 12, '#1d4e89');
+  arrow(-conv, 12, '#111', true);
+  arrow(input.declinationDeg - conv, 12, '#b3261e');
+  text(ctx, 'N', ncx, r.y + mm(4.6), { size: 3, bold: true, align: 'center', base: 'bottom' });
 
   // Fila de abajo: leyenda del norte, declinación, aviso y atribuciones
   const legendY = r.y + mm(21.4);
