@@ -4341,3 +4341,10 @@ a.module-card:hover {
   text-align: left;
   cursor: pointer;
 }
+
+/* Escalas del mapa topográfico que no entran: grisadas y sin respuesta al toque. */
+.chip:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

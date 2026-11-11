@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Activity, Check, Download, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Route as RouteIcon, Trash2, X } from 'lucide-react';
+import { Activity, Check, Download, ExternalLink, Footprints, Map as MapIcon, MapPinPlus, Pencil, Printer, Route as RouteIcon, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Track, Waypoint } from '@/core/model/types';
@@ -10,6 +10,8 @@ import { formatAltitude, formatDistance } from '@/core/units/units';
 import { toGpx } from '@/modules/training/interchange';
 import { routeFromTrack } from '@/modules/waypoints/importRoute';
 import { deliverFile } from '@/ui/files';
+import { trackSheetInput } from '@/modules/maps/print/data';
+import { PrintTopoDialog } from '@/modules/maps/print/PrintTopoDialog';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { ElevationProfile } from './ElevationProfile';
 import { useRecorder } from './recorder';
@@ -60,6 +62,7 @@ function TrackDetail({ track }: { track: Track }) {
   const deleteWaypoint = useWaypoints((s) => s.deleteWaypoint);
   /** Lo que se está editando (nombre o notas) y su borrador; null si no se edita nada. */
   const [editing, setEditing] = useState<{ field: 'name' | 'notes'; value: string } | null>(null);
+  const [printing, setPrinting] = useState(false);
   const dist = (m: number) => formatDistance(m, units, i18n.language);
   const alt = (m: number) => formatAltitude(m, units, i18n.language);
 
@@ -223,6 +226,11 @@ function TrackDetail({ track }: { track: Track }) {
           <Link className="btn" to={`/orientation/maps?track=${track.id}`}>
             <MapIcon size={18} /> {t('tracks.onMap')}
           </Link>
+          {track.segments.some((seg) => seg.length > 1) && (
+            <button className="btn" type="button" data-testid="track-print-map" onClick={() => setPrinting(true)}>
+              <Printer size={18} /> {t('topoPrint.button')}
+            </button>
+          )}
           {workoutId && (
             <Link className="btn" to={`/training/workouts/${workoutId}`} data-testid="track-workout">
               <Activity size={18} /> {t('tracks.seeWorkout')}
@@ -307,6 +315,7 @@ function TrackDetail({ track }: { track: Track }) {
           </button>
         </div>
       )}
+      {printing && <PrintTopoDialog input={trackSheetInput(track)} onClose={() => setPrinting(false)} />}
     </div>
   );
 }

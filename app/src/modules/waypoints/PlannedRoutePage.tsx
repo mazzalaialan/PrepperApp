@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Download, Footprints, Map as MapIcon, MapPinPlus, Trash2 } from 'lucide-react';
+import { Download, Footprints, Map as MapIcon, MapPinPlus, Printer, Trash2 } from 'lucide-react';
 import type { Route } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
@@ -15,6 +15,8 @@ import { legsOf, lineLength, trackFromRoute } from './plan';
 import { useWaypoints } from './store';
 import type { NewWaypointDraft } from './WaypointEditPage';
 import { confirmAction } from '@/ui/confirm';
+import { plannedRouteSheetInput } from '@/modules/maps/print/data';
+import { PrintTopoDialog } from '@/modules/maps/print/PrintTopoDialog';
 
 /**
  * Una ruta planificada en el mapa: sus piernas (distancia y rumbo magnético),
@@ -36,6 +38,7 @@ export function PlannedRoutePage({ route }: { route: Route }) {
   const alt = (m: number) => formatAltitude(m, units, i18n.language);
   const [summary, setSummary] = useState<PathSummary | null>(null);
   const [name, setName] = useState(route.name);
+  const [printing, setPrinting] = useState(false);
   useEffect(() => {
     let cancelled = false;
     void summarizePath(line).then((s) => !cancelled && setSummary(s));
@@ -126,6 +129,11 @@ export function PlannedRoutePage({ route }: { route: Route }) {
           <button className="btn" type="button" data-testid="planned-kml" onClick={() => void exportKml()}>
             <Download size={18} /> {t('routes.exportKml')}
           </button>
+          {line.length > 1 && (
+            <button className="btn" type="button" data-testid="planned-print-map" onClick={() => setPrinting(true)}>
+              <Printer size={18} /> {t('topoPrint.button')}
+            </button>
+          )}
         </div>
       </section>
       <section className="card stack">
@@ -170,6 +178,7 @@ export function PlannedRoutePage({ route }: { route: Route }) {
           <Trash2 size={18} /> {t('common.delete')}
         </button>
       </div>
+      {printing && <PrintTopoDialog input={plannedRouteSheetInput(route)} onClose={() => setPrinting(false)} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { convergenceDeg, legsBetween, planSheet, scaleChoices, type TopoSheetInput } from './compose';
+import { convergenceDeg } from './compose';
+import { legsBetween, planSheet, scaleChoices, type TopoSheetInput } from './plan';
 
 const base = (over: Partial<TopoSheetInput> = {}): TopoSheetInput => ({
   title: 'Prueba',
