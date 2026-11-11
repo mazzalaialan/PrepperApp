@@ -2384,10 +2384,11 @@
     "zoneCountry": {
       "CL": "Chile no tiene un calendario oficial de huerta familiar: se usa el de la zona argentina de clima parecido ({{zone}}).",
       "UY": "Uruguay no tiene un calendario oficial de huerta familiar: se usa el de la zona argentina de clima parecido ({{zone}}).",
-      "BO": "Bolivia no tiene un calendario de huerta oficial publicado por cultivo y mes (el INIAF no lo publica). Para los valles hay una zona estimada, \"Valles de Bolivia (Tarija)\", armada con el manual de una ONG; en el altiplano o el trópico elegí a mano la que más se parezca y tomá los meses como referencia.",
+      "BO": "Bolivia no tiene un calendario de huerta oficial publicado por cultivo y mes (el INIAF no lo publica). Hay dos zonas estimadas: \"Valles de Bolivia (Tarija)\", armada con el manual de una ONG, y \"Trópico y Yungas de Bolivia\", de un cuadro de un proyecto de cooperación (12 cultivos); en el altiplano elegí a mano la que más se parezca y tomá los meses como referencia.",
       "PE": "Perú no tiene un calendario de huerta oficial publicado por cultivo y mes (el INIA no lo publica abierto): el clima de la costa, la sierra y la selva no se parece a ninguna zona argentina. Elegí a mano la zona que más se parezca (la de \"Valles de Bolivia\" es de clima templado de valle) y tomá los meses como referencia."
     },
     "zoneEstimatedValles": "Esta zona sale de un manual de una ONG para el Valle Central de Tarija (2016), no de una fuente oficial: los meses se leyeron de cuadros gráficos y pueden estar corridos un mes. Sirve para valles de clima templado; en el altiplano o el trópico los meses cambian. Tomalo como orientación y fijate qué hacen en tu zona.",
+    "zoneEstimatedTropico": "Esta zona sale de un cuadro de siembra de un proyecto de cooperación para el trópico de Cochabamba y los Yungas de La Paz (Jatun Sacha, con apoyo de UNODC): una sola fuente, no oficial y sin validar por el INIAF. No distingue siembra directa de almácigo ni los Yungas del trópico, y trae solo 12 cultivos. Tomalo como orientación y fijate qué hacen en tu zona.",
     "zoneEstimated": "Para esta zona no hay cartilla del INTA: el calendario es una estimación (heladas suaves, verano muy caluroso y húmedo). Tomalo como orientación.",
     "zones": {
       "pampeana": "Pampeana",
@@ -2396,6 +2397,7 @@
       "cuyo": "Cuyo",
       "patagoniaNorte": "Patagonia norte",
       "patagoniaSur": "Patagonia sur y andina",
+      "tropicoBolivia": "Trópico y Yungas de Bolivia (estimada)",
       "vallesBolivia": "Valles de Bolivia (Tarija, estimada)"
     },
     "thisMonth": "Este mes: {{month}}",

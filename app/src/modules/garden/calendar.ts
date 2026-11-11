@@ -22,16 +22,20 @@ import type { Country, GardenZone } from '@/core/settings/settings';
  * (±1 mes). Las filas "Siembra" van como siembra directa; donde el cuadro solo
  * tiene "Cultivo" (la planta en el campo), siembra o trasplante son los
  * primeros tres meses de esa franja. Cosecha: la de los cuadros.
+ * Trópico y Yungas de Bolivia: cuadro de siembra de «Construyamos nuestra huerta
+ * familiar» (proyecto Jatun Sacha, con apoyo de UNODC): una sola fuente, no oficial,
+ * que no distingue siembra directa de almácigo (se carga todo como siembra) ni los
+ * Yungas del trópico. La cosecha se calcula con los días a cosecha de cada ficha.
  */
 
-export const ZONES = ['pampeana', 'nea', 'noa', 'cuyo', 'patagoniaNorte', 'patagoniaSur', 'vallesBolivia'] as const;
+export const ZONES = ['pampeana', 'nea', 'noa', 'cuyo', 'patagoniaNorte', 'patagoniaSur', 'vallesBolivia', 'tropicoBolivia'] as const;
 export type Zone = (typeof ZONES)[number];
 // El tipo de Ajustes tiene que coincidir con esta lista.
 const _sameZones: Zone extends GardenZone ? (GardenZone extends Zone ? true : never) : never = true;
 void _sameZones;
 
 /** Zonas sin cartilla del INTA: el calendario es una estimación. */
-export const ESTIMATED_ZONES: ReadonlySet<Zone> = new Set(['nea', 'vallesBolivia']);
+export const ESTIMATED_ZONES: ReadonlySet<Zone> = new Set(['nea', 'vallesBolivia', 'tropicoBolivia']);
 
 export interface ZoneEntry {
   /** Siembra directa. */
@@ -290,6 +294,22 @@ const VALLES_BOLIVIA: ZoneTable = {
   remolacha: { S: '4-6', H: '7-11' },
 };
 
+/** Estimado a partir de un cuadro de siembra de un proyecto de cooperación (ver arriba): una sola fuente, sin validar por el INIAF. */
+const TROPICO_BOLIVIA: ZoneTable = {
+  rabanito: { S: '1-12' },
+  chaucha: { S: '9-1' },
+  lechuga: { S: '9-1' },
+  repollo: { S: '9-1' },
+  brocoli: { S: '10-1' },
+  zanahoria: { S: '10-1' },
+  coliflor: { S: '10-1' },
+  cebolla: { S: '10-1' },
+  acelga: { S: '10-3' },
+  pepino: { S: '11-12' },
+  zapallo: { S: '11-12' },
+  sandia: { S: '11-12' },
+};
+
 export const ZONE_TABLES: Record<Zone, ZoneTable> = {
   pampeana: PAMPEANA,
   nea: NEA,
@@ -298,6 +318,7 @@ export const ZONE_TABLES: Record<Zone, ZoneTable> = {
   patagoniaNorte: PATAGONIA_NORTE,
   patagoniaSur: PATAGONIA_SUR,
   vallesBolivia: VALLES_BOLIVIA,
+  tropicoBolivia: TROPICO_BOLIVIA,
 };
 
 /** "8-11,2" → {8,9,10,11,2}; los rangos pueden cruzar el año ("11-2"). Meses 1–12. */

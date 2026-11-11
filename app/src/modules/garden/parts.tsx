@@ -61,7 +61,7 @@ export function ZonePicker({ place, zone, suggested, manual }: { place: GardenPl
       {country !== 'AR' && <p className="hint" style={{ margin: 0 }}>{t(`garden.zoneCountry.${country}`, { zone: t(`garden.zones.${zone}`) })}</p>}
       {ESTIMATED_ZONES.has(zone) && (
         <p className="warning-box" style={{ margin: 0 }} data-testid="zone-estimated">
-          {t(zone === 'vallesBolivia' ? 'garden.zoneEstimatedValles' : 'garden.zoneEstimated')}
+          {t(zone === 'vallesBolivia' ? 'garden.zoneEstimatedValles' : zone === 'tropicoBolivia' ? 'garden.zoneEstimatedTropico' : 'garden.zoneEstimated')}
         </p>
       )}
     </div>

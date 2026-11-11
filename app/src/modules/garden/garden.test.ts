@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GardenBed, Planting } from '@/core/model/types';
-import { cropCalendar, harvestMonths, missingInZone, monthPlan, parseMonths, ZONE_TABLES, ZONES, zoneFor } from './calendar';
+import { cropCalendar, ESTIMATED_ZONES, harvestMonths, missingInZone, monthPlan, parseMonths, ZONE_TABLES, ZONES, zoneFor } from './calendar';
 import { CROP_BY_ID, CROPS, gridFootprint } from './crops';
 import { readilyAvailableMm, beforeLastFrost, dueTasks, frostRisk, gridSize, outdoorPlantings, plantsFor, recommendForBed, waterBalance, type WaterDay } from './logic';
 
@@ -260,5 +260,17 @@ describe('lo que se manda al servidor', () => {
     // El ajo resiste la helada: el campo solo tiene riego.
     expect(body.places.find((p) => p.label === 'campo')!.frost).toEqual([]);
     expect(body.tasks.map((t) => t.id)).toContain('p6:transplant');
+  });
+});
+
+describe('zona estimada del trópico y los Yungas de Bolivia', () => {
+  it('tiene los 12 cultivos del cuadro, está marcada como estimada y se elige a mano', () => {
+    expect(Object.keys(ZONE_TABLES.tropicoBolivia)).toHaveLength(12);
+    expect(ESTIMATED_ZONES.has('tropicoBolivia')).toBe(true);
+    expect(zoneFor(-17.4, -66.1, 'BO')).toBeNull();
+  });
+  it('el rabanito se siembra todo el año y la lechuga de septiembre a enero', () => {
+    expect(parseMonths(ZONE_TABLES.tropicoBolivia.rabanito!.S).size).toBe(12);
+    expect([...parseMonths(ZONE_TABLES.tropicoBolivia.lechuga!.S)].sort((a, b) => a - b)).toEqual([1, 9, 10, 11, 12]);
   });
 });

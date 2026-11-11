@@ -11,7 +11,7 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 - **Grabar recorrido con pantalla apagada:** al volver de un corte, avisa entre qué horas fue y pregunta si unir con una recta o dejar el tramo vacío.
 - **Entrenamiento (base):** sesiones de caminata, correr, trekking, remo (kayak, canoa, bote, SUP, rafting), ciclismo (ruta, montaña, gravel, urbana, eléctrica) y bajo techo (cinta, elíptica, escalador); calorías (ACSM y MET) con el peso de la ficha médica; tiempo en movimiento, ritmo o velocidad, parciales por km, desnivel, mapa y gráfico de desnivel; historial por semana, récords y salidas que agrupan actividades con totales, mapa y desnivel de toda la salida. Los puntos grabados ahora llevan la hora.
 - **Enlace público de una salida:** solo si se elige; título, recorrido simplificado, datos y gráfico, sin fotos; se recorta el inicio y el final cerca de casa, vence al año y se puede borrar.
-- **Huerta de Bolivia:** zona estimada "Valles de Bolivia (Tarija)" con 20 cultivos (ver el punto 1).
+- **Huerta de Bolivia:** zonas estimadas "Valles de Bolivia (Tarija)" con 20 cultivos y "Trópico y Yungas de Bolivia" con 12 (cuadro de siembra del proyecto Jatun Sacha/UNODC, una sola fuente, no oficial; ver el punto 1).
 - **Radio Nacional del Perú:** 13 emisoras cargadas en el paquete de Perú.
 - **Radio de Perú:** servicio colectivo familiar (462 y 467 MHz, hasta 500 mW, sin licencia; sin confirmar vigente). PMR446 no figura como uso libre y no se cargó; INDECI y Cruz Roja siguen sin frecuencia publicada.
 - **Notas y equipo:** cómo me sentí, terreno y clima al terminar (de Open-Meteo, si había internet) en cada sesión; equipo (zapatillas, bici, bote) que suma sus km, avisa su vida útil y se agrega al Inventario como un artículo de la categoría Entrenamiento (o se vincula a uno que ya existe). El equipo se oculta con un interruptor (para copias que no usan el Inventario).
@@ -30,7 +30,11 @@ Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; e
 
 ## 1. Calendarios de huerta de Bolivia y Perú
 
-No existe un calendario oficial abierto de siembra por cultivo y mes (INIAF e INIA no lo publican; los del INIA están detrás de un login). Se cargó una zona estimada, "Valles de Bolivia (Tarija)", con 20 cultivos del manual de una ONG (2016): los cuadros son gráficos, se leyeron a ojo (±1 mes) y la app lo avisa. Perú y el altiplano o el trópico de Bolivia siguen con la zona elegida a mano. Si aparece una fuente oficial, reemplaza o completa esta zona.
+No existe un calendario oficial abierto de siembra por cultivo y mes (INIAF e INIA no lo publican; los del INIA están detrás de un login). Revisado el 2026-11-11: el calendario de cultivos de la FAO (CC BY 4.0) solo trae cultivos de campo (la categoría de hortalizas viene vacía); los sitios del MIDAGRI, el INIA y la UNALM no respondieron desde el servidor; el cuadro de hortalizas del INIAF (2025) es comercial y sin cuadro mensual.
+
+Cargadas, ambas estimadas y con aviso en la app: "Valles de Bolivia (Tarija)", con 20 cultivos del manual de una ONG (2016; cuadros gráficos leídos a ojo, ±1 mes), y "Trópico y Yungas de Bolivia", con 12 cultivos del cuadro de siembra del proyecto Jatun Sacha (UNODC; una sola fuente, no distingue siembra directa de almácigo ni Yungas de trópico; sin ají porque no está en los cultivos de la app).
+
+Pendiente: Perú (costa, sierra, selva) y altiplano de Bolivia siguen con la zona elegida a mano. Pedir calendarios oficiales a INIAF e INIA por correo, o abrir desde otra red la guía de biohuertos del INIA y las cartillas de la UNALM (ver si traen cuadro mensual y su licencia). Y abrir la ficha del INTA Valle Inferior (Cecchini, 2023, calendario de siembra otoño-invierno, repositorio.inta.gob.ar/handle/20.500.12123/14512) para contrastar zanahoria, lechuga y cebolla con la zona Patagonia norte; el trasplante de cebolla en la zona pampeana (mayo a julio) sigue sin fuente oficial. Legal: las fichas del INTA son CC BY-NC-SA; solo se toman hechos y se cita, pero que lo valide el abogado por la licencia comercial.
 
 ## 2. Entrenamiento: lo que falta
 
