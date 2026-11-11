@@ -1440,6 +1440,10 @@
     "finished": "You've reached the end of the route"
   },
   "topoPrint": {
+    "coverageOk": "Map and terrain of the area are downloaded: you can print offline.",
+    "coverageOnline": "{{missing}} of {{total}} map and terrain tiles are missing on the device: they will be downloaded when you generate. To print offline, download the area in Maps.",
+    "coverageOffline": "Offline and {{missing}} of {{total}} map and terrain tiles are missing: the sheet would have gaps or no contour lines. Download the area in Maps when you have internet.",
+    "checking": "Checking the downloaded map…",
     "paper": "Paper",
     "button": "Print topographic map",
     "title": "Print topographic map",

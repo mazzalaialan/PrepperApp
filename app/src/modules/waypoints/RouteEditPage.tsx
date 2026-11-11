@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Navigation, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Navigation, Plus, Printer, Trash2, X } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { newEntity } from '@/core/model/entity';
 import type { Id, Route } from '@/core/model/types';
@@ -10,6 +10,8 @@ import { formatDistance } from '@/core/units/units';
 import { PlannedRoutePage } from './PlannedRoutePage';
 import { routeLength, useWaypoints } from './store';
 import { confirmAction } from '@/ui/confirm';
+import { waypointRouteSheetInput } from '@/modules/maps/print/data';
+import { PrintTopoDialog } from '@/modules/maps/print/PrintTopoDialog';
 
 export function RouteEditPage() {
   const { id } = useParams();
@@ -35,6 +37,7 @@ function RouteForm({ stored }: { stored: Route | undefined }) {
   const navigate = useNavigate();
   const units = useSettings((s) => s.settings.units);
   const { waypoints, saveRoute, deleteRoute } = useWaypoints();
+  const [printing, setPrinting] = useState(false);
   const [name, setName] = useState(initial.name);
   const [notes, setNotes] = useState(initial.notes);
   const [ids, setIds] = useState<Id[]>(initial.waypointIds.filter((w) => waypoints.has(w)));
@@ -80,6 +83,12 @@ function RouteForm({ stored }: { stored: Route | undefined }) {
           <Navigation size={20} /> {t('routes.start')}
         </Link>
       )}
+      {canStart && (
+        <button className="btn btn-block" type="button" data-testid="route-print-map" onClick={() => setPrinting(true)}>
+          <Printer size={20} /> {t('topoPrint.button')}
+        </button>
+      )}
+      {printing && stored && <PrintTopoDialog input={waypointRouteSheetInput(stored, waypoints)} onClose={() => setPrinting(false)} />}
 
       <form className="stack" onSubmit={handleSubmit}>
         <section className="card stack">

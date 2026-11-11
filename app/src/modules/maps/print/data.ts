@@ -1,8 +1,8 @@
 import { bearingDeg, distanceMeters, type LatLon } from '@/core/geo/geo';
-import type { Route, Track } from '@/core/model/types';
+import type { Route, Track, Waypoint } from '@/core/model/types';
 import { declinationAt } from '@/core/sensors/heading';
 import { legsOf } from '@/modules/waypoints/plan';
-import { climb } from '../measure';
+import { climb, summarizePath } from '../measure';
 import type { TopoLeg, TopoPoint, TopoSheetInput } from './plan';
 
 /** Datos de la hoja a partir de un track o de una ruta planificada. */
@@ -71,4 +71,34 @@ export function plannedRouteSheetInput(route: Route): TopoSheetInput {
   const points: TopoPoint[] = line.map((p, i) => ({ n: i + 1, name: '', lat: p.lat, lon: p.lon }));
   const legs: TopoLeg[] = legsOf(line).map((l) => ({ from: l.n, to: l.n + 1, distanceM: l.distanceM, bearingTrueDeg: l.trueBearing, bearingMagDeg: l.magneticBearing }));
   return { ...meta(route.name, line), subtitle: 'Ruta planificada', line, points, legs };
+}
+
+/** Hoja de una ruta hecha con waypoints: los puntos con su nombre y las rectas entre ellos (el desnivel sale de la altura de cada waypoint). */
+export function waypointRouteSheetInput(route: Route, waypoints: Map<string, Waypoint>): TopoSheetInput {
+  const stops = route.waypointIds.map((id) => waypoints.get(id)).filter((w): w is Waypoint => !!w);
+  if (!stops.length) throw new Error('NO_ROUTE');
+  const line = stops.map((w) => ({ lat: w.lat, lon: w.lon }));
+  const decl = meta(route.name, line).declinationDeg;
+  const points: TopoPoint[] = stops.map((w, i) => ({ n: i + 1, name: w.name, lat: w.lat, lon: w.lon }));
+  const legs: TopoLeg[] = stops.slice(1).map((b, i) => {
+    const a = stops[i]!;
+    const t = bearingDeg(a, b);
+    const both = a.alt !== null && b.alt !== null;
+    return {
+      from: i + 1,
+      to: i + 2,
+      distanceM: distanceMeters(a, b),
+      bearingTrueDeg: t,
+      bearingMagDeg: norm360(t - decl),
+      ascentM: both ? Math.max(0, b.alt! - a.alt!) : undefined,
+      descentM: both ? Math.max(0, a.alt! - b.alt!) : undefined,
+    };
+  });
+  return { ...meta(route.name, line), subtitle: 'Ruta de waypoints', line, points, legs };
+}
+
+/** Desnivel de cada pierna de una ruta planificada con el relieve que haya en el dispositivo (sin datos: la pierna queda sin desnivel). */
+export async function withPlannedClimb(input: TopoSheetInput): Promise<TopoSheetInput> {
+  const sums = await Promise.all(input.legs.map((_, i) => summarizePath([input.line[i]!, input.line[i + 1]!]).catch(() => null)));
+  return { ...input, legs: input.legs.map((l, i) => ({ ...l, ascentM: sums[i]?.ascent ?? undefined, descentM: sums[i]?.descent ?? undefined })) };
 }

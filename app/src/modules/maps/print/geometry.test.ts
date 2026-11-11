@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PAPERS, contourInterval, edgeTicks, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
+import { PAPERS, contourInterval, coordRows, edgeTicks, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
 
 describe('geometría de la hoja topográfica', () => {
   it('la cuadrícula mide en el papel lo que dice la escala', () => {
@@ -106,5 +106,21 @@ describe('geometría de la hoja topográfica', () => {
     expect(of.map.h).toBeGreaterThan(a4.map.h + 25);
     expect(of.footer.y + of.footer.h).toBeLessThanOrEqual(330 - of.margin + 1e-9);
     expect(sheetLayout('landscape', 8, 'oficio').paper).toEqual({ w: 330, h: 216 });
+  });
+
+  it('lista de coordenadas: se reserva lugar sin pisar el mapa, la tabla ni el pie', () => {
+    expect(sheetLayout('portrait', 4).coords).toBeNull();
+    for (const o of ['portrait', 'landscape'] as const) {
+      const l = sheetLayout(o, 4, 'a4', 8);
+      expect(l.coords).not.toBeNull();
+      const c = l.coords!;
+      expect(c.y + c.h).toBeLessThanOrEqual(l.footer.y + 1e-9);
+      expect(c.y).toBeGreaterThanOrEqual(l.table.y + l.table.h);
+      expect(l.map.h).toBeGreaterThan(80);
+    }
+    expect(sheetLayout('portrait', 4, 'a4', 8).map.h).toBeLessThan(sheetLayout('portrait', 4).map.h);
+    expect(coordRows(8, 'portrait')).toBe(4);
+    expect(coordRows(8, 'landscape')).toBe(8);
+    expect(coordRows(40, 'portrait')).toBe(6); // tope de 12 puntos en dos columnas
   });
 });

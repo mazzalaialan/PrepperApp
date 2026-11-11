@@ -48,6 +48,10 @@ test('mapa topográfico: opciones antes de generar (las escalas que no entran, g
   await expect(page.getByTestId('topo-scale-50000')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('topo-scale-info')).toContainText('cuadrícula UTM de 1 km × 1 km (20 mm en el papel)');
 
+  // Sin teselas descargadas y con conexión: avisa que se van a bajar de internet.
+  await expect(page.getByTestId('topo-coverage')).toHaveAttribute('data-state', 'partial-online');
+  await expect(page.getByTestId('topo-coverage')).toContainText('se bajan de internet');
+
   // Elegir otra escala cambia la leyenda; las grisadas no responden.
   await page.getByTestId('topo-scale-100000').click();
   await expect(page.getByTestId('topo-scale-100000')).toHaveAttribute('aria-pressed', 'true');
@@ -66,6 +70,9 @@ test('mapa topográfico: opciones antes de generar (las escalas que no entran, g
 
   // Sin conexión también se arma (el código ya está cargado y el mapa de la zona viene de lo descargado): ahora en horizontal.
   await context.setOffline(true);
+  // Sin conexión y sin la zona descargada: avisa que la hoja saldría con huecos (se puede generar igual).
+  await expect(page.getByTestId('topo-coverage')).toHaveAttribute('data-state', 'partial-offline');
+  await expect(page.getByTestId('topo-coverage')).toContainText('con huecos');
   await page.getByTestId('topo-paper-oficio').click();
   await page.getByTestId('topo-orient-landscape').click();
   await page.getByTestId('topo-latlon').check();

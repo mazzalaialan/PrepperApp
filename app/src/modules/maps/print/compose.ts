@@ -11,6 +11,7 @@ import {
   edgeTicks,
   gridStepM,
   latLonStepDeg,
+  MAX_COORD_POINTS,
   MM_PER_INCH,
   scaleBar,
   scaleEquivalence,
@@ -134,8 +135,12 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
     ctx.lineWidth = mm(0.75);
     line(pts);
   }
-  for (const p of input.points) {
-    const c = proj(p);
+  // Los círculos primero; los nombres se ubican en el primer lugar libre (derecha, izquierda, arriba o abajo) sin pisar
+  // otro nombre ni otro círculo.
+  const circles = input.points.map((p) => proj(p));
+  const taken: Rect[] = circles.map((c) => ({ x: c.x - mm(2.8), y: c.y - mm(2.8), w: mm(5.6), h: mm(5.6) }));
+  input.points.forEach((p, i) => {
+    const c = circles[i]!;
     ctx.beginPath();
     ctx.arc(c.x, c.y, mm(2.3), 0, Math.PI * 2);
     ctx.fillStyle = '#fff';
@@ -144,8 +149,27 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
     ctx.strokeStyle = '#d62828';
     ctx.stroke();
     text(ctx, String(p.n), c.x, c.y, { size: 2.9, bold: true, color: '#d62828', align: 'center', base: 'middle' });
-    if (p.name) text(ctx, p.name, c.x + mm(3.2), c.y - mm(1.6), { size: 3, bold: true, color: '#111', halo: 'rgba(255,255,255,0.92)' });
-  }
+  });
+  const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  input.points.forEach((p, i) => {
+    if (!p.name) return;
+    const c = circles[i]!;
+    ctx.font = `700 ${mm(3)}px ${FONT}`;
+    const w = ctx.measureText(p.name).width;
+    const h = mm(3.6);
+    const spots: Rect[] = [
+      { x: c.x + mm(3.2), y: c.y - mm(4.6), w, h },
+      { x: c.x + mm(3.2), y: c.y + mm(1), w, h },
+      { x: c.x - mm(3.2) - w, y: c.y - mm(4.6), w, h },
+      { x: c.x - mm(3.2) - w, y: c.y + mm(1), w, h },
+      { x: c.x - w / 2, y: c.y - mm(8), w, h },
+      { x: c.x - w / 2, y: c.y + mm(3.6), w, h },
+    ];
+    const free = (r: Rect) => r.x >= map.x && r.x + r.w <= map.x + map.w && r.y >= map.y && r.y + r.h <= map.y + map.h && !taken.some((t) => overlaps({ x: r.x - mm(0.5), y: r.y - mm(0.5), w: r.w + mm(1), h: r.h + mm(1) }, t));
+    const spot = spots.find(free) ?? spots[0]!;
+    taken.push(spot);
+    text(ctx, p.name, spot.x, spot.y + mm(2.9), { size: 3, bold: true, color: '#111', halo: 'rgba(255,255,255,0.92)' });
+  });
   ctx.restore();
 
   // Marco del mapa
@@ -237,6 +261,7 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
   text(ctx, `1:${scale.toLocaleString('es-AR')}`, h.x + h.w, h.y + mm(7), { size: 6.5, bold: true, align: 'right' });
 
   drawTable(ctx, rectPx(layout.table), input);
+  if (layout.coords) drawCoords(ctx, rectPx(layout.coords), input, plan.zone, layout.orientation);
   drawFooter(ctx, rectPx(layout.footer), plan, input, scale);
   return canvas;
 }
@@ -308,6 +333,39 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
   }
   const more = input.legs.length > legs.length ? ` (se muestran ${legs.length} de ${input.legs.length} tramos)` : '';
   text(ctx, `Total: ${fmtDist(total)}${up || down ? ` · +${Math.round(up)} / −${Math.round(down)} m` : ''}${more}`, r.x + mm(1.5), r.y + r.h - mm(1.8), { size: 3, bold: true });
+}
+
+/** Lista de los puntos con sus coordenadas UTM (para cargarlas en un GPS o dictarlas por radio). */
+function drawCoords(ctx: Ctx, r: Rect, input: TopoSheetInput, zone: number, orientation: 'portrait' | 'landscape') {
+  const grp = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = mm(0.3);
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.fillStyle = '#e9e5da';
+  ctx.fillRect(r.x, r.y, r.w, mm(5.4));
+  const hemi = input.points[0] && input.points[0].lat < 0 ? 'Sur' : 'Norte';
+  const head = r.w < mm(120) ? `Coordenadas UTM · zona ${zone} ${hemi} · m` : `Coordenadas UTM de los puntos · zona ${zone} ${hemi} · WGS84 · metros`;
+  ctx.font = `700 ${mm(2.8)}px ${FONT}`;
+  text(ctx, fit(ctx, head, r.w - mm(3)), r.x + mm(1.5), r.y + mm(3.9), { size: 2.8, bold: true });
+  const list = input.points.slice(0, MAX_COORD_POINTS);
+  const cols = orientation === 'portrait' ? 2 : 1;
+  const perCol = Math.ceil(list.length / cols);
+  const colW = r.w / cols;
+  list.forEach((p, i) => {
+    const col = Math.floor(i / perCol);
+    const row = i % perCol;
+    const x = r.x + col * colW + mm(1.5);
+    const y = r.y + mm(5.4) + mm(4.4) * (row + 1) - mm(1);
+    const u = toUtm(p, zone);
+    const coords = `${grp(u.easting)} E · ${grp(u.northing)} N`;
+    ctx.font = `${mm(2.6)}px ${FONT}`;
+    const cw = ctx.measureText(coords).width;
+    ctx.font = `700 ${mm(2.6)}px ${FONT}`;
+    const label = fit(ctx, `${p.n}. ${p.name || `Punto ${p.n}`}`, colW - mm(4) - cw);
+    text(ctx, label, x, y, { size: 2.6, bold: true });
+    text(ctx, coords, x + colW - mm(3), y, { size: 2.6, align: 'right' });
+  });
+  if (input.points.length > list.length) text(ctx, `(se muestran ${list.length} de ${input.points.length} puntos)`, r.x + r.w - mm(1.5), r.y + r.h - mm(0.8), { size: 2.2, color: '#444', align: 'right' });
 }
 
 function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, scale: number) {

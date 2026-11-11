@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Printer } from 'lucide-react';
 import { Dialog } from '@/ui/Dialog';
 import { deliverFile } from '@/ui/files';
-import { gridLabel, gridStepM, PAPERS, paperMm, scaleEquivalence, type Orientation, type PaperId } from './geometry';
+import { gridLabel, gridStepM, PAPERS, paperMm, scaleEquivalence, zoomForScale, type Orientation, type PaperId } from './geometry';
+import { mapCoverage, sheetBounds, type Coverage } from './coverage';
 import { DEFAULT_SCALE, planSheet, scaleChoices, type TopoSheetInput } from './plan';
 
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'mapa';
@@ -31,6 +32,38 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
   // La escala elegida vale mientras entre; si al cambiar la hoja ya no entra, vuelve a la de por defecto.
   const chosen = scale !== null && choices.find((c) => c.scale === scale)?.fits ? scale : defaultScale;
   const anyFits = choices.some((c) => c.fits);
+
+  // Cuánto del mapa y del relieve de la zona ya está en el dispositivo (sirve sin conexión).
+  const [online, setOnline] = useState(() => navigator.onLine);
+  const [coverage, setCoverage] = useState<Coverage | null>(null);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+  useEffect(() => {
+    if (chosen === null) {
+      setCoverage(null);
+      return;
+    }
+    let live = true;
+    setCoverage(null);
+    const plan = planSheet({ ...base, scale: chosen });
+    void mapCoverage(sheetBounds(plan.center, chosen, plan.layout.map), zoomForScale(plan.center.lat, chosen))
+      .then((c) => live && setCoverage(c))
+      .catch(() => live && setCoverage(null));
+    return () => {
+      live = false;
+    };
+  }, [base, chosen]);
+  const missing = coverage ? coverage.vector.total - coverage.vector.have + coverage.dem.total - coverage.dem.have : 0;
+  const total = coverage ? coverage.vector.total + coverage.dem.total : 0;
+  const coverageState = !coverage ? 'checking' : missing === 0 ? 'ok' : online ? 'partial-online' : 'partial-offline';
 
   async function generate() {
     if (chosen === null) return;
@@ -119,7 +152,21 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
           <input type="checkbox" checked={latLon} onChange={(e) => setLatLon(e.target.checked)} data-testid="topo-latlon" />
           {t('topoPrint.latLon')}
         </label>
-        <p className="hint" style={{ margin: 0 }}>{t('topoPrint.offline')}</p>
+        {chosen !== null && (
+          <p
+            className={coverageState === 'partial-offline' ? 'error' : 'hint'}
+            style={{ margin: 0 }}
+            role={coverageState === 'partial-offline' ? 'alert' : 'status'}
+            data-testid="topo-coverage"
+            data-state={coverageState}
+          >
+            {coverageState === 'checking'
+              ? t('topoPrint.checking')
+              : coverageState === 'ok'
+                ? t('topoPrint.coverageOk')
+                : t(coverageState === 'partial-online' ? 'topoPrint.coverageOnline' : 'topoPrint.coverageOffline', { missing, total })}
+          </p>
+        )}
         <p className="hint" style={{ margin: 0 }}>{t('topoPrint.notOfficial')}</p>
         {error && <p className="error" role="alert" data-testid="topo-error">{error}</p>}
         {done && <p className="ok" role="status" data-testid="topo-done">{t('topoPrint.done')}</p>}

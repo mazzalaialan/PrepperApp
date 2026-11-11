@@ -88,15 +88,21 @@ export interface SheetLayout {
   map: Rect;
   /** Tabla de piernas: abajo en vertical, a la derecha en horizontal. */
   table: Rect;
+  /** Lista de puntos con sus coordenadas UTM (null si no hay puntos). */
+  coords: Rect | null;
   /** Franja con escala, cuadrícula, norte y atribuciones, abajo. */
   footer: Rect;
 }
+
+export const MAX_COORD_POINTS = 12;
+/** Filas de la lista de coordenadas: dos columnas en vertical, una en horizontal. */
+export const coordRows = (points: number, orientation: Orientation) => (points <= 0 ? 0 : orientation === 'portrait' ? Math.ceil(Math.min(points, MAX_COORD_POINTS) / 2) : Math.min(points, MAX_COORD_POINTS));
 
 /**
  * Diseño de la hoja A4 en milímetros. En vertical la tabla va debajo del mapa y su alto depende de la cantidad de filas;
  * en horizontal va a la derecha, con ancho fijo.
  */
-export function sheetLayout(orientation: Orientation, legRows: number, paperId: PaperId = 'a4'): SheetLayout {
+export function sheetLayout(orientation: Orientation, legRows: number, paperId: PaperId = 'a4', pointCount = 0): SheetLayout {
   const margin = 10;
   const size = PAPERS[paperId];
   const paper = orientation === 'portrait' ? { w: size.w, h: size.h } : { w: size.h, h: size.w };
@@ -109,16 +115,25 @@ export function sheetLayout(orientation: Orientation, legRows: number, paperId: 
   // 5 mm arriba y abajo del marco para los rótulos de longitud y de la cuadrícula.
   const top = header.y + headerH + 5;
   const bottom = footer.y - 5;
+  const rows = coordRows(pointCount, orientation);
+  const coordsH = rows ? 6.5 + rows * 4.4 : 0;
   if (orientation === 'landscape') {
-    // A la derecha del mapa quedan 14 mm para los rótulos de latitud antes de la tabla.
+    // A la derecha del mapa quedan 14 mm para los rótulos de la cuadrícula antes de la tabla.
     const tableW = 74;
     const map: Rect = { x: margin, y: top, w: innerW - tableW - 14, h: bottom - top };
-    return { orientation, paper, margin, header, map, table: { x: map.x + map.w + 14, y: top, w: tableW, h: bottom - top }, footer };
+    const x = map.x + map.w + 14;
+    const avail = bottom - top - (coordsH ? coordsH + 3 : 0);
+    const tableH = Math.max(20, Math.min(avail, 6.2 + legRows * 9.6 + 8));
+    const table: Rect = { x, y: top, w: tableW, h: tableH };
+    const coords: Rect | null = coordsH ? { x, y: top + tableH + 3, w: tableW, h: Math.min(coordsH, bottom - (top + tableH + 3)) } : null;
+    return { orientation, paper, margin, header, map, table, coords, footer };
   }
   const tableH = Math.min(95, 12 + Math.max(1, legRows) * rowH);
-  // 7 mm entre el mapa y la tabla para los rótulos de longitud.
-  const map: Rect = { x: margin, y: top, w: innerW, h: bottom - top - tableH - 7 };
-  return { orientation, paper, margin, header, map, table: { x: margin, y: map.y + map.h + 7, w: innerW, h: tableH }, footer };
+  // 7 mm entre el mapa y la tabla para los rótulos de la cuadrícula.
+  const map: Rect = { x: margin, y: top, w: innerW, h: bottom - top - tableH - 7 - (coordsH ? coordsH + 3 : 0) };
+  const table: Rect = { x: margin, y: map.y + map.h + 7, w: innerW, h: tableH };
+  const coords: Rect | null = coordsH ? { x: margin, y: table.y + table.h + 3, w: innerW, h: coordsH } : null;
+  return { orientation, paper, margin, header, map, table, coords, footer };
 }
 
 /** Si una zona de `extentEastM × extentNorthM` metros entra en el marco del mapa a una escala, con un margen en el papel. */

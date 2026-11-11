@@ -1440,6 +1440,10 @@
     "finished": "Llegaste al final de la ruta"
   },
   "topoPrint": {
+    "coverageOk": "Mapa y relieve de la zona descargados: se puede imprimir sin conexión.",
+    "coverageOnline": "Faltan {{missing}} de {{total}} teselas de mapa y relieve en el dispositivo: se bajan de internet al generar. Para imprimir sin conexión, descargá la zona en Mapas.",
+    "coverageOffline": "Sin conexión y faltan {{missing}} de {{total}} teselas del mapa y el relieve: la hoja saldría con huecos o sin curvas de nivel. Descargá la zona en Mapas cuando tengas internet.",
+    "checking": "Revisando el mapa descargado…",
     "paper": "Papel",
     "button": "Imprimir mapa topográfico",
     "title": "Imprimir mapa topográfico",

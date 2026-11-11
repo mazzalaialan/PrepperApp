@@ -15,7 +15,8 @@ import { legsOf, lineLength, trackFromRoute } from './plan';
 import { useWaypoints } from './store';
 import type { NewWaypointDraft } from './WaypointEditPage';
 import { confirmAction } from '@/ui/confirm';
-import { plannedRouteSheetInput } from '@/modules/maps/print/data';
+import { plannedRouteSheetInput, withPlannedClimb } from '@/modules/maps/print/data';
+import type { TopoSheetInput } from '@/modules/maps/print/plan';
 import { PrintTopoDialog } from '@/modules/maps/print/PrintTopoDialog';
 
 /**
@@ -38,7 +39,8 @@ export function PlannedRoutePage({ route }: { route: Route }) {
   const alt = (m: number) => formatAltitude(m, units, i18n.language);
   const [summary, setSummary] = useState<PathSummary | null>(null);
   const [name, setName] = useState(route.name);
-  const [printing, setPrinting] = useState(false);
+  // La hoja se arma con los tramos; el desnivel de cada uno se suma cuando se lee el relieve del dispositivo.
+  const [printInput, setPrintInput] = useState<TopoSheetInput | null>(null);
   useEffect(() => {
     let cancelled = false;
     void summarizePath(line).then((s) => !cancelled && setSummary(s));
@@ -130,7 +132,11 @@ export function PlannedRoutePage({ route }: { route: Route }) {
             <Download size={18} /> {t('routes.exportKml')}
           </button>
           {line.length > 1 && (
-            <button className="btn" type="button" data-testid="planned-print-map" onClick={() => setPrinting(true)}>
+            <button className="btn" type="button" data-testid="planned-print-map" onClick={() => {
+                const base = plannedRouteSheetInput(route);
+                setPrintInput(base);
+                void withPlannedClimb(base).then((full) => setPrintInput(full));
+              }}>
               <Printer size={18} /> {t('topoPrint.button')}
             </button>
           )}
@@ -178,7 +184,7 @@ export function PlannedRoutePage({ route }: { route: Route }) {
           <Trash2 size={18} /> {t('common.delete')}
         </button>
       </div>
-      {printing && <PrintTopoDialog input={plannedRouteSheetInput(route)} onClose={() => setPrinting(false)} />}
+      {printInput && <PrintTopoDialog input={printInput} onClose={() => setPrintInput(null)} />}
     </div>
   );
 }
