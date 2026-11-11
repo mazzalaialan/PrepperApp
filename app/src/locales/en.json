@@ -1466,7 +1466,7 @@
     "fitError": "The route does not fit at that scale.",
     "mapTimeout": "The map of the area could not be loaded. Download it in Maps to print it offline.",
     "failed": "The map could not be generated.",
-    "notOfficial": "Not an official chart: verify on the ground."
+    "notOfficial": "Not an official chart: check it against official charts."
   },
   "goto": {
     "switchLabel": "How to guide you",

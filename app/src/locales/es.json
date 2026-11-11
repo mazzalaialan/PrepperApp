@@ -1466,7 +1466,7 @@
     "fitError": "La ruta no entra a esa escala.",
     "mapTimeout": "No se pudo cargar el mapa de la zona. Descargalo en Mapas para poder imprimirlo sin conexión.",
     "failed": "No se pudo generar el mapa.",
-    "notOfficial": "No es una carta oficial: verificá en el terreno."
+    "notOfficial": "No es una carta oficial: verificá con las cartas oficiales."
   },
   "goto": {
     "switchLabel": "Cómo guiarte",

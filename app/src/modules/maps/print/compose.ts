@@ -408,7 +408,7 @@ function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, s
   lines.forEach((s, i) => text(ctx, s, mx, r.y + mm(3.9 + i * 2.85), { size: 2.3 }));
 
   // Norte: de la cuadrícula (NC), verdadero (NV) y magnético (NM)
-  const ncx = r.x + r.w - mm(14);
+  const ncx = r.x + r.w - mm(24);
   const ncy = r.y + mm(19);
   const conv = convergenceDeg(plan.center, plan.zone);
   const arrow = (angleDeg: number, len: number, color: string, dash = false) => {
@@ -436,7 +436,11 @@ function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, s
   arrow(0, 12, '#1d4e89');
   arrow(-conv, 12, '#111', true);
   arrow(input.declinationDeg - conv, 12, '#b3261e');
-  text(ctx, 'N', ncx, r.y + mm(4.6), { size: 3, bold: true, align: 'center', base: 'bottom' });
+  // Rótulos en la punta de cada flecha: GN a la izquierda, MN a la derecha con su valor y TN abajo a la izquierda.
+  const tipY = ncy - mm(12);
+  text(ctx, 'GN', ncx - mm(2.2), tipY - mm(0.6), { size: 2.8, bold: true, color: '#1d4e89', align: 'right' });
+  text(ctx, `MN ${dm(input.declinationDeg)} ${input.declinationDeg >= 0 ? 'E' : 'O'}`, ncx + mm(2.6), tipY - mm(0.6), { size: 2.8, bold: true, color: '#b3261e', align: 'left' });
+  text(ctx, 'TN', ncx - mm(2.2), tipY + mm(3.2), { size: 2.6, bold: true, color: '#111', align: 'right' });
 
   // Fila de abajo: leyenda del norte, declinación, aviso y atribuciones
   const legendY = r.y + mm(21.4);
@@ -445,13 +449,13 @@ function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, s
     text(ctx, s, x, legendY, { size: 2.4, color, bold });
     x += ctx.measureText(s).width;
   };
-  run('NC', '#1d4e89', true);
+  run('GN', '#1d4e89', true);
   run(' norte de la cuadrícula  ·  ', '#111');
-  run('NV', '#111', true);
-  run(` norte verdadero (convergencia ${dm(conv)})  ·  `, '#111');
-  run('NM', '#b3261e', true);
+  run('TN', '#111', true);
+  run(` norte verdadero (convergencia ${dm(conv)} ${conv >= 0 ? 'E' : 'O'})  ·  `, '#111');
+  run('MN', '#b3261e', true);
   run(` norte magnético: declinación ${dm(input.declinationDeg)} ${input.declinationDeg >= 0 ? 'E' : 'O'} en ${input.declinationYear}`, '#111');
-  text(ctx, 'Mapa de ruta de VikArg: no es una carta oficial. Verificá en el terreno.', left, r.y + mm(24.8), { size: 2.5, bold: true });
+  text(ctx, 'Mapa de ruta de VikArg: no es una carta oficial. Verificá con las cartas oficiales.', left, r.y + mm(24.8), { size: 2.5, bold: true });
   text(ctx, '© OpenStreetMap contributors (ODbL), OpenMapTiles, OpenFreeMap · Elevación: Terrain Tiles (AWS)', left, r.y + mm(27.8), { size: 2.2, color: '#444' });
 }
 
