@@ -89,3 +89,17 @@ Regla: un diagrama paso a paso se considera verificado solo si se transcribió d
 - **Sin diagrama paso a paso hasta tener uno verificado:** ocho de dos gazas. La ficha muestra la foto del manual y el texto. El dibujo anterior no era este nudo. Estructura real (ABOK #1085 y fotos de Der Barbar): un ocho en cuerda doble sin la última pasada; dos senos del cuello se tiran hacia abajo a través del ocho (son las dos gazas) y el seno sobrante abraza el cuello y todo el nudo. Hace falta una referencia más nítida (ABOK #1085 a resolución completa o una foto con cuerda de dos colores).
 - **Sin revisar todavía:** los grupos 6 a 9 (bloqueo y pesca: prusik, machard, klemheist, bachmann, palomar, clinch, uni; varios: dinámico, mula, guarda, cornamusa, asiento de rappel, silla de bombero, cadena, margarita; amarres: cuadrada, tijera, diagonal, trípode; escalera de cuerda).
 - Textos de `knots.ts` a revisar: ocho de gaza paso 3 («tirando de los cuatro tramos», con flechas en dos), mariposa («los dedos», dibujados solo en el paso 2), camionero paso 1 (as de guía), alondra (`abok: 1890` no figura en las fuentes consultadas; Wikipedia lista 1673 y 1802 entre otros) y la foto `rizo-3.webp`, que muestra un pescador doble y no un rizo.
+
+## Mapa topográfico impreso (en curso, 2026-11-11)
+
+Función nueva en Tracks y en Rutas: «Imprimir mapa topográfico». Genera un PDF A4 de una hoja con la zona de la ruta, **sin conexión** (el código viaja en el paquete precargado; el mapa, las curvas de nivel y el relieve de la zona tienen que estar descargados, y la app avisa si falta algo). PDF propio, sin librerías (`core/pdf/jpegPdf.ts`: una imagen JPEG a 300 puntos por pulgada dentro de una página).
+
+Lo que debe tener la hoja:
+- **Cuadrícula (grilla) UTM y la escala de esa cuadrícula:** líneas cada 1 km (a 1:25.000 y 1:50.000; 2 km o 5 km a escalas menores), con los valores de este y norte rotulados en los bordes, y un rótulo que diga «Cuadrícula UTM de 1 km × 1 km, WGS84, zona 19 G». Más las marcas de latitud y longitud en el borde (cada 1' o 2', según la escala). El usuario las quiere ambas: UTM y latitud y longitud.
+- **Escala:** numérica (1:25.000), equivalencia («1 cm = 250 m») y barra de escala gráfica en kilómetros y metros; la cuadrícula debe medir en papel exactamente lo que dice la escala (4 cm a 1:25.000 con cuadrícula de 1 km).
+- Flecha del norte con norte geográfico, norte de la cuadrícula y norte magnético, con la declinación y el año.
+- Curvas de nivel con su equidistancia, ruta dibujada, waypoints numerados, título, fecha, atribuciones (OpenStreetMap, datos de elevación) y aviso de que no es una carta oficial.
+- Tabla de las piernas (número de punto, nombre, distancia, rumbo magnético, desnivel, totales) al costado o abajo, donde entre.
+- Una sola hoja A4; si la ruta no entra a la escala elegida, se avisa y se propone otra escala.
+
+Pasos: (1) UTM, hecho (`core/geo/utm.ts`); (2) escritor de PDF, hecho; (3) dibujar el mapa a escala real en un lienzo grande; (4) superponer cuadrícula, escala, norte, ruta, waypoints y tabla; (5) botón, opciones y avisos de zona sin mapa descargado; (6) pruebas, incluida la generación sin conexión.
