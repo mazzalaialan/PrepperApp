@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
+import { contourInterval, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
 
 describe('geometría de la hoja topográfica', () => {
   it('la cuadrícula mide en el papel lo que dice la escala', () => {
@@ -80,5 +80,12 @@ describe('geometría de la hoja topográfica', () => {
     expect(pickScale(2000, 1500, frame)).toBe(15_000); // a 1:10.000 serían 200 mm: no entra
     expect(pickScale(8000, 6000, frame)).toBe(50_000); // a 1:25.000 son 320 mm: no entra
     expect(pickScale(2_000_000, 2_000_000, frame)).toBeNull();
+  });
+
+  it('equidistancia de las curvas según el zoom', () => {
+    expect(contourInterval(13.1)).toEqual({ minor: 20, major: 100 });
+    expect(contourInterval(14.7)).toEqual({ minor: 10, major: 50 });
+    expect(contourInterval(11.9)).toEqual({ minor: 100, major: 500 });
+    expect(contourInterval(5)).toEqual({ minor: 500, major: 1000 });
   });
 });

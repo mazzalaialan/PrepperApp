@@ -98,21 +98,24 @@ export function sheetLayout(orientation: Orientation, legRows: number): SheetLay
   const margin = 10;
   const paper = orientation === 'portrait' ? { w: PAPER.w, h: PAPER.h } : { w: PAPER.h, h: PAPER.w };
   const headerH = 14;
-  const footerH = 26;
+  const footerH = 30;
   const rowH = 5.2;
   const innerW = paper.w - 2 * margin;
   const header: Rect = { x: margin, y: margin, w: innerW, h: headerH };
   const footer: Rect = { x: margin, y: paper.h - margin - footerH, w: innerW, h: footerH };
-  const top = header.y + headerH + 2;
-  const bottom = footer.y - 2;
+  // 5 mm arriba y abajo del marco para los rótulos de longitud y de la cuadrícula.
+  const top = header.y + headerH + 5;
+  const bottom = footer.y - 5;
   if (orientation === 'landscape') {
-    const tableW = 78;
-    const map: Rect = { x: margin, y: top, w: innerW - tableW - 3, h: bottom - top };
-    return { orientation, paper, margin, header, map, table: { x: map.x + map.w + 3, y: top, w: tableW, h: bottom - top }, footer };
+    // A la derecha del mapa quedan 14 mm para los rótulos de latitud antes de la tabla.
+    const tableW = 74;
+    const map: Rect = { x: margin, y: top, w: innerW - tableW - 14, h: bottom - top };
+    return { orientation, paper, margin, header, map, table: { x: map.x + map.w + 14, y: top, w: tableW, h: bottom - top }, footer };
   }
   const tableH = Math.min(95, 12 + Math.max(1, legRows) * rowH);
-  const map: Rect = { x: margin, y: top, w: innerW, h: bottom - top - tableH - 3 };
-  return { orientation, paper, margin, header, map, table: { x: margin, y: map.y + map.h + 3, w: innerW, h: tableH }, footer };
+  // 7 mm entre el mapa y la tabla para los rótulos de longitud.
+  const map: Rect = { x: margin, y: top, w: innerW, h: bottom - top - tableH - 7 };
+  return { orientation, paper, margin, header, map, table: { x: margin, y: map.y + map.h + 7, w: innerW, h: tableH }, footer };
 }
 
 /**
@@ -124,4 +127,12 @@ export function pickScale(extentEastM: number, extentNorthM: number, frame: { w:
     if (paperMm(extentEastM, s) + 2 * padMm <= frame.w && paperMm(extentNorthM, s) + 2 * padMm <= frame.h) return s;
   }
   return null;
+}
+
+/** Equidistancia de las curvas de nivel que dibuja el mapa a un zoom (las mismas que fija protocols.ts): la fina y la destacada, en metros. */
+export function contourInterval(zoom: number): { minor: number; major: number } {
+  const table: Record<number, [number, number]> = { 9: [500, 1000], 10: [200, 1000], 11: [100, 500], 12: [50, 250], 13: [20, 100], 14: [10, 50] };
+  const z = Math.min(14, Math.max(9, Math.floor(zoom)));
+  const [minor, major] = table[z]!;
+  return { minor, major };
 }
