@@ -102,4 +102,6 @@ Lo que debe tener la hoja:
 - Tabla de las piernas (número de punto, nombre, distancia, rumbo magnético, desnivel, totales) al costado o abajo, donde entre.
 - Una sola hoja A4; si la ruta no entra a la escala elegida, se avisa y se propone otra escala.
 
+Estado (2026-11-11): hecho el cuadro de opciones (título, escala con las que no entran en gris, hoja automática/vertical/horizontal, marcas de latitud y longitud opcionales) y el botón en Tracks y en Rutas planificadas; la hoja lleva el rumbo geográfico y el magnético de cada tramo, valores UTM completos afuera del marco, la cuadrícula vertical (norte de la cuadrícula arriba) y la proyección UTM/WGS84 con la zona en el pie; prueba e2e (vertical, horizontal y sin conexión). Falta: botón en las rutas hechas con waypoints, desnivel de las rutas planificadas, aviso de zona sin mapa descargado (hoy solo avisa si el mapa no carga), resolver choques entre rótulos del mapa, lista de puntos con coordenadas UTM (idea), probar en celular y sin conexión real con la zona bajada.
+
 Pasos: (1) UTM, hecho (`core/geo/utm.ts`); (2) escritor de PDF, hecho; (3) dibujar el mapa a escala real en un lienzo grande; (4) superponer cuadrícula, escala, norte, ruta, waypoints y tabla; (5) botón, opciones y avisos de zona sin mapa descargado; (6) pruebas, incluida la generación sin conexión.
