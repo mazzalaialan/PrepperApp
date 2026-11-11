@@ -21,22 +21,30 @@ export default {
     // UN solo cordino. Una pata sale por el costado, da vueltas a la cuerda hacia arriba, hace una D por la izquierda
     // (afuera de la cuerda), baja y vuelve con vueltas hacia el medio, donde sale la otra pata. Las dos patas
     // quedan juntas, entre los dos grupos de vueltas, y las vueltas no se cruzan entre sí.
-    const cord = ({ n = 1.5, r = 26, pitch = 26, legA = 178, legB = 204 } = {}) => {
-      const upA = coilV({ x: X, y: legA, n, pitch, r, from: 'right', up: true });
-      const topY = upA[upA.length - 1][1];
-      const lowY = legB + n * pitch;
-      const upB = coilV({ x: X, y: lowY, n, pitch, r, from: 'left', up: true });
+    // Cada vuelta es un anillo visto de costado: solo se dibuja el tramo de adelante, que cruza la cuerda por ARRIBA;
+    // el de atrás pasa por detrás de la cuerda y queda tapado, como en la foto del manual. Los anillos van apilados:
+    // tres de cada lado de las patas. El de arriba sigue en la D, que baja por la izquierda hasta el último de abajo.
+    const cord = ({ r = 22, gap = 18, legA = 178, legB = 222 } = {}) => {
+      const band = (y, ...tail) => [[X - r, y], [X, y, 1], [X + r, y], ...tail];
+      const yTop = legA - 2 * gap, yBot = legB + 2 * gap;
       const dx = X - r - 52;
-      return [[X + 120, legA], ...upA, [X - r - 14, topY - 12], [dx, topY + 2], [dx - 6, (topY + lowY) / 2], [dx, lowY - 2], [X - r - 14, lowY + 12], ...upB, [X + 120, legB]];
+      const d = [[X + r, yTop], [X, yTop, 1], [X - r, yTop], [X - r - 14, yTop - 10], [dx, yTop + 2], [dx - 6, (yTop + yBot) / 2], [dx, yBot - 2], [X - r - 14, yBot + 10], [X - r, yBot], [X, yBot, 1], [X + r, yBot]];
+      return [
+        { ...G, path: d, end: false },
+        { ...G, path: band(legA - gap), end: false },
+        { ...G, path: band(legA, [X + 120, legA]), end: false },
+        { ...G, path: band(legB, [X + 120, legB]), end: false },
+        { ...G, path: band(legB + gap), end: false },
+      ];
     };
-    const loose = { ...G, path: cord({ n: 1.5, r: 30, pitch: 32 }), end: false };
-    const tight = { ...G, path: cord({ n: 1.5, r: 22, pitch: 22, legA: 188, legB: 208 }), end: false };
+    const loose = cord({ r: 30, gap: 28, legA: 170, legB: 232 });
+    const tight = cord({ r: 22, gap: 18, legA: 178, legB: 222 });
     return [
       // Paso 1: el anillo (dos tramos y el seno a la izquierda) se apoya POR DETRÁS de la cuerda, cruzándola de costado.
       { ...H, ropes: [main, { ...G, path: [[340, 214], [240, 214], [214, 214, 0], [200, 214, 1], [186, 214, 0], [160, 214], [110, 214], [62, 214], [44, 200], [62, 186], [110, 186], [160, 186], [186, 186, 0], [200, 186, 1], [214, 186, 0], [240, 186], [270, 186], [340, 186]], end: false }] },
-      { ...H, ropes: [main, loose] },
-      { ...H, ropes: [main, tight] },
-      { ...H, ropes: [main, tight], arrows: [[[250, 270], [250, 330]]] },
+      { ...H, ropes: [main, ...loose] },
+      { ...H, ropes: [main, ...tight] },
+      { ...H, ropes: [main, ...tight], arrows: [[[250, 270], [250, 330]]] },
     ];
   })(),
   machard: [
