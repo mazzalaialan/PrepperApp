@@ -105,9 +105,8 @@ test('ir al punto: dos opciones (mapa o vista 3D sin cámara), flecha acostado y
   await expect(page.getByTestId('hg-edge')).toBeVisible();
   await expect(beacon).toHaveCount(0);
 
-  // Cambiar de vista vuelve a las dos opciones; el mapa abre sin cámara.
-  await page.getByTestId('goto-change-view').click();
-  await page.getByTestId('goto-choose-map').click();
+  // El selector Mapa | Brújula 3D cambia de vista sin volver a preguntar; el mapa abre sin cámara.
+  await page.getByTestId('goto-view-map').click();
   await expect(page.getByTestId('guide-map')).toBeVisible();
 });
 

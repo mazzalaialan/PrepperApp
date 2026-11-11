@@ -4323,3 +4323,21 @@ a.module-card:hover {
       color 0.15s ease;
   }
 }
+
+/* Selector Mapa | Brújula 3D de «Ir a un punto»: con ícono y texto, para que se entienda qué vista es cuál. */
+.goto-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* La dirección de un lugar es un botón que abre el cuadro de opciones: se ve como el enlace de antes. */
+.map-link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Check, Copy, ExternalLink, Flame, HeartPulse, Hospital, LifeBuoy, MapPinned, Navigation, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
+import { Dialog } from '@/ui/Dialog';
+import { useCapabilities } from '@/core/capabilities/capabilities';
+import { Check, Copy, ExternalLink, Flame, HeartPulse, Hospital, LifeBuoy, Map as MapIcon, MapPinned, Navigation, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { dialable, mapsUrl } from './national';
 import type { ParkRadio } from './data';
@@ -63,31 +65,77 @@ export function PhoneActions({ phone, testId }: { phone: string; testId?: string
 }
 
 /**
- * Dirección: abre Google Maps. Con coordenadas, además se puede ir hasta ahí con
- * VikArg (brújula o mapa, también sin conexión) o abrirlo en la app de mapas que elijas.
+ * Dirección de un lugar. Sin coordenadas, abre Google Maps directo. Con coordenadas, al tocarla se
+ * abre un cuadro con las opciones: verlo acá en el mapa o en la brújula 3D de VikArg (también sin
+ * conexión), Google Maps o la app de mapas que elijas.
  */
 export function MapLink({ address, lat, lon }: { address: string; lat: number | null; lon: number | null }) {
   const { t } = useTranslation();
+  const caps = useCapabilities((c) => c.caps);
+  const [open, setOpen] = useState(false);
   const url = mapsUrl(address, lat, lon);
   if (!url) return null;
-  const hasPoint = lat !== null && lon !== null;
-  const name = encodeURIComponent(address.trim().slice(0, 80));
-  return (
-    <span className="map-links">
+  const label = address || t('emergency.seeOnMap');
+  if (lat === null || lon === null) {
+    return (
       <a className="map-link" href={url} target="_blank" rel="noreferrer" title={t('emergency.openMaps')}>
-        <MapPinned size={14} aria-hidden /> {address || t('emergency.seeOnMap')}
+        <MapPinned size={14} aria-hidden /> {label}
       </a>
-      {hasPoint && (
-        <>
-          <Link className="map-link" to={`/orientation/go?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&name=${name}`} title={t('emergency.openHereTitle')} data-testid="open-in-app">
-            <Navigation size={14} aria-hidden /> {t('emergency.openHere')}
-          </Link>
-          <a className="map-link" href={`geo:${lat.toFixed(6)},${lon.toFixed(6)}?q=${lat.toFixed(6)},${lon.toFixed(6)}`} title={t('emergency.openOtherTitle')}>
-            <ExternalLink size={14} aria-hidden /> {t('emergency.openOther')}
-          </a>
-        </>
+    );
+  }
+  const coords = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+  const goTo = `/orientation/go?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&name=${encodeURIComponent(address.trim().slice(0, 80))}`;
+  const close = () => setOpen(false);
+  return (
+    <>
+      <button className="map-link map-link-btn" type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" title={t('emergency.placeOptions')} data-testid="place-options">
+        <MapPinned size={14} aria-hidden /> {label}
+      </button>
+      {open && (
+        <Dialog title={label} onClose={close}>
+          <ul className="list" data-testid="place-options-list">
+            <li>
+              <Link className="list-row" to={`${goTo}&view=map`} onClick={close} data-testid="open-in-app-map">
+                <MapIcon size={22} aria-hidden style={{ color: 'var(--accent)' }} />
+                <span className="list-main">
+                  <span className="list-title">{t('emergency.viewHereMap')}</span>
+                  <span className="list-sub">{t('emergency.viewHereMapTitle')}</span>
+                </span>
+              </Link>
+            </li>
+            {caps?.orientation && (
+              <li>
+                <Link className="list-row" to={`${goTo}&view=3d`} onClick={close} data-testid="open-in-app-3d">
+                  <Navigation size={22} aria-hidden style={{ color: 'var(--accent)' }} />
+                  <span className="list-main">
+                    <span className="list-title">{t('emergency.viewHereCompass')}</span>
+                    <span className="list-sub">{t('emergency.viewHereCompassTitle')}</span>
+                  </span>
+                </Link>
+              </li>
+            )}
+            <li>
+              <a className="list-row" href={url} target="_blank" rel="noreferrer" onClick={close} data-testid="open-google-maps">
+                <ExternalLink size={22} aria-hidden style={{ color: 'var(--accent)' }} />
+                <span className="list-main">
+                  <span className="list-title">{t('emergency.openGoogle')}</span>
+                  <span className="list-sub">{t('emergency.openMaps')}</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a className="list-row" href={`geo:${coords}?q=${coords}`} onClick={close} data-testid="open-other-app">
+                <ExternalLink size={22} aria-hidden style={{ color: 'var(--accent)' }} />
+                <span className="list-main">
+                  <span className="list-title">{t('emergency.openOther')}</span>
+                  <span className="list-sub">{t('emergency.openOtherTitle')}</span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </Dialog>
       )}
-    </span>
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowUp, Box, ChevronLeft, ChevronRight, CircleCheck, Map as MapIcon, Repeat } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Box, ChevronLeft, ChevronRight, CircleCheck, Map as MapIcon } from 'lucide-react';
 import { useCapabilities } from '@/core/capabilities/capabilities';
 import { bearingDeg, distanceMeters, normalizeDeg } from '@/core/geo/geo';
 import { useGeolocation } from '@/core/geo/useGeolocation';
@@ -50,7 +50,7 @@ export interface RouteStep {
   onNext: (() => void) | null;
 }
 
-export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: string; route?: RouteStep }) {
+export function GoTo({ target, backTo, route, initialView }: { target: Waypoint; backTo: string; route?: RouteStep; /** Vista con la que abre (si se llega con «Ver aquí, mapa» o «Ver aquí, brújula»); sin valor, la última que se usó. */ initialView?: GoMode }) {
   const { t, i18n } = useTranslation();
   const caps = useCapabilities((s) => s.caps);
   const units = useSettings((s) => s.settings.units);
@@ -60,7 +60,7 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
   const lastView = useSettings((s) => s.settings.gotoView);
   const updateSettings = useSettings((s) => s.update);
   // La última vista elegida se recuerda (también entre puntos de una ruta); "cambiar la vista" vuelve a preguntar.
-  const [picked, setPicked] = useState<GoMode | null>(lastView);
+  const [picked, setPicked] = useState<GoMode | null>(initialView ?? lastView);
   const hasCompass = caps?.orientation ?? false;
   // Sin brújula (una PC) la vista 3D no sirve: solo queda el mapa, sin preguntar.
   const choice: GoMode | null = caps && !caps.orientation ? 'map' : picked === '3d' && !hasCompass ? null : picked;
@@ -90,11 +90,6 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
             </p>
           )}
         </div>
-        {choice && hasCompass && (
-          <button className="icon-btn" type="button" onClick={() => choose(null)} aria-label={t('goto.changeView')} title={t('goto.changeView')} data-testid="goto-change-view">
-            <Repeat size={22} />
-          </button>
-        )}
       </div>
 
       <section className="card nav-readout">
@@ -107,6 +102,17 @@ export function GoTo({ target, backTo, route }: { target: Waypoint; backTo: stri
           <span className="nav-value" data-testid="goto-bearing">{shownBearing === null ? '—' : formatBearing(shownBearing)}</span>
         </div>
       </section>
+
+      {choice && hasCompass && (
+        <div className="segmented goto-switch" role="group" aria-label={t('goto.switchLabel')} data-testid="goto-switch">
+          <button type="button" aria-pressed={choice === 'map'} onClick={() => choose('map')} data-testid="goto-view-map">
+            <MapIcon size={18} aria-hidden /> {t('goto.tabMap')}
+          </button>
+          <button type="button" aria-pressed={choice === '3d'} onClick={() => choose('3d')} data-testid="goto-view-3d">
+            <Box size={18} aria-hidden /> {t('goto.tab3d')}
+          </button>
+        </div>
+      )}
 
       {route && (
         <div className="row-between">

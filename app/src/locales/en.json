@@ -393,8 +393,12 @@
     "notesPlaceholder": "Surgeries, vaccines, other useful details"
   },
   "emergency": {
-    "openHere": "Go in VikArg",
-    "openHereTitle": "Guide me there with the VikArg compass or map",
+    "placeOptions": "View this place: options",
+    "openGoogle": "Google Maps",
+    "viewHereMap": "View here, map",
+    "viewHereMapTitle": "Open the VikArg map with the way to this place",
+    "viewHereCompass": "View here, compass",
+    "viewHereCompassTitle": "Open the VikArg 3D compass: shows the direction and height of this place",
     "openOther": "Other app",
     "openOtherTitle": "Open in the map app you choose (Waze, OsmAnd, Maps…)",
     "newContact": "New contact",
@@ -1436,6 +1440,9 @@
     "finished": "You've reached the end of the route"
   },
   "goto": {
+    "switchLabel": "How to guide you",
+    "tabMap": "Map",
+    "tab3d": "3D compass",
     "pointName": "that place",
     "cameraOn": "Use the camera as background",
     "cameraOff": "Back to black background",

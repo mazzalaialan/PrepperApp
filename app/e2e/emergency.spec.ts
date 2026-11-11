@@ -68,7 +68,15 @@ test('contactos: números nacionales, buscar cercanos (oficial + OpenStreetMap),
   await page.getByRole('button', { name: 'Policía', exact: true }).click();
   const police = list.locator('li').filter({ hasText: 'Comisaría 28' });
   await expect(police.getByRole('link', { name: '+54 294 442 2030' })).toHaveAttribute('href', 'tel:+542944422030');
-  await expect(police.getByRole('link', { name: /Mitre 100/ })).toHaveAttribute('href', /google\.com\/maps\/search\/\?api=1&query=Mitre%20100/);
+  // Tocar la dirección abre un cuadro con las opciones: ver acá (mapa o brújula), Google Maps u otra app.
+  await police.getByTestId('place-options').click();
+  const options = page.getByTestId('place-options-list');
+  await expect(options.getByTestId('open-google-maps')).toHaveAttribute('href', /google\.com\/maps\/search\/\?api=1&query=Mitre%20100/);
+  await expect(options.getByTestId('open-other-app')).toHaveAttribute('href', /^geo:/);
+  await expect(options.getByTestId('open-in-app-map')).toBeVisible();
+  await options.getByTestId('open-in-app-map').click();
+  await expect(page.getByTestId('guide-map')).toBeVisible();
+  await page.goBack();
   await police.getByRole('button', { name: 'Guardar Comisaría 28 en mis contactos' }).click();
   await expect(police.getByLabel('Guardado en mis contactos')).toBeVisible();
   // La intendencia del Nahuel Huapi, con su teléfono, el 105 y las frecuencias que publica el parque.

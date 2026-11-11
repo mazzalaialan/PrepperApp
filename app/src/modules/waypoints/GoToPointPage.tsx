@@ -10,6 +10,7 @@ export function GoToPointPage() {
   const [params] = useSearchParams();
   const lat = Number(params.get('lat'));
   const lon = Number(params.get('lon'));
+  const view = params.get('view') === 'map' ? 'map' : params.get('view') === '3d' ? '3d' : undefined;
   const name = params.get('name')?.trim() || t('goto.pointName');
   const valid = params.has('lat') && params.has('lon') && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
   const target = useMemo<Waypoint | null>(
@@ -23,5 +24,5 @@ export function GoToPointPage() {
       </p>
     );
   }
-  return <GoTo target={target} backTo="/first-aid/contacts/nearby" />;
+  return <GoTo target={target} backTo="/first-aid/contacts/nearby" initialView={view} />;
 }

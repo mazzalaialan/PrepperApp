@@ -393,8 +393,12 @@
     "notesPlaceholder": "Cirugías, vacunas, otros datos útiles"
   },
   "emergency": {
-    "openHere": "Ir en VikArg",
-    "openHereTitle": "Guiarme hasta acá con la brújula o el mapa de VikArg",
+    "placeOptions": "Ver este lugar: opciones",
+    "openGoogle": "Google Maps",
+    "viewHereMap": "Ver aquí, mapa",
+    "viewHereMapTitle": "Abrir el mapa de VikArg con el camino hasta este lugar",
+    "viewHereCompass": "Ver aquí, brújula",
+    "viewHereCompassTitle": "Abrir la brújula 3D de VikArg: te marca la dirección y la altura de este lugar",
     "openOther": "Otra app",
     "openOtherTitle": "Abrir en la app de mapas que elijas (Waze, OsmAnd, Maps…)",
     "newContact": "Nuevo contacto",
@@ -1436,6 +1440,9 @@
     "finished": "Llegaste al final de la ruta"
   },
   "goto": {
+    "switchLabel": "Cómo guiarte",
+    "tabMap": "Mapa",
+    "tab3d": "Brújula 3D",
     "pointName": "ese lugar",
     "cameraOn": "Usar la cámara de fondo",
     "cameraOff": "Volver al fondo negro",
