@@ -83,6 +83,8 @@ Pendientes, por prioridad (las que dijo el usuario que vienen después de la lis
 
 ## Diagramas de nudos: estado de la revisión (2026-11-10)
 
+Aviso de beta: el paso a paso y la práctica de cada nudo muestran «Opción beta, en desarrollo: los pasos y los dibujos pueden contener errores» y NO se puede ocultar (`BetaNotice` en `modules/knots/KnotPage.tsx`): cuando una persona revise todos los nudos, se saca ese aviso para que el usuario sepa que ya están revisados.
+
 Regla: un diagrama paso a paso se considera verificado solo si se transcribió de una referencia real y `node check.mjs <id>` (en `tools/knot-diagrams`) da COINCIDE con `refs/<id>.json`, o si lo revisó un analista contra la referencia, con los cruces a la vista. El proceso barato está en `tools/knot-diagrams/PROCESO.md`.
 
 - **Verificados contra la referencia real:** escape, ballestrinque, alondra, medios cotes, constrictor (paso terminado; flechas de los pasos 1 y 2 del constrictor sin revisar), as de guía doble (paso terminado) y mariposa (paso terminado). Con la secuencia en `refs/`.

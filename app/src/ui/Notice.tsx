@@ -33,6 +33,7 @@ export function Notice({
   variant = 'hint',
   testId,
   style,
+  dismissible = true,
   children,
 }: {
   id: string;
@@ -40,14 +41,16 @@ export function Notice({
   variant?: 'hint' | 'warning';
   testId?: string;
   style?: CSSProperties;
+  /** `false`: el aviso no se puede ocultar (por ejemplo, el de beta de los nudos, para que se sepa cuándo se revisaron). */
+  dismissible?: boolean;
   children: ReactNode;
 }) {
   const { hidden, dismiss } = useNotice(id);
-  if (hidden) return null;
+  if (hidden && dismissible) return null;
   return (
     <div className={`notice ${variant === 'warning' ? 'warning-box' : 'hint'}`} style={{ margin: 0, ...style }} data-testid={testId} data-notice={id}>
       <div className="notice-body">{children}</div>
-      <DismissNoticeButton onClick={dismiss} />
+      {dismissible && <DismissNoticeButton onClick={dismiss} />}
     </div>
   );
 }

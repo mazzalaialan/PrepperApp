@@ -15,11 +15,12 @@ import { Notice } from '@/ui/Notice';
 const src = (file: string) => `${import.meta.env.BASE_URL}knots/${file}`;
 
 /** Modo práctica: un paso por pantalla, imagen grande y voz. */
-/** Aviso de que el paso a paso es beta y puede tener errores; con enlace para reportar uno. Se puede dar por leído. */
+/** Aviso de que el paso a paso es beta y puede tener errores; con enlace para reportar uno. No se puede ocultar. */
 function BetaNotice({ name, n, testId, onNavigate }: { name: string; n?: number; testId: string; onNavigate?: () => void }) {
   const { t } = useTranslation();
   return (
-    <Notice id="knots.beta" testId={testId}>
+    // Sin «Entendido»: mientras sea beta tiene que verse siempre; cuando un humano revise los nudos se saca.
+    <Notice id="knots.beta" testId={testId} dismissible={false}>
       <span className="pill">{t('knots.betaPill')}</span> {t('knots.beta')}{' '}
       <Link
         className="btn-link"
