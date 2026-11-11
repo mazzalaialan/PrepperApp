@@ -16,12 +16,24 @@ const L = { rope: 6, zoom: [1.6, 270, 165] };
 const LP = { rope: 8 };
 
 export default {
-  prusik: [
-    { ...H, ropes: [main, { ...G, path: [[150, 330], [160, 260], [175, 215], [200, 200, -1], [225, 215], [240, 260], [250, 330]], end: false }] },
-    { ...H, ropes: [main, { ...G, path: [[165, 340], [175, 260], ...wraps(3, 235, 26), [182, 140], [205, 150, 1], [226, 175], [230, 260], [235, 340]], end: false }] },
-    { ...H, ropes: [main, { ...G, path: [[185, 340], [188, 260], ...wraps(3, 235, 22, 22), [185, 160], [205, 168, 1], [215, 190], [212, 260], [215, 340]], end: false }] },
-    { ...H, ropes: [main, { ...G, path: [[185, 340], [188, 260], ...wraps(3, 235, 22, 22), [185, 160], [205, 168, 1], [215, 190], [212, 260], [215, 340]], end: false }], arrows: [[[250, 270], [250, 330]]] },
-  ],
+  prusik: (() => {
+    // El anillo va DOBLE alrededor de la cuerda (referencia: Ankerstich/Prusik A–D, StromBer, CC BY-SA 2.0 de, Commons):
+    // una hebra sube en espiral, da la vuelta arriba (el seno del anillo) y la otra baja pegada a ella; las dos patas
+    // salen juntas por abajo y se cruzan una vez antes de bajar.
+    const cord = (n, y = 262, pitch = 30, r = 26, gap = 9) => {
+      const up = coilV({ x: X, y, n, pitch, r, up: true });
+      const down = rev(coilV({ x: X, y: y + gap, n, pitch, r, up: true }));
+      const top = up[up.length - 1], back = down[0];
+      return [[X - 40, 350], [X - 34, 310], ...up, [(top[0] + back[0]) / 2 - 14, (top[1] + back[1]) / 2 - 4], ...down, [X - 30, y + gap + 32], [X + 36, 350]];
+    };
+    const tight = { ...G, path: cord(3, 262, 22, 20, 7), end: false };
+    return [
+      { ...H, ropes: [main, { ...G, path: [[150, 330], [160, 260], [175, 215], [200, 200, -1], [225, 215], [240, 260], [250, 330]], end: false }] },
+      { ...H, ropes: [main, { ...G, path: cord(3), end: false }] },
+      { ...H, ropes: [main, tight] },
+      { ...H, ropes: [main, tight], arrows: [[[250, 270], [250, 330]]] },
+    ];
+  })(),
   machard: [
     { ...H, ropes: [main, { ...G, path: [[160, 300], [170, 250], [200, 230, -1], [230, 250], [240, 300]], end: false }], poles: [{ x: 170, y: 20, w: 60, h: 40, rx: 10, fill: '#c0c4ca', stroke: '#6b7079' }] },
     { ...H, ropes: [main, { ...G, path: [[175, 330], [180, 280], ...wraps(4, 250, 26, 22), [182, 140], [215, 300], [222, 330]], end: false }], poles: [{ x: 170, y: 20, w: 60, h: 40, rx: 10, fill: '#c0c4ca', stroke: '#6b7079' }] },
