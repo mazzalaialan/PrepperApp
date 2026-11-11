@@ -8,6 +8,7 @@ import { useSettings } from '@/core/settings/settings';
 import { CountrySwitch } from '@/modules/emergency/CountrySwitch';
 import { EnvSwitch, useLang } from './parts';
 import { fillGuideText } from './types';
+import { Notice } from '@/ui/Notice';
 
 /** Guía de primeros auxilios: lo primero, la evaluación paso a paso y todas las situaciones. */
 export function GuidesPage() {
@@ -64,7 +65,7 @@ export function GuidesPage() {
         </ul>
       </section>
 
-      <p className="hint">{t('guides.disclaimer', { medical })}</p>
+      <Notice id="guides.disclaimer">{t('guides.disclaimer', { medical })}</Notice>
     </div>
   );
 }

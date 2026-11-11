@@ -6,6 +6,7 @@ import { ANCHOR_BY_ID, ANCHOR_KINDS, ANCHOR_SOURCES, ANCHORS, type Anchor } from
 import { KNOT_BY_ID, RISKY_USES } from './knots';
 import { tl } from './KnotGuidePage';
 import { norm } from './search';
+import { Notice } from '@/ui/Notice';
 
 const src = (file: string) => `${import.meta.env.BASE_URL}anchors/${file}`;
 
@@ -24,7 +25,7 @@ export function AnchorsPage() {
   return (
     <div className="stack">
       <h1 className="page-title">{t('modules.anchors.title')}</h1>
-      <p className="warning-box" style={{ margin: 0 }}>{t('anchors.safety')}</p>
+      <Notice id="anchors.safety" variant="warning">{t('anchors.safety')}</Notice>
       <div className="field">
         <label htmlFor="anchor-search">{t('anchors.search')}</label>
         <div className="input-group">
@@ -95,9 +96,9 @@ export function AnchorPage() {
       <h1 className="page-title" style={{ margin: 0 }}>{tl(a.name, lang)}</h1>
       <p className="hint" style={{ margin: 0 }}>{t(`anchors.kinds.${a.kind}`)}</p>
       {a.uses.some((u) => RISKY_USES.has(u)) && (
-        <p className="warning-box" style={{ margin: 0 }} data-testid="anchor-safety">
+        <Notice id="anchors.safety" variant="warning" testId="anchor-safety">
           {t('anchors.safety')}
-        </p>
+        </Notice>
       )}
       <p style={{ margin: 0 }}>{tl(a.summary, lang)}</p>
       {a.images.length > 0 && (

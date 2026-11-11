@@ -4,6 +4,7 @@ import { Lock, LockOpen } from 'lucide-react';
 import { avalancheRisk, LEVEL_MIN_SURFACE, lateralTilt, slopeZone } from '@/core/sensors/tilt';
 import { useTilt } from '@/core/sensors/useTilt';
 import { Segmented } from '@/ui/Segmented';
+import { Notice } from '@/ui/Notice';
 
 type Mode = 'surface' | 'sight' | 'level';
 
@@ -86,7 +87,7 @@ export function InclinometerPage() {
             </li>
           ))}
         </ul>
-        <p className="hint" style={{ margin: 0 }}>{t('inclinometer.disclaimer')}</p>
+        <Notice id="inclinometer.disclaimer">{t('inclinometer.disclaimer')}</Notice>
       </section>
       )}
     </div>

@@ -13,6 +13,7 @@ import { loadOfficialRepeaters, officialFor, withoutDuplicates, type OfficialRep
 import { loadRepeaters, locateRepeaters, mergeRepeaters, parseRepeaterFile, repeaterSummary, saveRepeaters, type Repeater, type RepeaterList } from './repeaters';
 import { useContacts } from './store';
 import { confirmAction } from '@/ui/confirm';
+import { DismissNoticeButton, Notice, useNotice } from '@/ui/Notice';
 
 /**
  * Radio en una emergencia: la emisora de Radio Nacional más cercana (para
@@ -171,7 +172,7 @@ export function RadioPage() {
             </li>
           ))}
         </ul>
-        <p className="hint" style={{ margin: 0 }}>{t('radio.distressNote')}</p>
+        <Notice id="radio.distress">{t('radio.distressNote')}</Notice>
       </section>
 
       {country !== 'UY' && <ParkSection place={place} />}
@@ -182,13 +183,9 @@ export function RadioPage() {
 
       <RepeatersSection place={place} />
 
-      <section className="card stack" aria-labelledby="ham-title">
-        <h2 id="ham-title" className="section-title" style={{ margin: 0 }}>{t('radio.hamTitle')}</h2>
-        <p className="hint" style={{ margin: 0 }}>{t('radio.hamText')}</p>
-        <p className="hint" style={{ margin: 0 }} data-testid="ham-license">{t(`radio.hamLicense.${country}`)}</p>
-      </section>
+      <HamSection country={country} />
 
-      <p className="hint">{t('radio.securityNote')}</p>
+      <Notice id="radio.security">{t('radio.securityNote')}</Notice>
     </div>
   );
 }
@@ -237,7 +234,7 @@ function MountainSection({ place }: { place: { lat: number; lon: number } | null
           </li>
         ))}
       </ul>
-      <p className="hint" style={{ margin: 0 }}>{t('radio.mountainNote')}</p>
+      <Notice id="radio.mountainNote">{t('radio.mountainNote')}</Notice>
       <p className="hint" style={{ margin: 0 }}>{t('radio.mountainSources')}</p>
     </section>
   );
@@ -273,6 +270,21 @@ const PE_FREE: { id: string; freq: string }[] = [
   { id: 'fam2', freq: '467,5625 – 467,7125 MHz' },
 ];
 
+/** Aviso de radioaficionados: se puede dar por leído y la tarjeta deja de ocupar lugar. */
+function HamSection({ country }: { country: string }) {
+  const { t } = useTranslation();
+  const { hidden, dismiss } = useNotice('radio.ham');
+  if (hidden) return null;
+  return (
+    <section className="card stack" aria-labelledby="ham-title">
+      <h2 id="ham-title" className="section-title" style={{ margin: 0 }}>{t('radio.hamTitle')}</h2>
+      <p className="hint" style={{ margin: 0 }}>{t('radio.hamText')}</p>
+      <p className="hint" style={{ margin: 0 }} data-testid="ham-license">{t(`radio.hamLicense.${country}`)}</p>
+      <DismissNoticeButton onClick={dismiss} />
+    </section>
+  );
+}
+
 function RenerSection({ place }: { place: { lat: number; lon: number } | null }) {
   const { t } = useTranslation();
   const country = useSettings((s) => s.settings.country);
@@ -305,7 +317,7 @@ function RenerSection({ place }: { place: { lat: number; lon: number } | null })
           </li>
         ))}
       </ul>
-      <p className="hint" style={{ margin: 0 }}>{t('radio.rener.note')}</p>
+      <Notice id="radio.renerNote">{t('radio.rener.note')}</Notice>
       <p className="hint" style={{ margin: 0 }}>{t('radio.rener.sources')}</p>
     </section>
     <section className="card stack" aria-labelledby="pe-free-title" data-testid="pe-free-radios">
@@ -325,7 +337,7 @@ function RenerSection({ place }: { place: { lat: number; lon: number } | null })
           </li>
         ))}
       </ul>
-      <p className="hint" style={{ margin: 0 }}>{t('radio.peFree.note')}</p>
+      <Notice id="radio.peFreeNote">{t('radio.peFree.note')}</Notice>
     </section>
     </>
   );
@@ -409,7 +421,7 @@ function ParkSection({ place }: { place: { lat: number; lon: number } | null }) 
           </ul>
         </>
       )}
-      <p className="hint" style={{ margin: 0 }}>{t('radio.park.note')}</p>
+      <Notice id="radio.parkNote">{t('radio.park.note')}</Notice>
       <p className="hint" style={{ margin: 0 }}>
         {t('radio.park.sourcesLead')} {[...new Set(parks.parks.map(parkCountry))].map((c) => t(`radio.park.sourceOf${c}`)).join(' ')}
       </p>
@@ -588,7 +600,7 @@ function RepeatersSection({ place }: { place: { lat: number; lon: number } | nul
           if (f) void handleFile(f);
         }}
       />
-      <p className="hint" style={{ margin: 0 }}>{t('radio.repeaters.howTo')}</p>
+      <Notice id="radio.repeatersHowTo">{t('radio.repeaters.howTo')}</Notice>
       <p className="hint" style={{ margin: 0 }}>{t('radio.repeaters.attribution')}</p>
     </section>
   );

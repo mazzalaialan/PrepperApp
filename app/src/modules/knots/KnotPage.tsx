@@ -10,6 +10,7 @@ import { findKnotRefs, isKnotBook, type KnotRef } from './libraryRefs';
 import { creditFor, KNOT_BY_ID, knotImages, RISKY_USES, type Knot } from './knots';
 import { tl } from './KnotGuidePage';
 import { KnotFigure } from './KnotFigure';
+import { Notice } from '@/ui/Notice';
 
 const src = (file: string) => `${import.meta.env.BASE_URL}knots/${file}`;
 
@@ -179,9 +180,9 @@ export function KnotPage() {
         ))}
       </div>
       {knot.uses.some((u) => RISKY_USES.has(u)) && (
-        <p className="warning-box" style={{ margin: 0 }} data-testid="knot-safety">
+        <Notice id="knots.safety" variant="warning" testId="knot-safety">
           {t('knots.safety')}
-        </p>
+        </Notice>
       )}
       <p style={{ margin: 0 }}>{tl(knot.purpose, lang)}</p>
 

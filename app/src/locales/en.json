@@ -2299,6 +2299,12 @@
     "newPasswordTitle": "New password",
     "newPasswordIntro": "You unlocked with your recovery key. Choose a new password."
   },
+  "notice": {
+    "dismiss": "Got it, hide",
+    "hidden": "Hidden notices: {{count}}",
+    "restore": "Show notices again",
+    "restoreHint": "Notices you hid with \"Got it\" (safety, radio, knots, etc.) show up again."
+  },
   "settings": {
     "title": "Settings",
     "general": "General",

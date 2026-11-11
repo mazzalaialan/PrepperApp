@@ -6,6 +6,7 @@ import type { Attachment } from '@/core/model/types';
 import { today } from '@/modules/inventory/domain/dates';
 import { useBlobUrl } from '@/ui/useBlobUrl';
 import { ageOn, monthsSince, useMedical } from './medicalStore';
+import { Notice } from '@/ui/Notice';
 
 function Avatar({ photo, pet }: { photo: Attachment | undefined; pet: boolean }) {
   const url = useBlobUrl(photo?.id, photo?.mime);
@@ -75,7 +76,7 @@ export function MedicalPage() {
           })}
         </ul>
       )}
-      <p className="hint" style={{ marginTop: 16 }}>{t('medical.privacy')}</p>
+      <Notice id="medical.privacy" style={{ marginTop: 16 }}>{t('medical.privacy')}</Notice>
     </>
   );
 }

@@ -8,6 +8,7 @@ import { PhoneActions } from '@/modules/emergency/parts';
 import { resolveNext, TOPIC_BY_ID } from './content';
 import { EnvSwitch, useLang } from './parts';
 import { CALLS, fillGuideText } from './types';
+import { Notice } from '@/ui/Notice';
 
 /** Un tema de la guía, paso a paso: cada respuesta lleva al paso siguiente (y "volver" deshace). */
 export function GuideTopicPage() {
@@ -155,7 +156,7 @@ export function GuideTopicPage() {
           {t('guides.all')}
         </Link>
       </div>
-      <p className="hint">{t('guides.disclaimer', { medical: fill('{medical}') })}</p>
+      <Notice id="guides.disclaimer">{t('guides.disclaimer', { medical: fill('{medical}') })}</Notice>
     </div>
   );
 }

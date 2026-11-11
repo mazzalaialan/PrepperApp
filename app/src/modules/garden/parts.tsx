@@ -4,6 +4,7 @@ import { useSettings } from '@/core/settings/settings';
 import { ESTIMATED_ZONES, ZONES, type CropCalendar, type Zone } from './calendar';
 import { cropName, type Crop, type Family } from './crops';
 import type { GardenPlace } from './status';
+import { Notice } from '@/ui/Notice';
 
 /** Color por familia: sirve para ver la rotación en la grilla. */
 export const FAMILY_COLOR: Record<Family, string> = {
@@ -61,9 +62,9 @@ export function ZonePicker({ place, zone, suggested, manual }: { place: GardenPl
       {!manual && !place && <p className="hint" style={{ margin: 0 }}>{t('garden.zoneNoPlace')}</p>}
       {country !== 'AR' && <p className="hint" style={{ margin: 0 }}>{t(`garden.zoneCountry.${country}`, { zone: t(`garden.zones.${zone}`) })}</p>}
       {ESTIMATED_ZONES.has(zone) && (
-        <p className="warning-box" style={{ margin: 0 }} data-testid="zone-estimated">
+        <Notice id={`garden.zoneEstimated.${zone}`} variant="warning" testId="zone-estimated">
           {t(zone === 'vallesBolivia' ? 'garden.zoneEstimatedValles' : zone === 'tropicoBolivia' ? 'garden.zoneEstimatedTropico' : zone === 'sierraPeru' ? 'garden.zoneEstimatedSierraPeru' : 'garden.zoneEstimated')}
-        </p>
+        </Notice>
       )}
     </div>
   );

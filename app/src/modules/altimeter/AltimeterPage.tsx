@@ -11,6 +11,7 @@ import { GpsStatus } from '@/modules/waypoints/components';
 import { Segmented } from '@/ui/Segmented';
 import { alarmReached, MAX_VERTICAL_ACCURACY, mapOffset, reachAlarm, smoothAltitude, type AltSample } from './altimeter';
 import { useAltimeter } from './store';
+import { Notice } from '@/ui/Notice';
 
 type AlarmKind = 'reach' | 'climb';
 
@@ -143,9 +144,9 @@ export function AltimeterPage() {
   return (
     <div className="stack">
       <h1 className="page-title">{t('modules.altimeter.title')}</h1>
-      <p className="warning-box" style={{ margin: 0 }} data-testid="alt-disclaimer">
+      <Notice id="altimeter.disclaimer" variant="warning" testId="alt-disclaimer">
         {t('altimeter.disclaimer')}
-      </p>
+      </Notice>
       <GpsStatus fix={fix} error={error} />
 
       {ringing && (

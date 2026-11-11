@@ -2299,6 +2299,12 @@
     "newPasswordTitle": "Nueva contraseña",
     "newPasswordIntro": "Desbloqueaste con la clave de recuperación. Elegí una contraseña nueva."
   },
+  "notice": {
+    "dismiss": "Entendido, ocultar",
+    "hidden": "Avisos ocultos: {{count}}",
+    "restore": "Mostrar de nuevo los avisos",
+    "restoreHint": "Los avisos que ocultaste con «Entendido» (seguridad, radio, nudos, etc.) vuelven a aparecer."
+  },
   "settings": {
     "title": "Ajustes",
     "general": "General",

@@ -95,6 +95,16 @@ export function SettingsPage() {
         </button>
       </section>
 
+      {settings.dismissedNotices.length > 0 && (
+        <section className="card stack" aria-labelledby="notices-title" data-testid="notices-section">
+          <h2 id="notices-title" className="section-title" style={{ margin: 0 }}>{t('notice.hidden', { count: settings.dismissedNotices.length })}</h2>
+          <p className="hint" style={{ margin: 0 }}>{t('notice.restoreHint')}</p>
+          <button className="btn" type="button" onClick={() => void update({ dismissedNotices: [] })} data-testid="notices-restore">
+            {t('notice.restore')}
+          </button>
+        </section>
+      )}
+
       <BackupSection />
       <ConnectionsSection settings={settings} onSave={update} />
       <NotificationsSection />

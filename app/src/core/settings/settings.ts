@@ -101,6 +101,8 @@ export interface Settings {
   gardenWateredAt: Record<string, string>;
   /** Nudos marcados como aprendidos (ids de la guía de nudos). */
   knotsLearned: string[];
+  /** Avisos que el usuario dio por leídos con «Entendido» (ver ui/Notice.tsx). */
+  dismissedNotices: string[];
   /** Última actividad elegida en Entrenamiento. */
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
@@ -239,6 +241,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenWaterAlerts: true,
   gardenWateredAt: {},
   knotsLearned: [],
+  dismissedNotices: [],
   trainingKind: 'walk',
   trainingVoice: false,
   trainingCountdownS: 0,

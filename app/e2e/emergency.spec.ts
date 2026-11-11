@@ -337,3 +337,28 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
   await expect(box).toHaveValue(/Repetidora en desuso o con datos mal:\nCE7RCM RPT-B · 146,820 MHz/);
   await expect(box).toHaveValue(/Fuente: listado oficial de SUBTEL \(Chile\) al 26\/10\/2026/);
 });
+
+test('un aviso se da por leído con «Entendido», no vuelve y Ajustes lo trae de nuevo', async ({ page }) => {
+  await setup(page);
+  await page.goto('/#/first-aid/radio');
+  await expect(page.getByTestId('ham-license')).toBeVisible();
+  await page.locator('section', { has: page.getByTestId('ham-license') }).getByTestId('notice-dismiss').click();
+  await expect(page.getByTestId('ham-license')).toHaveCount(0);
+
+  // Otro aviso de la misma pantalla (el de seguridad) sigue ahí: cada uno se oculta por separado.
+  await expect(page.locator('[data-notice="radio.security"]')).toBeVisible();
+
+  // Sigue oculto al volver a entrar a la pantalla.
+  await page.goto('/#/first-aid');
+  await page.goto('/#/first-aid/radio');
+  await expect(page.getByRole('heading', { name: 'Radioaficionados', exact: true })).toHaveCount(0);
+  await expect(page.getByTestId('ham-license')).toHaveCount(0);
+
+  // Ajustes cuenta los ocultos y los trae de nuevo.
+  await page.goto('/#/settings');
+  await expect(page.getByTestId('notices-section')).toContainText('Avisos ocultos: 1');
+  await page.getByTestId('notices-restore').click();
+  await expect(page.getByTestId('notices-section')).toHaveCount(0);
+  await page.goto('/#/first-aid/radio');
+  await expect(page.getByTestId('ham-license')).toBeVisible();
+});

@@ -8,6 +8,7 @@ import { Dialog } from '@/ui/Dialog';
 import type { LibraryBook } from './books';
 import { useLibrary } from './store';
 import { confirmAction } from '@/ui/confirm';
+import { Notice } from '@/ui/Notice';
 
 const mb = (bytes: number, lang: string) => new Intl.NumberFormat(lang, { maximumFractionDigits: bytes < 10 * 2 ** 20 ? 1 : 0 }).format(bytes / 2 ** 20);
 
@@ -43,7 +44,7 @@ function KeyDialog({ onClose, onOk }: { onClose: () => void; onOk: () => void })
       }
     >
       <form id="library-key" className="stack" onSubmit={submit}>
-        <p className="warning-box" style={{ margin: 0 }}>{t('library.personalUse')}</p>
+        <Notice id="library.personalUse" variant="warning">{t('library.personalUse')}</Notice>
         <div className="field">
           <label htmlFor="library-pass">{t('library.key')}</label>
           <input id="library-pass" className="input" type="password" autoComplete="off" value={pass} onChange={(e) => setPass(e.target.value)} />

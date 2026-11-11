@@ -13,6 +13,7 @@ import { loadGeoData, type GeoData } from './geo';
 import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
 import { fitBounds, homeBounds, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
+import { Notice } from '@/ui/Notice';
 import {
   alertCovers,
   fetchHazards,
@@ -558,7 +559,7 @@ export function WeatherMapPage() {
         )}
       </section>
 
-      <p className="hint">{t('weatherMap.disclaimer')}</p>
+      <Notice id="weatherMap.disclaimer">{t('weatherMap.disclaimer')}</Notice>
       <OfficialWeatherNotice />
     </div>
   );

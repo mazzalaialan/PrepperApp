@@ -8,6 +8,7 @@ import { KNOT_BY_ID, KNOT_TYPES, KNOT_USES, knotImages, type Knot, type KnotType
 import { ANCHOR_BY_ID } from './anchors';
 import { NEEDS } from './content';
 import { KNOT_PROPS, searchKnots, type KnotProp } from './search';
+import { Notice } from '@/ui/Notice';
 
 export const tl = (x: L, lang: string) => (lang.startsWith('en') ? x.en : x.es);
 
@@ -152,7 +153,7 @@ export function KnotGuidePage() {
         </details>
       </section>
 
-      {use && (use === 'rappel' || use === 'rescue') && <p className="warning-box" style={{ margin: 0 }}>{t('knots.safety')}</p>}
+      {use && (use === 'rappel' || use === 'rescue') && <Notice id="knots.safety" variant="warning">{t('knots.safety')}</Notice>}
       {results.length === 0 ? (
         <p className="hint">{t('knots.noResults')}</p>
       ) : (
