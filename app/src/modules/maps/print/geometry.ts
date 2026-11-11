@@ -136,3 +136,24 @@ export function contourInterval(zoom: number): { minor: number; major: number } 
   const [minor, major] = table[z]!;
   return { minor, major };
 }
+
+/**
+ * Marcas sobre un borde del mapa: dadas muestras ordenadas (posición en el borde y valor de la coordenada ahí), devuelve dónde
+ * el valor pasa por un múltiplo de `step` (interpolando). Sirve para las marcas de latitud y longitud cuando el mapa está girado.
+ */
+export function edgeTicks(samples: { pos: number; value: number }[], step: number): { pos: number; value: number }[] {
+  const out: { pos: number; value: number }[] = [];
+  for (let i = 1; i < samples.length; i++) {
+    const a = samples[i - 1]!;
+    const b = samples[i]!;
+    if (a.value === b.value) continue;
+    const lo = Math.min(a.value, b.value);
+    const hi = Math.max(a.value, b.value);
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-12; v += step) {
+      if (v < lo - 1e-12) continue;
+      const t = (v - a.value) / (b.value - a.value);
+      if (t >= 0 && t < 1) out.push({ pos: a.pos + (b.pos - a.pos) * t, value: Math.round(v / step) * step });
+    }
+  }
+  return out;
+}

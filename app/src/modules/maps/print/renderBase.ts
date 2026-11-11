@@ -16,6 +16,8 @@ export interface BaseMap {
 export interface BaseMapInput {
   center: LatLon;
   zoom: number;
+  /** Rumbo que queda hacia arriba (grados desde el norte verdadero): para la hoja, el norte de la cuadrícula. */
+  bearing?: number;
   /** Tamaño en píxeles CSS; el lienzo resultante mide esto por `pixelRatio`. */
   cssWidth: number;
   cssHeight: number;
@@ -28,7 +30,7 @@ export interface BaseMapInput {
  * Dibuja el mapa de una zona en un lienzo grande, fuera de pantalla, con el estilo de papel. Usa las mismas fuentes que el mapa
  * de la app (lo descargado primero; sin conexión alcanza con las zonas bajadas).
  */
-export async function renderBaseMap({ center, zoom, cssWidth, cssHeight, pixelRatio, timeoutMs = 90_000 }: BaseMapInput): Promise<BaseMap> {
+export async function renderBaseMap({ center, zoom, bearing = 0, cssWidth, cssHeight, pixelRatio, timeoutMs = 90_000 }: BaseMapInput): Promise<BaseMap> {
   const { contoursUrl } = setupProtocols();
   const el = document.createElement('div');
   el.style.cssText = `position:fixed;left:-30000px;top:0;width:${cssWidth}px;height:${cssHeight}px;pointer-events:none`;
@@ -38,6 +40,7 @@ export async function renderBaseMap({ center, zoom, cssWidth, cssHeight, pixelRa
     style: printStyle(contoursUrl),
     center: [center.lon, center.lat],
     zoom,
+    bearing,
     pixelRatio,
     interactive: false,
     attributionControl: false,

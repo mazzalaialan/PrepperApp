@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contourInterval, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
+import { contourInterval, edgeTicks, groundMeters, gridLabel, gridLines, gridStepM, latLonStepDeg, paperMm, pickScale, scaleBar, scaleEquivalence, sheetLayout, zoomForScale } from './geometry';
 
 describe('geometría de la hoja topográfica', () => {
   it('la cuadrícula mide en el papel lo que dice la escala', () => {
@@ -87,5 +87,14 @@ describe('geometría de la hoja topográfica', () => {
     expect(contourInterval(14.7)).toEqual({ minor: 10, major: 50 });
     expect(contourInterval(11.9)).toEqual({ minor: 100, major: 500 });
     expect(contourInterval(5)).toEqual({ minor: 500, major: 1000 });
+  });
+
+  it('marcas en un borde: dónde el valor pasa por múltiplos del paso (también con el valor decreciente)', () => {
+    const up = edgeTicks([{ pos: 0, value: 10.1 }, { pos: 100, value: 10.9 }], 0.25);
+    expect(up.map((t) => t.value)).toEqual([10.25, 10.5, 10.75]);
+    expect(up[0]!.pos).toBeCloseTo(18.75, 6);
+    const down = edgeTicks([{ pos: 0, value: -41.0 }, { pos: 100, value: -41.4 }], 0.25);
+    expect(down.map((t) => t.value)).toEqual([-41.25, -41]);
+    expect(down.every((t) => t.pos >= 0 && t.pos <= 100)).toBe(true);
   });
 });

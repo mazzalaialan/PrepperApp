@@ -18,7 +18,7 @@ const base = (over: Partial<TopoSheetInput> = {}): TopoSheetInput => ({
 describe('hoja topográfica: planificación', () => {
   it('elige 1:25.000 para una ruta de ~3 km y centra la hoja en la ruta', () => {
     const plan = planSheet(base());
-    expect(plan.scale).toBe(15_000); // 2,9 km en diagonal: entra con más detalle que 1:25.000
+    expect(plan.scale).toBe(50_000); // por defecto 1:50.000 si la ruta entra (entraría hasta a 1:15.000)
     expect(plan.zone).toBe(19);
     expect(plan.center.lat).toBeCloseTo(-41.18135, 4);
     expect(plan.center.lon).toBeCloseTo(-71.4483, 4);

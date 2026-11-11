@@ -7,6 +7,7 @@ import {
   DEFAULT_DPI,
   gridLabel,
   gridLines,
+  edgeTicks,
   gridStepM,
   latLonStepDeg,
   MM_PER_INCH,
@@ -61,6 +62,8 @@ export interface SheetPlan {
   extentM: { east: number; north: number };
 }
 
+/** Escala por defecto de la hoja. */
+export const DEFAULT_SCALE = 50_000;
 const PX_PER_MM = DEFAULT_DPI / MM_PER_INCH;
 const mm = (v: number) => v * PX_PER_MM;
 
@@ -79,7 +82,9 @@ export function planSheet(input: TopoSheetInput): SheetPlan {
   const layout = sheetLayout(orientation, input.legs.length + 1);
   const center = fromUtm({ zone, hemisphere: mid.lat < 0 ? 'S' : 'N', easting: (minE + maxE) / 2, northing: (minN + maxN) / 2 });
   const extentM = { east: maxE - minE, north: maxN - minN };
-  const scale = input.scale ?? pickScale(extentM.east, extentM.north, layout.map);
+  // Por defecto 1:50.000 (la más usada en montaña); más cerca solo si la ruta no entra a esa escala, nunca más detalle que eso salvo que se pida.
+  const fit = pickScale(extentM.east, extentM.north, layout.map);
+  const scale = input.scale ?? (fit !== null && fit < DEFAULT_SCALE ? DEFAULT_SCALE : fit);
   return { scale, layout, center, zone, extentM };
 }
 
@@ -98,7 +103,16 @@ const fmtDist = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(2).replace('.'
 type Ctx = CanvasRenderingContext2D;
 const FONT = 'system-ui, "Segoe UI", Roboto, Arial, sans-serif';
 
-function text(ctx: Ctx, s: string, x: number, y: number, o: { size: number; bold?: boolean; color?: string; align?: CanvasTextAlign; base?: CanvasTextBaseline; halo?: string }) {
+interface TextOpts {
+  size: number;
+  bold?: boolean;
+  color?: string;
+  align?: CanvasTextAlign;
+  base?: CanvasTextBaseline;
+  halo?: string;
+}
+
+function text(ctx: Ctx, s: string, x: number, y: number, o: TextOpts) {
   ctx.font = `${o.bold ? '700 ' : ''}${mm(o.size)}px ${FONT}`;
   ctx.textAlign = o.align ?? 'left';
   ctx.textBaseline = o.base ?? 'alphabetic';
@@ -110,6 +124,15 @@ function text(ctx: Ctx, s: string, x: number, y: number, o: { size: number; bold
   }
   ctx.fillStyle = o.color ?? '#111';
   ctx.fillText(s, x, y);
+}
+
+/** Texto girado 90° (se lee de abajo hacia arriba); el cuerpo de las letras queda a la izquierda de la línea de base `x`. */
+function vtext(ctx: Ctx, s: string, x: number, y: number, o: TextOpts) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(-Math.PI / 2);
+  text(ctx, s, 0, 0, o);
+  ctx.restore();
 }
 
 const rectPx = (r: Rect): Rect => ({ x: mm(r.x), y: mm(r.y), w: mm(r.w), h: mm(r.h) });
@@ -179,14 +202,6 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
       gridLabels.push({ ...vis.reduce((a, b) => (b.x > a.x ? b : a)), s: km(n, step), edge: 'right' });
     }
   }
-  for (const l of gridLabels) {
-    const o = { size: 2.6, bold: true, color: GRID_COLOR, halo: 'rgba(255,255,255,0.9)' } as const;
-    if (l.edge === 'top') text(ctx, l.s, l.x, map.y + mm(3.4), { ...o, align: 'center' });
-    if (l.edge === 'bottom') text(ctx, l.s, l.x, map.y + map.h - mm(1.2), { ...o, align: 'center' });
-    if (l.edge === 'left') text(ctx, l.s, map.x + mm(1), l.y - mm(0.6), { ...o, align: 'left' });
-    if (l.edge === 'right') text(ctx, l.s, map.x + map.w - mm(1), l.y - mm(0.6), { ...o, align: 'right' });
-  }
-
   // Ruta y waypoints
   if (input.line.length > 1) {
     const pts = input.line.map(proj);
@@ -213,38 +228,67 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
   }
   ctx.restore();
 
+  // Valores de la cuadrícula (km) pegados al borde, dentro del marco: los de este, horizontales; los de norte, en vertical.
+  // Se omiten los que quedan a menos de 7 mm de una esquina (se cortarían o pisarían los del otro eje).
+  const corner = mm(7);
+  const GL = { size: 2.6, bold: true, color: GRID_COLOR, halo: 'rgba(255,255,255,0.92)' } as const;
+  for (const l of gridLabels) {
+    if (l.edge === 'top' || l.edge === 'bottom') {
+      if (l.x < map.x + corner || l.x > map.x + map.w - corner) continue;
+      text(ctx, l.s, l.x, l.edge === 'top' ? map.y + mm(3.4) : map.y + map.h - mm(1.2), { ...GL, align: 'center' });
+    } else {
+      if (l.y < map.y + corner || l.y > map.y + map.h - corner) continue;
+      vtext(ctx, l.s, l.edge === 'left' ? map.x + mm(3.5) : map.x + map.w - mm(1), l.y, { ...GL, align: 'center' });
+    }
+  }
+
   // Marco del mapa y marcas de latitud y longitud en el borde
   ctx.strokeStyle = '#111';
   ctx.lineWidth = mm(0.4);
   ctx.strokeRect(map.x, map.y, map.w, map.h);
-  const tl = unproj(map.x, map.y);
-  const br = unproj(map.x + map.w, map.y + map.h);
+  // Con el mapa girado (norte de la cuadrícula arriba), los meridianos y paralelos quedan inclinados: las marcas se ubican
+  // donde cada uno cruza el borde del marco.
   const ll = latLonStepDeg(scale);
   const secs = ll < 1 / 60 - 1e-9;
   const tickOpt = { size: 2.5, color: '#111' } as const;
-  for (let lat = Math.ceil(Math.min(tl.lat, br.lat) / ll) * ll; lat <= Math.max(tl.lat, br.lat); lat += ll) {
-    const y = proj({ lat, lon: plan.center.lon }).y;
-    if (y < map.y || y > map.y + map.h) continue;
+  const N = 240;
+  const along = (from: { x: number; y: number }, to: { x: number; y: number }, key: 'lat' | 'lon', axis: 'x' | 'y') =>
+    Array.from({ length: N + 1 }, (_, i) => {
+      const x = from.x + ((to.x - from.x) * i) / N;
+      const y = from.y + ((to.y - from.y) * i) / N;
+      return { pos: axis === 'x' ? x : y, value: unproj(x, y)[key] };
+    });
+  const L = { x: map.x, y: map.y };
+  const R = { x: map.x + map.w, y: map.y };
+  const BL = { x: map.x, y: map.y + map.h };
+  const BR = { x: map.x + map.w, y: map.y + map.h };
+  for (const t of edgeTicks(along(L, BL, 'lat', 'y'), ll)) {
     ctx.beginPath();
-    ctx.moveTo(map.x - mm(1.8), y);
-    ctx.lineTo(map.x, y);
-    ctx.moveTo(map.x + map.w, y);
-    ctx.lineTo(map.x + map.w + mm(1.8), y);
+    ctx.moveTo(map.x - mm(1.8), t.pos);
+    ctx.lineTo(map.x, t.pos);
     ctx.stroke();
-    text(ctx, dm(lat, secs), map.x - mm(2.2), y, { ...tickOpt, align: 'right', base: 'middle' });
-    text(ctx, dm(lat, secs), map.x + map.w + mm(2.2), y, { ...tickOpt, align: 'left', base: 'middle' });
+    vtext(ctx, dm(t.value, secs), map.x - mm(2.2), t.pos, { ...tickOpt, align: 'center' });
   }
-  for (let lon = Math.ceil(Math.min(tl.lon, br.lon) / ll) * ll; lon <= Math.max(tl.lon, br.lon); lon += ll) {
-    const x = proj({ lat: plan.center.lat, lon }).x;
-    if (x < map.x || x > map.x + map.w) continue;
+  for (const t of edgeTicks(along(R, BR, 'lat', 'y'), ll)) {
     ctx.beginPath();
-    ctx.moveTo(x, map.y - mm(1.8));
-    ctx.lineTo(x, map.y);
-    ctx.moveTo(x, map.y + map.h);
-    ctx.lineTo(x, map.y + map.h + mm(1.8));
+    ctx.moveTo(map.x + map.w, t.pos);
+    ctx.lineTo(map.x + map.w + mm(1.8), t.pos);
     ctx.stroke();
-    text(ctx, dm(lon, secs), x, map.y - mm(2.2), { ...tickOpt, align: 'center', base: 'bottom' });
-    text(ctx, dm(lon, secs), x, map.y + map.h + mm(2.2), { ...tickOpt, align: 'center', base: 'top' });
+    vtext(ctx, dm(t.value, secs), map.x + map.w + mm(5), t.pos, { ...tickOpt, align: 'center' });
+  }
+  for (const t of edgeTicks(along(L, R, 'lon', 'x'), ll)) {
+    ctx.beginPath();
+    ctx.moveTo(t.pos, map.y - mm(1.8));
+    ctx.lineTo(t.pos, map.y);
+    ctx.stroke();
+    text(ctx, dm(t.value, secs), t.pos, map.y - mm(2.2), { ...tickOpt, align: 'center', base: 'bottom' });
+  }
+  for (const t of edgeTicks(along(BL, BR, 'lon', 'x'), ll)) {
+    ctx.beginPath();
+    ctx.moveTo(t.pos, map.y + map.h);
+    ctx.lineTo(t.pos, map.y + map.h + mm(1.8));
+    ctx.stroke();
+    text(ctx, dm(t.value, secs), t.pos, map.y + map.h + mm(2.2), { ...tickOpt, align: 'center', base: 'top' });
   }
 
   // Título
@@ -407,6 +451,8 @@ export async function makeTopoPdf(input: TopoSheetInput): Promise<{ pdf: Uint8Ar
   const base = await renderBaseMap({
     center: plan.center,
     zoom: zoomForScale(plan.center.lat, plan.scale, DEFAULT_DPI, r),
+    // El norte de la cuadrícula hacia arriba: la cuadrícula UTM queda vertical y horizontal; el norte verdadero y el magnético, inclinados.
+    bearing: convergenceDeg(plan.center, plan.zone),
     cssWidth: Math.round(mapPx.w / r),
     cssHeight: Math.round(mapPx.h / r),
     pixelRatio: r,
