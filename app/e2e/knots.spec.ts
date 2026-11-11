@@ -35,11 +35,14 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
   await expect(page.getByTestId('knot-credits')).toContainText('Diagramas propios de VikArg');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-51-knot.png`, fullPage: true });
 
+  // El paso a paso de la ficha también avisa que es una opción beta con posibles errores.
+  await expect(page.getByTestId('steps-beta')).toContainText('Opción beta, en desarrollo');
+
   // Práctica paso a paso.
   await page.getByTestId('knot-practice-start').click();
   const practice = page.getByTestId('knot-practice');
   await expect(practice).toContainText('Paso 1 de 4');
-  await expect(practice.getByTestId('practice-beta')).toContainText('Los dibujos paso a paso son nuevos');
+  await expect(practice.getByTestId('practice-beta')).toContainText('Opción beta, en desarrollo');
   await page.getByTestId('practice-next').click();
   await expect(practice).toContainText('Paso 2 de 4');
   // Cada paso con su diagrama propio, que carga sin conexión desde el paquete de la app.

@@ -2681,9 +2681,10 @@
   },
   "knots": {
     "betaPill": "Beta",
-    "beta": "Los dibujos paso a paso son nuevos y los estamos mejorando.",
+    "beta": "Opción beta, en desarrollo: los pasos y los dibujos pueden contener errores.",
     "betaLink": "Avisar un error",
     "betaReport": "Nudo «{{name}}», paso {{n}}: el dibujo está mal porque ",
+    "betaReportGeneral": "Nudo «{{name}}»: encontré un error en ",
     "library": {"title": "En tu biblioteca", "none": "Bajá los libros de Cabuyería para ver dónde aparece este nudo en ellos, con sus figuras, sin conexión.", "go": "Ir a la Biblioteca", "searching_one": "Buscando en {{count}} libro de nudos…", "searching_other": "Buscando en {{count}} libros de nudos…", "notFound_one": "No aparece en el libro de nudos que tenés bajado.", "notFound_other": "No aparece en los {{count}} libros de nudos que tenés bajados."},
     "wizard": "¿Qué necesito hacer?",
     "search": "Buscar un nudo",
