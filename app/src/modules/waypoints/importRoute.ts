@@ -21,5 +21,5 @@ export function lineFromSegments(segments: TrackPoint[][], max = MAX_ROUTE_POINT
 export function routeFromTrack(track: Track): Route | null {
   const line = lineFromSegments(track.segments);
   if (line.length < 2) return null;
-  return newEntity<Route>({ name: track.name, waypointIds: [], notes: '', line });
+  return newEntity<Route>({ name: track.name, waypointIds: [], notes: '', line, stops: (track.waypoints ?? []).map((w) => ({ name: w.name, lat: w.lat, lon: w.lon })) });
 }

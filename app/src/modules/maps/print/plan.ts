@@ -33,6 +33,8 @@ export interface TopoSheetInput {
   line: LatLon[];
   points: TopoPoint[];
   legs: TopoLeg[];
+  /** Índice en `line` de cada punto numerado (cuando los tramos no son entre puntos consecutivos de la línea). */
+  stopIdx?: number[];
   /** Declinación magnética en el centro (este positivo) y su año. */
   declinationDeg: number;
   declinationYear: number;

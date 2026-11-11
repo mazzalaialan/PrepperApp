@@ -56,7 +56,7 @@ export function Shell() {
 
   return (
     <div className="shell">
-      <nav className="bottomnav" aria-label="Principal">
+      <nav className="bottomnav" aria-label={t('nav.main')}>
         {NAV.map(({ to, key, icon: Icon }) => (
           <NavLink key={to} to={to} end={to === '/'}>
             <Icon size={24} aria-hidden />

@@ -136,7 +136,10 @@ const RADIO_BO = [
   ['Red Patria Nueva', 'Cochabamba', null, 93.7],
 ];
 
-/** Radio Nacional del Perú (IRTP): lista aportada por un usuario (myradioenvivo.pe), sin confirmar en el IRTP. */
+/**
+ * Radio Nacional del Perú (IRTP): lista aportada por un usuario (myradioenvivo.pe), sin confirmar en el IRTP,
+ * salvo Puno (100.9) y Trujillo (89.7), tomadas de «Red de Radio FM del IRTP» (datosabiertos.gob.pe, ODC-By, 2021-09-15).
+ */
 const RADIO_PE = [
   ['Radio Nacional del Perú', 'Lima', 850, 103.9],
   ['Radio Nacional del Perú', 'Abancay', null, 100.1],
@@ -151,6 +154,8 @@ const RADIO_PE = [
   ['Radio Nacional del Perú', 'Ica', null, 100.7],
   ['Radio Nacional del Perú', 'Iquitos', 1120, 101.3],
   ['Radio Nacional del Perú', 'Piura', 850, 89.1],
+  ['Radio Nacional del Perú', 'Puno', null, 100.9],
+  ['Radio Nacional del Perú', 'Trujillo', null, 89.7],
 ];
 
 const norm = (s) =>
@@ -455,4 +460,4 @@ const only = process.argv[2];
 if (!only || only === 'UY') await build('UY', RADIO_UY, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Radiodifusión Nacional del Uruguay (Wikipedia)' });
 if (!only || only === 'CL') await build('CL', RADIO_CL, { fire: 'Bomberos', police: 'Carabineros', health: 'Centro de salud', radioSource: 'Radio Bío-Bío (Wikipedia)' });
 if (!only || only === 'BO') await build('BO', RADIO_BO, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Red Patria Nueva (State Media Monitor)' });
-if (!only || only === 'PE') await build('PE', RADIO_PE, { fire: 'Bomberos', police: 'Comisaría', health: 'Centro de salud', radioSource: 'Radio Nacional del Perú (myradioenvivo.pe, sin confirmar en el IRTP)' });
+if (!only || only === 'PE') await build('PE', RADIO_PE, { fire: 'Bomberos', police: 'Comisaría', health: 'Centro de salud', radioSource: 'Radio Nacional del Perú (myradioenvivo.pe, sin confirmar en el IRTP; Puno y Trujillo: IRTP vía datosabiertos.gob.pe, ODC-By)' });

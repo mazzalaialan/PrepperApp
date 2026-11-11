@@ -153,6 +153,8 @@ export interface Route extends BaseEntity {
    * guardan como lugar a mano. Cada tramo entre dos puntos es una pierna.
    */
   line?: { lat: number; lon: number }[];
+  /** Puntos con nombre de un track que se pasó a ruta (sus waypoints): la hoja impresa los usa como tramos en vez de cada punto de la línea. */
+  stops?: { name: string; lat: number; lon: number }[];
 }
 
 /** `radio`: frecuencia guardada por el usuario (p. ej. la que le dieron en un refugio). */

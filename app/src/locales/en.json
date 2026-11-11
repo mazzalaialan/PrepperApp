@@ -19,6 +19,7 @@
     "edit": "Edit"
   },
   "nav": {
+    "main": "Main",
     "home": "Home",
     "inventory": "Inventory",
     "firstAid": "Emergency",

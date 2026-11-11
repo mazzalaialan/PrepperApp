@@ -12,6 +12,15 @@ export function Countdown({ seconds, onDone, onCancel }: { seconds: number; onDo
   const voice = useSettings((s) => s.settings.trainingVoice);
   const [left, setLeft] = useState(seconds);
   const done = useRef(onDone);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  // El foco pasa al botón Cancelar al abrirse (teclado y lectores de pantalla) y Escape cancela.
+  useEffect(() => {
+    cancelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   done.current = onDone;
   useEffect(() => {
     if (left <= 0) {
@@ -27,11 +36,11 @@ export function Countdown({ seconds, onDone, onCancel }: { seconds: number; onDo
     return () => clearTimeout(id);
   }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="countdown" role="dialog" aria-label={t('countdown.title')} data-testid="countdown">
+    <div className="countdown" role="dialog" aria-modal="true" aria-label={t('countdown.title')} data-testid="countdown">
       {/* Los lectores de pantalla oyen solo el título (y la voz de la app cuenta los últimos segundos): no cada número. */}
       <p className="countdown-label" role="status">{t('countdown.title')}</p>
       <p className="countdown-number" aria-hidden data-testid="countdown-number">{Math.max(0, left)}</p>
-      <button className="btn" type="button" onClick={onCancel} data-testid="countdown-cancel">
+      <button ref={cancelRef} className="btn" type="button" onClick={onCancel} data-testid="countdown-cancel">
         {t('common.cancel')}
       </button>
     </div>
