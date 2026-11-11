@@ -109,15 +109,10 @@ export default {
       { ...g, ropes: [{ ...A, path: [...e8, ...eyeD, ...rev(offset(e8, d)).slice(0, -2), ...exit], end: false }], arrows: [[[480, 150], [520, 160], [545, 190]]] },
     ];
   })(),
-  'ocho-dos-gazas': (() => {
-    const ears = [[392, 155], [432, 185], [420, 235], [378, 215], [388, 120], [425, 95], [405, 55], [362, 105]];
-    return [
-      { width: 440, rope: 12, ropes: [{ ...A, path: [...e8.slice(0, 13), ...rev(offset(e8.slice(0, 13), 15))], end: false }] },
-      { width: 440, rope: 12, ropes: [{ ...A, path: [...e8, ...ears, ...rev(offset(e8, 15))], end: false }] },
-      { width: 440, rope: 12, ropes: [{ ...A, path: [...e8, ...ears, ...rev(offset(e8, 15))], end: false }], arrows: [[[300, 30], [360, 40], [390, 75]]] },
-      { width: 440, rope: 12, ropes: [{ ...A, path: [...e8, ...ears, ...rev(offset(e8, 15))], end: false }], arrows: [[[440, 220], [440, 260]], [[440, 90], [440, 50]]] },
-    ];
-  })(),
+  // Ocho de dos gazas: SIN diagrama paso a paso hasta tener uno verificado contra una referencia real (ver refs/ocho-dos-gazas.json):
+  // el dibujo anterior era un ocho con una sola gaza retorcida y no el nudo (le faltaba el seno sobrante que abraza el cuello).
+  // Mientras tanto la ficha muestra la foto del manual y el texto.
+  'ocho-dos-gazas': [],
   mariposa: (() => {
     const hand = { x: 110, y: 105, w: 230, h: 90, rx: 40, fill: '#e8c3a0', stroke: '#a77b58' };
     // Los dedos (a la derecha de la mano): la vuelta "del lado de los dedos" es la tercera, la más cercana a ellos.

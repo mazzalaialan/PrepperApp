@@ -23,8 +23,17 @@ describe('guía de nudos: datos', () => {
     expect(new Set(KNOTS.map((k) => k.id)).size).toBe(KNOTS.length);
   });
 
-  it('cada paso de cada nudo tiene su diagrama propio, con el mismo estilo', () => {
+  /** Nudos sin diagrama paso a paso porque todavía no hay uno verificado contra una referencia real: la ficha muestra la foto del manual y el texto. */
+  const SIN_DIAGRAMA = ['ocho-dos-gazas'];
+
+  it('cada paso de cada nudo tiene su diagrama propio, con el mismo estilo (salvo los que esperan uno verificado)', () => {
     for (const k of KNOTS) {
+      if (SIN_DIAGRAMA.includes(k.id)) {
+        expect((DIAGRAMS as Record<string, number[]>)[k.id]?.length ?? 0, `${k.id}: no debe tener diagramas propios`).toBe(0);
+        expect(k.images.length, `${k.id}: necesita su foto`).toBeGreaterThan(0);
+        for (const s of k.steps) expect(s.img, k.id).toBeUndefined();
+        continue;
+      }
       expect((DIAGRAMS as Record<string, number[]>)[k.id]?.length, `${k.id}: figuras ≠ pasos`).toBe(k.steps.length);
       for (const s of k.steps) {
         expect(s.img, k.id).toMatch(/^pasos\/.+\.svg$/);
