@@ -11,7 +11,8 @@ import {
   gridStepM,
   latLonStepDeg,
   MM_PER_INCH,
-  pickScale,
+  fitsScale,
+  SCALES,
   scaleBar,
   scaleEquivalence,
   sheetLayout,
@@ -31,7 +32,9 @@ export interface TopoLeg {
   from: number;
   to: number;
   distanceM: number;
-  /** Rumbo magnético (grados), si se conoce. */
+  /** Rumbo geográfico (respecto del norte verdadero), en grados. */
+  bearingTrueDeg: number | null;
+  /** Rumbo magnético (el que marca la brújula), en grados. */
   bearingMagDeg: number | null;
   ascentM?: number;
   descentM?: number;
@@ -50,7 +53,8 @@ export interface TopoSheetInput {
   declinationYear: number;
   /** Escala (denominador); sin valor, la de más detalle a la que entra la ruta. */
   scale?: number;
-  orientation?: Orientation;
+  /** Sin valor o 'auto': la que mejor aprovecha la hoja para la escala elegida. */
+  orientation?: Orientation | 'auto';
   /** Además de la cuadrícula UTM, marcas de latitud y longitud dentro del marco (apagado por defecto). */
   latLonTicks?: boolean;
 }
@@ -69,8 +73,8 @@ export const DEFAULT_SCALE = 50_000;
 const PX_PER_MM = DEFAULT_DPI / MM_PER_INCH;
 const mm = (v: number) => v * PX_PER_MM;
 
-/** Decide escala, diseño y centro de la hoja sin dibujar nada (sirve para avisar antes si la ruta no entra). */
-export function planSheet(input: TopoSheetInput): SheetPlan {
+/** Zona de la ruta en metros UTM (este y norte), su centro y la zona UTM. */
+function routeExtent(input: TopoSheetInput) {
   const all: LatLon[] = [...input.line, ...input.points.map((p) => ({ lat: p.lat, lon: p.lon }))];
   if (!all.length) throw new Error('NO_ROUTE');
   const mid = { lat: (Math.min(...all.map((p) => p.lat)) + Math.max(...all.map((p) => p.lat))) / 2, lon: (Math.min(...all.map((p) => p.lon)) + Math.max(...all.map((p) => p.lon))) / 2 };
@@ -80,14 +84,44 @@ export function planSheet(input: TopoSheetInput): SheetPlan {
   const maxE = Math.max(...u.map((p) => p.easting));
   const minN = Math.min(...u.map((p) => p.northing));
   const maxN = Math.max(...u.map((p) => p.northing));
-  const orientation = input.orientation ?? (maxE - minE > maxN - minN ? 'landscape' : 'portrait');
-  const layout = sheetLayout(orientation, input.legs.length + 1);
   const center = fromUtm({ zone, hemisphere: mid.lat < 0 ? 'S' : 'N', easting: (minE + maxE) / 2, northing: (minN + maxN) / 2 });
-  const extentM = { east: maxE - minE, north: maxN - minN };
-  // Por defecto 1:50.000 (la más usada en montaña); más cerca solo si la ruta no entra a esa escala, nunca más detalle que eso salvo que se pida.
-  const fit = pickScale(extentM.east, extentM.north, layout.map);
-  const scale = input.scale ?? (fit !== null && fit < DEFAULT_SCALE ? DEFAULT_SCALE : fit);
-  return { scale, layout, center, zone, extentM };
+  return { zone, center, extentM: { east: maxE - minE, north: maxN - minN } };
+}
+
+export interface ScaleChoice {
+  scale: number;
+  /** Si la ruta entra en la hoja a esta escala. */
+  fits: boolean;
+  /** Orientación con la que entra (la preferida, o la otra si solo así entra). */
+  orientation: Orientation;
+}
+
+/**
+ * Todas las escalas con su disponibilidad para esta ruta: sirve para grisar en el cuadro de opciones las que no entran.
+ * Con orientación automática se prueba primero la que sigue la forma de la ruta y después la otra.
+ */
+export function scaleChoices(input: TopoSheetInput): ScaleChoice[] {
+  const { extentM } = routeExtent(input);
+  const natural: Orientation = extentM.east > extentM.north ? 'landscape' : 'portrait';
+  const pref = input.orientation && input.orientation !== 'auto' ? [input.orientation] : [natural, natural === 'portrait' ? 'landscape' : 'portrait'];
+  return SCALES.map((scale) => {
+    for (const orientation of pref as Orientation[]) {
+      const frame = sheetLayout(orientation, input.legs.length + 1).map;
+      if (fitsScale(extentM.east, extentM.north, frame, scale)) return { scale, fits: true, orientation };
+    }
+    return { scale, fits: false, orientation: pref[0] as Orientation };
+  });
+}
+
+/** Decide escala, diseño y centro de la hoja sin dibujar nada. */
+export function planSheet(input: TopoSheetInput): SheetPlan {
+  const { zone, center, extentM } = routeExtent(input);
+  const choices = scaleChoices(input);
+  // Por defecto 1:50.000 (la más usada en montaña); más lejos solo si la ruta no entra a esa escala, y nunca con más detalle salvo que se pida.
+  // Una escala pedida que no entra deja la hoja sin escala (NO_FIT).
+  const chosen = input.scale ? choices.find((c) => c.scale === input.scale && c.fits) : choices.find((c) => c.fits && c.scale >= DEFAULT_SCALE);
+  const orientation = chosen?.orientation ?? choices[0]?.orientation ?? 'portrait';
+  return { scale: chosen?.scale ?? null, layout: sheetLayout(orientation, input.legs.length + 1), center, zone, extentM };
 }
 
 /** Grados y minutos (y segundos si hace falta) de una coordenada: 41°08′ o 71°27′30″. */
@@ -330,7 +364,7 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
   const total = input.legs.reduce((s, l) => s + l.distanceM, 0);
   const up = input.legs.reduce((s, l) => s + (l.ascentM ?? 0), 0);
   const down = input.legs.reduce((s, l) => s + (l.descentM ?? 0), 0);
-  const bearing = (l: TopoLeg) => (l.bearingMagDeg === null ? '—' : `${String(Math.round(l.bearingMagDeg) % 360).padStart(3, '0')}°`);
+  const deg3 = (v: number | null) => (v === null ? '—' : `${String(Math.round(v) % 360).padStart(3, '0')}°`);
   const gain = (l: TopoLeg) => (l.ascentM === undefined && l.descentM === undefined ? '—' : `+${Math.round(l.ascentM ?? 0)} / −${Math.round(l.descentM ?? 0)} m`);
   const rowH = narrow ? mm(9.6) : mm(5.2);
   const maxRows = Math.max(1, Math.floor((r.h - headH - mm(7)) / rowH));
@@ -338,13 +372,13 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
 
   if (narrow) {
     // Tabla angosta (hoja horizontal): dos líneas por tramo, el nombre arriba y los datos abajo.
-    text(ctx, 'Tramos: distancia · rumbo magnético · desnivel', r.x + mm(1.5), r.y + mm(4.3), { size: 3, bold: true });
+    text(ctx, 'Tramos: distancia · rumbo geog. y mag. · desnivel', r.x + mm(1.5), r.y + mm(4.3), { size: 3, bold: true });
     legs.forEach((leg, i) => {
       const y = r.y + headH + rowH * i;
       ctx.font = `700 ${mm(3.1)}px ${FONT}`;
       const title = fit(ctx, `${i + 1}.  ${name(leg.from)} → ${name(leg.to)}`, r.w - mm(3));
       text(ctx, title, r.x + mm(1.5), y + mm(4.2), { size: 3.1, bold: true });
-      text(ctx, `${fmtDist(leg.distanceM)}  ·  ${bearing(leg)}  ·  ${gain(leg)}`, r.x + mm(1.5), y + mm(8), { size: 2.9, color: '#333' });
+      text(ctx, `${fmtDist(leg.distanceM)} · geog. ${deg3(leg.bearingTrueDeg)} · mag. ${deg3(leg.bearingMagDeg)} · ${gain(leg)}`, r.x + mm(1.5), y + mm(8), { size: 2.7, color: '#333' });
       ctx.strokeStyle = '#c9c4b6';
       ctx.beginPath();
       ctx.moveTo(r.x, y + rowH);
@@ -352,8 +386,8 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
       ctx.stroke();
     });
   } else {
-    const cols = [0.07, 0.43, 0.15, 0.15, 0.2];
-    const heads = ['N.°', 'Tramo', 'Distancia', 'Rumbo mag.', 'Desnivel'];
+    const cols = [0.06, 0.34, 0.13, 0.13, 0.13, 0.21];
+    const heads = ['N.°', 'Tramo', 'Distancia', 'Rumbo geog.', 'Rumbo mag.', 'Desnivel'];
     let x = r.x;
     heads.forEach((hd, i) => {
       text(ctx, hd, x + mm(1.2), r.y + mm(4.3), { size: 3, bold: true });
@@ -362,7 +396,7 @@ function drawTable(ctx: Ctx, r: Rect, input: TopoSheetInput) {
     legs.forEach((leg, i) => {
       const y = r.y + headH + rowH * i + mm(3.8);
       ctx.font = `${mm(3)}px ${FONT}`;
-      const cells = [String(i + 1), fit(ctx, `${name(leg.from)} → ${name(leg.to)}`, cols[1]! * r.w - mm(2.4)), fmtDist(leg.distanceM), bearing(leg), gain(leg)];
+      const cells = [String(i + 1), fit(ctx, `${name(leg.from)} → ${name(leg.to)}`, cols[1]! * r.w - mm(2.4)), fmtDist(leg.distanceM), deg3(leg.bearingTrueDeg), deg3(leg.bearingMagDeg), gain(leg)];
       let cx = r.x;
       cells.forEach((c, k) => {
         text(ctx, c, cx + mm(1.2), y, { size: 3 });
@@ -505,6 +539,6 @@ export function legsBetween(points: TopoPoint[], declinationDeg: number): TopoLe
   return points.slice(1).map((b, i) => {
     const a = points[i]!;
     const true_ = bearingDeg(a, b);
-    return { from: a.n, to: b.n, distanceM: distanceMeters(a, b), bearingMagDeg: (((true_ - declinationDeg) % 360) + 360) % 360 };
+    return { from: a.n, to: b.n, distanceM: distanceMeters(a, b), bearingTrueDeg: true_, bearingMagDeg: (((true_ - declinationDeg) % 360) + 360) % 360 };
   });
 }

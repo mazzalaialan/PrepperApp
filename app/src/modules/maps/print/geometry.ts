@@ -118,13 +118,18 @@ export function sheetLayout(orientation: Orientation, legRows: number): SheetLay
   return { orientation, paper, margin, header, map, table: { x: margin, y: map.y + map.h + 7, w: innerW, h: tableH }, footer };
 }
 
+/** Si una zona de `extentEastM × extentNorthM` metros entra en el marco del mapa a una escala, con un margen en el papel. */
+export function fitsScale(extentEastM: number, extentNorthM: number, frame: { w: number; h: number }, scale: number, padMm = 8): boolean {
+  return paperMm(extentEastM, scale) + 2 * padMm <= frame.w && paperMm(extentNorthM, scale) + 2 * padMm <= frame.h;
+}
+
 /**
  * Escala más grande (la de más detalle) de la lista con la que entra una zona de `extentEastM × extentNorthM` metros en el marco del mapa,
  * con un margen en papel. Devuelve null si no entra ni a la escala menor.
  */
 export function pickScale(extentEastM: number, extentNorthM: number, frame: { w: number; h: number }, padMm = 8): number | null {
   for (const s of SCALES) {
-    if (paperMm(extentEastM, s) + 2 * padMm <= frame.w && paperMm(extentNorthM, s) + 2 * padMm <= frame.h) return s;
+    if (fitsScale(extentEastM, extentNorthM, frame, s, padMm)) return s;
   }
   return null;
 }

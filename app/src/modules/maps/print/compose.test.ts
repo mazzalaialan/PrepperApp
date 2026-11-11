@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convergenceDeg, legsBetween, planSheet, type TopoSheetInput } from './compose';
+import { convergenceDeg, legsBetween, planSheet, scaleChoices, type TopoSheetInput } from './compose';
 
 const base = (over: Partial<TopoSheetInput> = {}): TopoSheetInput => ({
   title: 'Prueba',
@@ -63,8 +63,62 @@ describe('piernas', () => {
     ];
     const [leg] = legsBetween(pts, 8);
     expect(leg!.bearingMagDeg).toBeCloseTo(352, 3);
+    expect(leg!.bearingTrueDeg).toBeCloseTo(0, 3);
     expect(leg!.distanceM).toBeGreaterThan(11_000);
     expect(leg!.from).toBe(1);
     expect(leg!.to).toBe(2);
+  });
+});
+
+describe('escalas disponibles', () => {
+  const route = (northKm: number, eastKm = 0.5, over: Partial<TopoSheetInput> = {}) =>
+    base({
+      points: [
+        { n: 1, name: 'A', lat: -41.2, lon: -71.4 },
+        { n: 2, name: 'B', lat: -41.2 + northKm / 111.32, lon: -71.4 + eastKm / (111.32 * Math.cos((41.2 * Math.PI) / 180)) },
+      ],
+      ...over,
+    });
+
+  it('una ruta de 8 km: no entra a 1:10.000 ni a 1:15.000, sí desde 1:25.000... según el marco', () => {
+    const c = scaleChoices(route(8));
+    const by = Object.fromEntries(c.map((x) => [x.scale, x.fits]));
+    expect(by[10_000]).toBe(false);
+    expect(by[15_000]).toBe(false);
+    expect(by[50_000]).toBe(true);
+    expect(by[250_000]).toBe(true);
+  });
+
+  it('una ruta de 1 km entra a todas las escalas', () => {
+    expect(scaleChoices(route(1)).every((x) => x.fits)).toBe(true);
+  });
+
+  it('una ruta de 40 km solo entra a 1:250.000, y una de 300 km, a ninguna', () => {
+    const c = scaleChoices(route(40));
+    expect(c.find((x) => x.scale === 100_000)!.fits).toBe(false);
+    expect(c.find((x) => x.scale === 150_000)!.fits).toBe(false);
+    expect(c.find((x) => x.scale === 250_000)!.fits).toBe(true);
+    expect(scaleChoices(route(300)).some((x) => x.fits)).toBe(false);
+  });
+
+  it('con orientación automática usa la que sigue la forma de la ruta; una ruta ancha va apaisada', () => {
+    const wide = scaleChoices(route(1, 8));
+    expect(wide.find((x) => x.scale === 50_000)!.orientation).toBe('landscape');
+    const tall = scaleChoices(route(8, 1));
+    expect(tall.find((x) => x.scale === 50_000)!.orientation).toBe('portrait');
+  });
+
+  it('con muchas filas en la tabla, la hoja vertical tiene menos mapa: si solo entra apaisada, la usa; si se fija la orientación, no la cambia', () => {
+    const legs = Array.from({ length: 30 }, (_, i) => ({ from: 1, to: 2, distanceM: 100 + i, bearingTrueDeg: 10, bearingMagDeg: 4 }));
+    const r = route(5.9, 0.5, { legs });
+    expect(scaleChoices({ ...r, orientation: 'portrait' }).find((x) => x.scale === 50_000)!.fits).toBe(false);
+    expect(scaleChoices({ ...r, orientation: 'landscape' }).find((x) => x.scale === 50_000)!.fits).toBe(true);
+    expect(scaleChoices(r).find((x) => x.scale === 50_000)).toMatchObject({ fits: true, orientation: 'landscape' });
+    expect(scaleChoices({ ...r, orientation: 'portrait' }).every((x) => x.orientation === 'portrait')).toBe(true);
+  });
+
+  it('planSheet: una escala pedida que no entra deja la hoja sin escala', () => {
+    expect(planSheet({ ...route(8), scale: 10_000 }).scale).toBeNull();
+    expect(planSheet({ ...route(8), scale: 50_000 }).scale).toBe(50_000);
   });
 });
