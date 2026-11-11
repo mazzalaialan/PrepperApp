@@ -2299,6 +2299,32 @@
     "newPasswordTitle": "Nueva contraseña",
     "newPasswordIntro": "Desbloqueaste con la clave de recuperación. Elegí una contraseña nueva."
   },
+  "licenses": {
+    "title": "Licencias y créditos",
+    "appTitle": "Licencia de VikArg",
+    "appText": "VikArg {{version}} es software libre: se distribuye bajo la licencia GNU GPL, versión 3 o posterior (GPL-3.0-or-later). Podés usarlo, estudiarlo, modificarlo y redistribuirlo; las versiones modificadas que se distribuyan deben publicarse con la misma licencia y su código fuente.",
+    "noWarranty": "La app se ofrece sin garantía de ningún tipo. Las alertas, los pronósticos y las guías son orientativos: ante una emergencia seguí las indicaciones de las autoridades.",
+    "commercial": "También hay una licencia comercial no exclusiva para quien no pueda o no quiera cumplir la GPL.",
+    "source": "Código fuente",
+    "fullText": "Texto completo de la licencia",
+    "contact": "Escribir por la licencia comercial",
+    "dataTitle": "Datos y créditos",
+    "dataIntro": "Lo que la app muestra viene de estas fuentes abiertas; cada una conserva su licencia.",
+    "credit": {
+      "map": { "name": "Mapas", "text": "© colaboradores de OpenStreetMap (ODbL, openstreetmap.org/copyright); teselas de OpenFreeMap y OpenMapTiles." },
+      "elevation": { "name": "Relieve", "text": "Terrain Tiles (AWS Open Data), con datos de varias fuentes públicas (SRTM, USGS y otras)." },
+      "weather": { "name": "Clima y alertas", "text": "Pronóstico de Open-Meteo (CC BY 4.0); lluvia y rayos de fuentes abiertas (RainViewer, NASA, USGS, GDACS); alertas oficiales del SMN de Argentina, SENAMHI de Bolivia y Perú, con sus propios términos." },
+      "parks": { "name": "Parques, radio y servicios", "text": "Administración de Parques Nacionales e IGN (CC BY 4.0), CONAF, SERNANP y SERNAP; repetidoras y listados oficiales de cada país; servicios cercanos de los organismos oficiales y de OpenStreetMap." },
+      "garden": { "name": "Huerta", "text": "INTA (ProHuerta, fichas de las EEA Alto Valle y Valle Inferior; el manual de Goites es CC BY 4.0 y de las fichas CC BY-NC-SA solo se toman los datos, citando la fuente), INIA de Perú, proyecto Jatun Sacha/UNODC y manual de la ONG Esperanza Bolivia/Louvain Coopération para Bolivia." },
+      "knots": { "name": "Nudos", "text": "Los dibujos son propios; para verificarlos se usaron referencias de Wikimedia Commons (cada archivo con su licencia) y manuales de dominio público." },
+      "library": { "name": "Biblioteca", "text": "Manuales de dominio público o con licencia libre; cada documento indica su fuente y su licencia." }
+    },
+    "depsTitle": "Componentes de terceros",
+    "depsIntro": "La app incluye {{count}} componentes de código abierto. Cada uno se rige por su propia licencia, que se puede leer acá.",
+    "loading": "Cargando la lista…",
+    "showText": "Ver licencia",
+    "hideText": "Ocultar"
+  },
   "notice": {
     "dismiss": "Entendido, ocultar",
     "hidden": "Avisos ocultos: {{count}}",

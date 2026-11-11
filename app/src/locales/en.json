@@ -2299,6 +2299,32 @@
     "newPasswordTitle": "New password",
     "newPasswordIntro": "You unlocked with your recovery key. Choose a new password."
   },
+  "licenses": {
+    "title": "Licenses and credits",
+    "appTitle": "VikArg license",
+    "appText": "VikArg {{version}} is free software: it is distributed under the GNU GPL, version 3 or later (GPL-3.0-or-later). You may use, study, modify and redistribute it; modified versions that are distributed must be published under the same license with their source code.",
+    "noWarranty": "The app is provided without warranty of any kind. Alerts, forecasts and guides are indicative: in an emergency follow the authorities' instructions.",
+    "commercial": "A non-exclusive commercial license is also available for those who cannot or do not want to comply with the GPL.",
+    "source": "Source code",
+    "fullText": "Full license text",
+    "contact": "Ask about the commercial license",
+    "dataTitle": "Data and credits",
+    "dataIntro": "What the app shows comes from these open sources; each keeps its own license.",
+    "credit": {
+      "map": { "name": "Maps", "text": "© OpenStreetMap contributors (ODbL, openstreetmap.org/copyright); tiles from OpenFreeMap and OpenMapTiles." },
+      "elevation": { "name": "Terrain", "text": "Terrain Tiles (AWS Open Data), with data from several public sources (SRTM, USGS and others)." },
+      "weather": { "name": "Weather and alerts", "text": "Forecast by Open-Meteo (CC BY 4.0); rain and lightning from open sources (RainViewer, NASA, USGS, GDACS); official alerts from Argentina's SMN and from SENAMHI of Bolivia and Peru, under their own terms." },
+      "parks": { "name": "Parks, radio and services", "text": "Argentina's National Parks Administration and IGN (CC BY 4.0), CONAF, SERNANP and SERNAP; repeaters and official lists of each country; nearby services from official bodies and OpenStreetMap." },
+      "garden": { "name": "Garden", "text": "INTA (ProHuerta, sheets from the Alto Valle and Valle Inferior stations; Goites' manual is CC BY 4.0 and from the CC BY-NC-SA sheets only the data is used, citing the source), INIA of Peru, the Jatun Sacha/UNODC project and the Esperanza Bolivia/Louvain Coopération NGO manual for Bolivia." },
+      "knots": { "name": "Knots", "text": "The drawings are our own; Wikimedia Commons references (each file under its own license) and public-domain manuals were used to check them." },
+      "library": { "name": "Library", "text": "Public-domain or freely licensed manuals; each document states its source and license." }
+    },
+    "depsTitle": "Third-party components",
+    "depsIntro": "The app includes {{count}} open-source components. Each is governed by its own license, which you can read here.",
+    "loading": "Loading the list…",
+    "showText": "View license",
+    "hideText": "Hide"
+  },
   "notice": {
     "dismiss": "Got it, hide",
     "hidden": "Hidden notices: {{count}}",

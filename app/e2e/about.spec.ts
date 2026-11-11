@@ -50,3 +50,35 @@ test('acerca de: versión, reportar un problema o sugerencia y cafecito', async 
   await page.goto('/#/settings');
   await expect(page.getByRole('link', { name: 'Acerca de, reportar un problema y contacto' })).toBeVisible();
 });
+
+test('licencias y créditos: licencia de la app, fuentes de datos y componentes de terceros con su texto', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  await page.goto('/#/about');
+  await page.getByTestId('about-licenses').click();
+  await expect(page.getByRole('heading', { name: 'Licencias y créditos' })).toBeVisible();
+  // Licencia de la app con el enlace al código.
+  await expect(page.getByTestId('lic-app-license')).toContainText('GPL-3.0-or-later');
+  await expect(page.getByTestId('lic-source')).toHaveAttribute('href', /github\.com/);
+  // Fuentes de datos con su licencia.
+  await expect(page.getByTestId('credit-map')).toContainText('ODbL');
+  await expect(page.getByTestId('credit-weather')).toContainText('Open-Meteo');
+  // Aviso legal del SMN (obligatorio donde se muestran datos del SMN).
+  await expect(page.getByTestId('licenses')).toContainText('Servicio Meteorológico Nacional (SMN)');
+  // Componentes de terceros, cargados aparte, con el texto de cada licencia.
+  const deps = page.getByTestId('lic-deps');
+  await expect(deps.locator('li').first()).toBeVisible();
+  await expect(deps).toContainText('react');
+  await expect(deps).toContainText('maplibre-gl');
+  const row = deps.locator('li', { hasText: 'zustand' }).first();
+  await row.getByRole('button', { name: 'Ver licencia' }).click();
+  await expect(row.locator('pre')).toContainText(/Permission is hereby granted|MIT/);
+  await row.getByRole('button', { name: 'Ocultar' }).click();
+  await expect(row.locator('pre')).toHaveCount(0);
+});

@@ -16,7 +16,7 @@ export const ROUTE_PATHS = [
   '/orientation/starmap', '/orientation/maps', '/orientation/routes', '/orientation/tracks', '/orientation/tracks/:id',
   '/orientation/tracks/:id/follow', '/orientation/routes/:id', '/orientation/routes/:id/go/:step', '/weather', '/weather/sky',
   '/weather/forecast', '/weather/map', '/knots', '/knots/guide', '/knots/guide/:id', '/knots/anchors', '/knots/anchors/:id', '/knots/ropes', '/knots/glossary',
-  '/garden', '/garden/calendar', '/garden/crops/:id', '/garden/beds', '/garden/beds/:id', '/field', '/library', '/library/books', '/library/search', '/library/read/:id', '/settings', '/about',
+  '/garden', '/garden/calendar', '/garden/crops/:id', '/garden/beds', '/garden/beds/:id', '/field', '/library', '/library/books', '/library/search', '/library/read/:id', '/settings', '/about', '/about/licenses',
 ];
 
 /** Donde no alcanza con sacar el último tramo de la ruta. */
@@ -28,6 +28,7 @@ const PARENTS: Record<string, string> = {
   '/settings/backup': '/settings',
   '/settings/share': '/settings',
   '/about': '/',
+  '/about/licenses': '/about',
 };
 
 const routeOf = (path: string) => ROUTE_PATHS.find((p) => matchPath({ path: p, end: true }, path));

@@ -97,6 +97,7 @@ const OutingPage = page(() => import('@/modules/training/OutingPage').then((m) =
 const GardenPage = page(() => import('@/modules/garden/GardenPage').then((m) => ({ default: m.GardenPage })));
 const SettingsPage = page(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const AboutPage = page(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const LicensesPage = page(() => import('./pages/LicensesPage').then((m) => ({ default: m.LicensesPage })));
 
 // MapLibre pesa ~1 MB: se carga recién al abrir los mapas (igual queda guardado para usarlo sin conexión).
 const MapsPage = page(() => import('@/modules/maps/MapsPage').then((m) => ({ default: m.MapsPage })));
@@ -195,6 +196,7 @@ const router = createHashRouter([
       { path: '/library/read/:id', element: <ReaderPage /> },
       { path: '/settings', element: <SettingsPage /> },
       { path: '/about', element: <AboutPage /> },
+      { path: '/about/licenses', element: <LicensesPage /> },
     ],
   },
 ]);

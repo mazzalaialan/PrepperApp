@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
-import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare, HandCoins } from 'lucide-react';
+import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare, HandCoins, Scale } from 'lucide-react';
 import { CAFECITO_URL, MERCADOPAGO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
 import { PortableUpdateCheck } from './SettingsPage';
 
@@ -76,6 +76,9 @@ export function AboutPage() {
         <a className="btn" href={REPO_URL} target="_blank" rel="noreferrer">
           <Code size={18} /> {t('about.source')}
         </a>
+        <Link className="btn" to="/about/licenses" data-testid="about-licenses">
+          <Scale size={18} aria-hidden /> {t('licenses.title')}
+        </Link>
       </section>
 
       <section className="card stack" aria-labelledby="about-feedback">
