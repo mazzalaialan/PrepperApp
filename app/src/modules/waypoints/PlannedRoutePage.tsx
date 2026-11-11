@@ -60,6 +60,8 @@ export function PlannedRoutePage({ route }: { route: Route }) {
   return (
     <div className="stack" data-testid="planned-route">
       <div className="page-head">
+        {/* El título se edita en el campo de abajo; el h1 es para lectores de pantalla. */}
+        <h1 className="sr-only">{name || route.name}</h1>
         <input
           className="input page-title"
           style={{ flex: 1 }}

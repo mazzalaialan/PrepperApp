@@ -87,8 +87,16 @@ export function PocketScreen() {
   const [, tick] = useState(0);
   useWakeLock(on);
   // Al abrirse, el foco va al botón de salir (con teclado o lector de pantalla se puede volver).
+  // Al salir, el foco vuelve al botón que lo abrió (si no, se pierde al principio de la página).
+  const openerRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    if (on) exitRef.current?.focus();
+    if (!on) return;
+    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    exitRef.current?.focus();
+    return () => {
+      const opener = openerRef.current;
+      if (opener?.isConnected) opener.focus();
+    };
   }, [on]);
   useEffect(() => {
     if (!on) return;
