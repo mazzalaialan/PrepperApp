@@ -45,11 +45,20 @@ export default {
     const UN = [[345,208],[613,146],[583,112],[445,277],[490,242],[466,277],[459,160],[519,278]];
     const T = ([x, y]) => [Math.round(x * 0.95 + 25), Math.round(y * 0.95 + 25)];
     const g = { width: 1040, height: 490, rope: 12 };
-        const cut = (n) => RAW.slice(0, n).map(T);
+    const cut = (n) => RAW.slice(0, n).map(T);
     const under = UN.map(T);
+    // Pasos 1 y 2 (revisados a ojo, 2026-11-12): el texto pide trabajar con la cuerda DOBLE, así que se dibuja el par (ida por el
+    // trazado de la referencia y vuelta en paralelo, el seno en la punta). Paso 2: con el par se hace la gaza chica de la referencia
+    // (el firme a la derecha, la curva arriba y la bajada que lo cruza por encima) y el seno sube por dentro de ella desde atrás
+    // (pasa por debajo del firme). La z de cada cruce va en los puntos y la copia en paralelo la hereda.
+    const TZ = ([x, y, z]) => (z === undefined ? T([x, y]) : [...T([x, y]), z]);
+    const at = (x, y) => RAW.findIndex(([a, b]) => a === x && b === y);
+    const dbl = (p) => [...p, ...rev(offset(p, 17))];
+    const firme = [...RAW.slice(0, at(388, 215) + 1), [402, 217, -1], [408, 218], [421, 219, -1], ...RAW.slice(at(428, 219), at(508, 222) + 1), [518, 222, 1], [528, 222], [538, 222, 1], ...RAW.slice(at(548, 222), at(420, 208) + 1)];
+    const seno = [[422, 219, 1], [424, 236, 1], [432, 256], [448, 282], [478, 298], [506, 286], [516, 240, -1], [519, 222, -1], [521, 170], [520, 128]];
     return [
-      { ...g, ropes: [{ ...A, path: cut(30), end: false }], arrows: [[[480, 190], [560, 240]]] },
-      { ...g, ropes: [{ ...A, path: cut(128), end: false }], under },
+      { ...g, ropes: [{ ...A, path: dbl(cut(30)), end: false }] },
+      { ...g, ropes: [{ ...A, path: dbl([...firme, ...seno].map(TZ)), end: false }] },
       { ...g, ropes: [{ ...A, path: cut(215), end: false }], under },
       { ...g, ropes: [{ ...A, path: cut(RAW.length), end: false }], under },
     ];
@@ -99,14 +108,19 @@ export default {
     // sale por arriba, rodeando el nudo, hacia la derecha.
     const rope = 10, d = 20;
     const eyeD = [[385, 148], [418, 164], [452, 160], [476, 133], [452, 104], [418, 100], [385, 114]];
-    const exit = [[120, 160], [98, 112], [118, 52], [200, 22], [330, 14], [450, 22], [540, 40]];
-    const e8h = e8.slice(0, 19);
+    // Revisado a ojo (2026-11-12) contra ocho-direccional-1..3.webp: la cuerda entra por la izquierda y sale por la DERECHA, en línea;
+    // la vuelta (paso 1) se retuerce alrededor del tramo de la izquierda y su punta (el seno) pasa por dentro: el cuerpo es un ocho con la
+    // cuerda doble que abraza al tramo de la izquierda (simple), y el otro tramo sale del nudo hacia la derecha, por abajo de la gaza.
+    // Antes el tramo de la derecha salía por la izquierda junto al otro y daba la vuelta por encima de todo el nudo (no es así en las fotos).
+    const single = e8.slice(0, 4); // tramo de la izquierda, simple: lo cruzan las dos pasadas dobles del ocho
+    const right = [[275, 222], [340, 234], [450, 238], [580, 238]];
     const g = { width: 560, height: 300, rope };
     const loopOne = [[-20, 262], [120, 258], [300, 248], [400, 238], [432, 200], [440, 120], [400, 50], [300, 22], [170, 30], [95, 80], [82, 150], [130, 205], [250, 218], [380, 214], [440, 205], [490, 196], [580, 190]];
+    const dHalf = e8.slice(4, 19), dFull = e8.slice(4);
     return [
       { ...g, ropes: [{ ...A, path: loopOne, end: false }] },
-      { ...g, ropes: [{ ...A, path: [...e8h, ...rev(offset(e8h, d)).slice(0, -2), ...exit], end: false }], arrows: [[[268, 131], [330, 128], [400, 140]]] },
-      { ...g, ropes: [{ ...A, path: [...e8, ...eyeD, ...rev(offset(e8, d)).slice(0, -2), ...exit], end: false }], arrows: [[[480, 150], [520, 160], [545, 190]]] },
+      { ...g, ropes: [{ ...A, path: [...single, ...dHalf, ...rev(offset(dHalf, d)), ...right], end: false }], arrows: [[[268, 131], [330, 128], [400, 140]]] },
+      { ...g, ropes: [{ ...A, path: [...single, ...dFull, ...eyeD, ...rev(offset(dFull, d)), ...right], end: false }], arrows: [[[480, 150], [520, 160], [545, 190]], [[40, 135], [5, 135]]] },
     ];
   })(),
   // Ocho de dos gazas: SIN diagrama paso a paso hasta tener uno verificado contra una referencia real (ver refs/ocho-dos-gazas.json):

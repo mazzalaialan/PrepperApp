@@ -469,7 +469,7 @@ export const KNOTS: Knot[] = [
     steps: [
       { text: l('Doblá la cuerda formando un seno largo.', 'Double the rope into a long bight.'), img: img('ocho-gaza', 1) },
       { text: l('Con la cuerda doble, dá una vuelta alrededor del firme doble y pasá el seno por dentro de la gaza que se formó (un ocho con las dos cuerdas juntas).', 'With the doubled rope, wrap around the doubled standing part and pass the bight through the loop formed (a figure eight in doubled rope).'), img: img('ocho-gaza', 2) },
-      { text: l('Peinalo sin cruces y ajustá tirando de los cuatro tramos.', 'Dress it without crossings and tighten all four strands.'), img: img('ocho-gaza', 3) },
+      { text: l('Peinalo sin cruces y ajustá tirando de la gaza para un lado y de las dos cuerdas del otro lado (firme y chicote juntos) para el otro.', 'Dress it without crossings and tighten by pulling the loop one way and both strands on the other side (standing part and tail together) the other way.'), img: img('ocho-gaza', 3) },
     ],
     images: [],
     holdsLoad: true,
