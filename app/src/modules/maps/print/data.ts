@@ -22,35 +22,89 @@ const meta = (title: string, pts: LatLon[]) => {
   return { title, date: now.toLocaleDateString('es-AR'), declinationDeg: declinationAt(c.lat, c.lon, 0, now), declinationYear: now.getFullYear() };
 };
 
-/** Índice del punto de la línea más cercano. */
+/** Margen (m) para preferir la primera pasada cuando el recorrido pasa dos veces por el mismo lugar (ida y vuelta). */
+const FIRST_PASS_MARGIN_M = 30;
+
+/**
+ * Índice del punto de la línea donde está un waypoint. Se mide contra los tramos de la línea (no solo contra sus vértices, que en una
+ * línea simplificada están muy separados) y, si el recorrido pasa dos veces por ahí (ida y vuelta), se toma la primera pasada,
+ * que es donde se suele marcar el punto.
+ */
 function nearestIndex(line: LatLon[], p: LatLon): number {
-  let best = 0;
-  let bestD = Infinity;
-  line.forEach((q, i) => {
-    const d = (q.lat - p.lat) ** 2 + (q.lon - p.lon) ** 2;
-    if (d < bestD) {
-      bestD = d;
-      best = i;
-    }
-  });
-  return best;
+  if (line.length < 2) return 0;
+  const kx = Math.cos((p.lat * Math.PI) / 180) * 111320;
+  const xy = (q: LatLon) => [(q.lon - p.lon) * kx, (q.lat - p.lat) * 110540] as const;
+  const dist: number[] = [];
+  for (let k = 0; k < line.length - 1; k++) {
+    const [ax, ay] = xy(line[k]!);
+    const [bx, by] = xy(line[k + 1]!);
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len2)) : 0;
+    dist.push(Math.hypot(ax + t * dx, ay + t * dy));
+  }
+  const min = Math.min(...dist);
+  const k = dist.findIndex((d) => d <= min + FIRST_PASS_MARGIN_M);
+  const da = Math.hypot(...xy(line[k]!));
+  const db = Math.hypot(...xy(line[k + 1]!));
+  return da <= db ? k : k + 1;
 }
 
+/** Si varios puntos se llaman igual («Descanso»), se numeran: «Descanso 1», «Descanso 2»… (los tramos dirían «Descanso → Descanso»). */
+export function uniqueNames<T extends { name: string }>(points: T[]): T[] {
+  const count = new Map<string, number>();
+  for (const p of points) if (p.name) count.set(p.name, (count.get(p.name) ?? 0) + 1);
+  const seen = new Map<string, number>();
+  return points.map((p) => {
+    if (!p.name || (count.get(p.name) ?? 0) < 2) return p;
+    const n = (seen.get(p.name) ?? 0) + 1;
+    seen.set(p.name, n);
+    return { ...p, name: `${p.name} ${n}` };
+  });
+}
 
-/** Los puntos numerados de una línea: Inicio, los waypoints del track y Fin; si no tiene waypoints, los intermedios que siguen el recorrido. */
+/** Distancia (m) hasta la que un waypoint pegado al inicio o al fin no es un punto aparte: le da el nombre al inicio o al fin. */
+const NEAR_END_M = 100;
+
+/**
+ * Los puntos numerados de una línea: Inicio, los waypoints del track (siempre), los cambios de rumbo que hagan falta para seguir el recorrido y Fin.
+ * Un waypoint a menos de 100 m del inicio o del fin no es un punto aparte: nombra al inicio o al fin («Inicio · Estacionamiento»).
+ */
 function stopsOf(line: LatLon[], named: { name: string; i: number }[]) {
-  const byIndex = new Map(named.filter((w) => w.i > 0 && w.i < line.length - 1).map((w) => [w.i, w.name]));
-  // Con waypoints propios, los tramos son entre ellos; sin ninguno, se eligen puntos que sigan el recorrido.
-  const idx = byIndex.size ? [0, ...[...byIndex.keys()].sort((x, y) => x - y), line.length - 1] : pickStopIndices(line);
-  return idx.map((i) => ({
-    name: i === 0 ? 'Inicio' : i === line.length - 1 ? 'Fin' : byIndex.get(i) ?? '',
+  const last = line.length - 1;
+  const along = (a: number, b: number) => {
+    let d = 0;
+    for (let j = a; j < b; j++) d += distanceMeters(line[j]!, line[j + 1]!);
+    return d;
+  };
+  let startName = '';
+  let endName = '';
+  const byIndex = new Map<number, string>();
+  for (const w of [...named].sort((x, y) => x.i - y.i)) {
+    if (w.i <= 0 || w.i >= last) {
+      if (w.i <= 0 && !startName) startName = w.name;
+      else if (w.i >= last && !endName) endName = w.name;
+      continue;
+    }
+    if (along(0, w.i) < NEAR_END_M && !startName) startName = w.name;
+    else if (along(w.i, last) < NEAR_END_M && !endName) endName = w.name;
+    else byIndex.set(w.i, w.name);
+  }
+  const idx = pickStopIndices(line, [...byIndex.keys()]);
+  const stops = idx.map((i) => ({
+    name: i === 0 ? (startName ? `Inicio · ${startName}` : 'Inicio') : i === last ? (endName ? `Fin · ${endName}` : 'Fin') : byIndex.get(i) ?? '',
     i,
     ...line[i]!,
   }));
+  return uniqueNames(stops);
 }
 
 /** Desvío máximo (m) con el que se deja de agregar puntos intermedios: la recta ya sigue el recorrido. */
 const STOP_TOLERANCE_M = 40;
+
+/** Largo (m) máximo de un tramo entre dos puntos numerados. */
+const MAX_LEG_M = 3000;
 
 /**
  * Índices de los puntos de la línea que son los puntos numerados de la hoja: el inicio, el fin, los obligados
@@ -97,6 +151,32 @@ export function pickStopIndices(line: LatLon[], forced: number[] = []): number[]
     }
     if (pick.i < 0 || pick.d < STOP_TOLERANCE_M) break;
     chosen.add(pick.i);
+  }
+  // Ningún tramo de más de 3 km (por ejemplo, la vuelta de una ida y vuelta, que repite el camino): se parte por el punto más alejado de su recta o, si es recto, por la mitad.
+  const cum = [0];
+  for (let i = 1; i < n; i++) cum.push(cum[i - 1]! + distanceMeters(line[i - 1]!, line[i]!));
+  while (chosen.size < 40) {
+    const sorted = [...chosen].sort((a, b) => a - b);
+    let worst = -1;
+    let worstLen = MAX_LEG_M;
+    for (let k = 1; k < sorted.length; k++) {
+      const len = cum[sorted[k]!]! - cum[sorted[k - 1]!]!;
+      if (len > worstLen) {
+        worstLen = len;
+        worst = k;
+      }
+    }
+    if (worst < 0) break;
+    const a = sorted[worst - 1]!;
+    const b = sorted[worst]!;
+    let cut = farthest(a, b).i;
+    if (cut < 0) {
+      const half = (cum[a]! + cum[b]!) / 2;
+      cut = a + 1;
+      while (cut < b - 1 && cum[cut]! < half) cut++;
+    }
+    if (cut <= a || cut >= b) break;
+    chosen.add(cut);
   }
   return [...chosen].sort((a, b) => a - b);
 }
@@ -155,7 +235,7 @@ export function waypointRouteSheetInput(route: Route, waypoints: Map<string, Way
   if (!stops.length) throw new Error('NO_ROUTE');
   const line = stops.map((w) => ({ lat: w.lat, lon: w.lon }));
   const decl = meta(route.name, line).declinationDeg;
-  const points: TopoPoint[] = stops.map((w, i) => ({ n: i + 1, name: w.name, lat: w.lat, lon: w.lon }));
+  const points: TopoPoint[] = uniqueNames(stops.map((w, i) => ({ n: i + 1, name: w.name, lat: w.lat, lon: w.lon })));
   const legs: TopoLeg[] = stops.slice(1).map((b, i) => {
     const a = stops[i]!;
     const t = bearingDeg(a, b);

@@ -26,6 +26,31 @@ describe('datos de la hoja', () => {
     expect(input.declinationDeg).toBeGreaterThan(3);
   });
 
+  it('track con waypoints (estacionamiento, descanso): se usan junto con los cambios de rumbo', () => {
+    // 5 km al norte en recta, giro a 90° y 5 km al este, con un punto cada 50 m
+    const seg: Track['segments'][number] = [
+      ...Array.from({ length: 101 }, (_, i) => [-41 + i * 0.00045, -71, 1000 + i] as [number, number, number]),
+      ...Array.from({ length: 100 }, (_, i) => [-41 + 100 * 0.00045, -71 + (i + 1) * 0.0006, 1100] as [number, number, number]),
+    ];
+    const track = {
+      ...newEntity<Track>({ name: 'L', desc: '', source: 'Wikiloc', link: null, segments: [seg], waypoints: [], distanceM: 0, ascentM: 0, descentM: 0, minEle: null, maxEle: null, notes: '' }),
+      waypoints: [
+        { name: 'Estacionamiento', lat: seg[30]![0], lon: seg[30]![1], ele: null, desc: '' },
+        { name: 'Descanso', lat: seg[160]![0], lon: seg[160]![1], ele: null, desc: '' },
+      ],
+    };
+    const input = trackSheetInput(track as Track);
+    const names = input.points.map((p) => p.name);
+    expect(names[0]).toBe('Inicio');
+    expect(names[names.length - 1]).toBe('Fin');
+    expect(names).toContain('Estacionamiento');
+    expect(names).toContain('Descanso');
+    // además, la esquina (cambio de rumbo): un punto sin nombre cerca del vértice 100
+    const corner = input.points.find((p) => !['Inicio', 'Fin', 'Estacionamiento', 'Descanso'].includes(p.name) && Math.abs(p.lat - seg[100]![0]) < 0.0003 && Math.abs(p.lon - seg[100]![1]) < 0.0003);
+    expect(corner).toBeDefined();
+    expect(input.legs.length).toBe(input.points.length - 1);
+  });
+
   it('ruta que viene de un track: los tramos son entre sus waypoints, no entre cada punto de la línea', () => {
     const line = Array.from({ length: 50 }, (_, i) => ({ lat: -41.17 - i * 0.001, lon: -71.44 }));
     const route = { ...newEntity<Route>({ name: 'Wikiloc', waypointIds: [], notes: '' }), line, stops: [{ name: 'Cima', lat: line[20]!.lat, lon: line[20]!.lon }, { name: 'Refugio', lat: line[35]!.lat, lon: line[35]!.lon }] };
@@ -36,8 +61,8 @@ describe('datos de la hoja', () => {
     expect(input.legs[0]!.distanceM).toBeGreaterThan(2100);
   });
 
-  it('ruta que viene de un track sin waypoints: un solo tramo Inicio → Fin, como la hoja del track', () => {
-    const line = Array.from({ length: 50 }, (_, i) => ({ lat: -41.17 - i * 0.001, lon: -71.44 }));
+  it('ruta que viene de un track sin waypoints: un solo tramo Inicio → Fin si es corto y recto', () => {
+    const line = Array.from({ length: 20 }, (_, i) => ({ lat: -41.17 - i * 0.001, lon: -71.44 }));
     const input = plannedRouteSheetInput({ ...newEntity<Route>({ name: 'W', waypointIds: [], notes: '' }), line, stops: [] });
     expect(input.legs).toHaveLength(1);
     expect(input.points.map((p) => p.name)).toEqual(['Inicio', 'Fin']);
@@ -58,6 +83,26 @@ describe('datos de la hoja', () => {
     // una ida y vuelta (inicio = fin) también marca el punto de giro
     const ida = [...line.slice(0, 101), ...line.slice(0, 100).reverse()];
     expect(pickStopIndices(ida)).toContain(100);
+  });
+
+  it('waypoints con el mismo nombre se numeran, y uno pegado al inicio nombra al inicio', () => {
+    const line = Array.from({ length: 90 }, (_, i) => [-41 - i * 0.0009, -71, 1000] as [number, number, number]);
+    const wp = (name: string, k: number) => ({ name, lat: line[k]![0], lon: line[k]![1], ele: null, desc: '' });
+    const track = { ...newEntity<Track>({ name: 'D', desc: '', source: 'Wikiloc', link: null, segments: [line], waypoints: [], distanceM: 0, ascentM: 0, descentM: 0, minEle: null, maxEle: null, notes: '' }), waypoints: [wp('Estacionamiento', 0), wp('Descanso', 20), wp('Descanso', 45), wp('Descanso', 70)] };
+    const names = trackSheetInput(track as Track).points.map((p) => p.name);
+    expect(names[0]).toBe('Inicio · Estacionamiento');
+    expect(names).toEqual(expect.arrayContaining(['Descanso 1', 'Descanso 2', 'Descanso 3']));
+    expect(names).not.toContain('Descanso');
+  });
+
+  it('ida y vuelta: el waypoint se ubica en la primera pasada y ningún tramo pasa de 3 km', () => {
+    const out = Array.from({ length: 101 }, (_, i) => ({ lat: -41 - i * 0.0009, lon: -71 }));
+    const line = [...out, ...out.slice(0, 100).reverse()];
+    const route = { ...newEntity<Route>({ name: 'IV', waypointIds: [], notes: '' }), line, stops: [{ name: 'Mitad', lat: out[50]!.lat, lon: out[50]!.lon }] };
+    const input = plannedRouteSheetInput(route);
+    expect(input.stopIdx).toContain(50);
+    expect(input.stopIdx).not.toContain(150);
+    expect(Math.max(...input.legs.map((l) => l.distanceM))).toBeLessThanOrEqual(3000);
   });
 
   it('ruta planificada: puntos numerados sin nombre y piernas con rumbo geográfico y magnético', () => {
@@ -89,11 +134,12 @@ describe('datos de la hoja', () => {
       ],
     };
     const input = trackSheetInput(track);
-    expect(input.points.map((p) => p.name)).toEqual(['Inicio', 'Lomada', 'Arroyo', 'Fin']);
-    expect(input.legs).toHaveLength(3);
+    // los waypoints van siempre, en orden, entre Inicio y Fin (puede haber además puntos de cambio de rumbo sin nombre)
+    const named = input.points.map((p) => p.name).filter((n) => !n.startsWith('Punto '));
+    expect(named).toEqual(['Inicio', 'Lomada', 'Arroyo', 'Fin']);
+    expect(input.legs.length).toBeGreaterThanOrEqual(3);
     // por el recorrido, un tramo no mide menos que la recta
-    expect(input.legs[1]!.distanceM).toBeGreaterThan(1000);
-    expect(input.legs[1]!.ascentM).toBeGreaterThanOrEqual(300);
+    expect(input.legs.every((l) => l.distanceM > 0)).toBe(true);
     expect(input.legs.every((l) => l.bearingTrueDeg !== null && l.bearingMagDeg !== null)).toBe(true);
     expect(input.subtitle).toBe('Wikiloc');
   });
