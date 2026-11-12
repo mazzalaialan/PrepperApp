@@ -2073,6 +2073,9 @@
     "smnLink": "See the official SMN alerts"
   },
   "about": {
+    "youtube": "YouTube channel",
+    "youtubeTitle": "VikArg on YouTube",
+    "youtubeText": "Videos about the app and preparedness: how to use each tool.",
     "title": "About",
     "link": "About, report a problem and contact",
     "footer": "VikArg {{version}} · About, report a problem and contact",

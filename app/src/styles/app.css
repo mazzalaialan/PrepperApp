@@ -4322,6 +4322,13 @@ a.module-card:hover {
 }
 
 /* Bloquear ahora: separado de Ajustes y con borde, para no tocarlo sin querer (bloquea al instante). */
+/* YouTube en la barra: solo si hay lugar (en el celular el título no entraría; está en Acerca de). */
+@media (max-width: 600px) {
+  .topbar-youtube {
+    display: none;
+  }
+}
+
 .topbar-lock {
   margin-left: 20px;
   border: 1px solid var(--control-border);

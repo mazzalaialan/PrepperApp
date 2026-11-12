@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { OfficialWeatherNotice } from '@/ui/OfficialWeatherNotice';
 import { Bug, Check, Coffee, Copy, Code, ExternalLink, Lightbulb, Mail, MessageSquare, HandCoins, Scale } from 'lucide-react';
-import { CAFECITO_URL, MERCADOPAGO_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
+import { CAFECITO_URL, MERCADOPAGO_URL, YOUTUBE_URL, deviceInfo, feedbackText, githubIssueUrl, mailtoUrl, REPO_URL, type FeedbackKind } from '@/core/about';
+import { YoutubeIcon } from '@/ui/YoutubeIcon';
 import { PortableUpdateCheck } from './SettingsPage';
 
 const KINDS: { kind: FeedbackKind; icon: typeof Bug }[] = [
@@ -128,6 +129,14 @@ export function AboutPage() {
           </a>
         </div>
         <p className="hint" style={{ margin: 0 }}>{mail ? t('about.githubHint') : t('about.noMailYet')}</p>
+      </section>
+
+      <section className="card stack" aria-labelledby="about-youtube">
+        <h2 id="about-youtube" className="section-title" style={{ margin: 0 }}>{t('about.youtubeTitle')}</h2>
+        <p className="hint" style={{ margin: 0 }}>{t('about.youtubeText')}</p>
+        <a className="btn" href={YOUTUBE_URL} target="_blank" rel="noreferrer" data-testid="about-youtube">
+          <YoutubeIcon size={20} /> {t('about.youtube')}
+        </a>
       </section>
 
       <section className="card stack about-coffee" aria-labelledby="about-coffee">

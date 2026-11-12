@@ -5,6 +5,8 @@
 
 export const REPO_URL = 'https://github.com/mazzalaialan/SurvTools';
 export const CAFECITO_URL = 'https://cafecito.app/vikarg';
+/** Canal de YouTube de VikArg. */
+export const YOUTUBE_URL = 'https://www.youtube.com/@VikArg';
 /** Link de pago de Mercado Pago (Argentina), para quien prefiere aportar por ahí. */
 export const MERCADOPAGO_URL = 'https://link.mercadopago.com.ar/vikarg';
 /** Mail de contacto de VikArg (formulario de contacto y reporte de errores). Vacío = el botón no aparece. */

@@ -5,6 +5,8 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BookOpen, CloudSun, Compass, Ellipsis, FileText, House, Lasso, Lock, Package, Settings, Siren, Sprout, Activity } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
 import { useEmergencyCardSync } from '@/modules/firstAid/emergencyCard';
+import { YOUTUBE_URL } from '@/core/about';
+import { YoutubeIcon } from '@/ui/YoutubeIcon';
 import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
 import { BackButton } from '@/ui/BackButton';
@@ -105,6 +107,10 @@ export function Shell() {
           <BackButton />
           <BrandMark />
           <p className="topbar-title">{t('app.name')}</p>
+          {/* Canal de YouTube: solo con lugar (web y tablet); en el celular está en Acerca de. */}
+          <a className="icon-btn topbar-youtube" href={YOUTUBE_URL} target="_blank" rel="noreferrer" aria-label={t('about.youtube')} title={t('about.youtube')} data-testid="topbar-youtube">
+            <YoutubeIcon size={26} />
+          </a>
           <Link className="icon-btn" to="/settings" aria-label={t('nav.settings')} title={t('nav.settings')}>
             <Settings size={22} />
           </Link>
