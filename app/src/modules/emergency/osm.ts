@@ -1,12 +1,14 @@
 import { distanceMeters } from '@/core/geo/geo';
 import type { ContactKind } from '@/core/model/types';
-import type { NearbyPlace } from './data';
+import type { FuelType, NearbyPlace } from './data';
+import { CATEGORY_KIND, type ServiceCategory } from './services';
 
 /**
  * Consultas a OpenStreetMap, solo con conexión y solo cuando el usuario lo
  * pide (políticas de uso de Overpass y Nominatim: pocas consultas y
  * puntuales).
- * - Overpass: comisarías, bomberos, hospitales y centros de salud cercanos;
+ * - Overpass: comisarías, bomberos, hospitales y centros de salud cercanos (y,
+ *   con su filtro, los servicios: estaciones, farmacias, agua, refugios…);
  *   calles, rutas y mojones alrededor de un punto.
  * - Nominatim: dirección de un punto.
  */
@@ -44,11 +46,71 @@ const pos = (e: OsmElement) => (e.lat !== undefined ? { lat: e.lat, lon: e.lon! 
 export function osmKind(tags: Record<string, string>): ContactKind | null {
   if (tags.amenity === 'police') return 'police';
   if (tags.amenity === 'fire_station') return 'fire';
+  if (tags.amenity === 'fuel') return 'fuel';
+  if (tags.amenity === 'pharmacy' || tags.healthcare === 'pharmacy') return 'pharmacy';
+  if (tags.emergency === 'defibrillator') return 'aed';
+  if (tags.amenity === 'veterinary') return 'vet';
+  if (tags.shop === 'tyres') return 'tyres';
+  if (tags.shop === 'car_repair') return 'carRepair';
+  if (['drinking_water', 'water_point'].includes(tags.amenity ?? '') || tags.man_made === 'water_tap' || tags.natural === 'spring') return 'water';
+  if (tags.tourism === 'alpine_hut' || tags.tourism === 'wilderness_hut' || tags.amenity === 'shelter') return 'shelter';
+  if (tags.amenity === 'atm' || tags.amenity === 'bank') return 'atm';
   if (tags.amenity === 'hospital') return 'hospital';
   if (tags.amenity === 'clinic' || tags.amenity === 'doctors' || tags.emergency === 'ambulance_station') return 'medical';
   if (/defensa civil|protecci[oó]n civil/i.test(tags.name ?? '')) return 'civilDefense';
   return null;
 }
+
+/** Combustibles de una estación según sus etiquetas `fuel:*=yes` (como en tools/fuel-data). */
+export function osmFuels(tags: Record<string, string>): FuelType[] {
+  const found = new Set<FuelType>();
+  for (const [k, v] of Object.entries(tags)) {
+    if (v !== 'yes' || !k.startsWith('fuel:')) continue;
+    const f = k.slice(5);
+    if (/^(octane_\d+|e\d+|gasoline|petrol)$/.test(f)) found.add('gasoline');
+    else if (/^(diesel|gtl_diesel|hgv_diesel|biodiesel)$/.test(f)) found.add('diesel');
+    else if (f === 'cng') found.add('cng');
+    else if (f === 'lpg') found.add('lpg');
+  }
+  return (['gasoline', 'diesel', 'cng', 'lpg'] as const).filter((f) => found.has(f));
+}
+
+/**
+ * Lo que se le pide a Overpass de cada categoría de servicios: las mismas
+ * etiquetas que usa tools/services-data/build.mjs para los archivos sin conexión.
+ */
+const SHELTER_TYPES = 'basic_hut|lean_to|rock_shelter|weather_shelter';
+export const SERVICE_SELECTORS: Record<ServiceCategory, string[]> = {
+  fuel: ['nwr["amenity"="fuel"]'],
+  tyres: ['nwr["shop"="tyres"]'],
+  repair: ['nwr["shop"="car_repair"]'],
+  pharmacy: ['nwr["amenity"="pharmacy"]', 'nwr["healthcare"="pharmacy"]'],
+  aed: ['nwr["emergency"="defibrillator"]'],
+  vet: ['nwr["amenity"="veterinary"]'],
+  water: ['nwr["amenity"="drinking_water"]', 'nwr["amenity"="water_point"]', 'nwr["man_made"="water_tap"]["drinking_water"="yes"]', 'nwr["natural"="spring"]'],
+  shelter: ['nwr["tourism"="alpine_hut"]', 'nwr["tourism"="wilderness_hut"]', `nwr["amenity"="shelter"]["shelter_type"~"^(${SHELTER_TYPES})$"]`],
+  atm: ['nwr["amenity"="atm"]', 'nwr["amenity"="bank"]["atm"="yes"]'],
+};
+
+/** Tipo que se muestra de un servicio (como en los archivos sin conexión): bandera, red del cajero, clase de refugio o de agua. */
+export function serviceDetail(kind: ContactKind, tags: Record<string, string>): string {
+  if (kind === 'water') {
+    if (tags.natural !== 'spring') return tags.amenity === 'water_point' ? 'Punto de agua' : 'Agua potable';
+    return tags.drinking_water === 'yes' ? 'Vertiente (potable)' : tags.drinking_water === 'no' ? 'Vertiente (no potable)' : 'Vertiente (potabilidad desconocida)';
+  }
+  if (kind === 'shelter') return tags.tourism === 'alpine_hut' ? 'Refugio de montaña' : tags.tourism === 'wilderness_hut' ? 'Refugio no atendido' : 'Vivac o reparo';
+  if (kind === 'atm') return tags.network ?? tags.brand ?? tags.operator ?? '';
+  return tags.brand ?? tags.operator ?? '';
+}
+
+/** Aclaración de un servicio: dónde está el desfibrilador; altura y capacidad de un refugio. */
+function serviceNote(kind: ContactKind, tags: Record<string, string>): string {
+  if (kind === 'aed') return tags['defibrillator:location'] ?? tags['defibrillator:location:es'] ?? tags.description ?? '';
+  if (kind === 'shelter') return [tags.ele && `${tags.ele} m`, tags.capacity && `capacidad ${tags.capacity}`].filter(Boolean).join(' · ');
+  return '';
+}
+
+const SERVICE_KIND_SET = new Set<ContactKind>(Object.values(CATEGORY_KIND));
 
 export function osmAddress(tags: Record<string, string>): string {
   const street = [tags['addr:street'], tags['addr:housenumber']].filter(Boolean).join(' ');
@@ -62,28 +124,40 @@ export function parseNearby(elements: OsmElement[], lat: number, lon: number): N
     const kind = osmKind(tags);
     const p = pos(e);
     if (!kind || !p) continue;
+    // Un punto de agua marcado como no potable no sirve.
+    if (kind === 'water' && tags.natural !== 'spring' && tags.drinking_water === 'no') continue;
+    const service = SERVICE_KIND_SET.has(kind);
+    const fuels = kind === 'fuel' ? osmFuels(tags) : [];
+    const note = service ? serviceNote(kind, tags) : '';
     out.push({
       key: `osm-${e.type}-${e.id}`,
       kind,
-      name: tags.name ?? tags.official_name ?? '',
+      name: tags.name ?? tags.official_name ?? (kind === 'fuel' ? (tags.brand ?? '') : ''),
       phone: tags.phone ?? tags['contact:phone'] ?? tags['contact:mobile'] ?? '',
       address: osmAddress(tags),
       lat: p.lat,
       lon: p.lon,
       distance: distanceMeters({ lat, lon }, p),
       source: 'osm',
-      detail: tags.healthcare ?? tags.amenity ?? tags.emergency ?? '',
+      detail: service ? serviceDetail(kind, tags) : (tags.healthcare ?? tags.amenity ?? tags.emergency ?? ''),
+      ...(fuels.length > 0 && { fuels }),
+      ...(note && { note: note.slice(0, 160) }),
     });
   }
   return out;
 }
 
-export async function fetchOsmNearby(lat: number, lon: number, radiusM: number): Promise<NearbyPlace[]> {
+/**
+ * `service`: también esa categoría de servicios (solo la que se está mirando:
+ * hay muchos y agrandan la consulta).
+ */
+export async function fetchOsmNearby(lat: number, lon: number, radiusM: number, service: ServiceCategory | null = null): Promise<NearbyPlace[]> {
   const around = `(around:${Math.round(radiusM)},${lat.toFixed(5)},${lon.toFixed(5)})`;
   const query = `[out:json][timeout:25];(
     nwr["amenity"~"^(police|fire_station|hospital|clinic)$"]${around};
     nwr["emergency"="ambulance_station"]${around};
-    nwr["office"="government"]["name"~"Defensa Civil|Protecci.n Civil",i]${around};
+    nwr["office"="government"]["name"~"Defensa Civil|Protecci.n Civil",i]${around};${service ? SERVICE_SELECTORS[service].map((sel) => `
+    ${sel}${around};`).join('') : ''}
   );out center tags;`;
   return parseNearby(await overpass(query), lat, lon);
 }

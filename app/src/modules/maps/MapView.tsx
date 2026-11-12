@@ -13,6 +13,8 @@ export interface MapPoint {
   name: string;
   lat: number;
   lon: number;
+  /** Color del punto según el tema (p. ej. policía en azul, bomberos en rojo); sin esto, el de acento. */
+  tone?: 'info' | 'danger' | 'ok' | 'warn';
 }
 
 export interface MapCircle {
@@ -31,6 +33,8 @@ export interface ViewState {
 
 interface Props {
   initial: ViewState;
+  /** Encuadre inicial [oeste, sur, este, norte]: si está, manda sobre el centro y el zoom de `initial`. */
+  initialBounds?: [number, number, number, number];
   layers: MapLayersOn;
   showMine: boolean;
   waypoints: MapPoint[];
@@ -101,7 +105,7 @@ function data(p: Props) {
   return {
     'mine-waypoints': {
       type: 'FeatureCollection',
-      features: p.waypoints.map((w) => ({ type: 'Feature', properties: { id: w.id, name: w.name }, geometry: { type: 'Point', coordinates: [w.lon, w.lat] } })),
+      features: p.waypoints.map((w) => ({ type: 'Feature', properties: { id: w.id, name: w.name, tone: w.tone ?? '' }, geometry: { type: 'Point', coordinates: [w.lon, w.lat] } })),
     } as FeatureCollection,
     'mine-routes': {
       type: 'FeatureCollection',
@@ -200,7 +204,7 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
     type: 'circle',
     source: 'mine-waypoints',
     layout: { visibility: mine },
-    paint: { 'circle-radius': 6, 'circle-color': c.accent, 'circle-stroke-color': c.bg, 'circle-stroke-width': 2 },
+    paint: { 'circle-radius': 6, 'circle-color': ['match', ['get', 'tone'], 'info', c.info, 'danger', c.danger, 'ok', c.ok, 'warn', c.warn, c.accent], 'circle-stroke-color': c.bg, 'circle-stroke-width': 2 },
   });
   map.addLayer({
     id: 'mine-waypoint-names',
@@ -286,6 +290,7 @@ export function MapView(props: Props) {
       style: buildStyle(themeColors(), contoursUrl, props.layers),
       center: [props.initial.lon, props.initial.lat],
       zoom: props.initial.zoom,
+      ...(props.initialBounds && { bounds: props.initialBounds, fitBoundsOptions: { padding: 48, maxZoom: 15 } }),
       attributionControl: { compact: true },
       maxZoom: 17,
       pitch: props.layers.terrain3d ? PITCH_3D : 0,

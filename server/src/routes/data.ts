@@ -9,7 +9,20 @@ import type { Config } from '../config.ts';
  * del servidor si es más nueva que la que trae (campo `generatedAt`).
  * Solo estos archivos: nada de rutas arbitrarias.
  */
-export const DATA_FILES = new Set(['CL.json', 'UY.json', 'BO.json', 'PE.json', 'parks-CL.json', 'parks-AR.json', 'parks-BO.json', 'parks-PE.json']);
+/** Servicios para "Buscar cercanos" (tools/services-data): un archivo por categoría y país. */
+const SERVICE_CATEGORIES = ['fuel', 'tyres', 'repair', 'pharmacy', 'aed', 'vet', 'water', 'shelter', 'atm'];
+const SERVICE_COUNTRIES = ['AR', 'CL', 'UY', 'BO', 'PE'];
+export const DATA_FILES = new Set([
+  'CL.json',
+  'UY.json',
+  'BO.json',
+  'PE.json',
+  'parks-CL.json',
+  'parks-AR.json',
+  'parks-BO.json',
+  'parks-PE.json',
+  ...SERVICE_CATEGORIES.flatMap((c) => SERVICE_COUNTRIES.map((cc) => `${c}-${cc}.json`)),
+]);
 
 export function dataRoutes(app: FastifyInstance, config: Config): void {
   app.get<{ Params: { file: string } }>('/api/data/:file', async (req, reply) => {

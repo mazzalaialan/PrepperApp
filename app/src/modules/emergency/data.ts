@@ -18,6 +18,10 @@ export interface Place {
   type?: string;
   /** En un paquete con listados oficiales (Uruguay): este lugar viene de OpenStreetMap. */
   osm?: boolean;
+  /** Estaciones de servicio: combustibles que vende, si se saben. */
+  fuels?: FuelType[];
+  /** Aclaración (servicios: dónde está el desfibrilador, altura y capacidad de un refugio). */
+  note?: string;
 }
 
 export interface RadioStation {
@@ -66,7 +70,12 @@ export interface NearbyPlace {
   note?: string;
   /** Frecuencias VHF que publica el parque donde está el lugar. */
   radio?: ParkRadio[];
+  /** Estaciones de servicio: combustibles que vende. */
+  fuels?: FuelType[];
 }
+
+/** Combustibles de una estación de servicio: nafta (bencina, gasolina), gasoil, GNC (GNV) y GLP. */
+export type FuelType = 'gasoline' | 'diesel' | 'cng' | 'lpg';
 
 // ---------- Parques nacionales (tools/emergency-data/parks.mjs) ----------
 
@@ -282,15 +291,16 @@ export function mergeNearby(official: NearbyPlace[], osm: NearbyPlace[]): Nearby
     if (twin) {
       twin.phone ||= o.phone;
       twin.address ||= o.address;
+      if (!twin.fuels && o.fuels) twin.fuels = o.fuels;
     } else merged.push(o);
   }
   return merged.sort((a, b) => a.distance - b.distance);
 }
 
-/** Grupo de cada tipo para "lo más cercano": hospitales y ambulancias van juntos (salud). */
+/** Grupo de cada tipo para "lo más cercano": hospitales y ambulancias van juntos (salud); las estaciones de servicio, aparte. */
 export const nearbyGroup = (k: ContactKind) => (k === 'hospital' || k === 'medical' ? 'health' : k);
 
-/** Los `count` más cercanos de cada grupo (policía, bomberos, salud, defensa civil), del más cercano al más lejano. */
+/** Los `count` más cercanos de cada grupo (policía, bomberos, salud, defensa civil, estaciones de servicio), del más cercano al más lejano. */
 export function nearestPerKind(places: NearbyPlace[], count: number): NearbyPlace[] {
   const taken = new Map<string, number>();
   const out: NearbyPlace[] = [];

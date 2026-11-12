@@ -65,6 +65,17 @@ export async function loadDataFile<T>(file: string): Promise<T> {
   return data as T;
 }
 
+/** Borra la copia guardada de un archivo de `data/` (p. ej. si quedó con un formato viejo): la próxima carga lo vuelve a bajar. */
+export async function forgetDataFile(file: string): Promise<void> {
+  if ('caches' in globalThis) await (await caches.open(DATA_CACHE)).delete(keyUrl(file));
+}
+
+/** ¿Ya está guardado este archivo de `data/`? (sin leerlo) */
+export async function hasDataFile(file: string): Promise<boolean> {
+  if (!('caches' in globalThis)) return false;
+  return !!(await (await caches.open(DATA_CACHE)).match(keyUrl(file)));
+}
+
 /**
  * Datos que vienen dentro de la app (por ejemplo, los parques de Argentina):
  * si el servidor propio tiene una copia más nueva, se guarda y se usa esa.

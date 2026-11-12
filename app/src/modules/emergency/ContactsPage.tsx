@@ -12,8 +12,11 @@ import { KindIcon, MapLink, PhoneActions } from './parts';
 import { useContacts } from './store';
 import type { ContactKind, EmergencyContact as Contact } from '@/core/model/types';
 
-/** Servicios de emergencia (lo que trae "Buscar cercanos" o se carga a mano): van en su propia sección. */
-const SERVICE_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense'];
+/**
+ * Servicios (lo que trae "Buscar cercanos" o se carga a mano): van en su propia sección.
+ * El veterinario queda en "mis contactos": suele ser el de la familia.
+ */
+const SERVICE_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense', 'pharmacy', 'aed', 'fuel', 'tyres', 'carRepair', 'water', 'shelter', 'atm'];
 export const isService = (c: Pick<Contact, 'kind'>) => SERVICE_KINDS.includes(c.kind);
 
 export function ContactsPage() {

@@ -1,6 +1,8 @@
 #!/bin/sh
 # Vuelve a generar cada mes los paquetes de datos que cambian (parques de
-# Argentina y de Chile, comisarías, bomberos y salud de Chile, Uruguay, Bolivia y Perú) con
+# Argentina y de Chile, comisarías, bomberos y salud de Chile, Uruguay, Bolivia y Perú,
+# y los servicios de "Buscar cercanos" de los cinco países: estaciones, gomerías,
+# talleres, farmacias, DEA, veterinarias, agua, refugios y cajeros) con
 # las mismas herramientas del repositorio (tools/), y los deja donde los sirve
 # el servidor (GET /api/data/:file). La app usa la copia del servidor si es más
 # nueva que la que trae. Pensado para cron, igual que los mapas:
@@ -73,4 +75,8 @@ step CL.json /repo/tools/country-data/build.mjs CL
 step UY.json /repo/tools/country-data/build.mjs UY
 step BO.json /repo/tools/country-data/build.mjs BO
 step PE.json /repo/tools/country-data/build.mjs PE
+# Servicios de "Buscar cercanos": un archivo por categoría y país.
+for cc in AR CL UY BO PE; do
+  for cat in fuel tyres repair pharmacy aed vet water shelter atm; do step "$cat-$cc.json" /repo/tools/services-data/build.mjs "$cc" "$cat"; done
+done
 echo "== $(date '+%F %T') terminado"

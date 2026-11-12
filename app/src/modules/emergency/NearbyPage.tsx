@@ -1,17 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Save } from 'lucide-react';
+import { Check, List, Map as MapIcon, Save } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { emptyContact } from './ContactEditPage';
 import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
 import { loadParks, mergeNearby, nearestPerKind, officialNearby, withParks, type EmergencyData, type NearbyPlace, type ParksData } from './data';
+import { CATEGORY_KIND, loadService, SERVICE_KINDS, serviceNearby, type ServiceCategory, type ServiceData } from './services';
 
 const EMPTY_DATA: EmergencyData = { sources: { fire: '', police: '', health: '', radio: '' }, fire: [], police: [], health: [], radio: [] };
 import { fetchOsmNearby } from './osm';
 import { formatDistance, KindIcon, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { useContacts } from './store';
+
+/** El mapa va aparte: MapLibre se carga recién al tocar "Ver en el mapa". */
+const NearbyMap = lazy(() => import('./NearbyMap').then((m) => ({ default: m.NearbyMap })));
 
 /** 0 = lo más cercano de cada tipo, sin límite (zonas agrestes, donde no hay nada cerca). */
 const RADII = [5, 15, 30, 50, 100, 200, 0];
@@ -19,9 +23,38 @@ const RADII = [5, 15, 30, 50, 100, 200, 0];
 const OSM_MAX_KM = 200;
 /** Sin límite: cuántos de cada tipo. */
 const NEAREST_PER_KIND = 3;
-type Filter = 'all' | 'police' | 'fire' | 'health' | 'civilDefense';
-const FILTERS: Filter[] = ['all', 'police', 'fire', 'health', 'civilDefense'];
-const matches = (f: Filter, k: ContactKind) => f === 'all' || f === k || (f === 'health' && (k === 'hospital' || k === 'medical'));
+type Filter = 'all' | 'police' | 'fire' | 'health' | 'civilDefense' | 'vehicle' | 'water' | 'shelter' | 'atm';
+const FILTERS: Filter[] = ['all', 'police', 'fire', 'health', 'civilDefense', 'vehicle', 'water', 'shelter', 'atm'];
+/** Lo que se está mirando: un filtro sin opciones o la opción elegida de Salud o Vehículos. */
+type Selection = Exclude<Filter, 'health' | 'vehicle'> | 'care' | 'pharmacy' | 'aed' | 'vet' | 'fuel' | 'tyres' | 'repair';
+/** Opciones de Salud y de Vehículos; la primera es la que viene elegida. */
+const SUBFILTERS: Partial<Record<Filter, Selection[]>> = {
+  health: ['care', 'pharmacy', 'aed', 'vet'],
+  vehicle: ['fuel', 'tyres', 'repair'],
+};
+/**
+ * Tipos de cada selección. "Todo" son los servicios de emergencia (policía,
+ * bomberos, hospitales y centros de atención, Defensa Civil): el resto se ve
+ * con su filtro (en una ciudad hay decenas de cada uno y taparían a los demás).
+ */
+const SELECTION_KINDS: Record<Selection, ContactKind[]> = {
+  all: ['police', 'fire', 'hospital', 'medical', 'civilDefense'],
+  police: ['police'],
+  fire: ['fire'],
+  care: ['hospital', 'medical'],
+  civilDefense: ['civilDefense'],
+  pharmacy: ['pharmacy'],
+  aed: ['aed'],
+  vet: ['vet'],
+  fuel: ['fuel'],
+  tyres: ['tyres'],
+  repair: ['carRepair'],
+  water: ['water'],
+  shelter: ['shelter'],
+  atm: ['atm'],
+};
+/** Categoría de los archivos de servicios de una selección (null: servicios de emergencia). */
+const serviceOf = (sel: Selection): ServiceCategory | null => (sel in CATEGORY_KIND ? (sel as ServiceCategory) : null);
 /** Más que esto no se lee en el celular: con un filtro se ven los de cada tipo. */
 const MAX_SHOWN = 60;
 
@@ -33,6 +66,16 @@ export function NearbyPage() {
   const [data, setData] = useState<EmergencyData | null>(null);
   const [radiusKm, setRadiusKm] = useState(15);
   const [filter, setFilter] = useState<Filter>('all');
+  const [sub, setSub] = useState<Selection | null>(null);
+  const selection: Selection = sub ?? (filter as Selection);
+  const service = serviceOf(selection);
+  const matches = (k: ContactKind) => SELECTION_KINDS[selection].includes(k);
+  function chooseFilter(f: Filter) {
+    setFilter(f);
+    // Salud y Vehículos arrancan con su primera opción (hospitales y centros de atención; estaciones de servicio).
+    setSub(SUBFILTERS[f]?.[0] ?? null);
+  }
+  const [onMap, setOnMap] = useState(false);
   const [osm, setOsm] = useState<{ key: string; items: NearbyPlace[] } | null>(null);
   const [osmState, setOsmState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
   const [attempt, setAttempt] = useState(0);
@@ -40,6 +83,21 @@ export function NearbyPage() {
   const country = useSettings((s) => s.settings.country);
   const [packageMissing, setPackageMissing] = useState(false);
   const [parks, setParks] = useState<ParksData | null>(null);
+  const [serviceData, setServiceData] = useState<ServiceData | null>(null);
+  // La categoría de servicios elegida (estaciones, farmacias, agua…): archivo aparte, se baja una vez.
+  // Sin conexión y sin bajar, solo lo que traiga OpenStreetMap en vivo.
+  useEffect(() => {
+    setServiceData(null);
+    if (!service) return;
+    let cancelled = false;
+    loadService(service, country).then(
+      (d) => !cancelled && setServiceData(d),
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [service, country]);
   // Parques nacionales y áreas de CONAF (intendencias, oficinas y frecuencias): Argentina y Chile.
   useEffect(() => {
     void loadParks(country).then(setParks);
@@ -56,7 +114,8 @@ export function NearbyPage() {
     );
   }, [country]);
 
-  const searchKey = place ? `${place.lat.toFixed(3)},${place.lon.toFixed(3)},${radiusKm}` : null;
+  // Los servicios se le piden a OpenStreetMap solo con su filtro (hay muchos y la consulta se vuelve pesada).
+  const searchKey = place ? `${place.lat.toFixed(3)},${place.lon.toFixed(3)},${radiusKm},${service ?? ''}` : null;
 
   // OpenStreetMap suma lo que no está en los datos oficiales (y teléfonos), solo con conexión.
   useEffect(() => {
@@ -67,7 +126,7 @@ export function NearbyPage() {
     }
     let cancelled = false;
     setOsmState('loading');
-    fetchOsmNearby(place.lat, place.lon, Math.min(radiusKm || OSM_MAX_KM, OSM_MAX_KM) * 1000).then(
+    fetchOsmNearby(place.lat, place.lon, Math.min(radiusKm || OSM_MAX_KM, OSM_MAX_KM) * 1000, service).then(
       (items) => {
         if (cancelled) return;
         setOsm({ key: searchKey, items });
@@ -84,16 +143,22 @@ export function NearbyPage() {
   // Todo lo conocido, sin límite de distancia (los datos oficiales vienen en la app).
   const everything = useMemo(() => {
     if (!data || !place) return [];
-    const merged = mergeNearby(officialNearby(data, place.lat, place.lon, Infinity), osm?.key === searchKey ? osm.items : []);
+    const known = [...officialNearby(data, place.lat, place.lon, Infinity), ...(serviceData ? serviceNearby(serviceData, place.lat, place.lon) : [])];
+    const merged = mergeNearby(known, osm?.key === searchKey ? osm.items : []);
     return parks ? withParks(merged, parks, place.lat, place.lon).sort((a, b) => a.distance - b.distance) : merged;
-  }, [data, parks, place?.lat, place?.lon, osm, searchKey]);
+  }, [data, serviceData, parks, place?.lat, place?.lon, osm, searchKey]);
   const results = radiusKm === 0 ? nearestPerKind(everything, NEAREST_PER_KIND) : everything.filter((p) => p.distance <= radiusKm * 1000);
-  const shown = results.filter((r) => matches(filter, r.kind));
+  const shown = results.filter((r) => matches(r.kind));
   // Nada en el rango: igual se muestra lo más cercano de cada tipo, aunque esté lejos.
-  const fallback = radiusKm !== 0 && shown.length === 0 ? nearestPerKind(everything.filter((r) => matches(filter, r.kind)), 1) : [];
+  const fallback = radiusKm !== 0 && shown.length === 0 ? nearestPerKind(everything.filter((r) => matches(r.kind)), 1) : [];
+  const visible = (fallback.length ? fallback : shown).slice(0, MAX_SHOWN);
 
   const savedKeys = useMemo(() => new Set([...contacts.values()].map((c) => `${c.name}|${c.lat?.toFixed(4)}|${c.lon?.toFixed(4)}`)), [contacts]);
   const isSaved = (p: NearbyPlace) => savedKeys.has(`${p.name}|${p.lat.toFixed(4)}|${p.lon.toFixed(4)}`);
+
+  /** El tipo según la fuente: el de los datos oficiales y el de los servicios (bandera, red del cajero, clase de refugio). */
+  const showDetail = (p: NearbyPlace) => !!p.detail && (p.source === 'official' || SERVICE_KINDS.has(p.kind));
+  const fuelList = (p: NearbyPlace) => (p.fuels ?? []).map((f) => t(`emergency.fuels.${f}`)).join(', ');
 
   async function handleSave(p: NearbyPlace) {
     await save({
@@ -104,10 +169,11 @@ export function NearbyPage() {
       lat: p.lat,
       lon: p.lon,
       notes: [
-        p.detail && p.source === 'official' ? p.detail : '',
+        showDetail(p) ? p.detail : '',
         p.note ?? '',
         ...(p.extraPhones ?? []).map((e) => `${e.label}: ${e.phone}`),
         ...(p.radio ?? []).map((r) => `${t('radio.vhf')} ${r.freq} (${r.label})`),
+        p.fuels ? fuelList(p) : '',
       ]
         .filter(Boolean)
         .join('\n'),
@@ -134,11 +200,24 @@ export function NearbyPage() {
       </div>
       <div className="chips" role="group" aria-label={t('emergency.filter')}>
         {FILTERS.map((f) => (
-          <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+          <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => chooseFilter(f)}>
             {t(`emergency.filters.${f}`)}
           </button>
         ))}
       </div>
+      {SUBFILTERS[filter] && (
+        <div className="chips nearby-subfilters" role="group" aria-label={t(`emergency.filters.${filter}`)} data-testid="nearby-subfilters">
+          {SUBFILTERS[filter]!.map((s) => (
+            <button key={s} type="button" className="chip" aria-pressed={selection === s} onClick={() => setSub(s)}>
+              {t(`emergency.subfilters.${s}`)}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Ver los resultados en el mapa: la distancia en línea recta no dice si se llega (un río, una montaña, la ruta). */}
+      <button className="btn" type="button" onClick={() => setOnMap((v) => !v)} disabled={!place} aria-pressed={onMap} data-testid="nearby-map-toggle">
+        {onMap ? <List size={18} aria-hidden /> : <MapIcon size={18} aria-hidden />} {onMap ? t('emergency.viewList') : t('emergency.viewOnMap')}
+      </button>
 
       <p className="hint" role="status" data-testid="nearby-status" style={{ margin: 0 }}>
         {osmState === 'loading'
@@ -170,17 +249,24 @@ export function NearbyPage() {
             {t('emergency.nothingWithin', { km: radiusKm })}
           </p>
         )}
+        {onMap ? (
+          <Suspense fallback={null}>
+            {/* Se vuelve a armar si cambian los resultados, para encuadrarlos a todos. */}
+            <NearbyMap key={`${searchKey},${selection},${visible.length}`} places={visible} here={place} />
+          </Suspense>
+        ) : (
         <ul className="list contact-list" data-testid="nearby-list">
-          {(fallback.length ? fallback : shown).slice(0, MAX_SHOWN).map((p) => (
+          {visible.map((p) => (
             <li key={p.key} className="contact-row">
               <KindIcon kind={p.kind} />
               <span className="list-main">
                 <span className="list-title">{p.name || t(`emergency.kind.${p.kind}`)}</span>
                 <span className="list-sub">
-                  {formatDistance(p.distance, i18n.language)} · {p.detail && p.source === 'official' ? p.detail : t(`emergency.kind.${p.kind}`)} ·{' '}
+                  {formatDistance(p.distance, i18n.language)} · {showDetail(p) ? p.detail : t(`emergency.kind.${p.kind}`)} ·{' '}
                   <span className={`source-badge source-${p.source}`}>{t(`emergency.source.${p.source}`)}</span>
                 </span>
                 {p.note && <span className="list-sub">{p.note}</span>}
+                {p.fuels && <span className="list-sub">{fuelList(p)}</span>}
                 <MapLink address={p.address} lat={p.lat} lon={p.lon} />
                 {p.extraPhones?.map((e) => (
                   <span key={e.phone} className="list-sub park-phone">
@@ -204,6 +290,7 @@ export function NearbyPage() {
             </li>
           ))}
         </ul>
+        )}
         </>
       )}
       {/* Argentina: el texto con todas las fuentes; Chile y Uruguay: las de su paquete. */}
@@ -211,6 +298,7 @@ export function NearbyPage() {
         {country === 'AR' || !data?.sources
           ? t('emergency.nearbySources')
           : t('emergency.nearbySourcesPackage', { sources: [data.sources.police, data.sources.fire, data.sources.health].filter(Boolean).join(' · ') })}
+        {serviceData?.source && ` ${t('emergency.serviceSource', { what: t(`emergency.subfilters.${selection}`, { defaultValue: t(`emergency.filters.${selection}`) }), source: serviceData.source })}`}
       </p>
     </div>
   );

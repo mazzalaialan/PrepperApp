@@ -158,7 +158,7 @@ export interface Route extends BaseEntity {
 }
 
 /** `radio`: frecuencia guardada por el usuario (p. ej. la que le dieron en un refugio). */
-export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'other' | 'radio' | 'doctor' | 'vet' | 'insurance';
+export type ContactKind = 'police' | 'fire' | 'medical' | 'hospital' | 'civilDefense' | 'fuel' | 'tyres' | 'carRepair' | 'pharmacy' | 'aed' | 'water' | 'shelter' | 'atm' | 'other' | 'radio' | 'doctor' | 'vet' | 'insurance';
 
 /** Contacto de emergencia: comisaría, bomberos, hospital, médico, familiar… */
 export interface EmergencyContact extends BaseEntity {

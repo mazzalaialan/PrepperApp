@@ -362,3 +362,45 @@ test('un aviso se da por leído con «Entendido», no vuelve y Ajustes lo trae d
   await page.goto('/#/first-aid/radio');
   await expect(page.getByTestId('ham-license')).toBeVisible();
 });
+
+test('buscar cercanos: Salud y Vehículos con sus opciones, estaciones de servicio con bandera y combustibles', async ({ page }) => {
+  await mockOsm(page);
+  await setup(page);
+  await page.goto('/#/first-aid/contacts/nearby');
+  const list = page.getByTestId('nearby-list');
+  const subfilters = page.getByTestId('nearby-subfilters');
+  await expect(list.getByText('Comisaría 28')).toBeVisible();
+  // "Todo" son los servicios de emergencia: las estaciones no aparecen, y no hay opciones.
+  await expect(list.getByText('Nafta')).toHaveCount(0);
+  await expect(subfilters).toHaveCount(0);
+  // Salud: arranca en hospitales y centros de atención; tiene farmacias, DEA y veterinarias.
+  await page.getByRole('button', { name: 'Salud', exact: true }).click();
+  await expect(subfilters.getByRole('button')).toHaveText(['Hospitales y centros de atención', 'Farmacias', 'Desfibriladores (DEA)', 'Veterinarias']);
+  await expect(subfilters.getByRole('button', { name: 'Hospitales y centros de atención' })).toHaveAttribute('aria-pressed', 'true');
+  // Vehículos: arranca en estaciones de servicio; tiene gomerías y talleres.
+  await page.getByRole('button', { name: 'Vehículos', exact: true }).click();
+  await expect(subfilters.getByRole('button')).toHaveText(['Estaciones de servicio', 'Gomerías', 'Talleres mecánicos']);
+  await expect(subfilters.getByRole('button', { name: 'Estaciones de servicio' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(list.getByText('Comisaría 28')).toHaveCount(0);
+  // En Bariloche hay estaciones del listado oficial de la Secretaría de Energía.
+  const first = list.locator('li').first();
+  await expect(first).toContainText('Oficial');
+  await expect(first).toContainText('Nafta');
+  await first.getByRole('button', { name: /^Guardar .* en mis contactos$/ }).click();
+  await expect(first.getByLabel('Guardado en mis contactos')).toBeVisible();
+  // Refugios: en Bariloche hay de montaña (OpenStreetMap, guardado para usar sin conexión).
+  await page.getByRole('button', { name: 'Refugios', exact: true }).click();
+  await expect(subfilters).toHaveCount(0);
+  await page.getByLabel('Hasta').selectOption({ label: '30 km' });
+  await expect(list.locator('li').first()).toContainText(/Refugio|Vivac/);
+  await page.getByRole('button', { name: 'Vehículos', exact: true }).click();
+  await page.getByLabel('Hasta').selectOption({ label: '15 km' });
+
+  // Los resultados en el mapa (en lugar de la lista) y de vuelta a la lista.
+  await page.getByTestId('nearby-map-toggle').click();
+  await expect(page.getByTestId('nearby-map')).toBeVisible();
+  await expect(list).toHaveCount(0);
+  await expect(page.getByTestId('nearby-map-toggle')).toHaveText('Ver como lista');
+  await page.getByTestId('nearby-map-toggle').click();
+  await expect(list.locator('li').first()).toBeVisible();
+});

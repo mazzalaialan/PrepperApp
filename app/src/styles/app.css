@@ -2065,6 +2065,21 @@ a.module-card:hover {
   right: auto;
 }
 
+/* Buscar cercanos en el mapa: ficha del lugar tocado, abajo y sobre el mapa. */
+.nearby-map-card {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 36px;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
 .maps-locate {
   position: absolute;
   right: 10px;
@@ -2239,6 +2254,14 @@ a.module-card:hover {
 .contact-icon-medical,
 .contact-icon-hospital { color: var(--ok); }
 .contact-icon-civilDefense { color: var(--warn); }
+.contact-icon-fuel,
+.contact-icon-tyres,
+.contact-icon-carRepair,
+.contact-icon-atm { color: var(--accent); }
+.contact-icon-pharmacy { color: var(--ok); }
+.contact-icon-aed { color: var(--danger); }
+.contact-icon-water { color: var(--info); }
+.contact-icon-shelter { color: var(--warn); }
 
 .contact-actions,
 .phone-actions {

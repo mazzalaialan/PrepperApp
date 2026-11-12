@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSettings, type Country } from '@/core/settings/settings';
 import { loadEmergencyData, loadParksCL, loadParksFile, type EmergencyData } from './data';
+import { prefetchServices } from './services';
 import { DATA_CACHE as CACHE, loadDataFile } from './dataFile';
 export { CountryDataError } from './dataFile';
 import { loadOfficialRepeaters } from './officialRepeaters';
@@ -55,6 +56,8 @@ export function useCountryPrefetch(): void {
   useEffect(() => {
     const fetchIt = () => {
       if (country !== 'AR') void loadCountryData(country).catch(() => undefined);
+      // Servicios del país (estaciones, farmacias, agua, refugios…; también Argentina: van aparte para no agrandar la descarga inicial).
+      void prefetchServices(country).catch(() => undefined);
       // Repetidoras oficiales de Chile: también con Argentina (en la cordillera se está cerca).
       void loadOfficialRepeaters(country).catch(() => undefined);
       // Áreas protegidas de Chile (CONAF): también con Argentina, por la cordillera.
