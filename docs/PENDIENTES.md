@@ -125,3 +125,10 @@ Pendiente: que un abogado matriculado valide el texto de `CONTRIBUTING.md`, el c
 Hay duplicación de información: un Track (línea con altura, hora, distancia y desnivel; grabado, importado o hecho desde una ruta) y una Ruta (línea planificada o lista de waypoints, con tramos y rumbos). Al seguir o ver una ruta en el mapa se crea un track «espejo» (`routeId`, `modules/waypoints/plan.ts`) que hay que mantener sincronizado; al importar un KML hay que convertir el track en ruta para ver los rumbos. Por eso exportar, imprimir y seguir existen en los dos lados (se unificó solo el botón de exportar: «Exportar recorrido» / «Exportar ruta», con GPX o KML).
 
 Idea: una sola entidad «Recorrido» con una línea y un origen (grabado, importado, planificado); los tramos con rumbo se calculan al mostrarlos; las rutas de solo waypoints, como otro tipo. Costo: migración de datos delicada (Dexie, sincronización con el servidor, seguimiento, mapa, pruebas, datos existentes); varios días. Decisión: se deja como pendiente, sin fecha.
+
+## Hidroponía y acuaponía (idea charlada el 2026-11-12, sin empezar)
+- Prioridad: hidroponía sin electricidad (Kratky, raíz flotante) y sustrato; acuaponía en una segunda etapa sobre la misma base (registro de agua, peces, aireación de respaldo obligatoria).
+- **No usa la grilla de superficie de los canteros:** un sistema se define por sus **lugares para plantas ("macetines")**, que es el dato a cargar y el límite de plantas. Estructura: N torres o caños × niveles × macetines por nivel (o una cantidad total si es una bandeja). Cada siembra ocupa macetines, no cuadros de 30 cm; la distancia entre plantas no aplica.
+- Por nivel puede cambiar la luz (los de abajo reciben menos): dato opcional por nivel.
+- Registro de la solución (pH, EC, temperatura del agua, reposición, cambio completo), rangos por cultivo, calculadora de solución (A+B comercial y La Molina), avisos de medición y cambio, insumos en el inventario.
+- Fuentes a confirmar: FAO «La huerta hidropónica popular»; solución La Molina (UNALM); FAO Fisheries Tech. Paper 589 (acuaponía); normativa de especies exóticas (tilapia) por provincia.
