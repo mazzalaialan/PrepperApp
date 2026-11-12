@@ -803,8 +803,8 @@ export const KNOTS: Knot[] = [
     uses: ['cargo', 'camp', 'survival'],
     purpose: l('Para tensar mucho una cuerda: atar carga a un vehículo, armar un tendedero o tensar la cuerda de una lona. Funciona como un aparejo que multiplica la fuerza.', 'To tension a rope hard: tie down a load, rig a clothesline or tighten a tarp ridgeline. It works like a pulley that multiplies force.'),
     steps: [
-      { text: l('Atá una punta a un punto fijo (por ejemplo, con un as de guía).', 'Tie one end to a fixed point (for example with a bowline).') },
-      { text: l('En el medio de la cuerda hacé una gaza (un ocho o una gaza con nudo simple).', 'In the middle of the rope make a loop (a figure eight or a slipped overhand).') },
+      { text: l('Atá una punta a un punto fijo: en el dibujo pasa por la argolla y se asegura con un cote sobre la cuerda (también sirve un as de guía).', 'Tie one end to a fixed point: in the drawing it goes through the ring and is secured with a half hitch around the rope (a bowline also works).') },
+      { text: l('En el medio de la cuerda hacé una gaza fija (en el dibujo, una mariposa; también sirve un ocho o una gaza con nudo simple).', 'In the middle of the rope make a fixed loop (in the drawing, an alpine butterfly; a figure eight or a slipped overhand also works).') },
       { text: l('Pasá el chicote alrededor del segundo punto fijo y volvé a pasarlo por dentro de esa gaza.', 'Run the end around the second anchor and back through that loop.') },
       { text: l('Tirá del chicote para tensar (la fuerza se multiplica) y aseguralo con dos cotes debajo de la gaza.', 'Pull the end to tension (the force is multiplied) and secure it with two half hitches below the loop.') },
     ],
