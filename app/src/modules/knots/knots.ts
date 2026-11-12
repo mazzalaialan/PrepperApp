@@ -948,7 +948,7 @@ export const KNOTS: Knot[] = [
     uses: ['rappel', 'rescue'],
     purpose: l('Autobloqueante que traba en un solo sentido; se puede hacer con cordino o con cinta plana cuando no hay cordino.', 'A friction hitch that grips in one direction; can be tied with cord or flat webbing when there is no cord.'),
     steps: [
-      { text: l('Enroscá el anillo alrededor de la cuerda tres o cuatro veces, de abajo hacia arriba.', 'Wrap the loop around the rope three or four times, working upward.') },
+      { text: l('Enroscá el anillo alrededor de la cuerda tres o cuatro veces, de abajo hacia arriba, y dejá arriba una gaza corta.', 'Wrap the loop around the rope three or four times, working upward, leaving a short loop at the top.') },
       { text: l('Pasá la punta de abajo por dentro de la gaza de arriba.', 'Pass the lower end through the top loop.') },
       { text: l('Tirá hacia abajo para cargarlo: traba hacia abajo y se corre hacia arriba.', 'Pull down to load it: it grips downward and slides upward.') },
     ],
