@@ -117,6 +117,29 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
     }
   }
 
+  // Con el PDF ya armado, el cuadro solo ofrece abrirlo, compartirlo, descargarlo o cerrar (para otra hoja se vuelve a abrir el cuadro).
+  if (result) {
+    return (
+      <Dialog title={t('topoPrint.title')} onClose={onClose}>
+        <div data-testid="topo-dialog" className="stack">
+          <div className="stack" data-testid="topo-result">
+            <p className="ok" role="status" data-testid="topo-done">{t('topoPrint.ready', { count: result.pages })}</p>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <button className="btn btn-primary" type="button" onClick={openPdf} data-testid="topo-open"><ExternalLink size={18} aria-hidden /> {t('topoPrint.open')}</button>
+              <button className="btn" type="button" onClick={() => void share()} data-testid="topo-share"><Share2 size={18} aria-hidden /> {t('topoPrint.share')}</button>
+              <button className="btn" type="button" onClick={download} data-testid="topo-download"><Download size={18} aria-hidden /> {t('topoPrint.download')}</button>
+            </div>
+            {notice && <p className="hint" style={{ margin: 0 }}>{notice}</p>}
+            {error && <p className="error" role="alert" data-testid="topo-error">{error}</p>}
+          </div>
+          <div className="row-end">
+            <button className="btn" type="button" onClick={onClose} data-testid="topo-close">{t('common.close')}</button>
+          </div>
+        </div>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog title={t('topoPrint.title')} onClose={onClose}>
       <div data-testid="topo-dialog" className="stack">
@@ -202,17 +225,6 @@ export function PrintTopoDialog({ input, onClose }: { input: TopoSheetInput; onC
         )}
         <p className="hint" style={{ margin: 0 }}>{t('topoPrint.notOfficial')}</p>
         {error && <p className="error" role="alert" data-testid="topo-error">{error}</p>}
-        {result && (
-          <div className="stack" data-testid="topo-result">
-            <p className="ok" role="status" data-testid="topo-done">{t('topoPrint.ready', { count: result.pages })}</p>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-              <button className="btn btn-primary" type="button" onClick={openPdf} data-testid="topo-open"><ExternalLink size={18} aria-hidden /> {t('topoPrint.open')}</button>
-              <button className="btn" type="button" onClick={() => void share()} data-testid="topo-share"><Share2 size={18} aria-hidden /> {t('topoPrint.share')}</button>
-              <button className="btn" type="button" onClick={download} data-testid="topo-download"><Download size={18} aria-hidden /> {t('topoPrint.download')}</button>
-            </div>
-            {notice && <p className="hint" style={{ margin: 0 }}>{notice}</p>}
-          </div>
-        )}
         {busy && <p className="hint" role="status" data-testid="topo-busy">{t('topoPrint.generating')}</p>}
         <div className="row-end">
           <button className="btn" type="button" onClick={onClose}>{t('common.close')}</button>

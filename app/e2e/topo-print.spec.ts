@@ -68,6 +68,17 @@ test('mapa topográfico: opciones antes de generar (las escalas que no entran, g
   expect(portraitPdf.length).toBeGreaterThan(20_000);
   await expect(page.getByTestId('topo-done')).toBeVisible();
 
+  // Con el PDF listo, el cuadro solo ofrece abrir, compartir, descargar o cerrar: nada de opciones ni del botón de generar.
+  await expect(page.getByTestId('topo-open')).toBeVisible();
+  await expect(page.getByTestId('topo-share')).toBeVisible();
+  await expect(page.getByTestId('topo-close')).toBeVisible();
+  await expect(page.getByTestId('topo-generate')).toHaveCount(0);
+  await expect(page.getByTestId('topo-scales')).toHaveCount(0);
+  await expect(page.getByTestId('topo-paper-a4')).toHaveCount(0);
+  await page.getByTestId('topo-close').click();
+  await expect(page.getByTestId('topo-dialog')).toHaveCount(0);
+  await page.getByTestId('track-print-map').click();
+
   // Sin conexión también se arma (el código ya está cargado y el mapa de la zona viene de lo descargado): ahora en horizontal.
   await context.setOffline(true);
   // Sin conexión y sin la zona descargada: avisa que la hoja saldría con huecos (se puede generar igual).
