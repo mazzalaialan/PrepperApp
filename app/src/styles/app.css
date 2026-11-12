@@ -266,6 +266,15 @@ a {
 .topbar .topbar-title {
   font-size: 1.1rem;
   flex: 1;
+  min-width: 0;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+@media (max-width: 420px) {
+  .topbar .topbar-title {
+    font-size: 0.95rem;
+  }
 }
 
 .icon-btn {

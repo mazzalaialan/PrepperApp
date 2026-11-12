@@ -1,4 +1,4 @@
-# VikArg Prepping Tools — Documento de Arquitectura
+# Herramientas de supervivencia por VikArg — Documento de Arquitectura
 
 > *"Hay que estar listo para que no te agarre un imprevisto".*
 

@@ -45,6 +45,22 @@ interface TextOpts {
   halo?: string;
 }
 
+/** Nombre de la app que se imprime en la hoja (la hoja sale siempre en español). */
+const APP_NAME = 'Herramientas de supervivencia por VikArg';
+
+/** Lado (mm) del logo en el encabezado de la hoja. */
+const LOGO_MM = 12;
+
+/** El logo de la app (viaja en la app, sirve sin conexión); si no se puede cargar, la hoja sale sin él. */
+function loadLogo(): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `${import.meta.env.BASE_URL}brand/logo-256.webp`;
+  });
+}
+
 function text(ctx: Ctx, s: string, x: number, y: number, o: TextOpts) {
   ctx.font = `${o.bold ? '700 ' : ''}${mm(o.size)}px ${FONT}`;
   ctx.textAlign = o.align ?? 'left';
@@ -71,7 +87,7 @@ function vtext(ctx: Ctx, s: string, x: number, y: number, o: TextOpts) {
 const rectPx = (r: Rect): Rect => ({ x: mm(r.x), y: mm(r.y), w: mm(r.w), h: mm(r.h) });
 
 /** Arma la hoja completa sobre el mapa ya dibujado. */
-export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput): HTMLCanvasElement {
+export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput, logo?: CanvasImageSource | null): HTMLCanvasElement {
   const { layout, scale } = plan;
   if (!scale) throw new Error('NO_FIT');
   const canvas = document.createElement('canvas');
@@ -256,9 +272,15 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput)
 
   // Título
   const h = rectPx(layout.header);
-  text(ctx, input.title, h.x, h.y + mm(7), { size: 6.5, bold: true });
-  text(ctx, `${input.subtitle ? input.subtitle + ' · ' : ''}${input.date}`, h.x, h.y + mm(12.2), { size: 3.4, color: '#444' });
-  text(ctx, `1:${scale.toLocaleString('es-AR')}`, h.x + h.w, h.y + mm(7), { size: 6.5, bold: true, align: 'right' });
+  const tx = h.x + (logo ? mm(LOGO_MM + 3) : 0);
+  if (logo) ctx.drawImage(logo, h.x, h.y + mm(0.5), mm(LOGO_MM), mm(LOGO_MM));
+  const scaleText = `1:${scale.toLocaleString('es-AR')}`;
+  text(ctx, scaleText, h.x + h.w, h.y + mm(7), { size: 6.5, bold: true, align: 'right' });
+  const titleRoom = h.x + h.w - tx - ctx.measureText(scaleText).width - mm(5);
+  ctx.font = `700 ${mm(6.5)}px ${FONT}`;
+  text(ctx, fit(ctx, input.title, titleRoom), tx, h.y + mm(7), { size: 6.5, bold: true });
+  text(ctx, `${input.subtitle ? input.subtitle + ' · ' : ''}${input.date}`, tx, h.y + mm(12.2), { size: 3.4, color: '#444' });
+  text(ctx, APP_NAME, h.x + h.w, h.y + mm(12.2), { size: 3, color: '#444', align: 'right' });
 
   const more = detailPages(plan, input).length > 0 ? 'siguen en la hoja 2' : undefined;
   drawTable(ctx, rectPx(layout.table), input, { moreOn: more ? 'todos, en la hoja 2' : undefined });
@@ -475,7 +497,7 @@ function drawFooter(ctx: Ctx, r: Rect, plan: SheetPlan, input: TopoSheetInput, s
   run(` norte verdadero (convergencia ${dm(conv)} ${conv >= 0 ? 'E' : 'O'})  ·  `, '#111');
   run('MN', '#b3261e', true);
   run(` norte magnético: declinación ${dm(input.declinationDeg)} ${input.declinationDeg >= 0 ? 'E' : 'O'} en ${input.declinationYear}`, '#111');
-  text(ctx, 'Mapa de ruta de VikArg: no es una carta oficial. Verificá con las cartas oficiales.', left, r.y + mm(24.8), { size: 2.5, bold: true });
+  text(ctx, `Mapa de ruta de ${APP_NAME}: no es una carta oficial. Verificá con las cartas oficiales.`, left, r.y + mm(24.8), { size: 2.5, bold: true });
   text(ctx, '© OpenStreetMap contributors (ODbL), OpenMapTiles, OpenFreeMap · Elevación: Terrain Tiles (AWS)', left, r.y + mm(27.8), { size: 2.2, color: '#444' });
 }
 
@@ -533,7 +555,7 @@ export function detailPages(plan: SheetPlan, input: TopoSheetInput): DetailPage[
 }
 
 /** Dibuja una hoja de detalle: cabecera, tabla de tramos (ancha) y lista de coordenadas. */
-export function drawDetailPage(plan: SheetPlan, input: TopoSheetInput, page: DetailPage, pageNo: number, pageTotal: number): HTMLCanvasElement {
+export function drawDetailPage(plan: SheetPlan, input: TopoSheetInput, page: DetailPage, pageNo: number, pageTotal: number, logo?: CanvasImageSource | null): HTMLCanvasElement {
   const { layout } = plan;
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(mm(layout.paper.w));
@@ -543,8 +565,11 @@ export function drawDetailPage(plan: SheetPlan, input: TopoSheetInput, page: Det
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   const x = layout.margin;
   const w = layout.paper.w - 2 * layout.margin;
-  text(ctx, input.title, mm(x), mm(layout.margin + 6), { size: 6.5, bold: true });
-  text(ctx, `Hoja ${pageNo} de ${pageTotal} · tramos y coordenadas de la ruta · escala del mapa 1:${(plan.scale ?? 0).toLocaleString('es-AR')}`, mm(x), mm(layout.margin + 11.5), { size: 3.2, color: '#333' });
+  const tx = mm(x) + (logo ? mm(LOGO_MM + 3) : 0);
+  if (logo) ctx.drawImage(logo, mm(x), mm(layout.margin + 0.5), mm(LOGO_MM), mm(LOGO_MM));
+  ctx.font = `700 ${mm(6.5)}px ${FONT}`;
+  text(ctx, fit(ctx, input.title, mm(x + w) - tx), tx, mm(layout.margin + 6), { size: 6.5, bold: true });
+  text(ctx, `Hoja ${pageNo} de ${pageTotal} · tramos y coordenadas de la ruta · escala del mapa 1:${(plan.scale ?? 0).toLocaleString('es-AR')}`, tx, mm(layout.margin + 11.5), { size: 3.2, color: '#333' });
   ctx.strokeStyle = '#111';
   ctx.lineWidth = mm(0.4);
   ctx.beginPath();
@@ -562,7 +587,7 @@ export function drawDetailPage(plan: SheetPlan, input: TopoSheetInput, page: Det
     const h = 5.4 + Math.ceil(page.coords.count / dcols) * 4.4 + 2;
     drawCoords(ctx, rectPx({ x, y, w, h }), input, plan.zone, layout.orientation, { from: page.coords.from, count: page.coords.count, cols: dcols });
   }
-  text(ctx, 'Mapa de ruta de VikArg: no es una carta oficial. Verificá con las cartas oficiales.', mm(x), mm(layout.paper.h - layout.margin + 3), { size: 2.5, color: '#444' });
+  text(ctx, `Mapa de ruta de ${APP_NAME}: no es una carta oficial. Verificá con las cartas oficiales.`, mm(x), mm(layout.paper.h - layout.margin + 3), { size: 2.5, color: '#444' });
   return canvas;
 }
 
@@ -586,9 +611,10 @@ export async function makeTopoPdf(input: TopoSheetInput): Promise<{ pdf: Uint8Ar
       const blob = await new Promise<Blob>((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('JPEG'))), 'image/jpeg', 0.92));
       return { jpeg: new Uint8Array(await blob.arrayBuffer()), widthPx: c.width, heightPx: c.height };
     };
-    const pages = [await toJpeg(drawSheet(base, plan, input))];
+    const logo = await loadLogo();
+    const pages = [await toJpeg(drawSheet(base, plan, input, logo))];
     const details = detailPages(plan, input);
-    for (let i = 0; i < details.length; i++) pages.push(await toJpeg(drawDetailPage(plan, input, details[i]!, i + 2, details.length + 1)));
+    for (let i = 0; i < details.length; i++) pages.push(await toJpeg(drawDetailPage(plan, input, details[i]!, i + 2, details.length + 1, logo)));
     return { pdf: jpegPagePdf({ pages, pageWmm: plan.layout.paper.w, pageHmm: plan.layout.paper.h, title: input.title }), scale: plan.scale, pages: pages.length };
   } finally {
     base.dispose();

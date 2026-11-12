@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "type": "module",
-  "description": "Servidor opcional y autoalojable de VikArg Prepping Tools: notificaciones push y transferencia de backups.",
+  "description": "Servidor opcional y autoalojable de Herramientas de supervivencia por VikArg: notificaciones push y transferencia de backups.",
   "engines": {
     "node": ">=24"
   },

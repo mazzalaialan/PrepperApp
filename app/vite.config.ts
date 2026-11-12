@@ -32,8 +32,8 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'brand/*.png'],
       manifest: {
-        name: 'VikArg Prepping Tools',
-        short_name: 'Prepping Tools',
+        name: 'Herramientas de supervivencia por VikArg',
+        short_name: 'SurvTools',
         description: 'Hay que estar listo para que no te agarre un imprevisto.',
         lang: 'es',
         theme_color: '#121a24',
