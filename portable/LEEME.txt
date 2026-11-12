@@ -55,4 +55,4 @@ contenido de la carpeta. La próxima vez que abras la app te va a ofrecer la ver
 nueva. Tus datos se mantienen.
 
 
-Licencia GPL-3.0-or-later. Código fuente: https://github.com/mazzalaialan/PrepperApp
+Licencia GPL-3.0-or-later. Código fuente: https://github.com/mazzalaialan/SurvTools

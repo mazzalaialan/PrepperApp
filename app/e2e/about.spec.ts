@@ -29,7 +29,7 @@ test('acerca de: versión, reportar un problema o sugerencia y cafecito', async 
   await expect(github).toHaveAttribute('aria-disabled', 'false');
   const href = (await github.getAttribute('href'))!;
   const url = new URL(href);
-  expect(url.origin + url.pathname).toBe('https://github.com/mazzalaialan/PrepperApp/issues/new');
+  expect(url.origin + url.pathname).toBe('https://github.com/mazzalaialan/SurvTools/issues/new');
   expect(url.searchParams.get('title')).toBe('Problema: El mapa no carga sin conexión');
   expect(url.searchParams.get('labels')).toBe('bug');
   expect(url.searchParams.get('body')).toContain('VikArg ');

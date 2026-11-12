@@ -127,7 +127,7 @@ jobs:
           if ! gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
               --title "Herramientas de Supervivencia por VikArg $VERSION" \
-              --notes "App: https://mazzalaialan.github.io/PrepperApp — Para usarla sin internet en una PC, descargá el paquete portable y seguí LEEME.txt."
+              --notes "App: https://mazzalaialan.github.io/SurvTools — Para usarla sin internet en una PC, descargá el paquete portable y seguí LEEME.txt."
           fi
           gh release upload "v$VERSION" vikarg-survival-portable-*.zip --repo "$GITHUB_REPOSITORY" --clobber
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' |

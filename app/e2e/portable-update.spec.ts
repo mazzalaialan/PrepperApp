@@ -10,12 +10,12 @@ test('paquete portable: avisa versión nueva, se puede cerrar y buscar a mano', 
   await context.route('**/portable.json', (route) => route.fulfill({ json: { portable: true } }));
   let latest = '9.9.9';
   let calls = 0;
-  await context.route('https://api.github.com/repos/mazzalaialan/PrepperApp/releases/latest', (route) => {
+  await context.route('https://api.github.com/repos/mazzalaialan/SurvTools/releases/latest', (route) => {
     calls++;
     return route.fulfill({
       json: {
         tag_name: `v${latest}`,
-        html_url: 'https://github.com/mazzalaialan/PrepperApp/releases/latest',
+        html_url: 'https://github.com/mazzalaialan/SurvTools/releases/latest',
         assets: [{ name: `vikarg-survival-portable-${latest}.zip`, browser_download_url: `https://example.org/vikarg-survival-portable-${latest}.zip` }],
       },
     });

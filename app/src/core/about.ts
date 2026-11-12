@@ -3,7 +3,7 @@
  * mail propio o el servidor, se reporta en GitHub o se copia el mensaje.
  */
 
-export const REPO_URL = 'https://github.com/mazzalaialan/PrepperApp';
+export const REPO_URL = 'https://github.com/mazzalaialan/SurvTools';
 export const CAFECITO_URL = 'https://cafecito.app/vikarg';
 /** Link de pago de Mercado Pago (Argentina), para quien prefiere aportar por ahí. */
 export const MERCADOPAGO_URL = 'https://link.mercadopago.com.ar/vikarg';

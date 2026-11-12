@@ -6,7 +6,7 @@ import { create } from 'zustand';
  * con conexión consulta la última Release de GitHub (una vez por día).
  */
 
-const REPO = 'mazzalaialan/PrepperApp';
+const REPO = 'mazzalaialan/SurvTools';
 export const RELEASES_URL = `https://github.com/${REPO}/releases/latest`;
 const API_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
 const CHECK_EVERY_MS = 24 * 60 * 60_000;

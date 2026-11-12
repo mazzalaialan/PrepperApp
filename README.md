@@ -9,7 +9,7 @@ Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y func
 ## Usarla sin internet
 
 - **Celular o PC con internet una vez:** abrila y usá "Instalar app" en Chrome o Edge. Queda guardada y funciona sin conexión.
-- **PC sin internet:** descargá el **paquete portable** de la [última versión](https://github.com/mazzalaialan/PrepperApp/releases/latest), descomprimilo (sirve en un pendrive) y abrí `Iniciar VikArg.bat` (Windows) o `iniciar.sh` (Linux/Mac). Instrucciones en el `LEEME.txt` del paquete.
+- **PC sin internet:** descargá el **paquete portable** de la [última versión](https://github.com/mazzalaialan/SurvTools/releases/latest), descomprimilo (sirve en un pendrive) y abrí `Iniciar VikArg.bat` (Windows) o `iniciar.sh` (Linux/Mac). Instrucciones en el `LEEME.txt` del paquete.
 
 ## Principios
 

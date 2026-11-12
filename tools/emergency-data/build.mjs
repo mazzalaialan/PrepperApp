@@ -35,7 +35,7 @@ const GBA = 'https://catalogo.datos.gba.gob.ar/dataset';
 const FIRE_CSV = `${GBA}/f3cf1025-b253-4627-b546-9c83457618f9/resource/9d601310-6bf9-4d82-b809-65fed2f3f63a/download/cuarteles-bomberos-082026.csv`;
 const POLICE_CSV = `${GBA}/bf79faeb-cb8a-4444-bbbe-5dc39479aa4a/resource/8d31bb16-3489-4ede-9e63-072f7f17383d/download/comisarias-pba-2026.csv`;
 const HEALTH_CSV = `${GBA}/91743f68-bc82-4475-baca-7d5d6908eee8/resource/c2d51824-c61d-4374-a014-cca5b76b082a/download/establecimientos-salud-publicos.csv`;
-const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/SurvTools)';
 const IGN_WFS = 'https://wms.ign.gob.ar/geoserver/ows?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&count=20000&typeNames=';
 const IGN_HEALTH = 'ign:salud_020801';
 const IGN_SECURITY = 'ign:estructuras_operativas_y_defensivas_FA517';

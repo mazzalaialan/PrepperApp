@@ -3,8 +3,8 @@ import { formatTransferCode, parseTransferLink, transferLink } from './transfer'
 
 describe('transferencia', () => {
   it('arma y lee el link del QR', () => {
-    const link = transferLink('https://vikarg.example.com/', 'ABCD2345', 'https://app.example.com/PrepperApp/');
-    expect(link).toBe('https://app.example.com/PrepperApp/#/transfer?server=https%3A%2F%2Fvikarg.example.com&code=ABCD2345');
+    const link = transferLink('https://vikarg.example.com/', 'ABCD2345', 'https://app.example.com/SurvTools/');
+    expect(link).toBe('https://app.example.com/SurvTools/#/transfer?server=https%3A%2F%2Fvikarg.example.com&code=ABCD2345');
     expect(parseTransferLink(link)).toEqual({ server: 'https://vikarg.example.com', code: 'ABCD2345' });
   });
 

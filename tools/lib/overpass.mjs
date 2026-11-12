@@ -11,7 +11,7 @@
 import { request } from 'node:https';
 
 export const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
-const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/SurvTools)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** POST de un formulario; resuelve con { status, body }. */

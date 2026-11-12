@@ -36,8 +36,8 @@ Con eso, el `docker-compose.yml` incluido obtiene y renueva el certificado HTTPS
 ## Instalación
 
 ```bash
-git clone https://github.com/mazzalaialan/PrepperApp.git
-cd PrepperApp/deploy
+git clone https://github.com/mazzalaialan/SurvTools.git
+cd SurvTools/deploy
 cp .env.example .env
 nano .env            # completar DOMAIN (el mail es opcional)
 docker compose up -d --build
@@ -117,7 +117,7 @@ Si `osmdata.openstreetmap.de` (polígonos de agua) no responde, `WATER_URL=` per
 
 **Actualizar el mapa cada 3 meses.** `server/src/maps/update-maps.sh` compara la fecha del extracto de Geofabrik con la del `vector.pmtiles` y, si hay datos de más de 30 días más nuevos (`MIN_DAYS=`), vuelve a armar el mapa. El archivo se reemplaza recién cuando está completo. La elevación no se regenera, porque Terrain Tiles es un conjunto fijo. Con cron:
 ```
-0 4 1 2,5,8,11 * sh /ruta/PrepperApp/server/src/maps/update-maps.sh /ruta/PrepperApp/deploy/maps
+0 4 1 2,5,8,11 * sh /ruta/SurvTools/server/src/maps/update-maps.sh /ruta/SurvTools/deploy/maps
 ```
 El registro queda en `deploy/maps/update.log`.
 
@@ -132,7 +132,7 @@ API: `GET /api/maps` informa los archivos (zooms, zona, fecha) y los límites, y
 
 **Actualizar a una versión nueva:**
 ```bash
-cd PrepperApp && git pull
+cd SurvTools && git pull
 cd deploy && docker compose up -d --build
 ```
 
@@ -220,7 +220,7 @@ Si una fuente externa (SMN, Dirección Meteorológica de Chile, INUMET, los SENA
 No salen solos con cada versión: se mandan a mano, solo cuando una versión trae algo importante. Llegan a los dispositivos con notificaciones que no apagaron **Ajustes → Notificaciones → "Avisarme de actualizaciones importantes de la app"** (viene prendido). Al tocarlo se abre la app, que baja la versión nueva. Cada versión se anuncia una sola vez: el servidor anota cuáles ya mandó (tabla `announcements`).
 
 ```bash
-cd PrepperApp/deploy
+cd SurvTools/deploy
 # Prueba: cuántos dispositivos lo recibirían, sin mandar nada.
 docker compose exec vikarg node src/announce.ts --version 0.23.0 \
   --title-es "VikArg 0.23" --body-es "Ahora te avisamos de las actualizaciones importantes." \
@@ -235,7 +235,7 @@ Título hasta 80 caracteres y texto hasta 300, en español y en inglés (cada ce
 Cada dispositivo puede borrar su cuenta y todos sus datos del servidor desde **Ajustes → Eliminar mi cuenta** (pide la contraseña de la app). Si alguien ya no tiene la app y lo pide por mail con el código de dispositivo:
 
 ```bash
-cd PrepperApp/deploy
+cd SurvTools/deploy
 docker compose exec vikarg node src/deleteDevice.ts <código de dispositivo>
 ```
 

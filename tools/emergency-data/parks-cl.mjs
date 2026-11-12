@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 
 // Con VIKARG_DATA_OUT escribe en la carpeta que sirve el servidor (actualización mensual).
 const OUT = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/parks-CL.json` : fileURLToPath(new URL('../../app/public/data/parks-CL.json', import.meta.url));
-const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/SurvTools)';
 const SITEMAP = 'https://www.conaf.cl/parque_nacionales-sitemap.xml';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

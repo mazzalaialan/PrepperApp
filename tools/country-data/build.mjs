@@ -57,7 +57,7 @@ function unzipSync(buf) {
   return out;
 }
 const strFromU8 = (u8) => Buffer.from(u8).toString('utf8');
-const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/SurvTools)';
 
 /** Radio Uruguay (Radiodifusión Nacional del Uruguay): Montevideo y repetidoras FM del interior. */
 const RADIO_UY = [

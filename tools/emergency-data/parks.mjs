@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 // Con VIKARG_DATA_OUT escribe en la carpeta que sirve el servidor (actualización mensual).
 const OUT = process.env.VIKARG_DATA_OUT ? `${process.env.VIKARG_DATA_OUT.replace(/\/$/, '')}/parks-AR.json` : fileURLToPath(new URL('../../app/src/modules/emergency/parks-data.json', import.meta.url));
-const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/PrepperApp)';
+const UA = 'VikArg-Prepping-Tools-build/1.0 (https://github.com/mazzalaialan/SurvTools)';
 const IGN = 'https://wms.ign.gob.ar/geoserver/ows?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&count=20000&typeNames=ign:area_protegida';
 const APN = 'https://www.argentina.gob.ar/parquesnacionales/';
 
