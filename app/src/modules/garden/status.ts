@@ -72,10 +72,11 @@ export function placeGroups(
   beds: Map<string, GardenBed>,
   plantings: Iterable<Planting>,
   waypointPlace: (id: string) => GardenPlace | null,
-): { groups: PlaceGroup[]; unplaced: GardenBed[] } {
+): { groups: PlaceGroup[]; unplaced: GardenBed[]; unplacedGreenhouse: GardenBed[] } {
   const groups = new Map<string, PlaceGroup>();
   const names = new Map<string, Set<string>>();
   const unplaced = new Set<GardenBed>();
+  const unplacedGreenhouse = new Set<GardenBed>();
   const list = [...plantings];
   const entries = [...outdoorPlantings(beds, list).map((o) => ({ o, inside: false })), ...greenhousePlantings(beds, list).map((o) => ({ o, inside: true }))];
   for (const { o, inside } of entries) {
@@ -85,7 +86,7 @@ export function placeGroups(
     const place = wpId ? waypointPlace(wpId) : null;
     if (!place) {
       // El aviso "sin lugar" es por la helada y la lluvia: un invernadero sin waypoint no se marca (solo pierde el aviso de riego).
-      if (bed && !inside) unplaced.add(bed);
+      if (bed) (inside ? unplacedGreenhouse : unplaced).add(bed);
       continue;
     }
     const key = weatherKey(place.lat, place.lon);
@@ -96,7 +97,7 @@ export function placeGroups(
     names.set(key, (names.get(key) ?? new Set()).add(place.label ?? ''));
   }
   for (const g of groups.values()) g.place.label = [...(names.get(g.key) ?? [])].filter(Boolean).sort().join(', ');
-  return { groups: [...groups.values()], unplaced: [...unplaced] };
+  return { groups: [...groups.values()], unplaced: [...unplaced], unplacedGreenhouse: [...unplacedGreenhouse] };
 }
 
 /** Clima de cada lugar: lo guardado y, si está viejo y hay conexión, uno nuevo. */
@@ -147,6 +148,8 @@ export interface GardenStatus {
   places: PlaceStatus[];
   /** Canteros al aire libre con plantas pero sin waypoint: sin avisos de helada ni riego. */
   unplaced: GardenBed[];
+  /** Invernaderos con plantas pero sin waypoint: sin aviso de riego (la helada no les corresponde). */
+  unplacedGreenhouse: GardenBed[];
 }
 
 /** Tareas que corresponden y, por lugar, helada y riego (lo que se muestra en Inicio y en la huerta). */
@@ -156,8 +159,8 @@ export function useGardenStatus(): GardenStatus {
     useShallow((s) => ({ gardenFrostAlerts: s.settings.gardenFrostAlerts, gardenWaterAlerts: s.settings.gardenWaterAlerts, gardenWateredAt: s.settings.gardenWateredAt })),
   );
   const waypoints = useWaypoints((s) => s.waypoints);
-  const { groups, unplaced } = useMemo(() => {
-    if (!loaded) return { groups: [], unplaced: [] };
+  const { groups, unplaced, unplacedGreenhouse } = useMemo(() => {
+    if (!loaded) return { groups: [], unplaced: [], unplacedGreenhouse: [] };
     const wpPlace = (id: string) => {
       const w = waypoints.get(id);
       return w ? { lat: w.lat, lon: w.lon, label: w.name } : null;
@@ -180,8 +183,8 @@ export function useGardenStatus(): GardenStatus {
           gardenWaterAlerts && days.length ? waterBalance(g.greenhouse, days, today, watered ? todayIso(new Date(watered)) : null, { greenhouse: true }) : null,
       };
     });
-    return { tasks, places, unplaced };
-  }, [loaded, plantings, groups, unplaced, weather, today, gardenFrostAlerts, gardenWaterAlerts, gardenWateredAt]);
+    return { tasks, places, unplaced, unplacedGreenhouse };
+  }, [loaded, plantings, groups, unplaced, unplacedGreenhouse, weather, today, gardenFrostAlerts, gardenWaterAlerts, gardenWateredAt]);
 }
 
 /** Cuántas cosas de la huerta piden atención (para el resumen de Inicio). */

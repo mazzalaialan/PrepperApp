@@ -2563,6 +2563,7 @@
     "noPlace": "Sin ubicación",
     "noPlaceWarn": "Sin ubicación: no hay aviso de helada ni de riego para este cantero.",
     "unplaced": "Sin ubicación, sin avisos de helada ni de riego: {{beds}}. Elegí su waypoint en cada cantero.",
+    "unplacedGreenhouse": "{{beds}}: sin waypoint no hay aviso de riego del invernadero. Ponele el waypoint (editá el cantero).",
     "nursery": "Almácigos",
     "addNursery": "Almácigo",
     "noNursery": "Sin almácigos. Los que hagas aparecen acá hasta que los trasplantes.",

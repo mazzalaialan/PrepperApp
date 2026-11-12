@@ -99,6 +99,11 @@ export function GardenWeatherNotices({ status, compact = false }: { status: Gard
           )}
         </div>
       ))}
+      {!compact && status.unplacedGreenhouse.length > 0 && settings.gardenWaterAlerts && (
+        <p className="warning-box" style={{ margin: 0 }} data-testid="garden-unplaced-greenhouse">
+          <MapPinOff size={18} aria-hidden /> {t('garden.unplacedGreenhouse', { beds: status.unplacedGreenhouse.map((b) => b.name).join(', ') })}
+        </p>
+      )}
       {!compact && status.unplaced.length > 0 && (settings.gardenFrostAlerts || settings.gardenWaterAlerts) && (
         <p className="warning-box" style={{ margin: 0 }} data-testid="garden-unplaced">
           <MapPinOff size={18} aria-hidden /> {t('garden.unplaced', { beds: status.unplaced.map((b) => b.name).join(', ') })}

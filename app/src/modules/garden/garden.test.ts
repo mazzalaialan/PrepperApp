@@ -352,3 +352,16 @@ describe('mejoras de la huerta (2026-11-12)', () => {
     expect(frostDates(['2023-12-20'], [1]).allYear).toBe(true);
   });
 });
+
+describe('invernadero sin waypoint', () => {
+  it('queda en su propia lista (sin aviso de riego) y no en la de canteros sin lugar', async () => {
+    const { placeGroups } = await import('./status');
+    const beds = new Map<string, GardenBed>([
+      ['g', bed({ id: 'g', greenhouse: true, waypointId: null })],
+      ['b1', bed({ id: 'b1', waypointId: null })],
+    ]);
+    const r = placeGroups(beds, [planting({ id: 'p1', bedId: 'g' }), planting({ id: 'p2', bedId: 'b1' })], () => null);
+    expect(r.unplacedGreenhouse.map((b) => b.id)).toEqual(['g']);
+    expect(r.unplaced.map((b) => b.id)).toEqual(['b1']);
+  });
+});

@@ -2563,6 +2563,7 @@
     "noPlace": "No location",
     "noPlaceWarn": "No location: no frost or watering alerts for this bed.",
     "unplaced": "No location, no frost or watering alerts: {{beds}}. Choose a waypoint for each bed.",
+    "unplacedGreenhouse": "{{beds}}: without a waypoint there is no greenhouse watering alert. Set its waypoint (edit the bed).",
     "nursery": "Seedlings",
     "addNursery": "Seedlings",
     "noNursery": "No seedlings. The ones you start show here until you transplant them.",
