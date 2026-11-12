@@ -1,0 +1,7 @@
+{
+  "fuente": "Double overhand knot.svg, Wikimedia Commons (pasos 1 a 3); tabla de nudos: el doble nudo simple es el tórico (2,5), 5₁ (KnotInfo)",
+  "pasos": {},
+  "v2": 3,
+  "det": 5,
+  "notas": "2026-11-12. La referencia arma el nudo de otra forma (la punta se enrosca dos veces alrededor del firme adentro del seno: 5 cruces en cadena en su paso 2; el paso 3 es un bollo chico que no se lee), así que la secuencia de cruces no se compara: se compara el tipo de nudo. Nuestro dibujo (vueltas en barril y la punta que vuelve por adentro) da v2 3 y det 5: es el 5₁, igual que la referencia. Ojo: el doble nudo simple NO es el 5₂ (det 7); se probó y se confirmó con los dos invariantes."
+}

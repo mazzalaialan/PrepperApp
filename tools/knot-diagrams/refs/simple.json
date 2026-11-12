@@ -1,0 +1,7 @@
+{
+  "fuente": "Tabla de nudos: el nudo simple es el trébol 3₁ (Rolfsen; KnotInfo). Forma confirmada con las fotos del manual de la ficha.",
+  "pasos": { "3": ["ABABAB"] },
+  "v2": 1,
+  "det": 3,
+  "notas": "2026-11-12. Con 3 cruces, la única secuencia que da un nudo es la alternada (cualquier otra se deshace): la secuencia está forzada por el nudo, no leída de un dibujo. El archivo «Overhand knot-demi-nœud.svg» que se había bajado es en realidad un medio nudo entre dos cuerdas (otro nudo) y no se usa. tipo.mjs lo confirma con v2 y det."
+}

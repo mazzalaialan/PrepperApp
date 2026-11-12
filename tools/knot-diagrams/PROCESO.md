@@ -6,6 +6,7 @@ Objetivo: que cada diagrama represente el nudo real y se entienda, gastando poco
 - `node check.mjs <id>… | all`: por figura, la secuencia arriba/abajo de cada cuerda (A/B), cruces ambiguos y, si hay `refs/<id>.json`, COINCIDE / NO COINCIDE con la referencia real (acepta el espejo).
 - `node montage.mjs <id> <paso>`: UNA imagen con la figura completa y solo los cruces ambiguos ampliados (o los 4 de menor ángulo). Una lectura de imagen por figura, no una por cruce.
 - `node trace.mjs <id> <paso>`: el recorrido detallado (solo si hace falta depurar).
+- `node tipo.mjs <id>… | all` (2026-11-12): qué nudo es, de verdad, el dibujo (figuras de una sola cuerda abierta): invariantes v2 (Polyak–Viro) y determinante, comparados con `"v2"`/`"det"` de `refs/<id>.json` (valores de la tabla de nudos, p. ej. KnotInfo). Sirve cuando la referencia arma el nudo con otra forma (la secuencia no se puede comparar) o cuando la imagen no se lee bien. Valores distintos prueban que el dibujo NO es ese nudo; iguales no lo prueban del todo. No distingue nada en los nudos atados en seno (gazas en el medio de la cuerda: de punta a punta son "sin nudo"). El det supone las dos puntas del lado de afuera del dibujo.
 - `node build.mjs`: regenera los SVG. `refs/<id>.json`: la secuencia leída de la referencia real, con fuente y licencia.
 
 ## Flujo por nudo (un nudo o un grupo chico por vez)

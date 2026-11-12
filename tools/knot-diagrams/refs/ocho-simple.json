@@ -1,0 +1,7 @@
+{
+  "fuente": "Figure-eight knot -nœud en huit.svg, Wikimedia Commons; tabla de nudos: el ocho es el 4₁ (Rolfsen; KnotInfo)",
+  "pasos": { "3": ["ABABABAB"] },
+  "v2": -1,
+  "det": 5,
+  "notas": "2026-11-12. La imagen es de un solo color y los cruces se distinguen poco; muestra la forma (dos lazos y las puntas cruzadas). Con 4 cruces, la única secuencia que da el ocho es la alternada (forzada por el nudo). tipo.mjs confirma que el dibujo es el 4₁ (v2 −1, det 5)."
+}

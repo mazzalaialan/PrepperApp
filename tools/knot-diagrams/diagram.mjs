@@ -83,7 +83,9 @@ function crossings(strands, W) {
           if (a === b && Math.abs(sa - sb) < W * 2) continue;
           const x = A[i].x + h.t * (A[i + 1].x - A[i].x), y = A[i].y + h.t * (A[i + 1].y - A[i].y);
           const za = (h.t < 0.5 ? A[i] : A[i + 1]).z, zb = (h.u < 0.5 ? B[j] : B[j + 1]).z;
-          const pa = { k: a, s: sa, z: za }, pb = { k: b, s: sb, z: zb };
+          // dx, dy: dirección de cada cuerda en el cruce (para el signo del cruce, ver tipo.mjs).
+          const pa = { k: a, s: sa, z: za, dx: A[i + 1].x - A[i].x, dy: A[i + 1].y - A[i].y };
+          const pb = { k: b, s: sb, z: zb, dx: B[j + 1].x - B[j].x, dy: B[j + 1].y - B[j].y };
           const [earlier, later] = a === b ? (sa < sb ? [pa, pb] : [pb, pa]) : [pa, pb];
           // Ángulo entre las dos cuerdas en el cruce (0° = casi paralelas: no se entiende cuál va arriba).
           const d1 = Math.atan2(A[i + 1].y - A[i].y, A[i + 1].x - A[i].x), d2 = Math.atan2(B[j + 1].y - B[j].y, B[j + 1].x - B[j].x);
@@ -96,7 +98,7 @@ function crossings(strands, W) {
 }
 
 /** Cuerdas, cruces y quién va arriba en cada uno (lo usan el dibujo y el análisis). */
-function resolve(spec) {
+export function resolve(spec) {
   const { ropes = [], under = [], rope: W = 14 } = spec;
   const strands = ropes.map((r, k) => ({ color: '#e8a33d', light: '#f7d39a', ...r, k, pts: catmull(r.path) }));
   const xs = crossings(strands, W);
