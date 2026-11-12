@@ -56,9 +56,9 @@ export default {
   })(),
   corredizo: [
     { ropes: [{ ...A, path: [...nooseLoop, [150, 112], [90, 112]] }], arrows: [[[70, 95], [40, 80]]] },
-    { ropes: [{ ...A, path: [...nooseLoop, ...nooseKnot(0.55).path, [80, 185]] }], under: [[147, 150], ...nooseKnot(0.55).under] },
-    { ropes: [{ ...A, path: [...nooseLoop.slice(0, -1), [230, 120], ...nooseKnot(0.42).path.slice(1), [100, 175]] }], under: [[147, 150], ...nooseKnot(0.42).under], arrows: [[[150, 205], [215, 205]]] },
-    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [250, 150], [280, 185], [320, 185], [330, 140], [305, 105], [270, 112], [230, 120], ...nooseKnot(0.42).path.slice(1), [100, 175]] }], under: [[147, 150], ...nooseKnot(0.42).under], arrows: [[[60, 125], [10, 125]]] },
+    { ropes: [{ ...A, path: [...nooseLoop, ...nooseKnot(0.55).path, [80, 185]] }], under: [[147, 150], [120, 150], ...nooseKnot(0.55).under] },
+    { ropes: [{ ...A, path: [...nooseLoop.slice(0, -1), [230, 120], ...nooseKnot(0.42).path.slice(1), [100, 175]] }], under: [[147, 150], [120, 150], ...nooseKnot(0.42).under], arrows: [[[150, 205], [215, 205]]] },
+    { ropes: [{ ...A, path: [[-20, 150], [100, 150], [250, 150], [280, 185], [320, 185], [330, 140], [305, 105], [270, 112], [230, 120], ...nooseKnot(0.42).path.slice(1), [100, 175]] }], under: [[147, 150], [120, 150], ...nooseKnot(0.42).under], arrows: [[[60, 125], [10, 125]]] },
   ],
   'ocho-gaza': (() => {
     // Ocho sobre seno (ABOK 1085 sin la segunda gaza): el ocho de siempre (4 cruces alternados, "FigureOfEightLoop.jpg",
