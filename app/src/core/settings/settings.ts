@@ -17,6 +17,11 @@ export interface Settings {
   theme: Theme;
   units: UnitSystem;
   autoLockMinutes: number;
+  /**
+   * Ficha médica y contactos de emergencia visibles en la pantalla de bloqueo
+   * (una copia sin cifrar, ver core/security/emergencyCard.ts). Opcional: por defecto, no.
+   */
+  emergencyOnLock: boolean;
   serverUrl: string;
   /** Ya se le cargó el servidor por defecto (para no volver a ponerlo si lo vació). */
   serverDefaulted: boolean;
@@ -204,6 +209,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
   units: 'metric',
   autoLockMinutes: 5,
+  emergencyOnLock: false,
   serverUrl: DEFAULT_SERVER_URL,
   serverDefaulted: true,
   weatherUrl: 'https://api.open-meteo.com',

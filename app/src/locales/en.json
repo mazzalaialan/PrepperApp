@@ -1525,6 +1525,9 @@
     "cardinalLong": { "N": "North", "NE": "Northeast", "E": "East", "SE": "Southeast", "S": "South", "SW": "Southwest", "W": "West", "NW": "Northwest" }
   },
   "account": {
+    "confirmWord": "DELETE",
+    "typeWord": "Type {{word}} to confirm",
+    "wrongWord": "Type {{word}} to confirm.",
     "pending": "You turned notifications off while offline: deleting your server account is pending. It completes on its own once you're back online.",
     "retry": "Retry deletion now",
     "title": "Delete my account",
@@ -1881,6 +1884,9 @@
     "hide": "Hide from lists"
   },
   "setup": {
+    "noPassword": "Use without a password",
+    "noPasswordWarning": "Without a password, the app opens by itself and anyone with this device unlocked can see everything: documents (ID or passport photos), medical records, contacts and waypoints. You can add a password later in Settings › Security. Backups are still encrypted: when you make one you will choose a password for it.",
+    "noPasswordConfirm": "Got it, use without a password",
     "welcome": "Welcome",
     "intro": "Your data stays on this device only, and it is encrypted. Choose a password to protect it.",
     "language": "Language",
@@ -2255,6 +2261,8 @@
     }
   },
   "backup": {
+    "openPasswordTitle": "Backup password",
+    "openPasswordHint": "The app has no password, but the backup is encrypted: choose a password to open it. Write it down: without it the backup cannot be restored (there is no recovery key).",
     "exportTitle": "Export",
     "exportHint": "Creates an encrypted .vikarg file with your whole inventory and photos. Opening it requires your current password or the recovery key.",
     "export": "Export backup",
@@ -2347,6 +2355,14 @@
     "restoreHint": "Notices you hid with \"Got it\" (safety, radio, knots, etc.) show up again."
   },
   "settings": {
+    "noPasswordStatus": "The app has no password: anyone with this device unlocked can see your data.",
+    "addPassword": "Add a password",
+    "addPasswordHint": "Your data will be protected and you will get a new recovery key to write down.",
+    "emergencyOnLock": "Show emergency data without unlocking",
+    "emergencyOnLockHint": "The password screen will show everyone's medical record (blood type, allergies, conditions, medication, who to call, doctors and health insurance) for whoever is helping you. That data is stored unencrypted on this device.",
+    "removePassword": "Remove the password",
+    "removePasswordHint": "The app will open by itself, without locking, and the recovery key will stop working. Anyone with this device unlocked will be able to see your data.",
+    "removePasswordConfirm": "Remove the password? Anyone with this device unlocked will be able to see your data. You can add it again anytime.",
     "title": "Settings",
     "general": "General",
     "language": "Language",
@@ -2907,5 +2923,13 @@
     "searchGo": "Search",
     "hits_one": "{{count}} result in {{books}} downloaded books",
     "hits_other": "{{count}} results in {{books}} downloaded books"
+  },
+  "lockCard": {
+    "title": "Emergency data",
+    "hint": "For whoever is helping you: emergency numbers, blood type, allergies, medication and who to call.",
+    "show": "Show emergency data",
+    "hide": "Hide",
+    "empty": "No medical records yet.",
+    "updated": "Updated: {{date}}"
   }
 }

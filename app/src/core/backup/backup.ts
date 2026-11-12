@@ -1,9 +1,9 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
-import { normalizeRecoveryKey, unwrapDek, type Sealed, type WrappedKey } from '@/core/crypto/crypto';
+import { normalizeRecoveryKey, unwrapDek, wrapDek, WrongSecretError, type Sealed, type WrappedKey } from '@/core/crypto/crypto';
 import { ENTITY_TABLES, db, type EncryptedRow } from '@/core/db/db';
 import type { EntityTable } from '@/core/model/types';
-import { setDek } from '@/core/security/session';
-import { VAULT_HEADER_KEY, readHeader, type VaultHeader } from '@/core/security/vault';
+import { getDek, setDek } from '@/core/security/session';
+import { VAULT_HEADER_KEY, isOpenHeader, kdfIterations, openHeaderFor, readStoredHeader } from '@/core/security/vault';
 import type { Settings } from '@/core/settings/settings';
 import { today } from '@/modules/inventory/domain/dates';
 
@@ -12,6 +12,10 @@ import { today } from '@/modules/inventory/domain/dates';
  * base, ya cifradas con la DEK, junto con el encabezado que la envuelve: el
  * archivo se abre con la contraseña vigente al exportar o con la clave de
  * recuperación. Restaurar reemplaza todo.
+ *
+ * Bóveda sin contraseña: el backup igual sale cifrado, con una contraseña que
+ * se elige al hacerlo (no hay clave de recuperación). Al restaurarlo, el
+ * dispositivo queda otra vez sin contraseña (`vault.open`).
  */
 
 export const BACKUP_FORMAT = 'vikarg-backup';
@@ -59,7 +63,8 @@ export interface BackupManifest {
   appVersion: string;
   dbVersion: number;
   createdAt: string;
-  vault: { version: 1; createdAt: string; password: WrappedJson; recovery: WrappedJson };
+  /** `recovery` falta y `open` es true en los backups de una bóveda sin contraseña. */
+  vault: { version: 1; createdAt: string; password: WrappedJson; recovery?: WrappedJson; open?: true };
   /** Ajustes no sensibles (idioma, tema, unidades, URLs). */
   settings: Partial<Settings> | null;
   counts: Partial<Record<EntityTable, number>>;
@@ -76,15 +81,25 @@ type DataJson = Partial<Record<EntityTable, RowJson[]>>;
 // Blob en el ZIP: IV (12 bytes) seguido del texto cifrado.
 const IV_LENGTH = 12;
 
+/** Encabezado del backup: la DEK envuelta con la contraseña y, si hay, con la clave de recuperación. */
+export interface BackupHeader {
+  version: 1;
+  createdAt: string;
+  password: WrappedKey;
+  recovery?: WrappedKey;
+  /** Viene de una bóveda sin contraseña: al restaurar queda sin contraseña. */
+  open?: true;
+}
+
 export interface ParsedBackup {
   manifest: BackupManifest;
-  header: VaultHeader;
+  header: BackupHeader;
   data: DataJson;
   blobs: Map<string, Sealed>;
 }
 
 export class BackupError extends Error {
-  constructor(public readonly code: 'invalid-file' | 'newer-version' | 'no-vault') {
+  constructor(public readonly code: 'invalid-file' | 'newer-version' | 'no-vault' | 'needs-password') {
     super(code);
     this.name = 'BackupError';
   }
@@ -92,9 +107,20 @@ export class BackupError extends Error {
 
 // ---------- exportar ----------
 
-export async function exportBackup(appVersion: string): Promise<Uint8Array<ArrayBuffer>> {
-  const header = await readHeader();
-  if (!header) throw new BackupError('no-vault');
+/**
+ * `backupPassword`: solo con la bóveda sin contraseña (obligatoria en ese caso):
+ * con ella se cifra el acceso al backup.
+ */
+export async function exportBackup(appVersion: string, backupPassword?: string): Promise<Uint8Array<ArrayBuffer>> {
+  const stored = await readStoredHeader();
+  if (!stored) throw new BackupError('no-vault');
+  let vault: BackupManifest['vault'];
+  if (isOpenHeader(stored)) {
+    if (!backupPassword) throw new BackupError('needs-password');
+    vault = { version: 1, createdAt: stored.createdAt, password: wrappedToJson(await wrapDek(getDek(), backupPassword, kdfIterations())), open: true };
+  } else {
+    vault = { version: stored.version, createdAt: stored.createdAt, password: wrappedToJson(stored.password), recovery: wrappedToJson(stored.recovery) };
+  }
 
   const data: DataJson = {};
   const counts: BackupManifest['counts'] = {};
@@ -120,12 +146,7 @@ export async function exportBackup(appVersion: string): Promise<Uint8Array<Array
     appVersion,
     dbVersion: db.verno,
     createdAt: new Date().toISOString(),
-    vault: {
-      version: header.version,
-      createdAt: header.createdAt,
-      password: wrappedToJson(header.password),
-      recovery: wrappedToJson(header.recovery),
-    },
+    vault,
     settings: ((await db.settings.get('app'))?.value as Partial<Settings> | undefined) ?? null,
     counts,
   };
@@ -176,7 +197,8 @@ export function readBackup(bytes: Uint8Array): ParsedBackup {
       version: manifest.vault.version,
       createdAt: manifest.vault.createdAt,
       password: wrappedFromJson(manifest.vault.password),
-      recovery: wrappedFromJson(manifest.vault.recovery),
+      ...(manifest.vault.recovery && { recovery: wrappedFromJson(manifest.vault.recovery) }),
+      ...(manifest.vault.open && { open: true as const }),
     },
     data: JSON.parse(strFromU8(entries['data.json'])) as DataJson,
     blobs,
@@ -189,9 +211,10 @@ export type SecretKind = 'password' | 'recovery';
 
 /** Verifica el secreto contra el backup sin tocar la base. Lanza `WrongSecretError`. */
 export async function unlockBackup(backup: ParsedBackup, secret: string, kind: SecretKind): Promise<CryptoKey> {
-  return kind === 'password'
-    ? unwrapDek(backup.header.password, secret)
-    : unwrapDek(backup.header.recovery, normalizeRecoveryKey(secret));
+  if (kind === 'password') return unwrapDek(backup.header.password, secret);
+  // Backup de una bóveda sin contraseña: no tiene clave de recuperación.
+  if (!backup.header.recovery) throw new WrongSecretError();
+  return unwrapDek(backup.header.recovery, normalizeRecoveryKey(secret));
 }
 
 /**
@@ -202,10 +225,15 @@ export async function restoreBackup(backup: ParsedBackup, secret: string, kind: 
   const dek = await unlockBackup(backup, secret, kind);
   setDek(null);
 
+  // Sin contraseña (como estaba al hacer el backup) o con la contraseña y la clave de recuperación del backup.
+  // Se arma antes de la transacción: adentro de una transacción de IndexedDB no se puede esperar a WebCrypto.
+  const { open, recovery, ...rest } = backup.header;
+  const header = open || !recovery ? await openHeaderFor(dek, rest.createdAt) : { ...rest, recovery };
+
   const tables = [db.meta, db.blobs, db.alertIndex, ...ENTITY_TABLES.map((t) => db.entityTable(t))];
   await db.transaction('rw', [...tables, db.settings], async () => {
     for (const table of tables) await table.clear();
-    await db.meta.put({ key: VAULT_HEADER_KEY, value: backup.header });
+    await db.meta.put({ key: VAULT_HEADER_KEY, value: header });
     for (const table of ENTITY_TABLES) {
       const rows: EncryptedRow[] = (backup.data[table] ?? []).map((r) => ({
         id: r.id,

@@ -6,7 +6,7 @@ import { blobStore, repos } from '@/core/db/repository';
 import { newEntity } from '@/core/model/entity';
 import type { Waypoint } from '@/core/model/types';
 import { isUnlocked } from '@/core/security/session';
-import { initializeVault, isVaultInitialized, lockVault, setTestIterations } from '@/core/security/vault';
+import { initializeOpenVault, initializeVault, isOpenVault, isVaultInitialized, lockVault, setTestIterations } from '@/core/security/vault';
 import { BackupError, exportBackup, readBackup, restoreBackup } from './backup';
 
 setTestIterations(1_000);
@@ -93,5 +93,26 @@ describe('backup', () => {
     const manifest = JSON.parse(strFromU8(entries['manifest.json']!));
     entries['manifest.json'] = strToU8(JSON.stringify({ ...manifest, formatVersion: 99 }));
     expect(() => readBackup(zipSync(entries))).toThrow('newer-version');
+  });
+});
+
+describe('backup de una bóveda sin contraseña', () => {
+  beforeEach(freshDb);
+
+  it('pide una contraseña para el backup, sin clave de recuperación, y al restaurar queda sin contraseña', async () => {
+    await initializeOpenVault();
+    await repos.waypoints.put(waypoint('Refugio'));
+    await expect(exportBackup('1.0.0')).rejects.toMatchObject({ code: 'needs-password' });
+    const file = await exportBackup('1.0.0', 'clave-del-backup');
+    const parsed = readBackup(file);
+    expect(parsed.header.recovery).toBeUndefined();
+    expect(parsed.header.open).toBe(true);
+
+    await freshDb();
+    await expect(restoreBackup(parsed, 'otra-clave', 'password')).rejects.toBeInstanceOf(WrongSecretError);
+    await expect(restoreBackup(parsed, 'AAAA-AAAA-AAAA-AAAA-AAAA-AAAA', 'recovery')).rejects.toBeInstanceOf(WrongSecretError);
+    await restoreBackup(parsed, 'clave-del-backup', 'password');
+    expect(await isOpenVault()).toBe(true);
+    expect((await repos.waypoints.loadAll()).map((w) => w.name)).toEqual(['Refugio']);
   });
 });

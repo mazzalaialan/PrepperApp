@@ -4402,3 +4402,25 @@ a.module-card:hover {
   font-size: 0.85rem;
   margin-left: auto;
 }
+
+/* Datos de emergencia en la pantalla de bloqueo (UnlockScreen). */
+.lock-emergency {
+  margin-bottom: 12px;
+}
+.lock-card-fields {
+  display: grid;
+  gap: 2px 0;
+  margin: 0;
+}
+.lock-card-fields dt {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+.lock-card-fields dd {
+  margin: 0;
+}
+.lock-card-fields ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}

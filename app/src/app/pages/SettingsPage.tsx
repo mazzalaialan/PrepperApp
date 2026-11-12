@@ -21,6 +21,7 @@ import { AUTO_LOCK_OPTIONS, COUNTRIES, LANGUAGES, THEMES, useSettings, type RedS
 import { roundForDusk } from '@/core/settings/theme';
 import { serverIsDown, serverMaps, type MapSourceMode, type ServerMaps } from '@/modules/maps/sources';
 import { Segmented } from '@/ui/Segmented';
+import { NewPasswordForm } from '@/ui/NewPasswordForm';
 import { useLibrary } from '@/modules/library/store';
 import { useMapZones } from '@/modules/maps/store';
 import { listImported, type ImportedMap } from '@/modules/maps/imported';
@@ -33,6 +34,8 @@ export function SettingsPage() {
   const settings = useSettings((s) => s.settings);
   const update = useSettings((s) => s.update);
   const lock = useVault((s) => s.lock);
+  const openVault = useVault((s) => s.open);
+  const addPassword = useVault((s) => s.addPassword);
 
   return (
     <div className="stack">
@@ -72,27 +75,46 @@ export function SettingsPage() {
         />
       </section>
 
-      <section className="card stack">
+      <section className="card stack" data-testid="security">
         <h2 className="section-title" style={{ marginTop: 0 }}>{t('settings.security')}</h2>
-        <div className="field">
-          <label htmlFor="autolock">{t('settings.autoLock')}</label>
-          <select
-            id="autolock"
-            className="select"
-            value={settings.autoLockMinutes}
-            onChange={(e) => void update({ autoLockMinutes: Number(e.target.value) })}
-          >
-            {AUTO_LOCK_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {t('settings.minutes', { count: m })}
-              </option>
-            ))}
-          </select>
-        </div>
-        <ChangePasswordForm />
-        <button className="btn" type="button" onClick={lock}>
-          <Lock size={18} /> {t('settings.lockNow')}
-        </button>
+        {openVault ? (
+          <>
+            {/* Sin contraseña: nada que bloquear; se puede poner una cuando se quiera (los datos no se re-cifran). */}
+            <p className="warning-box" style={{ margin: 0 }} data-testid="no-password-status">{t('settings.noPasswordStatus')}</p>
+            <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('settings.addPassword')}</h3>
+            <p className="hint" style={{ margin: 0 }}>{t('settings.addPasswordHint')}</p>
+            <NewPasswordForm submitLabel={t('settings.addPassword')} busyLabel={t('setup.creating')} onSubmit={addPassword} />
+          </>
+        ) : (
+          <>
+            <div className="field">
+              <label htmlFor="autolock">{t('settings.autoLock')}</label>
+              <select
+                id="autolock"
+                className="select"
+                value={settings.autoLockMinutes}
+                onChange={(e) => void update({ autoLockMinutes: Number(e.target.value) })}
+              >
+                {AUTO_LOCK_OPTIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {t('settings.minutes', { count: m })}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Ficha médica y contactos visibles en la pantalla de bloqueo, para quien te asista (como en los celulares). */}
+            <label className="check">
+              <input type="checkbox" checked={settings.emergencyOnLock} onChange={(e) => void update({ emergencyOnLock: e.target.checked })} data-testid="emergency-on-lock" />
+              {t('settings.emergencyOnLock')}
+            </label>
+            <p className="hint" style={{ margin: 0 }}>{t('settings.emergencyOnLockHint')}</p>
+            <ChangePasswordForm />
+            <button className="btn" type="button" onClick={lock}>
+              <Lock size={18} /> {t('settings.lockNow')}
+            </button>
+            <RemovePasswordForm />
+          </>
+        )}
       </section>
 
       {settings.dismissedNotices.length > 0 && (
@@ -244,6 +266,40 @@ function RedScheduleFields({ settings, onSave }: { settings: Settings; onSave: (
       )}
       {settings.redSchedule !== 'off' && <p className="hint" style={{ margin: 0 }}>{t('settings.redScheduleHint')}</p>}
     </>
+  );
+}
+
+/** Con contraseña → sin contraseña: pide la actual y avisa lo que se pierde. */
+function RemovePasswordForm() {
+  const { t } = useTranslation();
+  const removePassword = useVault((s) => s.removePassword);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!(await confirmAction(t('settings.removePasswordConfirm')))) return;
+    try {
+      await removePassword(password);
+    } catch (err) {
+      if (err instanceof WrongSecretError) return setError(t('unlock.wrong'));
+      throw err;
+    }
+  }
+
+  return (
+    <form className="stack" onSubmit={handleSubmit} data-testid="remove-password">
+      <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('settings.removePassword')}</h3>
+      <p className="hint" style={{ margin: 0 }}>{t('settings.removePasswordHint')}</p>
+      <div className="field">
+        <label htmlFor="remove-password">{t('settings.currentPassword')}</label>
+        <input id="remove-password" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </div>
+      {error && <p className="error" role="alert">{error}</p>}
+      <button className="btn" type="submit" disabled={!password}>
+        <LockOpen size={18} /> {t('settings.removePassword')}
+      </button>
+    </form>
   );
 }
 

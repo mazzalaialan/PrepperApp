@@ -7,7 +7,12 @@ import type { Waypoint } from '@/core/model/types';
 import { LockedError, isUnlocked } from './session';
 import {
   WeakPasswordError,
+  addPassword,
   changePassword,
+  initializeOpenVault,
+  isOpenVault,
+  removePassword,
+  unlockOpenVault,
   initializeVault,
   isVaultInitialized,
   lockVault,
@@ -106,5 +111,51 @@ describe('vault', () => {
     const bytes = new Uint8Array([1, 2, 3, 250]);
     await blobStore.put('foto-1', bytes);
     expect(await blobStore.get('foto-1')).toEqual(bytes);
+  });
+});
+
+describe('bóveda sin contraseña', () => {
+  beforeEach(() => {
+    lockVault();
+    setTestDb(`test-${crypto.randomUUID()}`);
+  });
+
+  it('se crea abierta, se vuelve a abrir sola y los datos se leen', async () => {
+    await initializeOpenVault();
+    expect(await isOpenVault()).toBe(true);
+    expect(isUnlocked()).toBe(true);
+    const wp = waypoint();
+    await repos.waypoints.put(wp);
+    // Al reiniciar la app (sin la clave en memoria) se abre sola.
+    lockVault();
+    expect(await unlockOpenVault()).toBe(true);
+    expect((await repos.waypoints.loadAll())[0]?.name).toBe('Refugio Sierra');
+  });
+
+  it('poner contraseña: después se abre con ella o con la clave de recuperación, sin re-cifrar', async () => {
+    await initializeOpenVault();
+    await repos.waypoints.put(waypoint());
+    const recovery = await addPassword('una-contraseña');
+    expect(await isOpenVault()).toBe(false);
+    expect(await unlockOpenVault()).toBe(false);
+    lockVault();
+    await expect(unlockWithPassword('otra-cosa')).rejects.toBeInstanceOf(WrongSecretError);
+    await unlockWithPassword('una-contraseña');
+    expect((await repos.waypoints.loadAll())).toHaveLength(1);
+    lockVault();
+    await unlockWithRecoveryKey(recovery);
+    expect(isUnlocked()).toBe(true);
+  });
+
+  it('quitar la contraseña pide la actual y deja la bóveda abierta', async () => {
+    await initializeVault('una-contraseña');
+    await repos.waypoints.put(waypoint());
+    await expect(removePassword('mal')).rejects.toBeInstanceOf(WrongSecretError);
+    expect(await isOpenVault()).toBe(false);
+    await removePassword('una-contraseña');
+    expect(await isOpenVault()).toBe(true);
+    lockVault();
+    expect(await unlockOpenVault()).toBe(true);
+    expect((await repos.waypoints.loadAll())).toHaveLength(1);
   });
 });

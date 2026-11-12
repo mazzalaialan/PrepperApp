@@ -1,7 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WrongSecretError } from '@/core/crypto/crypto';
+import { HeartPulse } from 'lucide-react';
+import { readEmergencyCard, type EmergencyCard } from '@/core/security/emergencyCard';
 import { useVault } from '@/core/security/useVault';
+import { useSettings } from '@/core/settings/settings';
+import { EmergencyCardView } from '@/modules/firstAid/EmergencyCardView';
 import { useRecorder } from '@/modules/tracks/recorder';
 import { BrandHeader } from '@/ui/Brand';
 
@@ -16,6 +20,13 @@ export function UnlockScreen() {
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Datos de emergencia sin desbloquear (si se activaron en Ajustes): para quien te asista.
+  const emergencyOnLock = useSettings((s) => s.settings.emergencyOnLock);
+  const [card, setCard] = useState<EmergencyCard | null>(null);
+  const [showCard, setShowCard] = useState(false);
+  useEffect(() => {
+    if (emergencyOnLock) void readEmergencyCard().then(setCard);
+  }, [emergencyOnLock]);
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -48,6 +59,28 @@ export function UnlockScreen() {
             {t('tracks.rec.whileLocked')}
           </p>
         )}
+        {emergencyOnLock && (
+          <section className="card stack lock-emergency" aria-labelledby="lock-emergency-title">
+            <h2 id="lock-emergency-title" className="section-title" style={{ margin: 0 }}>
+              <HeartPulse size={20} aria-hidden style={{ color: 'var(--danger)', verticalAlign: 'text-bottom' }} /> {t('lockCard.title')}
+            </h2>
+            {showCard ? (
+              <>
+                <EmergencyCardView card={card} />
+                <button className="btn" type="button" onClick={() => setShowCard(false)}>
+                  {t('lockCard.hide')}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="hint" style={{ margin: 0 }}>{t('lockCard.hint')}</p>
+                <button className="btn" type="button" onClick={() => setShowCard(true)} data-testid="lock-emergency-show">
+                  {t('lockCard.show')}
+                </button>
+              </>
+            )}
+          </section>
+        )}
         <form className="card stack" onSubmit={handleSubmit}>
           <h2>{t(isPassword ? 'unlock.title' : 'unlock.recoveryTitle')}</h2>
           <div className="field">
@@ -61,7 +94,7 @@ export function UnlockScreen() {
               spellCheck={false}
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
-              autoFocus
+              autoFocus={!showCard}
             />
           </div>
           {error && <p className="error" role="alert">{error}</p>}

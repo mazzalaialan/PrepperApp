@@ -268,6 +268,14 @@ Huella (WebAuthn PRF, opcional) ────────────────
 - Desbloqueo diario con huella (opcional); la contraseña se pide periódicamente y tras reinicios.
 - Autobloqueo por inactividad (configurable).
 
+### 7.1.1 Sin contraseña (opcional, 2026-11-12)
+
+Al configurar la app se puede elegir «Usar sin contraseña» (con una advertencia). La DEK se guarda **sin envolver** en `meta` (`OpenVaultHeader`: `{ open: true, key }`, `core/security/vault.ts`) y la app se abre sola al iniciar (`unlockOpenVault` en `useVault.refresh`). Los datos siguen cifrados con la DEK, con el mismo formato: poner contraseña después (`addPassword`, Ajustes › Seguridad; da una clave de recuperación nueva) o quitarla (`removePassword`, pide la actual) solo cambia cómo se guarda la DEK, no re-cifra nada. Sin contraseña no hay bloqueo (ni botón, ni autobloqueo: `useVault.lock` no hace nada). El **backup** igual sale cifrado: se elige una contraseña para él al exportarlo o enviarlo (sin clave de recuperación; `vault.open` en el manifiesto) y al restaurarlo el dispositivo queda otra vez sin contraseña. Borrar la cuenta del servidor se confirma escribiendo BORRAR.
+
+### 7.1.2 Datos de emergencia sin desbloquear (opcional, 2026-11-12)
+
+Ajustes › Seguridad › «Mostrar datos de emergencia sin desbloquear» (`settings.emergencyOnLock`, por defecto no): la pantalla de la contraseña muestra los números de emergencia del país y, de cada persona (no mascotas), grupo sanguíneo, alergias, enfermedades, medicación, a quién avisar, médicos y obra social, como la ficha médica de los celulares. Es una **copia reducida sin cifrar** (`meta.emergencyCard`, `core/security/emergencyCard.ts`; sin notas, fotos ni fecha de nacimiento, solo la edad) que la app mantiene al día mientras está desbloqueada (`useEmergencyCardSync` en el Shell) y borra al desactivar la opción.
+
 ### 7.2 Qué se cifra
 
 | Dato | Cifrado |
@@ -275,6 +283,8 @@ Huella (WebAuthn PRF, opcional) ────────────────
 | Artículos, lotes, ubicaciones, documentos, waypoints, fotos, grupo familiar, reglas | **Sí** |
 | Índice de alertas (§5.3) | No (decisión explícita) |
 | Ajustes no sensibles (idioma, tema) | No (se necesitan antes del desbloqueo) |
+| Datos de emergencia para la pantalla de bloqueo (§7.1.2), solo si se activan | No (decisión del usuario) |
+| Todo, si se eligió usar la app sin contraseña (§7.1.1) | Cifrado, pero con la clave guardada al lado: en la práctica, sin protección |
 | Biblioteca y mapas | No (contenido público y pesado) |
 
 ### 7.3 Consultas sobre datos cifrados

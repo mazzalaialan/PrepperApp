@@ -12,6 +12,9 @@ import { Segmented } from '@/ui/Segmented';
 export function SetupScreen() {
   const { t } = useTranslation();
   const create = useVault((s) => s.create);
+  const createOpen = useVault((s) => s.createOpen);
+  // "Usar sin contraseña": primero se muestra la advertencia y se confirma.
+  const [noPassword, setNoPassword] = useState(false);
   const language = useSettings((s) => s.settings.language);
   const update = useSettings((s) => s.update);
   // Dispositivo nuevo abierto desde el QR de transferencia: va directo a restaurar.
@@ -45,6 +48,23 @@ export function SetupScreen() {
             <>
               <p className="hint">{t('setup.intro')}</p>
               <NewPasswordForm submitLabel={t('setup.create')} busyLabel={t('setup.creating')} onSubmit={create} />
+              {noPassword ? (
+                <div className="stack" data-testid="setup-no-password">
+                  <p className="warning-box" style={{ margin: 0 }}>{t('setup.noPasswordWarning')}</p>
+                  <div className="row-end">
+                    <button className="btn" type="button" onClick={() => setNoPassword(false)}>
+                      {t('common.cancel')}
+                    </button>
+                    <button className="btn" type="button" onClick={() => void createOpen()}>
+                      {t('setup.noPasswordConfirm')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button className="btn-link" type="button" onClick={() => setNoPassword(true)}>
+                  {t('setup.noPassword')}
+                </button>
+              )}
             </>
           )}
           <button className="btn-link" type="button" onClick={() => setRestoring(!restoring)}>

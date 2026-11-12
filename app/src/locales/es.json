@@ -1525,6 +1525,9 @@
     "cardinalLong": { "N": "Norte", "NE": "Noreste", "E": "Este", "SE": "Sudeste", "S": "Sur", "SW": "Sudoeste", "W": "Oeste", "NW": "Noroeste" }
   },
   "account": {
+    "confirmWord": "BORRAR",
+    "typeWord": "Escribí {{word}} para confirmar",
+    "wrongWord": "Escribí {{word}} para confirmar.",
     "pending": "Apagaste las notificaciones sin conexión: el borrado de tu cuenta en el servidor quedó pendiente. Se completa solo cuando vuelva la conexión.",
     "retry": "Reintentar el borrado ahora",
     "title": "Eliminar mi cuenta",
@@ -1881,6 +1884,9 @@
     "hide": "Ocultar en los listados"
   },
   "setup": {
+    "noPassword": "Usar sin contraseña",
+    "noPasswordWarning": "Sin contraseña, la app entra sola y cualquiera que tenga este dispositivo desbloqueado puede ver todo: documentos (fotos del DNI o el pasaporte), ficha médica, contactos y waypoints. Podés poner una contraseña después, en Ajustes › Seguridad. Los backups igual salen cifrados: al hacer uno vas a elegir una contraseña para él.",
+    "noPasswordConfirm": "Entendido, usar sin contraseña",
     "welcome": "Te damos la bienvenida",
     "intro": "Tus datos se guardan solo en este dispositivo y van cifrados. Elegí una contraseña para protegerlos.",
     "language": "Idioma",
@@ -2255,6 +2261,8 @@
     }
   },
   "backup": {
+    "openPasswordTitle": "Contraseña del backup",
+    "openPasswordHint": "La app no tiene contraseña, pero el backup sale cifrado: elegí una contraseña para abrirlo. Anotala: sin ella no se puede restaurar (no hay clave de recuperación).",
     "exportTitle": "Exportar",
     "exportHint": "Genera un archivo .vikarg cifrado con todo tu inventario y tus fotos. Para abrirlo hace falta tu contraseña actual o la clave de recuperación.",
     "export": "Exportar backup",
@@ -2347,6 +2355,14 @@
     "restoreHint": "Los avisos que ocultaste con «Entendido» (seguridad, radio, nudos, etc.) vuelven a aparecer."
   },
   "settings": {
+    "noPasswordStatus": "La app no tiene contraseña: cualquiera que tenga este dispositivo desbloqueado puede ver tus datos.",
+    "addPassword": "Poner contraseña",
+    "addPasswordHint": "Tus datos quedan protegidos y vas a recibir una clave de recuperación nueva para anotar.",
+    "emergencyOnLock": "Mostrar datos de emergencia sin desbloquear",
+    "emergencyOnLockHint": "En la pantalla de la contraseña se podrá ver la ficha médica de las personas (grupo sanguíneo, alergias, enfermedades, medicación, a quién avisar, médicos y obra social) para quien te asista. Esos datos quedan guardados sin cifrar en este dispositivo.",
+    "removePassword": "Quitar la contraseña",
+    "removePasswordHint": "La app va a entrar sola, sin bloquearse, y la clave de recuperación deja de servir. Cualquiera que tenga este dispositivo desbloqueado va a poder ver tus datos.",
+    "removePasswordConfirm": "¿Quitar la contraseña? Cualquiera que tenga este dispositivo desbloqueado va a poder ver tus datos. Podés volver a ponerla cuando quieras.",
     "title": "Ajustes",
     "general": "General",
     "language": "Idioma",
@@ -2907,5 +2923,13 @@
     "searchGo": "Buscar",
     "hits_one": "{{count}} resultado en {{books}} libros bajados",
     "hits_other": "{{count}} resultados en {{books}} libros bajados"
+  },
+  "lockCard": {
+    "title": "Datos de emergencia",
+    "hint": "Para quien te asista: números de emergencia, grupo sanguíneo, alergias, medicación y a quién avisar.",
+    "show": "Ver datos de emergencia",
+    "hide": "Ocultar",
+    "empty": "No hay fichas médicas cargadas.",
+    "updated": "Actualizado: {{date}}"
   }
 }

@@ -186,16 +186,19 @@ export function RestoreForm({ replacesData, initialTransfer, onDone }: Props) {
               autoFocus
             />
           </div>
-          <button
-            className="btn-link"
-            type="button"
-            onClick={() => {
-              setKind(kind === 'password' ? 'recovery' : 'password');
-              setSecret('');
-            }}
-          >
-            {t(kind === 'password' ? 'unlock.useRecovery' : 'unlock.usePassword')}
-          </button>
+          {/* El backup de una bóveda sin contraseña no tiene clave de recuperación: solo la contraseña elegida al hacerlo. */}
+          {backup.header.recovery && (
+            <button
+              className="btn-link"
+              type="button"
+              onClick={() => {
+                setKind(kind === 'password' ? 'recovery' : 'password');
+                setSecret('');
+              }}
+            >
+              {t(kind === 'password' ? 'unlock.useRecovery' : 'unlock.usePassword')}
+            </button>
+          )}
           {replacesData && (
             <>
               <p className="warning-box">{t('backup.replaceWarning')}</p>

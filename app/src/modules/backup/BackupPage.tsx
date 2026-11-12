@@ -5,6 +5,8 @@ import { Download, Send, Users } from 'lucide-react';
 import { backupFileName, exportBackup, lastBackupAt, markBackupDone } from '@/core/backup/backup';
 import { TransferError, formatTransferCode, transferLink, uploadTransfer, type TransferTicket } from '@/core/backup/transfer';
 import { useSettings } from '@/core/settings/settings';
+import { useVault } from '@/core/security/useVault';
+import { MIN_PASSWORD_LENGTH } from '@/core/security/vault';
 import { deliverFile } from '@/ui/files';
 import { QrCode } from '@/ui/QrCode';
 import { daysBetween, today } from '@/modules/inventory/domain/dates';
@@ -17,6 +19,12 @@ export function BackupPage() {
   const [last, setLast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Sin contraseña en la app: el backup igual sale cifrado, con una contraseña que se elige acá.
+  const open = useVault((s) => s.open);
+  const [backupPassword, setBackupPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const passwordOk = !open || (backupPassword.length >= MIN_PASSWORD_LENGTH && backupPassword === confirmPassword);
+  const secret = open ? backupPassword : undefined;
 
   // Llegada por link o QR de transferencia (#/transfer?server=…&code=…).
   const server = params.get('server');
@@ -31,7 +39,7 @@ export function BackupPage() {
     setBusy(true);
     setMessage(null);
     try {
-      const how = await deliverFile(await exportBackup(__APP_VERSION__), backupFileName());
+      const how = await deliverFile(await exportBackup(__APP_VERSION__, secret), backupFileName());
       await markBackupDone();
       setLast(await lastBackupAt());
       setMessage(t(how === 'shared' ? 'backup.shared' : 'backup.downloaded'));
@@ -52,6 +60,25 @@ export function BackupPage() {
 
       {!initialTransfer && (
         <>
+          {open && (
+            <section className="card stack" data-testid="backup-password">
+              <h2 className="section-title" style={{ margin: 0 }}>{t('backup.openPasswordTitle')}</h2>
+              <p className="hint" style={{ margin: 0 }}>{t('backup.openPasswordHint')}</p>
+              <div className="field">
+                <label htmlFor="backup-password">{t('setup.password')}</label>
+                <input id="backup-password" className="input" type="password" autoComplete="new-password" value={backupPassword} onChange={(e) => setBackupPassword(e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="backup-password-confirm">{t('setup.confirm')}</label>
+                <input id="backup-password-confirm" className="input" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              </div>
+              {backupPassword && !passwordOk && (
+                <p className="hint" role="status" style={{ margin: 0 }}>
+                  {backupPassword.length < MIN_PASSWORD_LENGTH ? t('setup.tooShort', { min: MIN_PASSWORD_LENGTH }) : t('setup.mismatch')}
+                </p>
+              )}
+            </section>
+          )}
           <section className="card stack">
             <h2 className="section-title" style={{ margin: 0 }}>{t('backup.exportTitle')}</h2>
             <p className="hint">{t('backup.exportHint')}</p>
@@ -59,12 +86,12 @@ export function BackupPage() {
               {daysAgo === null ? t('backup.never') : daysAgo === 0 ? t('backup.lastToday') : t('backup.lastDaysAgo', { count: daysAgo })}
             </p>
             {message && <p className="success" role="status">{message}</p>}
-            <button className="btn btn-primary" type="button" onClick={handleExport} disabled={busy}>
+            <button className="btn btn-primary" type="button" onClick={handleExport} disabled={busy || !passwordOk}>
               <Download size={20} /> {busy ? t('backup.exporting') : t('backup.export')}
             </button>
           </section>
 
-          <SendSection onSent={() => void markBackupDone().then(lastBackupAt).then(setLast)} />
+          <SendSection secret={secret} ready={passwordOk} onSent={() => void markBackupDone().then(lastBackupAt).then(setLast)} />
 
           <section className="card stack">
             <h2 className="section-title" style={{ margin: 0 }}>{t('share.title')}</h2>
@@ -88,7 +115,7 @@ export function BackupPage() {
 }
 
 /** Enviar a otro dispositivo por el servidor propio: código + QR. */
-function SendSection({ onSent }: { onSent: () => void }) {
+function SendSection({ secret, ready, onSent }: { secret: string | undefined; ready: boolean; onSent: () => void }) {
   const { t, i18n } = useTranslation();
   const serverUrl = useSettings((s) => s.settings.serverUrl);
   const [ticket, setTicket] = useState<TransferTicket | null>(null);
@@ -99,7 +126,7 @@ function SendSection({ onSent }: { onSent: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      setTicket(await uploadTransfer(serverUrl, await exportBackup(__APP_VERSION__)));
+      setTicket(await uploadTransfer(serverUrl, await exportBackup(__APP_VERSION__, secret)));
       onSent();
     } catch (err) {
       if (!(err instanceof TransferError)) throw err;
@@ -130,7 +157,7 @@ function SendSection({ onSent }: { onSent: () => void }) {
         <>
           <p className="hint">{t('transfer.sendHint')}</p>
           {error && <p className="error" role="alert">{error}</p>}
-          <button className="btn" type="button" onClick={() => void send()} disabled={busy}>
+          <button className="btn" type="button" onClick={() => void send()} disabled={busy || !ready}>
             <Send size={18} /> {busy ? t('transfer.sending') : t('transfer.send')}
           </button>
         </>

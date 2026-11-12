@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BookOpen, CloudSun, Compass, Ellipsis, FileText, House, Lasso, Lock, Package, Settings, Siren, Sprout, Activity } from 'lucide-react';
 import { useVault } from '@/core/security/useVault';
+import { useEmergencyCardSync } from '@/modules/firstAid/emergencyCard';
 import { useCountryPrefetch } from '@/modules/emergency/country';
 import { BrandMark } from '@/ui/Brand';
 import { BackButton } from '@/ui/BackButton';
@@ -42,7 +43,11 @@ const MORE = [
 export function Shell() {
   const { t } = useTranslation();
   const lock = useVault((s) => s.lock);
+  // Sin contraseña no hay bloqueo: el botón no se muestra.
+  const openVault = useVault((s) => s.open);
   useCountryPrefetch();
+  // Datos de emergencia para la pantalla de bloqueo (si se activaron): se mantienen al día con las fichas.
+  useEmergencyCardSync();
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const inMore = MORE.some((m) => pathname.startsWith(m.to));
@@ -103,9 +108,11 @@ export function Shell() {
           <Link className="icon-btn" to="/settings" aria-label={t('nav.settings')} title={t('nav.settings')}>
             <Settings size={22} />
           </Link>
-          <button className="icon-btn topbar-lock" type="button" onClick={lock} aria-label={t('settings.lockNow')} title={t('settings.lockNow')}>
-            <Lock size={22} />
-          </button>
+          {!openVault && (
+            <button className="icon-btn topbar-lock" type="button" onClick={lock} aria-label={t('settings.lockNow')} title={t('settings.lockNow')}>
+              <Lock size={22} />
+            </button>
+          )}
         </header>
         <PortableUpdateNotice />
         <RainNotices />

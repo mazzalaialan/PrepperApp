@@ -5,6 +5,7 @@ import { CONTACT_EMAIL } from '@/core/about';
 import { deleteServerAccount, retryPendingDeletes, ServerError } from '@/core/notifications/notifications';
 import { readNotificationState, type PushRegistration } from '@/core/notifications/state';
 import { useSettings } from '@/core/settings/settings';
+import { useVault } from '@/core/security/useVault';
 import { verifyPassword } from '@/core/security/vault';
 import { Dialog } from '@/ui/Dialog';
 
@@ -21,6 +22,9 @@ export function AccountSection() {
   const [pending, setPending] = useState(0);
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
+  // Sin contraseña en la app: se confirma escribiendo una palabra (BORRAR).
+  const openVault = useVault((s) => s.open);
+  const confirmWord = t('account.confirmWord');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -43,7 +47,8 @@ export function AccountSection() {
     setBusy(true);
     setError(null);
     try {
-      if (!(await verifyPassword(password))) return setError(t('account.wrongPassword'));
+      if (openVault ? password.trim().toUpperCase() !== confirmWord.toUpperCase() : !(await verifyPassword(password)))
+        return setError(t(openVault ? 'account.wrongWord' : 'account.wrongPassword', { word: confirmWord }));
       await deleteServerAccount();
       setDone(true);
       close();
@@ -121,12 +126,12 @@ export function AccountSection() {
           <form className="stack" onSubmit={submit}>
             <p style={{ margin: 0 }}>{t('account.confirmText')}</p>
             <div className="field">
-              <label htmlFor="account-password">{t('account.password')}</label>
+              <label htmlFor="account-password">{openVault ? t('account.typeWord', { word: confirmWord }) : t('account.password')}</label>
               <input
                 id="account-password"
                 className="input"
-                type="password"
-                autoComplete="current-password"
+                type={openVault ? 'text' : 'password'}
+                autoComplete={openVault ? 'off' : 'current-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoFocus
