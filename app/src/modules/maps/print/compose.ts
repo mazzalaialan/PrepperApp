@@ -279,12 +279,14 @@ export function drawSheet(base: BaseMap, plan: SheetPlan, input: TopoSheetInput,
   const titleRoom = h.x + h.w - tx - ctx.measureText(scaleText).width - mm(5);
   ctx.font = `700 ${mm(6.5)}px ${FONT}`;
   text(ctx, fit(ctx, input.title, titleRoom), tx, h.y + mm(7), { size: 6.5, bold: true });
-  text(ctx, `${input.subtitle ? input.subtitle + ' · ' : ''}${input.date}`, tx, h.y + mm(12.2), { size: 3.4, color: '#444' });
+  text(ctx, `${input.subtitle ? input.subtitle + ' · ' : ''}${input.date}${layout.detailOnly ? ' · tramos y coordenadas desde la hoja 2' : ''}`, tx, h.y + mm(12.2), { size: 3.4, color: '#444' });
   text(ctx, APP_NAME, h.x + h.w, h.y + mm(12.2), { size: 3, color: '#444', align: 'right' });
 
-  const more = detailPages(plan, input).length > 0 ? 'siguen en la hoja 2' : undefined;
-  drawTable(ctx, rectPx(layout.table), input, { moreOn: more ? 'todos, en la hoja 2' : undefined });
-  if (layout.coords) drawCoords(ctx, rectPx(layout.coords), input, plan.zone, layout.orientation, { moreOn: more ? 'todos, en la hoja 2' : undefined });
+  // Si los tramos y las coordenadas no entran enteros, no se imprimen acá: van todos desde la hoja 2.
+  if (!layout.detailOnly) {
+    drawTable(ctx, rectPx(layout.table), input);
+    if (layout.coords) drawCoords(ctx, rectPx(layout.coords), input, plan.zone, layout.orientation);
+  }
   drawFooter(ctx, rectPx(layout.footer), plan, input, scale);
   return canvas;
 }
@@ -517,15 +519,11 @@ interface DetailPage {
 
 /**
  * Hojas de detalle (2, 3…) con TODOS los tramos y TODAS las coordenadas, cuando no entran enteros en la hoja del mapa.
- * Vacío si en la hoja 1 entra todo.
+ * Vacío si en la hoja 1 entra todo (si no entra, la hoja 1 queda solo con el mapa).
  */
 export function detailPages(plan: SheetPlan, input: TopoSheetInput): DetailPage[] {
   const { layout } = plan;
-  const narrow = layout.table.w < 120;
-  const shownLegs = Math.min(tableCapacity(rectPx(layout.table), narrow), input.legs.length);
-  const cols = layout.orientation === 'portrait' ? 2 : 1;
-  const shownPoints = layout.coords ? Math.min(MAX_COORD_POINTS, coordsCapacity(rectPx(layout.coords), cols), input.points.length) : 0;
-  if (shownLegs >= input.legs.length && shownPoints >= input.points.length) return [];
+  if (!layout.detailOnly) return [];
   const pages: DetailPage[] = [];
   const area = layout.paper.h - 2 * layout.margin - layout.header.h - 4;
   const dcols = layout.orientation === 'portrait' ? 2 : 3;

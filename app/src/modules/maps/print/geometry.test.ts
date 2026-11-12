@@ -63,8 +63,24 @@ describe('geometría de la hoja topográfica', () => {
     expect(l.footer.y).toBeGreaterThanOrEqual(l.table.y + l.table.h);
     expect(l.footer.y + l.footer.h).toBeLessThanOrEqual(297 - l.margin + 1e-9);
     expect(l.map.h).toBeGreaterThan(120);
-    // más filas, tabla más alta y mapa más bajo
-    expect(sheetLayout('portrait', 20).map.h).toBeLessThan(l.map.h);
+    // más filas, tabla más alta y mapa más bajo, mientras entren
+    expect(sheetLayout('portrait', 14).map.h).toBeLessThan(l.map.h);
+    expect(l.detailOnly).toBe(false);
+  });
+
+  it('si los tramos o las coordenadas no entran enteros, la hoja 1 es solo el mapa (sin tabla) y el detalle va desde la hoja 2', () => {
+    for (const o of ['portrait', 'landscape'] as const) {
+      const ok = sheetLayout(o, 4, 'a4', 4);
+      const many = sheetLayout(o, 40, 'a4', 4);
+      expect(ok.detailOnly).toBe(false);
+      expect(many.detailOnly).toBe(true);
+      expect(many.coords).toBeNull();
+      expect(many.table.h).toBe(0);
+      expect(many.map.w * many.map.h).toBeGreaterThan(ok.map.w * ok.map.h);
+      expect(many.footer.y).toBeGreaterThanOrEqual(many.map.y + many.map.h);
+    }
+    // demasiados puntos para la lista de coordenadas de la hoja 1
+    expect(sheetLayout('portrait', 4, 'a4', 13).detailOnly).toBe(true);
   });
 
   it('diseño horizontal: la tabla va a la derecha', () => {

@@ -109,13 +109,15 @@ describe('escalas disponibles', () => {
     expect(tall.find((x) => x.scale === 50_000)!.orientation).toBe('portrait');
   });
 
-  it('con muchas filas en la tabla, la hoja vertical tiene menos mapa: si solo entra apaisada, la usa; si se fija la orientación, no la cambia', () => {
+  it('con muchas filas en la tabla (no entran en la hoja 1), la hoja 1 es solo el mapa y el detalle va desde la hoja 2', () => {
     const legs = Array.from({ length: 30 }, (_, i) => ({ from: 1, to: 2, distanceM: 100 + i, bearingTrueDeg: 10, bearingMagDeg: 4 }));
     const r = route(5.9, 0.5, { legs });
-    expect(scaleChoices({ ...r, orientation: 'portrait' }).find((x) => x.scale === 50_000)!.fits).toBe(false);
-    expect(scaleChoices({ ...r, orientation: 'landscape' }).find((x) => x.scale === 50_000)!.fits).toBe(true);
-    expect(scaleChoices(r).find((x) => x.scale === 50_000)).toMatchObject({ fits: true, orientation: 'landscape' });
+    expect(planSheet({ ...r, orientation: 'portrait' }).layout.detailOnly).toBe(true);
+    expect(planSheet({ ...r, orientation: 'landscape' }).layout.detailOnly).toBe(true);
+    // sin la tabla, el mapa ocupa toda la hoja: a 1:50.000 entra también en vertical
+    expect(scaleChoices({ ...r, orientation: 'portrait' }).find((x) => x.scale === 50_000)!.fits).toBe(true);
     expect(scaleChoices({ ...r, orientation: 'portrait' }).every((x) => x.orientation === 'portrait')).toBe(true);
+    expect(detailPages(planSheet({ ...r, orientation: 'portrait' }), r).length).toBeGreaterThan(0);
   });
 
   it('planSheet: una escala pedida que no entra deja la hoja sin escala', () => {
