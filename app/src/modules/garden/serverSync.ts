@@ -58,7 +58,7 @@ export function gardenServerBody(
       const water = settings.gardenWaterAlerts
         ? {
             kc: Math.max(...g.outdoor.map((o) => cropKc(o.planting, o.crop, today))),
-            thresholdMm: Math.min(...g.outdoor.map((o) => readilyAvailableMm(o.crop, o.soil))),
+            thresholdMm: Math.min(...g.outdoor.map((o) => readilyAvailableMm(o.crop, o.soil, o.pot))),
             wateredOn: watered ? todayIso(new Date(watered)) : null,
           }
         : null;

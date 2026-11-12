@@ -14,7 +14,14 @@ export interface GardenDay {
   et0: number;
   rain: number;
   min: number;
+  /** Nubosidad media (%) y viento máximo (km/h): noche despejada y calma = escarcha con mínimas más altas. */
+  cloud?: number | null;
+  wind?: number | null;
 }
+
+/** Igual que en la app (modules/garden/logic.ts): despejado (< 30 % de nubes) y calmo (< 10 km/h) baja 2 °C el umbral. */
+const clearCalm = (d: GardenDay) => d.cloud != null && d.wind != null && d.cloud < 30 && d.wind < 10;
+export const feltMin = (d: GardenDay) => d.min - (clearCalm(d) ? 2 : 0);
 
 /** Clima diario de un punto: 10 días pasados y 3 de pronóstico, en la hora del lugar. */
 export type GardenWeatherSource = (lat: number, lon: number) => Promise<GardenDay[] | null>;
@@ -25,7 +32,7 @@ export function openMeteoGarden(baseUrl: string, fetchImpl: typeof fetch = fetch
     const params = new URLSearchParams({
       latitude: lat.toFixed(2),
       longitude: lon.toFixed(2),
-      daily: 'et0_fao_evapotranspiration,precipitation_sum,temperature_2m_min',
+      daily: 'et0_fao_evapotranspiration,precipitation_sum,temperature_2m_min,cloud_cover_mean,wind_speed_10m_max',
       timezone: 'auto',
       past_days: '10',
       forecast_days: '3',
@@ -41,7 +48,8 @@ export function openMeteoGarden(baseUrl: string, fetchImpl: typeof fetch = fetch
         const et0 = num(d.et0_fao_evapotranspiration?.[i]);
         const rain = num(d.precipitation_sum?.[i]);
         const min = num(d.temperature_2m_min?.[i]);
-        if (typeof date === 'string' && et0 !== null && rain !== null && min !== null) out.push({ date, et0, rain, min });
+        if (typeof date === 'string' && et0 !== null && rain !== null && min !== null)
+          out.push({ date, et0, rain, min, cloud: num(d.cloud_cover_mean?.[i]), wind: num(d.wind_speed_10m_max?.[i]) });
       });
       return out.length ? out : null;
     } catch {
@@ -159,7 +167,7 @@ export async function runGardenWatch(db: Db, push: PushSender, source: GardenWea
       // La mínima de mañana es la de esta madrugada que viene.
       const tomorrow = addDays(day, 1);
       const d = days.find((x) => x.date === tomorrow);
-      const hit = d ? frostCrops.filter((c) => d.min <= c.threshold).map((c) => c.name) : [];
+      const hit = d ? frostCrops.filter((c) => feltMin(d) <= c.threshold).map((c) => c.name) : [];
       if (d && hit.length && row.frost_notified_date !== tomorrow) {
         if (await send(row, { type: 'garden', garden: { kind: 'frost', placeId: row.place_id, label: row.label, date: tomorrow, min: Math.round(d.min), crops: [...new Set(hit)] } })) {
           markFrost.run(tomorrow, row.device_id, row.place_id);

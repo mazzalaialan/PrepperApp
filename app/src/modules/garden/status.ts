@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGeolocation } from '@/core/geo/useGeolocation';
-import type { GardenBed, Planting, SoilKind } from '@/core/model/types';
+import type { GardenBed, Planting } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
 import { today as todayIso } from '@/modules/inventory/domain/dates';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { useRainWatch } from '@/modules/weather/rainWatch';
 import { ZONES, zoneFor, type Zone } from './calendar';
-import type { Crop } from './crops';
-import { dueTasks, frostRisk, outdoorPlantings, waterBalance, type FrostRisk, type GardenTask, type WaterBalance } from './logic';
+import { dueTasks, frostRisk, greenhousePlantings, outdoorPlantings, waterBalance, type FrostRisk, type GardenTask, type PlantedEntry, type WaterBalance } from './logic';
 import { useGarden } from './store';
 import { cachedGardenWeather, fetchGardenWeather, GARDEN_WEATHER_STALE_MS, storeGardenWeather, weatherKey, type GardenWeather } from './weather';
 
@@ -57,7 +56,9 @@ export interface PlaceGroup {
   key: string;
   place: GardenPlace;
   beds: GardenBed[];
-  outdoor: { planting: Planting; crop: Crop; waypointId?: string; soil?: SoilKind }[];
+  outdoor: PlantedEntry[];
+  /** Lo plantado en invernaderos de ese lugar: solo para el riego (sin lluvia ni helada). */
+  greenhouse: PlantedEntry[];
 }
 
 /**
@@ -75,19 +76,22 @@ export function placeGroups(
   const groups = new Map<string, PlaceGroup>();
   const names = new Map<string, Set<string>>();
   const unplaced = new Set<GardenBed>();
-  for (const o of outdoorPlantings(beds, plantings)) {
+  const list = [...plantings];
+  const entries = [...outdoorPlantings(beds, list).map((o) => ({ o, inside: false })), ...greenhousePlantings(beds, list).map((o) => ({ o, inside: true }))];
+  for (const { o, inside } of entries) {
     // Un almácigo de afuera trae su propio lugar; lo demás, el del cantero.
     const bed = o.planting.bedId ? beds.get(o.planting.bedId) : undefined;
     const wpId = o.waypointId ?? bed?.waypointId ?? null;
     const place = wpId ? waypointPlace(wpId) : null;
     if (!place) {
-      if (bed) unplaced.add(bed);
+      // El aviso "sin lugar" es por la helada y la lluvia: un invernadero sin waypoint no se marca (solo pierde el aviso de riego).
+      if (bed && !inside) unplaced.add(bed);
       continue;
     }
     const key = weatherKey(place.lat, place.lon);
-    const g = groups.get(key) ?? { key, place: { ...place }, beds: [], outdoor: [] };
+    const g = groups.get(key) ?? { key, place: { ...place }, beds: [], outdoor: [], greenhouse: [] };
     if (bed && !g.beds.includes(bed)) g.beds.push(bed);
-    g.outdoor.push(o);
+    (inside ? g.greenhouse : g.outdoor).push(o);
     groups.set(key, g);
     names.set(key, (names.get(key) ?? new Set()).add(place.label ?? ''));
   }
@@ -134,6 +138,8 @@ export interface PlaceStatus {
   label: string;
   frost: FrostRisk | null;
   water: WaterBalance | null;
+  /** Riego de los canteros en invernadero de ese lugar (sin lluvia, con menos evaporación). */
+  greenhouseWater: WaterBalance | null;
 }
 
 export interface GardenStatus {
@@ -170,6 +176,8 @@ export function useGardenStatus(): GardenStatus {
         label: g.place.label ?? '',
         frost: gardenFrostAlerts ? frostRisk(g.outdoor, days, today) : null,
         water: gardenWaterAlerts && days.length ? waterBalance(g.outdoor, days, today, watered ? todayIso(new Date(watered)) : null) : null,
+        greenhouseWater:
+          gardenWaterAlerts && days.length ? waterBalance(g.greenhouse, days, today, watered ? todayIso(new Date(watered)) : null, { greenhouse: true }) : null,
       };
     });
     return { tasks, places, unplaced };
@@ -178,5 +186,5 @@ export function useGardenStatus(): GardenStatus {
 
 /** Cuántas cosas de la huerta piden atención (para el resumen de Inicio). */
 export function gardenAlertCount(s: GardenStatus): number {
-  return s.tasks.length + s.places.reduce((n, p) => n + (p.frost ? 1 : 0) + (p.water?.needsWater ? 1 : 0), 0);
+  return s.tasks.length + s.places.reduce((n, p) => n + (p.frost ? 1 : 0) + (p.water?.needsWater ? 1 : 0) + (p.greenhouseWater?.needsWater ? 1 : 0), 0);
 }

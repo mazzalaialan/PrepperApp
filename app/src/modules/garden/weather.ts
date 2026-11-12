@@ -14,7 +14,8 @@ export interface GardenWeather {
   fetchedAt: string;
   lat: number;
   lon: number;
-  days: (WaterDay & { min: number })[];
+  /** cloud: nubosidad media del día (%); wind: viento máximo (km/h). Faltan en lo guardado antes de 0.61. */
+  days: (WaterDay & { min: number; cloud?: number | null; wind?: number | null })[];
 }
 
 const CACHE_ID = 'garden-weather';
@@ -24,7 +25,7 @@ export function gardenWeatherUrl(base: string, lat: number, lon: number): string
   const params = new URLSearchParams({
     latitude: lat.toFixed(2),
     longitude: lon.toFixed(2),
-    daily: 'et0_fao_evapotranspiration,precipitation_sum,temperature_2m_min',
+    daily: 'et0_fao_evapotranspiration,precipitation_sum,temperature_2m_min,cloud_cover_mean,wind_speed_10m_max',
     timezone: 'auto',
     past_days: '10',
     forecast_days: '3',
@@ -33,7 +34,7 @@ export function gardenWeatherUrl(base: string, lat: number, lon: number): string
 }
 
 interface ApiDaily {
-  daily?: { time?: unknown[]; et0_fao_evapotranspiration?: unknown[]; precipitation_sum?: unknown[]; temperature_2m_min?: unknown[] };
+  daily?: { time?: unknown[]; et0_fao_evapotranspiration?: unknown[]; precipitation_sum?: unknown[]; temperature_2m_min?: unknown[]; cloud_cover_mean?: unknown[]; wind_speed_10m_max?: unknown[] };
 }
 
 export function parseGardenWeather(data: ApiDaily, lat: number, lon: number, now = new Date()): GardenWeather {
@@ -46,7 +47,7 @@ export function parseGardenWeather(data: ApiDaily, lat: number, lon: number, now
     const rain = num(d.precipitation_sum?.[i]);
     const min = num(d.temperature_2m_min?.[i]);
     if (typeof date !== 'string' || et0 === null || rain === null || min === null) return;
-    days.push({ date: date as IsoDay, et0, rain, min });
+    days.push({ date: date as IsoDay, et0, rain, min, cloud: num(d.cloud_cover_mean?.[i]), wind: num(d.wind_speed_10m_max?.[i]) });
   });
   if (!days.length) throw new Error('empty');
   return { fetchedAt: now.toISOString(), lat, lon, days };

@@ -132,3 +132,10 @@ Idea: una sola entidad «Recorrido» con una línea y un origen (grabado, import
 - Por nivel puede cambiar la luz (los de abajo reciben menos): dato opcional por nivel.
 - Registro de la solución (pH, EC, temperatura del agua, reposición, cambio completo), rangos por cultivo, calculadora de solución (A+B comercial y La Molina), avisos de medición y cambio, insumos en el inventario.
 - Fuentes a confirmar: FAO «La huerta hidropónica popular»; solución La Molina (UNALM); FAO Fisheries Tech. Paper 589 (acuaponía); normativa de especies exóticas (tilapia) por provincia.
+
+## Huerta: mejoras pendientes (2026-11-12)
+Hechas el 2026-11-12 (sin publicar): fecha de última helada calculada con 5 años de histórico del lugar (botón en Ajustes de la huerta), margen de escarcha en noches despejadas y sin viento (app y servidor), reserva de agua de las macetas a la mitad y riego propio de los invernaderos (sin lluvia, 70 % de la ET0; solo con la app abierta: el servidor no lo calcula todavía). El tipo de suelo ya existía.
+Quedan, en este orden (necesitan investigar datos de los ~44 cultivos con fuentes INTA/FAO):
+1. **Semillas propias:** por cultivo, si es fácil guardar su semilla, distancia de aislamiento, cómo secarla y cuántos años dura; las semillas como artículos del inventario con vencimiento.
+2. **Cuánto plantar para comer:** planificador de calorías por persona y temporada con los rendimientos de las fichas (p. ej. "2 personas, 3 meses de papa: X m²").
+3. **Plagas y enfermedades:** las más comunes por cultivo y su control agroecológico (purines, trampas, asociaciones).

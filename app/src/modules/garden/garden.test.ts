@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { GardenBed, Planting } from '@/core/model/types';
 import { cropCalendar, ESTIMATED_ZONES, harvestMonths, missingInZone, monthPlan, parseMonths, ZONE_TABLES, ZONES, zoneFor } from './calendar';
 import { CROP_BY_ID, CROPS, gridFootprint } from './crops';
+import { frostDates } from './frostDates';
 import { readilyAvailableMm, beforeLastFrost, dueTasks, frostRisk, gridSize, outdoorPlantings, plantsFor, recommendForBed, waterBalance, type WaterDay } from './logic';
 
 const base = { createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null };
@@ -302,5 +303,52 @@ describe('zona estimada de la sierra de Perú', () => {
     // La oca, de setiembre/octubre, se cosecha en abril y mayo (INIA).
     const oca = cropCalendar('sierraPeru', 'oca')!.harvest;
     expect(oca.has(4) && oca.has(5)).toBe(true);
+  });
+});
+
+describe('mejoras de la huerta (2026-11-12)', () => {
+  const tomate = CROP_BY_ID.get('tomate')!;
+  const p = planting({ cropId: 'tomate', status: 'growing', bedId: 'b1', sownOn: '2026-10-01', transplantedOn: '2026-10-01' });
+  const days: WaterDay[] = Array.from({ length: 8 }, (_, i) => ({ date: `2026-11-0${i + 1}`, et0: 5, rain: 6 }));
+
+  it('noche despejada y sin viento: avisa helada con una mínima de 3 °C a los sensibles', () => {
+    const outdoor = [{ planting: p, crop: tomate }];
+    expect(frostRisk(outdoor, [{ date: '2026-10-11', min: 3, cloud: 60, wind: 5 }], '2026-10-10')).toBeNull();
+    expect(frostRisk(outdoor, [{ date: '2026-10-11', min: 3, cloud: 10, wind: 20 }], '2026-10-10')).toBeNull();
+    const r = frostRisk(outdoor, [{ date: '2026-10-11', min: 3, cloud: 10, wind: 5 }], '2026-10-10');
+    expect(r?.clearCalm).toBe(true);
+    expect(r?.crops.map((c) => c.id)).toEqual(['tomate']);
+  });
+
+  it('en maceta la reserva es la mitad que en un cantero', () => {
+    expect(readilyAvailableMm(tomate, 'loam', true)).toBeCloseTo(readilyAvailableMm(tomate, 'loam') / 2, 1);
+  });
+
+  it('invernadero: la lluvia no cuenta y se evapora menos', () => {
+    const afuera = waterBalance([{ planting: p, crop: tomate }], days, '2026-11-08', null)!;
+    const adentro = waterBalance([{ planting: p, crop: tomate }], days, '2026-11-08', null, { greenhouse: true })!;
+    expect(afuera.rainMm).toBeGreaterThan(0);
+    expect(adentro.rainMm).toBe(0);
+    expect(adentro.deficitMm).toBeGreaterThan(afuera.deficitMm);
+  });
+
+  it('fechas de helada del lugar: promedio, la más tardía y heladas todo el año', () => {
+    const times: string[] = [];
+    const mins: number[] = [];
+    for (const [y, last, first] of [[2021, '09-10', '05-20'], [2022, '09-30', '05-05']] as const) {
+      for (let d = new Date(Date.UTC(y, 0, 1)); d.getUTCFullYear() === y; d = new Date(d.getTime() + 86_400_000)) {
+        const iso = d.toISOString().slice(0, 10);
+        const md = iso.slice(5);
+        times.push(iso);
+        mins.push(md === last || md === first ? 0 : 10);
+      }
+    }
+    const f = frostDates(times, mins);
+    expect(f.years).toBe(2);
+    expect(f.lastLatest).toBe('09-30');
+    expect(f.lastAvg).toBe('09-20');
+    expect(f.firstEarliest).toBe('05-05');
+    expect(f.allYear).toBe(false);
+    expect(frostDates(['2023-12-20'], [1]).allYear).toBe(true);
   });
 });

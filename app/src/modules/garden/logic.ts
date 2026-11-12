@@ -180,20 +180,39 @@ export function recommendForBed(bed: GardenBed, plantings: Planting[], opts: Rec
  * Lo que hay plantado al aire libre (los canteros en invernadero no cuentan para la helada ni para el riego por lluvia).
  * Un almácigo cuenta solo si se marcó que está afuera y en qué lugar (`nurseryWaypointId`): puede estar adentro de casa.
  */
-export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): { planting: Planting; crop: Crop; waypointId?: string; soil?: SoilKind }[] {
-  const out: { planting: Planting; crop: Crop; waypointId?: string; soil?: SoilKind }[] = [];
+export interface PlantedEntry {
+  planting: Planting;
+  crop: Crop;
+  waypointId?: string;
+  soil?: SoilKind;
+  /** En maceta: guarda mucha menos agua que un cantero. */
+  pot?: boolean;
+}
+
+export function outdoorPlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): PlantedEntry[] {
+  return plantedIn(beds, plantings, false);
+}
+
+/** Lo plantado en canteros de invernadero: no tiene helada ni lluvia, pero igual se seca (riego propio). */
+export function greenhousePlantings(beds: Map<string, GardenBed>, plantings: Iterable<Planting>): PlantedEntry[] {
+  return plantedIn(beds, plantings, true);
+}
+
+function plantedIn(beds: Map<string, GardenBed>, plantings: Iterable<Planting>, greenhouse: boolean): PlantedEntry[] {
+  const out: PlantedEntry[] = [];
   for (const p of plantings) {
     if (p.deletedAt || p.status === 'done') continue;
     const crop = CROP_BY_ID.get(p.cropId);
     if (!crop) continue;
     if (p.status === 'nursery') {
-      if (p.nurseryWaypointId) out.push({ planting: p, crop, waypointId: p.nurseryWaypointId });
+      // Un almácigo afuera cuenta como al aire libre (en el invernadero no se lleva la cuenta de almácigos).
+      if (!greenhouse && p.nurseryWaypointId) out.push({ planting: p, crop, waypointId: p.nurseryWaypointId });
       continue;
     }
     if (!p.bedId) continue;
     const bed = beds.get(p.bedId);
-    if (!bed || bed.deletedAt || bed.greenhouse) continue;
-    out.push({ planting: p, crop, soil: bed.soil });
+    if (!bed || bed.deletedAt || bed.greenhouse !== greenhouse) continue;
+    out.push({ planting: p, crop, soil: bed.soil, ...(bed.kind === 'pot' && { pot: true }) });
   }
   return out;
 }
@@ -209,18 +228,33 @@ export interface FrostRisk {
   date: IsoDay;
   min: number;
   crops: Crop[];
+  /** Noche despejada y sin viento: escarcha con una mínima más alta que el umbral. */
+  clearCalm?: boolean;
 }
 
+/**
+ * Noche despejada y sin viento: el suelo y las hojas irradian calor al cielo y quedan 2 a 4 °C más fríos que el aire
+ * a 2 m (la mínima del pronóstico): aparece escarcha aunque la mínima no llegue al umbral. Se mira la nubosidad
+ * media del día y el viento máximo (datos diarios: es una aproximación de la noche).
+ */
+export const CLEAR_CLOUD_PCT = 30;
+export const CALM_WIND_KMH = 10;
+export const RADIATIVE_MARGIN = 2;
+export const isClearCalm = (d: { cloud?: number | null; wind?: number | null }) =>
+  d.cloud != null && d.wind != null && d.cloud < CLEAR_CLOUD_PCT && d.wind < CALM_WIND_KMH;
+
 /** Primera noche (hoy o mañana) en que la mínima pronosticada quema algo de lo plantado al aire libre. */
-export function frostRisk(outdoor: { crop: Crop }[], days: { date: IsoDay; min: number }[], today: IsoDay): FrostRisk | null {
+export function frostRisk(outdoor: { crop: Crop }[], days: { date: IsoDay; min: number; cloud?: number | null; wind?: number | null }[], today: IsoDay): FrostRisk | null {
   const tomorrow = addDays(today, 1);
   for (const d of days) {
     if (d.date < today || d.date > tomorrow) continue;
+    const clearCalm = isClearCalm(d);
+    const felt = d.min - (clearCalm ? RADIATIVE_MARGIN : 0);
     const hit = [...new Map(outdoor.map((o) => [o.crop.id, o.crop])).values()].filter((c) => {
       const t = frostThreshold(c);
-      return t !== null && d.min <= t;
+      return t !== null && felt <= t;
     });
-    if (hit.length) return { date: d.date, min: d.min, crops: hit };
+    if (hit.length) return { date: d.date, min: d.min, crops: hit, ...(clearCalm && { clearCalm: true }) };
   }
   return null;
 }
@@ -234,9 +268,15 @@ export const READILY_AVAILABLE_MM: Record<RootDepth, number> = { shallow: 15, me
  */
 export const SOIL_FACTOR: Record<SoilKind, number> = { sandy: 0.6, loam: 1, clay: 1.1 };
 
-/** Reserva fácilmente aprovechable de un cultivo (mm) en esa tierra. */
-export function readilyAvailableMm(crop: Crop, soil?: SoilKind): number {
-  return Math.round(READILY_AVAILABLE_MM[crop.rootDepth] * SOIL_FACTOR[soil ?? 'loam'] * 10) / 10;
+/**
+ * En una maceta las raíces tienen pocos litros de tierra y la maceta se calienta por los costados: se seca bastante
+ * antes que un cantero con el mismo cultivo. Se toma la mitad de la reserva (aproximación; una maceta chica, aún menos).
+ */
+export const POT_FACTOR = 0.5;
+
+/** Reserva fácilmente aprovechable de un cultivo (mm) en esa tierra (y en maceta, si lo está). */
+export function readilyAvailableMm(crop: Crop, soil?: SoilKind, pot = false): number {
+  return Math.round(READILY_AVAILABLE_MM[crop.rootDepth] * SOIL_FACTOR[soil ?? 'loam'] * (pot ? POT_FACTOR : 1) * 10) / 10;
 }
 
 /** Coeficiente de cultivo según la etapa: inicio, desarrollo pleno o final. */
@@ -278,10 +318,22 @@ const RAIN_LOSS_MM = 2;
  * escurre). Avisa cuando falta más que lo fácilmente aprovechable de las
  * raíces más cortas que haya.
  */
-export function waterBalance(outdoor: { planting: Planting; crop: Crop; soil?: SoilKind }[], days: WaterDay[], today: IsoDay, wateredOn: IsoDay | null): WaterBalance | null {
+/**
+ * Bajo plástico o vidrio la evapotranspiración es menor que afuera (menos radiación y viento): se toma el 70 % de la
+ * ET0 de afuera (FAO-56 y manuales de cultivo protegido dan entre 60 y 80 %).
+ */
+export const GREENHOUSE_ET_FACTOR = 0.7;
+
+export function waterBalance(
+  outdoor: { planting: Planting; crop: Crop; soil?: SoilKind; pot?: boolean }[],
+  days: WaterDay[],
+  today: IsoDay,
+  wateredOn: IsoDay | null,
+  { greenhouse = false }: { greenhouse?: boolean } = {},
+): WaterBalance | null {
   if (!outdoor.length) return null;
   const kc = Math.max(...outdoor.map((o) => cropKc(o.planting, o.crop, today)));
-  const thresholdMm = Math.min(...outdoor.map((o) => readilyAvailableMm(o.crop, o.soil)));
+  const thresholdMm = Math.min(...outdoor.map((o) => readilyAvailableMm(o.crop, o.soil, o.pot)));
   const tenDaysAgo = addDays(today, -10);
   const since = wateredOn && wateredOn > tenDaysAgo ? wateredOn : tenDaysAgo;
   let deficit = 0;
@@ -289,9 +341,11 @@ export function waterBalance(outdoor: { planting: Planting; crop: Crop; soil?: S
   for (const d of [...days].sort((a, b) => a.date.localeCompare(b.date))) {
     // El día del riego cuenta desde después de regar: se empieza al día siguiente.
     if (d.date <= since || d.date > today) continue;
-    const useful = Math.max(0, d.rain - RAIN_LOSS_MM);
-    rainMm += d.rain;
-    deficit = Math.max(0, deficit + d.et0 * kc - useful);
+    // En el invernadero no llueve adentro y se evapora menos.
+    const rain = greenhouse ? 0 : d.rain;
+    const useful = Math.max(0, rain - RAIN_LOSS_MM);
+    rainMm += rain;
+    deficit = Math.max(0, deficit + d.et0 * (greenhouse ? GREENHOUSE_ET_FACTOR : 1) * kc - useful);
     // Más de lo que entra en las raíces no se acumula como falta: el suelo ya está seco.
     deficit = Math.min(deficit, thresholdMm * 3);
   }

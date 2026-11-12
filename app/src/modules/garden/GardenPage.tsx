@@ -12,7 +12,8 @@ import { BedDialog } from './BedDialog';
 import { NurseryDialog, PlantingDialog } from './PlantingDialog';
 import { FAMILY_COLOR } from './parts';
 import { newBed, useGarden } from './store';
-import { useGardenStatus, type GardenStatus } from './status';
+import { useGardenStatus, useZonePlace, type GardenStatus } from './status';
+import { fetchFrostDates, type FrostDates } from './frostDates';
 import type { GardenBed } from '@/core/model/types';
 
 /** Tareas que ya corresponden. */
@@ -62,6 +63,7 @@ export function GardenWeatherNotices({ status, compact = false }: { status: Gard
                   min: Math.round(p.frost.min),
                   crops: p.frost.crops.map((c) => cropName(c, i18n.language)).join(', '),
                 })}
+                {p.frost.clearCalm && ` ${t('garden.frostClearCalm')}`}
               </span>
             </div>
           )}
@@ -71,6 +73,18 @@ export function GardenWeatherNotices({ status, compact = false }: { status: Gard
               <span style={{ flex: 1 }}>
                 {many && <strong>{p.label}: </strong>}
                 {t('garden.waterAlert', { mm: Math.round(p.water.deficitMm), rain: p.water.rainMm })}
+              </span>
+              <button className="btn" type="button" onClick={() => void update({ gardenWateredAt: { ...settings.gardenWateredAt, [p.key]: new Date().toISOString() } })}>
+                {t('garden.watered')}
+              </button>
+            </div>
+          )}
+          {p.greenhouseWater?.needsWater && (
+            <div className="warning-box garden-notice" role="alert" data-testid="garden-water-greenhouse">
+              <Droplets size={20} aria-hidden />
+              <span style={{ flex: 1 }}>
+                {many && <strong>{p.label}: </strong>}
+                {t('garden.waterGreenhouseAlert', { mm: Math.round(p.greenhouseWater.deficitMm) })}
               </span>
               <button className="btn" type="button" onClick={() => void update({ gardenWateredAt: { ...settings.gardenWateredAt, [p.key]: new Date().toISOString() } })}>
                 {t('garden.watered')}
@@ -98,6 +112,22 @@ function GardenSettings() {
   const { t } = useTranslation();
   const settings = useSettings((s) => s.settings);
   const update = useSettings((s) => s.update);
+  // Última helada del lugar de la huerta con 5 años de histórico (en vez de cargarla a mano).
+  const place = useZonePlace();
+  const [frost, setFrost] = useState<{ state: 'idle' | 'loading' | 'error' } | { state: 'done'; dates: FrostDates }>({ state: 'idle' });
+  const fmt = (mmdd: string | null) => (mmdd ? `${mmdd.slice(3, 5)}/${mmdd.slice(0, 2)}` : '—');
+  async function calcFrost() {
+    if (!place) return;
+    setFrost({ state: 'loading' });
+    try {
+      const dates = await fetchFrostDates(settings.weatherUrl, place.lat, place.lon);
+      setFrost({ state: 'done', dates });
+      // La fecha segura: la más tardía de los 5 años. Donde hiela todo el año no hay fecha (todo lo sensible, bajo cubierta).
+      if (!dates.allYear && dates.lastLatest) await update({ gardenLastFrost: dates.lastLatest });
+    } catch {
+      setFrost({ state: 'error' });
+    }
+  }
   return (
     <details className="card" data-testid="garden-settings">
       <summary>{t('garden.settings')}</summary>
@@ -112,6 +142,26 @@ function GardenSettings() {
             onChange={(e) => void update({ gardenLastFrost: e.target.value ? e.target.value.slice(5) : null })}
           />
           <p className="hint">{t('garden.lastFrostHint')}</p>
+          <button className="btn" type="button" onClick={() => void calcFrost()} disabled={!place || !navigator.onLine || frost.state === 'loading'} data-testid="garden-frost-calc">
+            <Snowflake size={18} aria-hidden /> {frost.state === 'loading' ? t('garden.frostCalcLoading') : t('garden.frostCalc')}
+          </button>
+          {!place && <p className="hint">{t('garden.frostCalcNoPlace')}</p>}
+          {frost.state === 'error' && <p className="error" role="alert">{t('garden.frostCalcError')}</p>}
+          {frost.state === 'done' && (
+            <p className="hint" role="status" data-testid="garden-frost-result">
+              {frost.dates.allYear
+                ? t('garden.frostAllYear', { years: frost.dates.years })
+                : frost.dates.lastLatest
+                  ? t('garden.frostResult', {
+                      years: frost.dates.years,
+                      lastAvg: fmt(frost.dates.lastAvg),
+                      lastLatest: fmt(frost.dates.lastLatest),
+                      firstAvg: fmt(frost.dates.firstAvg),
+                      firstEarliest: fmt(frost.dates.firstEarliest),
+                    })
+                  : t('garden.frostNone', { years: frost.dates.years })}
+            </p>
+          )}
         </div>
         <label className="check">
           <input type="checkbox" checked={settings.gardenFrostAlerts} onChange={(e) => void update({ gardenFrostAlerts: e.target.checked })} />
