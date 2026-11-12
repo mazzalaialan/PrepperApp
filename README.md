@@ -1,4 +1,4 @@
-# Herramientas de supervivencia por VikArg
+# Herramientas de Supervivencia por VikArg
 
 > *Hay que estar listo para que no te agarre un imprevisto.*
 

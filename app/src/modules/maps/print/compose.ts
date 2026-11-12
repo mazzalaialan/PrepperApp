@@ -46,7 +46,7 @@ interface TextOpts {
 }
 
 /** Nombre de la app que se imprime en la hoja (la hoja sale siempre en español). */
-const APP_NAME = 'Herramientas de supervivencia por VikArg';
+const APP_NAME = 'Herramientas de Supervivencia por VikArg';
 
 /** Lado (mm) del logo en el encabezado de la hoja. */
 const LOGO_MM = 12;

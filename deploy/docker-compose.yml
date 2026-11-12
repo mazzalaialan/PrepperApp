@@ -1,4 +1,4 @@
-# Herramientas de supervivencia por VikArg autoalojado con HTTPS automático (Caddy + Let's Encrypt).
+# Herramientas de Supervivencia por VikArg autoalojado con HTTPS automático (Caddy + Let's Encrypt).
 # Uso: copiar .env.example a .env, completar DOMAIN, y correr
 #   docker compose up -d --build
 # Guía completa: docs/SERVIDOR.md

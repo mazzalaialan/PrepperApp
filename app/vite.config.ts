@@ -32,7 +32,7 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'brand/*.png'],
       manifest: {
-        name: 'Herramientas de supervivencia por VikArg',
+        name: 'Herramientas de Supervivencia por VikArg',
         short_name: 'SurvTools',
         description: 'Hay que estar listo para que no te agarre un imprevisto.',
         lang: 'es',

@@ -21,7 +21,7 @@ const TEXT = {
     shortage: 'falta stock según tus recomendaciones',
     minStock: 'debajo del stock mínimo',
     more: (n: number) => `y ${n} más`,
-    testTitle: 'Herramientas de supervivencia por VikArg',
+    testTitle: 'Herramientas de Supervivencia por VikArg',
     testBody: 'Las notificaciones funcionan correctamente.',
     here: 'Donde estás',
     rainSoon: (min: number, place: string) => `Lluvia en unos ${min} min · ${place}`,

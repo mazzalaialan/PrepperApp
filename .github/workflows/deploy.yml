@@ -62,7 +62,7 @@ jobs:
           docker run -d --name vikarg -p 8080:8080 vikarg-survival
           for i in $(seq 1 30); do curl -fs http://localhost:8080/api/health && break; sleep 1; done
           curl -fs http://localhost:8080/api/health | grep -q vapidPublicKey
-          curl -fs http://localhost:8080/ | grep -q "Herramientas de supervivencia por VikArg"
+          curl -fs http://localhost:8080/ | grep -q "Herramientas de Supervivencia por VikArg"
           docker logs vikarg
 
   # Paquete para usar la app sin internet en una PC (ver portable/LEEME.txt).
@@ -126,7 +126,7 @@ jobs:
       - run: |
           if ! gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title "Herramientas de supervivencia por VikArg $VERSION" \
+              --title "Herramientas de Supervivencia por VikArg $VERSION" \
               --notes "App: https://mazzalaialan.github.io/PrepperApp — Para usarla sin internet en una PC, descargá el paquete portable y seguí LEEME.txt."
           fi
           gh release upload "v$VERSION" vikarg-survival-portable-*.zip --repo "$GITHUB_REPOSITORY" --clobber
