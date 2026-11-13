@@ -32,6 +32,8 @@ const SYSTEM_CATEGORIES: SystemCategorySpec[] = [
   { key: 'other', icon: 'package', color: '#7a8696', controlType: 'none' },
   // Después de "other" para no mover el orden de las que ya están guardadas. El equipo de Entrenamiento se agrega acá.
   { key: 'training', icon: 'activity', color: '#4f9a6f', controlType: 'none' },
+  // Semillas de la huerta: avisan cuando se acerca el vencimiento (cuánto dura la germinación, ver garden/seeds.ts). También al final.
+  { key: 'seeds', icon: 'sprout', color: '#7fae52', controlType: 'expiryDate' },
 ];
 
 export function systemCategoryId(key: string): string {

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Package } from 'lucide-react';
+import { CROP_BY_ID } from './crops';
+import { SeedStockDialog } from './SeedStockDialog';
 import { loadSeeds, seedText, type SeedInfo } from './seeds';
 
 const LEVEL_PILL: Record<SeedInfo['level'], string> = { easy: 'pill pill-free', medium: 'pill pill-warn', hard: 'pill pill-danger', no: 'pill' };
@@ -9,6 +12,7 @@ export function SeedSection({ cropId }: { cropId: string }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const [info, setInfo] = useState<SeedInfo | null | undefined>(undefined);
+  const [stocking, setStocking] = useState(false);
   useEffect(() => {
     let live = true;
     void loadSeeds()
@@ -18,7 +22,8 @@ export function SeedSection({ cropId }: { cropId: string }) {
       live = false;
     };
   }, [cropId]);
-  if (!info) return null;
+  const crop = CROP_BY_ID.get(cropId);
+  if (!info || !crop) return null;
 
   const { isolationM: iso, minPlants: pl, yearsViable: yr } = info;
   // Números con el formato del idioma (0,5 y 1.000 en español).
@@ -87,6 +92,12 @@ export function SeedSection({ cropId }: { cropId: string }) {
           {info.argentina && <p style={{ margin: 0 }}><strong>{t('garden.seeds.argentina')}:</strong> {seedText(info.argentina, lang)}</p>}
         </div>
       </details>
+      <div>
+        <button className="btn" type="button" onClick={() => setStocking(true)} data-testid="seed-to-inventory">
+          <Package size={18} aria-hidden /> {t('garden.seeds.stock.button')}
+        </button>
+      </div>
+      {stocking && <SeedStockDialog crop={crop} info={info} onClose={() => setStocking(false)} />}
       <p className="hint" style={{ margin: 0 }}>{t(`garden.seeds.confidence.${info.confidence}`)} {t('garden.seeds.disclaimer')}</p>
       <details>
         <summary>{t('garden.seeds.sources')}</summary>

@@ -255,4 +255,21 @@ test('huerta: ficha del cultivo con «guardar semilla propia» (dificultad, aisl
   await page.goto('/#/garden/crops/tomate');
   await expect(page.getByTestId('seed-level')).toHaveText('Fácil');
   await expect(page.getByTestId('seed-section')).toContainText('4 a 6 años');
+
+  // Guardar las semillas en el inventario: el vencimiento sale solo (4 años) y se puede cambiar.
+  await page.getByTestId('seed-to-inventory').click();
+  await expect(page.getByTestId('seed-stock-form')).toBeVisible();
+  await page.getByLabel('Variedad (opcional)').fill('Platense');
+  await page.getByTestId('seed-qty').fill('3');
+  const inFourYears = new Date();
+  inFourYears.setFullYear(inFourYears.getFullYear() + 4);
+  await expect(page.getByTestId('seed-expiry')).toHaveValue(new RegExp(`^${inFourYears.getFullYear()}-`));
+  await page.getByTestId('seed-stock-save').click();
+  await expect(page.getByTestId('seed-stock-done')).toContainText('categoría Semillas');
+  await page.goto('/#/inventory/items');
+  await expect(page.getByText('Semillas de Tomate Platense')).toBeVisible();
+  // La categoría nueva está en el filtro y el artículo cae en ella.
+  await page.getByRole('combobox').first().selectOption({ label: 'Semillas' });
+  await expect(page.getByText('Semillas de Tomate Platense')).toBeVisible();
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-61-seeds-inventory.png`, fullPage: true });
 });

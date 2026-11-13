@@ -136,7 +136,8 @@
     "tools": "Herramientas",
     "training": "Entrenamiento",
     "entertainment": "Entretenimiento",
-    "other": "Otros"
+    "other": "Otros",
+    "seeds": "Semillas"
   },
   "controlType": {
     "none": "Sin control de vencimiento",
@@ -2517,6 +2518,24 @@
       "argentina": "En Argentina",
       "confidence": {"high": "Varias fuentes coinciden.", "medium": "Confianza media: las fuentes difieren en algunos puntos.", "low": "Confianza baja: hay pocas fuentes o no coinciden."},
       "disclaimer": "Las distancias y los plazos salen de guías de distintos países y no coinciden del todo: tomalos como orientación y, si dudás, usá la distancia más grande.",
+      "stock": {
+        "button": "Guardar mis semillas en el inventario",
+        "title": "Semillas de {{crop}} al inventario",
+        "itemName": "Semillas de {{crop}}",
+        "itemNameParts": "{{crop}} (material de siembra)",
+        "variety": "Variedad (opcional)",
+        "varietyHint": "Por ejemplo, la que te regaló un vecino",
+        "quantity": "Cantidad",
+        "unit": "Unidad",
+        "units": {"g": "g", "packets": "sobres", "u": "unidades"},
+        "storedOn": "Guardadas el",
+        "expiry": "Vencen (aviso cuando se acerca)",
+        "expiryHint": "Sugerido: {{years}} años desde que las guardaste, lo habitual de este cultivo en un lugar fresco y seco. Podés cambiarlo.",
+        "expiryNone": "No hay un plazo habitual para este cultivo (se multiplica por partes vivas). Poné una fecha si querés que la app te avise.",
+        "save": "Guardar",
+        "saved": "Listo: quedaron en el inventario, categoría Semillas. La app te avisa cuando se acerque el vencimiento.",
+        "open": "Ver el inventario"
+      },
       "sources": "Fuentes",
       "sourcesNote": "De cada fuente solo se tomaron datos; los textos son propios."
     },

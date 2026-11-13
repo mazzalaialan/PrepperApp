@@ -19,6 +19,7 @@ import {
   Radio,
   Shield,
   Shirt,
+  Sprout,
   Tent,
   Wheat,
   Wind,
@@ -51,6 +52,7 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   anchor: Anchor,
   package: Package,
   activity: Activity,
+  sprout: Sprout,
 };
 
 export const CATEGORY_COLORS = [

@@ -136,7 +136,8 @@
     "tools": "Tools",
     "training": "Training",
     "entertainment": "Entertainment",
-    "other": "Other"
+    "other": "Other",
+    "seeds": "Seeds"
   },
   "controlType": {
     "none": "No expiry tracking",
@@ -2517,6 +2518,24 @@
       "argentina": "In Argentina",
       "confidence": {"high": "Several sources agree.", "medium": "Medium confidence: sources differ on some points.", "low": "Low confidence: few sources or they disagree."},
       "disclaimer": "Distances and time spans come from guides of different countries and do not fully agree: take them as a guide and, if in doubt, use the larger distance.",
+      "stock": {
+        "button": "Save my seeds to inventory",
+        "title": "{{crop}} seeds to inventory",
+        "itemName": "{{crop}} seeds",
+        "itemNameParts": "{{crop}} (planting stock)",
+        "variety": "Variety (optional)",
+        "varietyHint": "For example, the one a neighbor gave you",
+        "quantity": "Quantity",
+        "unit": "Unit",
+        "units": {"g": "g", "packets": "packets", "u": "units"},
+        "storedOn": "Stored on",
+        "expiry": "Expires (alert when it is near)",
+        "expiryHint": "Suggested: {{years}} years after you stored it, the usual for this crop in a cool, dry place. You can change it.",
+        "expiryNone": "There is no usual time span for this crop (it is propagated by living parts). Set a date if you want the app to alert you.",
+        "save": "Save",
+        "saved": "Done: they are in the inventory, Seeds category. The app alerts you when the expiry date is near.",
+        "open": "Open the inventory"
+      },
       "sources": "Sources",
       "sourcesNote": "Only data were taken from each source; the texts are our own."
     },
