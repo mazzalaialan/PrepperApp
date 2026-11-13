@@ -1,6 +1,6 @@
 # Guía para colaborar en VikArg
 
-Documento de traspaso para quien se suma al proyecto (persona o sesión de Claude Code). Junta lo que antes estaba solo en la memoria de la sesión de trabajo: cómo se trabaja, cómo se publica, cómo funciona el servidor, qué agentes ayudan y qué reglas se respetan. Estado al **13 de noviembre de 2026** (versión 0.58.3 publicada).
+Documento de traspaso para quien se suma al proyecto (persona o sesión de Claude Code). Junta lo que antes estaba solo en la memoria de la sesión de trabajo: cómo se trabaja, cómo se publica, cómo funciona el servidor, qué agentes ayudan y qué reglas se respetan. Estado al **13 de noviembre de 2026** (versión 0.61.0 publicada).
 
 Lo que ya estaba documentado no se repite acá:
 - Principios, arquitectura, modelo de datos, módulos: `docs/ARQUITECTURA.md`.
@@ -62,8 +62,8 @@ Las pruebas siempre arrancan con la base vacía, así que **no detectan** una mi
 
 ## 5. Pruebas
 
-- **Unitarias de la app:** `npx vitest run` en `app/` (~35 s, 558 pruebas al 13/11). **Servidor:** en `server/` (113). **Tipos:** `npx tsc --noEmit -p .` en cada uno.
-- **e2e (Playwright, Chromium):** `npm run e2e:full` en `app/` (88 pruebas, ~22 minutos). Ese script (`scripts/e2e-full.sh` → `scripts/heavy-containers.sh`) pausa los contenedores pesados (`nomad_ollama` y el conversor de la biblioteca, que se identifica por su imagen `vikarg-library-builder` y cambia de ID en cada lote; además detiene el bucle `auto-convert.sh`), verifica que de verdad estén pausados (si no, aborta) y los reanuda siempre al salir. `sh scripts/heavy-containers.sh status` muestra el estado. Cuidado: un `pgrep -f` cuyo patrón aparece en tu propio comando también encuentra tu shell (una vez se detuvo a sí mismo).
+- **Unitarias de la app:** `npx vitest run` en `app/` (~35 s; más de 550 pruebas). **Servidor:** en `server/` (más de 110). **Tipos:** `npx tsc --noEmit -p .` en cada uno.
+- **e2e (Playwright, Chromium):** `npm run e2e:full` en `app/` (unas 88 pruebas, ~22 minutos). Ese script (`scripts/e2e-full.sh` → `scripts/heavy-containers.sh`) pausa los contenedores pesados (`nomad_ollama` y el conversor de la biblioteca, que se identifica por su imagen `vikarg-library-builder` y cambia de ID en cada lote; además detiene el bucle `auto-convert.sh`), verifica que de verdad estén pausados (si no, aborta) y los reanuda siempre al salir. `sh scripts/heavy-containers.sh status` muestra el estado. Cuidado: un `pgrep -f` cuyo patrón aparece en tu propio comando también encuentra tu shell (una vez se detuvo a sí mismo).
 - Una sola especificación: `npx playwright test e2e/<archivo>.spec.ts --project=desktop`.
 - **Sin pausar los contenedores pesados, las pruebas de mapas y de tracks fallan por tiempo.** En un equipo sin GPU el WebGL es por software, y alguna prueba de mapas en 3D puede fallar sola: se tratan como del entorno, no como una regresión, pero se comprueba que pasen en otro equipo.
 - Al agregar una función se escribe o ajusta también su e2e (existen para que se corran al final).
@@ -103,5 +103,6 @@ Hay además un agente privado de presupuesto que vive fuera del repositorio porq
 
 ## 8. Cosas que cambian cuando hay más de una persona
 
+- **Ya pasó:** el 12 y 13 de noviembre de 2026 otra sesión publicó las versiones 0.58.4 a 0.61.0 en este mismo repositorio mientras la primera sesión seguía abierta. Antes de empezar, `git fetch` y `git log origin/main` para ver si hubo versiones nuevas; no asumir que el número de versión que recordás sigue vigente.
 - La memoria de la sesión de Claude (`~/.claude/projects/.../memory`) es **local**: no viaja con el repositorio. Todo lo importante tiene que estar en estos documentos, en `CLAUDE.md` o en `PENDIENTES.md`. Si descubrís algo que vale para el resto, escribilo acá o en `FUENTES-DE-DATOS.md`.
 - Los permisos de Claude Code (qué comandos se permiten sin preguntar) son por usuario. Si el sistema bloquea una acción como destructiva o como una evasión de protección de un sitio, no se fuerza: se explica y decide quien dirige.
