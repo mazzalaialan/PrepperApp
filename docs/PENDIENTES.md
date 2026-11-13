@@ -2,6 +2,21 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
+## PRIMERO PARA REVISAR (anotado el 2026-11-13): priorizar el país donde estás
+
+Pedido de quien dirige, a revisar **antes** de «Cuánto plantar para comer». Hay dos partes, y salen de lo que pasó con la radio (0.62.0), donde la pantalla traía el país de Ajustes en vez del del lugar.
+
+**1. Que las pantallas prioricen el país donde estás (GPS o lugar elegido), no el de Ajustes.**
+- La radio ya lo hace (`modules/emergency/usePlaceCountry.ts`: país del lugar por fronteras y, a menos de 50 km de una frontera, también el vecino). El país de Ajustes queda solo como respaldo cuando no hay lugar o cae fuera de los países de la app.
+- **Revisar y aplicar el mismo criterio** en: «Buscar cercanos» (`NearbyPage.tsx`, usa `settings.country` para el paquete, los servicios y los parques), los **teléfonos de emergencia** y la guía según el país (`national.ts`, pantalla de Contactos), y cualquier otra que lea `settings.country` (buscarlo con `grep "settings.country"`; hoy son las pantallas de emergencia, la huerta por zona y los avisos).
+- **A decidir:** qué hacer con los teléfonos de emergencia cuando el GPS dice un país y Ajustes otro. Propuesta: mostrar primero los del país donde estás y, abajo y diferenciados, los de Ajustes; no cambiar Ajustes solo. En una emergencia lo correcto es el número local de donde estás.
+
+**2. Que descargue los datos del país donde estás apenas lo detecte.**
+- Hoy `useCountryPrefetch` (`modules/emergency/country.ts`) baja en segundo plano **solo el paquete del país de Ajustes** (emergencias, localidades, servicios, repetidoras de Chile y parques); si viajás, no baja nada del país nuevo hasta que lo cambies a mano, y sin conexión no hay datos.
+- **Propuesta:** al detectar un país distinto (por GPS, con las fronteras) y haber conexión, bajar en segundo plano el paquete de ese país y los de los vecinos a menos de 50 km, con los mismos archivos que hoy (`<país>.json`, servicios, parques). **A decidir:** (a) si solo descarga o también ofrece cambiar el país de Ajustes («Estás en Perú: ¿cambiar?»); (b) si avisa antes de bajar y cuánto pesa (Perú: unos 2,7 MB el paquete más unos 1,5 MB de servicios y parques; Bolivia y Uruguay menos de 0,5 MB; ver `app/public/data/`); (c) si solo por Wi-Fi o también con datos móviles; (d) cada cuánto revisar el GPS para esto (la ubicación ya se usa para los avisos, ver la regla de ubicación en `docs/COLABORAR.md` §2).
+- Hay que tener en cuenta el **mapa sin conexión** (zonas grandes), que se baja aparte y es mucho más pesado: esto no lo cambia, pero conviene avisar que los mapas del país nuevo no se bajaron solos.
+- Pruebas: e2e con Ajustes en un país y el GPS en otro (como la de la radio en `e2e/peru-bolivia.spec.ts`): que salgan los datos del lugar, y que el paquete se baje (se guarda en caché) sin tocar Ajustes.
+
 ## SIGUIENTE PUNTO (anotado el 2026-11-13): «Cuánto plantar para comer»
 
 Es el segundo de la lista de huerta (el primero, semillas propias, ya está hecho). Planificador de calorías por persona: «2 personas, 3 meses de papa: X m²». Qué hace falta:
