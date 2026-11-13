@@ -1,6 +1,6 @@
 # Guía para colaborar en VikArg
 
-Documento de traspaso para quien se suma al proyecto (persona o sesión de Claude Code). Junta lo que antes estaba solo en la memoria de la sesión de trabajo: cómo se trabaja, cómo se publica, cómo funciona el servidor, qué agentes ayudan y qué reglas se respetan. Estado al **13 de noviembre de 2026** (versión 0.61.0 publicada).
+Documento de traspaso para quien se suma al proyecto (persona o sesión de Claude Code). Junta lo que antes estaba solo en la memoria de la sesión de trabajo: cómo se trabaja, cómo se publica, cómo funciona el servidor, qué agentes ayudan y qué reglas se respetan. Estado al **13 de noviembre de 2026** (versión 0.61.1 publicada).
 
 Lo que ya estaba documentado no se repite acá:
 - Principios, arquitectura, modelo de datos, módulos: `docs/ARQUITECTURA.md`.
@@ -110,6 +110,6 @@ Hay además un agente privado de presupuesto que vive fuera del repositorio porq
 ## 8. Cosas que cambian cuando hay más de una persona
 
 - **Tareas programadas:** la tarea del domingo 15/11 a las 15:07 que estaba en otra sesión de Claude Code (abierta desde `~/TP-Simulacion1`) **no va a correr**, porque esa sesión se cerró; los puntos de la primera tarea de `PENDIENTES.md` se ejecutan a mano en otra sesión, y quien dirige puede dejar otras cosas programadas para el domingo. Las tareas programadas viven dentro de la sesión que las creó: si se cierra, desaparecen, y una sesión no ve las de otra (`CronList` solo muestra las propias). Nunca dos sesiones sobre los mismos archivos a la vez. Hay además un `git stash` con nudos a medio revisar (dinámico, mula, cornamusa): **no borrarlo**; revisarlo con `git stash show -p` antes de rehacer esos nudos.
-- **Ya pasó:** el 12 y 13 de noviembre de 2026 otra sesión publicó las versiones 0.58.4 a 0.61.0 en este mismo repositorio mientras la primera sesión seguía abierta. Antes de empezar, `git fetch` y `git log origin/main` para ver si hubo versiones nuevas; no asumir que el número de versión que recordás sigue vigente.
+- **Ya pasó:** el 12 y 13 de noviembre de 2026 otra sesión publicó las versiones 0.58.4 a 0.61.0 (y esta sesión la 0.61.1, con las atribuciones de licencia) en este mismo repositorio mientras la primera sesión seguía abierta. Antes de empezar, `git fetch` y `git log origin/main` para ver si hubo versiones nuevas; no asumir que el número de versión que recordás sigue vigente.
 - La memoria de la sesión de Claude (`~/.claude/projects/.../memory`) es **local**: no viaja con el repositorio. Todo lo importante tiene que estar en estos documentos, en `CLAUDE.md` o en `PENDIENTES.md`. Si descubrís algo que vale para el resto, escribilo acá o en `FUENTES-DE-DATOS.md`.
 - Los permisos de Claude Code (qué comandos se permiten sin preguntar) son por usuario. Si el sistema bloquea una acción como destructiva o como una evasión de protección de un sitio, no se fuerza: se explica y decide quien dirige.
