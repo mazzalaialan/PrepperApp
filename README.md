@@ -19,6 +19,8 @@ Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y func
 
 La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
+Si vas a colaborar, empezá por [docs/COLABORAR.md](docs/COLABORAR.md) (cómo se trabaja, se prueba y se publica) y [docs/PENDIENTES.md](docs/PENDIENTES.md) (qué falta).
+
 ## Estructura
 
 | Carpeta | Contenido |

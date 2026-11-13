@@ -2,6 +2,13 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
+## PRIMERA TAREA al reiniciarse el límite semanal (domingo ~15:00, hora de Argentina)
+
+Son los dos trabajos grandes que se dejaron para después del reinicio, porque gastan mucho uso de Claude. Se hacen **antes que cualquier otra cosa** y se corta antes del 95 % del límite.
+
+1. **Revisión de los nudos sin revisar (grupos 6 a 9),** con agentes baratos y el proceso de `tools/knot-diagrams/PROCESO.md`: bloqueo y pesca (prusik, machard, klemheist, bachmann, palomar, clinch, uni), varios (dinámico, mula, guarda, cornamusa, asiento de rappel, silla de bombero, cadena, margarita), amarres (cuadrada, tijera, diagonal, trípode) y escalera de cuerda. Ver «Diagramas de nudos: estado de la revisión» más abajo. Regla: un diagrama se da por verificado solo si sale de una referencia real y `check.mjs` da COINCIDE; si no, queda con el aviso de beta.
+2. **Investigación de datos de los ~44 cultivos** con fuentes INTA y FAO, en este orden (ver «Huerta: mejoras pendientes»): semillas propias, cuánto plantar para comer (calorías por persona) y plagas y enfermedades con control agroecológico. Las tareas de investigación se derivan a `vikarg-investigador`.
+
 ## Hecho
 
 - **Sol del cantero y qué cultivar (2026-11-09, sin publicar):** en el cantero, "Horas de sol" a mano o "Calcular según el entorno": rumbo hacia donde mira el frente (cualquier ángulo; escrito o con la brújula del celular apoyado, con la declinación del lugar), paredes pegadas por lado con su altura (tapan según altura y distancia), obstáculos lejanos como un tramo del horizonte con altura aparente (baja, media, alta, muy alta) y media sombra del 30, 50 o 70 %. El sol se recorre cada 10 minutos con astronomy-engine (no cuenta el sol a menos de 5° del horizonte) y da horas hoy, en pleno verano y en pleno invierno; el valor guardado (el que usa la recomendación de cultivos) es el del equinoccio. En la página del cantero, "Qué cultivar en este cantero": se eligen varias plantas, se les da cuadros y se distribuyen con los altos del lado donde cae la sombra (los bajos que aguantan sombra, pegados a ellos), con el largo de sombra al mediodía; avisa si lo ya plantado se tapa; "Plantar acá" abre la siembra con esos cuadros. Alturas por cultivo en `modules/garden/heights.ts` (valores generales de planta adulta). Pendiente posible: medir la altura del obstáculo con el inclinómetro.

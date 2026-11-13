@@ -1,0 +1,107 @@
+# Guía para colaborar en VikArg
+
+Documento de traspaso para quien se suma al proyecto (persona o sesión de Claude Code). Junta lo que antes estaba solo en la memoria de la sesión de trabajo: cómo se trabaja, cómo se publica, cómo funciona el servidor, qué agentes ayudan y qué reglas se respetan. Estado al **13 de noviembre de 2026** (versión 0.58.3 publicada).
+
+Lo que ya estaba documentado no se repite acá:
+- Principios, arquitectura, modelo de datos, módulos: `docs/ARQUITECTURA.md`.
+- Servidor opcional y autoalojado: `docs/SERVIDOR.md`.
+- Qué está hecho, qué falta y en qué orden: `docs/PENDIENTES.md` (el documento vivo; se actualiza al terminar cada cosa).
+- Fuentes de datos investigadas y sus límites: `docs/FUENTES-DE-DATOS.md`.
+- Requisitos originales de Entrenamiento: `docs/ENTRENAMIENTO.md`.
+
+## 1. Quién dirige y cómo se trabaja
+
+- **Rol:** una persona desarrolla y supervisa; Claude Code implementa. Cada versión la aprueba quien dirige.
+- **Idioma:** español rioplatense (voseo) en la conversación, en los textos de la app, en los comentarios («el porqué», no el qué) y en los commits. La app tiene español e inglés (`app/src/locales/es.json` y `en.json`; se editan **como texto**, sin reserializar el JSON, para no cambiarles el formato).
+- **Commits:** los de cambios llevan un mensaje descriptivo en español; el de versión se llama exactamente `Versión X.Y.Z`.
+- **Pruebas por cambio:** tipos (`npx tsc --noEmit -p .`) y unitarias (`npx vitest run`), que son baratas. La e2e se corre **una vez al final de un lote de cambios** y antes de publicar: correrla después de cada ajuste es tiempo perdido porque el estado sigue cambiando. Quien la ejecuta verifica los fallos (real, intermitente o error de la prueba) y reintenta antes de informar; nunca se entrega un informe a medias.
+- **Presupuesto de uso de Claude:** el límite semanal de quien dirige se reinicia el domingo cerca de las 15:00 (hora de Argentina) y se pidió parar antes del 95 %. Las tareas grandes (revisión de nudos con agentes, investigación de datos) conviene arrancarlas justo después del reinicio; cerca del tope, cambios chicos y dejar el estado escrito en `PENDIENTES.md`.
+
+## 2. Reglas de privacidad y contacto
+
+- **Ningún mail personal** en la app, los documentos, la configuración del servidor (`.env`, Caddy, asunto VAPID) ni los commits. El único permitido es `contacto.vikarg@gmail.com`, que está como `CONTACT_EMAIL` (formulario de contacto y reportes de errores). Si una función necesita una dirección de contacto, se deja configurable y vacía y se pregunta. `VAPID_SUBJECT` vale por defecto `https://${DOMAIN}` y Caddy pide los certificados sin correo.
+- **Ubicación:** cuando las notificaciones con el servidor están activas, la app manda por defecto la última ubicación conocida (redondeada a ~1 km) para los avisos de lluvia y rayos. Hay un interruptor en Ajustes → Notificaciones que lo apaga y el servidor borra el dato. Fue una decisión deliberada (se descartó el consentimiento previo): **no volver a «solo si acepta»**, y mantener visible el aviso de privacidad donde se activan las notificaciones. Radio de aviso de rayos: 30 km. Si la ubicación está cerca de un waypoint con alertas, se omite para no duplicar la notificación.
+- **Datos y licencias:** de cada dato o texto que se cargue hay que anotar fuente, licencia y fecha. Lo que no tiene licencia clara que lo permita no se copia. OpenStreetMap exige atribución. Las alertas oficiales se presentan como «avisos informativos» (el SMN lo pidió por escrito; la leyenda está en `legal.smn`, ver `ARQUITECTURA.md`, «Aclaración del SMN»).
+- **Terceros protegidos:** si un sitio tiene un desafío anti-bot (Cloudflare, etc.), no se lo esquiva con navegadores disfraza­dos, proxies ni servicios de rastreo, aunque haya autorización verbal: se pide acceso formal (lista de permitidos, credencial, espejo). Caso concreto en `FUENTES-DE-DATOS.md` (radar del SMN).
+- **Lo que no vive en el repositorio (a propósito):** presupuestos, contratos y notas comerciales de clientes. Si hace falta algo de eso, se pide a quien dirige; nunca se agrega al repositorio público.
+
+## 3. Entorno de desarrollo y servidor
+
+La máquina de desarrollo es también el servidor de producción (Ubuntu en una PC de casa), con **dos copias del repositorio**:
+- `~/PrepperApp`: la copia de desarrollo. Ahí se edita, se prueba, se commitea y se empuja a GitHub (remoto SSH `mazzalaialan/SurvTools`; la carpeta conserva el nombre viejo).
+- `~/vikarg`: la copia de despliegue. **No se edita.** Solo hace `git pull --ff-only` y `docker compose up -d --build` desde `~/vikarg/deploy`; su `.env` solo tiene `DOMAIN`. Producción siempre corre lo que hay en GitHub.
+
+Particularidades:
+- **CPU sin AVX** (Celeron G4930, 2 núcleos, sin GPU): los binarios nativos de npm hechos para AVX se caen con «Illegal instruction» (pasó con Rollup). Por eso `app/package.json` reemplaza `rollup` por `@rollup/wasm-node` mediante `overrides`. Si una dependencia nativa falla acá, sospechar esto primero. El build de Docker (`node:26-alpine`) no se ve afectado.
+- **Sin `sudo`:** el usuario está en el grupo `docker`, pero los comandos con `sudo` los corre quien dirige. Node viene de `nvm` en el home; la integración continua usa Node 22 y 26.
+- **Dominio:** `valhallarust2.ddns.net` (No-IP gratuito: hay que **confirmarlo cada 30 días** y falta un actualizador automático si cambia la IP pública). El router redirige 80 y 443 a esta máquina y Caddy mantiene el certificado de Let's Encrypt.
+- **Otro proyecto en la misma máquina** usa los puertos 8080 y 9999 (Project N.O.M.A.D.): no tocarlos. Su contenedor `nomad_ollama` consume ~160 % de CPU de forma constante y hace fallar por tiempo agotado las pruebas de mapas.
+- **Tras desplegar:** comprobar que `deploy-vikarg-1` corre la imagen nueva `vikarg-survival:latest` (una vez compose armó la imagen pero no recreó el contenedor; si pasa, `docker compose up -d --force-recreate vikarg`) y que no se reinicia.
+- Si otra persona o cuenta también empuja cambios (por ejemplo desde otra PC con GitHub Desktop), **siempre `git pull` antes de empezar**.
+- Un **segundo Claude sobre la misma copia** se pisa: dos sesiones editando el árbol y compartiendo puertos de la e2e o publicando a la vez es un riesgo real. Que una sola toque el repositorio, o trabajar en una copia aparte (`git worktree`).
+
+## 4. Cómo se publica una versión
+
+Solo cuando quien dirige lo aprobó explícitamente. Pasos (los hace el agente `vikarg-publicador` o una persona):
+
+1. Todas las pruebas en verde: unitarias de `app/` y de `server/`, tipos y e2e completa.
+2. Subir `version` en `app/package.json` y correr `npm install --package-lock-only`.
+3. Commit `Versión X.Y.Z` y `git push` a `main` (sin `--force`).
+4. Esperar unos 5 minutos y comprobar en GitHub que el flujo «Deploy a GitHub Pages» terminó bien y que existe la release `vX.Y.Z`. El flujo también verifica que la página servida contenga el título «Herramientas de Supervivencia por VikArg»: si se cambia el nombre de la app hay que cambiar ese chequeo en `.github/workflows/deploy.yml`.
+5. Actualizar producción: en `~/vikarg`, `git pull --ff-only` y **después**, desde `~/vikarg/deploy`, `docker compose up -d --build`. Esos dos pasos **no se corren en paralelo**: una vez la reconstrucción salió con el código viejo. El sistema de permisos de Claude Code puede bloquear `git checkout -- deploy`; no hace falta (si `git status` no muestra cambios en `deploy`, el `pull` solo alcanza).
+6. Verificar: `https://valhallarust2.ddns.net/api/health` con `ok: true` y `sourcesDown: []`, contenedor `healthy` sin reinicios y logs sin errores. El campo `version` de ese endpoint es la del servidor (0.1.0), no la de la app. Revisar también `observedRain.available`: lleva varias publicaciones vacío y conviene mirarlo.
+7. **No mandar el aviso de actualización a los usuarios** salvo que se pida.
+
+El agente se detiene si `server/src/db.ts` cambió y nadie lo verificó (ver migraciones).
+
+### Migraciones del servidor (lección de producción)
+
+Las migraciones de `server/src/db.ts` (lista `MIGRATIONS`, aplicadas según `PRAGMA user_version`) se **agregan siempre al final**, nunca en el medio. El 6 de noviembre de 2026, la v0.41.0 puso columnas de lluvia antes de `source_status`: producción (en la versión 9) corrió las entradas equivocadas, falló al crear `source_status` y el contenedor se reinició en bucle unos 10 minutos. Se corrigió con migraciones por función que agregan columnas solo si faltan (`addColumnIfMissing`) y una prueba que reabre una base a medio migrar (`server/test/migrations.test.ts`).
+
+Las pruebas siempre arrancan con la base vacía, así que **no detectan** una migración reordenada: solo una base real de producción. Antes de desplegar un cambio de esquema, abrir una copia de la base de producción con el código nuevo (copiarla del volumen `deploy_vikarg-data` usando la imagen `vikarg-survival`) y revisar `PRAGMA user_version` y las columnas. Después de `docker compose up`, confirmar que el contenedor no se reinicia antes de dar el éxito por hecho.
+
+## 5. Pruebas
+
+- **Unitarias de la app:** `npx vitest run` en `app/` (~35 s, 558 pruebas al 13/11). **Servidor:** en `server/` (113). **Tipos:** `npx tsc --noEmit -p .` en cada uno.
+- **e2e (Playwright, Chromium):** `npm run e2e:full` en `app/` (88 pruebas, ~22 minutos). Ese script (`scripts/e2e-full.sh` → `scripts/heavy-containers.sh`) pausa los contenedores pesados (`nomad_ollama` y el conversor de la biblioteca, que se identifica por su imagen `vikarg-library-builder` y cambia de ID en cada lote; además detiene el bucle `auto-convert.sh`), verifica que de verdad estén pausados (si no, aborta) y los reanuda siempre al salir. `sh scripts/heavy-containers.sh status` muestra el estado. Cuidado: un `pgrep -f` cuyo patrón aparece en tu propio comando también encuentra tu shell (una vez se detuvo a sí mismo).
+- Una sola especificación: `npx playwright test e2e/<archivo>.spec.ts --project=desktop`.
+- **Sin pausar los contenedores pesados, las pruebas de mapas y de tracks fallan por tiempo.** En un equipo sin GPU el WebGL es por software, y alguna prueba de mapas en 3D puede fallar sola: se tratan como del entorno, no como una regresión, pero se comprueba que pasen en otro equipo.
+- Al agregar una función se escribe o ajusta también su e2e (existen para que se corran al final).
+
+## 6. Agentes (subagentes de Claude Code)
+
+Definidos en `.claude/agents/` y cargados al iniciar la sesión (si se crearon después del inicio, usar `general-purpose` con el mismo modelo y pedirle que lea el `.md` del agente). Regla de la casa: la sesión principal se reserva para arquitectura, lógica compleja y programación; las tareas repetitivas, de estimación o de poca complejidad se derivan al agente que corresponde, y la sesión principal solo integra o muestra el resultado. Si aparece otra tarea que valga la pena derivar, **se pausa y se pregunta antes de crear un agente nuevo**.
+
+| Agente | Modelo | Qué hace |
+|---|---|---|
+| `vikarg-probador` | haiku | Corre unitarias, tipos, servidor y e2e (solo con `npm run e2e:full`), informa fallos de sintaxis, tipos y pruebas. No edita código. |
+| `vikarg-publicador` | sonnet | Comprobación de build, subida de versión, push, espera de la release, despliegue en `~/vikarg` y verificación de salud. **Solo con aprobación explícita en el pedido** (más número de versión y pruebas pasadas). Aviso de actualización solo si se pide. |
+| `vikarg-investigador` | sonnet | Busca y verifica datos en la web, OSM y APIs (teléfonos, frecuencias, direcciones, coordenadas, fuentes abiertas y su licencia) con URL, fecha y nivel de confianza. No edita el repositorio. |
+| `vikarg-generador-datos` | haiku | Corre los generadores de `tools/country-data`, `tools/emergency-data` y `tools/geo-data` y verifica el resultado. |
+| `vikarg-documentador` | sonnet | Comentarios del código (en español, el porqué), README y `docs/*.md`. No cambia comportamiento. |
+| `vikarg-limpieza` | haiku | Imports y variables sin usar, estilo del proyecto en los archivos indicados, lista de código muerto (informa, no borra). No hay linter ni formateador y no se agregan. |
+| `vikarg-analista-nudos` | — | Mira los diagramas paso a paso de los nudos y los compara con el texto y la técnica real; devuelve defectos o «OK». Solo analiza. |
+| `vikarg-corrector-nudos` | — | Corrige los specs de `tools/knot-diagrams` según esa lista, regenera y verifica. Solo toca `tools/knot-diagrams/specs` y los SVG generados. |
+| `vikarg-legal` | — | Propiedad intelectual, licencias (GPL, CC BY-SA, ODbL, dominio público), contratos y datos personales (Argentina y reglas de Apple/Google). Solo analiza y redacta borradores: lo valida un abogado matriculado. |
+
+Hay además un agente privado de presupuesto que vive fuera del repositorio porque cita a un cliente; no se comparte.
+
+**Regla de costo** (medida en la sesión): cada agente cuesta ~35 a 45 mil tokens aunque la tarea dure 30 segundos (arranque en frío), y los de modelo chico a veces devuelven informes a medias o paran la e2e antes de tiempo. Por eso:
+- **Hacerlo en la sesión principal:** tipos, `vitest` de un módulo o de todo (~35 s), una e2e puntual. Redirigir la salida a un archivo y leer solo el final o las líneas que fallan; para corridas largas usar ejecución en segundo plano y esperar el aviso de fin (sin consultar a cada rato).
+- **Derivar:** publicación (≈12 pasos con salidas largas y lista de control estricta), e2e completa, investigación web con muchas lecturas, regeneración de paquetes de datos con salidas grandes, pasadas largas de documentación o comentarios.
+- Nunca crear un agente para correr un solo comando.
+- Antes de que un agente publique no se debe editar el árbol de trabajo (revisa `git status` y empuja desde `~/PrepperApp`).
+- Los agentes no escriben la memoria de la sesión: lo que haya que recordar lo registra la sesión principal a partir de su informe.
+
+## 7. Decisiones de producto que conviene no revertir
+
+- **App móvil:** envoltorio Capacitor (Android y, en lo posible, iPhone) sobre el mismo código; la web sigue igual. Para grabar con la pantalla apagada, `@capgo/background-geolocation` (MPL-2.0) a través de una bifurcación pública propia. No Transistorsoft (binario cerrado, clave paga por app, sin excepción GPL), no el complemento comunitario (sin cola nativa), no `@capacitor/geolocation` (solo en primer plano). Antes de comprometerse se hace la prueba de una semana (Xiaomi, Samsung, Pixel o Motorola y un iPhone si se puede; tres salidas de 4 a 6 h con la pantalla apagada y una de 8 h o más, con ahorro de batería y matando la app; segundo teléfono con OsmAnd o Strava como referencia; «confiable» = ≥ 95 % de los puntos esperados, ningún hueco de más de 2 minutos, error de distancia menor al 3 % y registro nativo recuperado entero). Plan B: complemento propio basado en Capgo. Las ediciones a archivos de Capgo se publican bajo MPL-2.0. Detalle en `PENDIENTES.md` §3.
+- **Licencia:** VikArg es GPL-3.0-or-later; el titular del código es su autor (no afirmar a terceros que el código asistido por IA esté todo protegido; validarlo con un abogado). Las versiones institucionales se ofrecen con una licencia de uso no exclusiva distinta. Ver `PENDIENTES.md`, «Licencia: doble licencia».
+- **Biblioteca:** privada por defecto, solo en el servidor propio detrás de una clave de acceso y con aviso de «uso personal»; los libros con derechos de autor van cifrados. Ver `ARQUITECTURA.md` §11.2.
+- **Mapa topográfico impreso:** PDF de una hoja (A4 u Oficio) con escritor de PDF propio, sin conexión, con cuadrícula UTM y su escala, norte verdadero, magnético y de la cuadrícula, tramos con rumbo geográfico y magnético. Si los tramos y las coordenadas no entran enteros, la hoja 1 es solo el mapa y el detalle va desde la hoja 2. Siempre dice que no es una carta oficial. A3 se descartó.
+- **Alertas:** informativas, nunca oficiales; las notificaciones push reales dependen del servidor.
+
+## 8. Cosas que cambian cuando hay más de una persona
+
+- La memoria de la sesión de Claude (`~/.claude/projects/.../memory`) es **local**: no viaja con el repositorio. Todo lo importante tiene que estar en estos documentos, en `CLAUDE.md` o en `PENDIENTES.md`. Si descubrís algo que vale para el resto, escribilo acá o en `FUENTES-DE-DATOS.md`.
+- Los permisos de Claude Code (qué comandos se permiten sin preguntar) son por usuario. Si el sistema bloquea una acción como destructiva o como una evasión de protección de un sitio, no se fuerza: se explica y decide quien dirige.
