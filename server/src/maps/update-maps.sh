@@ -1,8 +1,8 @@
 #!/bin/sh
 # Revisa si hay datos de OpenStreetMap más nuevos que el mapa del servidor y,
-# si los hay, vuelve a armar vector.pmtiles. Pensado para cron (cada 3 meses):
+# si los hay, vuelve a armar vector.pmtiles. Pensado para cron (una vez por mes; el criterio de MIN_DAYS evita reconstruir si no hay datos nuevos):
 #
-#   0 4 1 2,5,8,11 * sh ~/vikarg/server/src/maps/update-maps.sh ~/vikarg/deploy/maps
+#   0 4 1 * * sh ~/vikarg/server/src/maps/update-maps.sh ~/vikarg/deploy/maps
 #
 # La elevación (Terrain Tiles de AWS) es un conjunto fijo: no se regenera.
 # El archivo nuevo reemplaza al anterior recién cuando está completo, y el

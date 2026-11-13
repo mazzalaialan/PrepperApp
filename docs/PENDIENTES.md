@@ -190,6 +190,16 @@ Idea: una sola entidad «Recorrido» con una línea y un origen (grabado, import
 ## Capa «agua en superficie» con ABI-Flood de NOAA (DESCARTADA el 2026-11-13)
 Decisión de quien dirige: si el dato tiene antigüedad (horas, solo de día, tapado por nubes), **no sirve como alerta para la app**, así que no se hace. Detalle del producto en `docs/FUENTES-DE-DATOS.md`, «Otros productos de NOAA». No es un reemplazo de la lluvia estimada retirada.
 
+## Actualización de los datos de OpenStreetMap (revisada el 2026-11-13)
+
+**Hecho el 2026-11-13:** el cron del **mapa vectorial pasó de cada 3 meses a una vez por mes** (`0 4 1 * *`, `~/vikarg/server/src/maps/update-maps.sh`; copia del crontab anterior en el scratchpad de la sesión, no en el repositorio). El relieve no se regenera (Terrain Tiles es un conjunto fijo). Los **paquetes de datos** (parques, emergencias y servicios de Buscar cercanos; `update-data.sh`) siguen **2 veces por mes** (días 3 y 17, 05:00).
+
+**Pendiente, en este orden:**
+1. **Mirar el registro `~/vikarg/deploy/data-packs/update.log` el 18/11**: la corrida del 17/11 a las 05:00 es la **primera completa** (con Perú, Bolivia, los servicios y los parques de BO y PE). La única corrida anterior (6/11) falló en varios archivos porque Overpass no respondió y hoy el servidor solo tiene `CL`, `UY`, `parks-AR` y `parks-CL`. Hasta que corran bien, la app usa los archivos que trae.
+2. **Reemplazar Overpass por el extracto de Geofabrik** en las herramientas de datos (`tools/country-data`, `tools/emergency-data`, `tools/services-data`, `tools/lib/overpass.mjs`): Overpass es un servicio público, se cayó varias veces (502 y 504) y no conviene aumentarle la carga. Con el extracto local (osmium o similar) es más estable y se podría actualizar más seguido sin molestar a nadie.
+3. **Verificar cómo se enteran los teléfonos de que su zona de mapa descargada cambió y cuántos datos gastan al refrescarla** (`/api/maps`, ETag y descarga por rangos). No se revisó. Importa más ahora que el mapa se reconstruye cada mes.
+4. Ver si conviene avisar (en `/api/health`) cuándo fue la última actualización de cada archivo y si falló.
+
 ## Sección «Navegación»: nivel de los ríos y otra información útil (idea del 2026-11-13, sin empezar)
 
 Pedido de quien dirige: una sección nueva que muestre, por ejemplo, **el nivel del río** y otra información relevante para quien navega o cruza cursos de agua. **Nada de esto está investigado todavía ni probado: las fuentes de abajo son candidatas a verificar** (cobertura, formato, licencia, si hay API abierta y sin clave, y si se puede consultar sin saltear protecciones).
