@@ -1,0 +1,5 @@
+{
+  "fuente": "Munter Hitch.jpg y Hitch-munter-ABoK 1818-USCG.jpg (Wikimedia Commons, CC BY-SA 4.0); foto del manual app/public/knots/dinamico-1.webp",
+  "pasos": { "1": ["AB"], "2": ["AB"], "3": ["AB"], "4": ["AB"] },
+  "notas": "Leído a 3x (2026-11-13) sobre la foto de la barra. Son DOS vueltas alrededor de la barra de MANO CONTRARIA con un solo cruce debajo: la carga sube POR DETRAS de la barra, pasa por encima y baja POR DELANTE (seno 1); cruza POR DEBAJO de su tramo ascendente; vuelve a subir POR DELANTE de la barra, pasa por encima y baja POR DETRAS: ahi sale el freno. Secuencia respecto de la barra: detras, delante, delante, detras. El dibujo anterior hacia detras, delante, detras, delante (dos vueltas de la MISMA mano: eso es un ballestrinque, no un dinamico); corregido. Con un solo cruce rope-rope, check.mjs ('AB') no distingue el espejo; la mano se controla con el orden respecto de la barra."
+}

@@ -991,7 +991,7 @@ export const KNOTS: Knot[] = [
     uses: ['rappel', 'rescue'],
     purpose: l('Frena una cuerda que pasa por un mosquetón con seguro, sin descensor. Para asegurar a otro o para bajar si se te cayó el descensor.', 'Brakes a rope running through a locking carabiner, without a belay device. To belay someone or rappel if you dropped your device.'),
     steps: [
-      { text: l('Con la cuerda en la mano, hacé una gaza y después una segunda gaza igual, delante de la primera.', 'In hand, make a loop and then a second identical loop in front of the first.') },
+      { text: l('Con la cuerda en la mano armá una gaza (cruzando la cuerda sobre sí misma) y, al lado, un segundo seno de la misma cuerda en sentido contrario, como un ocho acostado.', 'In hand, make a loop (crossing the rope over itself) and, next to it, a second bight of the same rope in the opposite direction, like a figure of eight lying on its side.') },
       { text: l('Doblá las dos gazas como un libro (la de adelante hacia atrás) y meté las dos juntas en el mosquetón con seguro de tipo pera.', 'Fold the two loops together like closing a book and clip both into a pear-shaped locking carabiner.') },
       { text: l('Cerrá el seguro. La mano de freno siempre agarra la cuerda que no va hacia la persona.', 'Lock the gate. The brake hand always holds the rope not going to the climber.') },
       { text: l('Frena más con la cuerda de freno paralela a la de carga. El nudo se da vuelta solo al cambiar de dar a recoger cuerda: es normal.', 'It brakes most with the brake strand parallel to the load strand. It flips over when switching between paying out and taking in: that is normal.') },
@@ -1132,7 +1132,7 @@ export const KNOTS: Knot[] = [
     purpose: l('Acorta una cuerda sin cortarla, o deja sin carga un tramo dañado. Es provisorio: solo aguanta con la cuerda tensa.', 'Shortens a rope without cutting it, or takes the load off a damaged section. Temporary: it holds only while taut.'),
     steps: [
       { text: l('Doblá la cuerda en tres, formando una "S" alargada del largo que querés acortar.', 'Fold the rope into three, making a long S of the length to shorten.') },
-      { text: l('En cada punta, hacé una gaza en el firme y pasala por encima del seno de ese lado (un cote).', 'At each end, make a loop in the standing part and drop it over the bight on that side (a half hitch).') },
+      { text: l('En cada punta, hacé una gaza en el firme y pasala por el seno de ese lado hasta que abrace los dos tramos que entran en él; la punta del seno tiene que sobresalir por afuera.', 'At each end, make a loop in the standing part and pass it over the bight on that side until it hugs the two strands entering it; the tip of the bight must stick out.') },
       { text: l('Tensá la cuerda. Para que no se suelte, pasá un palito por cada seno o atá los senos al firme.', 'Tension the rope. To keep it from falling apart, push a toggle through each bight or tie the bights to the standing part.') },
     ],
     images: [img('margarita', 1)],
@@ -1153,8 +1153,8 @@ export const KNOTS: Knot[] = [
     purpose: l('Une dos palos que se cruzan en ángulo recto: refugios, mesas, camillas, balsas.', 'Joins two poles crossing at a right angle: shelters, tables, stretchers, rafts.'),
     steps: [
       { text: l('Empezá con un ballestrinque en el palo vertical, debajo del cruce.', 'Start with a clove hitch on the upright pole, below the crossing.') },
-      { text: l('Dá tres o cuatro vueltas pasando por encima del palo horizontal y por detrás del vertical, siempre por fuera de las anteriores.', 'Take three or four wrapping turns over the crosspiece and behind the upright, each outside the previous one.') },
-      { text: l('Dá dos o tres vueltas de ajuste (frapping) entre los palos, apretando las vueltas anteriores.', 'Take two or three frapping turns between the poles, tightening the wraps.') },
+      { text: l('Dá cuatro vueltas completas (como mínimo cuatro) alrededor de los dos palos: por delante del horizontal, por detrás del vertical arriba y por delante abajo, siempre por fuera de las anteriores.', 'Take four complete wrapping turns (at least four) around both poles: in front of the crosspiece, behind the upright above and in front of it below, each outside the previous one.') },
+      { text: l('Dá dos vueltas de ajuste (frapping) entre los palos, apretando las vueltas anteriores.', 'Take two frapping turns between the poles, tightening the wraps.') },
       { text: l('Terminá con un ballestrinque en el palo horizontal.', 'Finish with a clove hitch on the crosspiece.') },
     ],
     images: [img('atadura-cuadrada', 1)],
@@ -1175,8 +1175,8 @@ export const KNOTS: Knot[] = [
     purpose: l('Une dos palos paralelos que después se abren en "A": soportes de refugio, bípodes, patas de mesa.', 'Joins two parallel poles that then open into an A: shelter supports, bipods, table legs.'),
     steps: [
       { text: l('Poné los dos palos juntos y empezá con un ballestrinque en uno.', 'Lay both poles together and start with a clove hitch on one.'), img: img('atadura-tijera', 1) },
-      { text: l('Dá siete u ocho vueltas alrededor de los dos palos, sin apretar demasiado.', 'Take seven or eight turns around both poles, not too tight.') },
-      { text: l('Dá dos o tres vueltas de ajuste entre los palos y terminá con un ballestrinque en el otro palo. Abrí las patas.', 'Take two or three frapping turns between the poles and finish with a clove hitch on the other pole. Open the legs.'), img: img('atadura-tijera', 2) },
+      { text: l('Dá ocho vueltas apretadas alrededor de los dos palos.', 'Take eight tight turns around both poles.') },
+      { text: l('Dá dos o tres vueltas de ajuste por la rendija entre los palos, alrededor de las vueltas anteriores, y terminá con un ballestrinque en el otro palo. Abrí las patas.', 'Take two or three frapping turns through the gap between the poles, around the previous turns, and finish with a clove hitch on the other pole. Open the legs.'), img: img('atadura-tijera', 2) },
     ],
     images: [],
     holdsLoad: true,
@@ -1222,8 +1222,8 @@ export const KNOTS: Knot[] = [
     purpose: l('Une tres palos para armar un trípode: colgar una olla sobre el fuego, base de un refugio o de un filtro de agua.', 'Joins three poles into a tripod: to hang a pot over the fire, as a shelter frame or water filter stand.'),
     steps: [
       { text: l('Poné tres palos juntos, el del medio al revés que los otros dos.', 'Lay three poles together, the middle one reversed.'), img: img('atadura-tripode', 1) },
-      { text: l('Ballestrinque en un palo de afuera y cinco o seis vueltas entrelazadas, pasando por encima y por debajo de cada palo.', 'Clove hitch on an outer pole and five or six weaving turns, over and under each pole.') },
-      { text: l('Vueltas de ajuste entre cada par de palos y ballestrinque en el otro palo de afuera. Abrí las patas.', 'Frapping turns between each pair of poles and a clove hitch on the other outer pole. Spread the legs.'), img: img('atadura-tripode', 2) },
+      { text: l('Ballestrinque en un palo de afuera y ocho vueltas entrelazadas, pasando por encima y por debajo de cada palo.', 'Clove hitch on an outer pole and eight weaving turns, over and under each pole.') },
+      { text: l('Dos vueltas de ajuste en cada hueco entre los palos, sin apretar (se aprietan al abrir las patas), y cerrá con un ballestrinque en el otro palo de afuera. Abrí las patas.', 'Two frapping turns in each gap between the poles, not tight (they tighten when you spread the legs), and finish with a clove hitch on the other outer pole. Spread the legs.'), img: img('atadura-tripode', 2) },
     ],
     images: [],
     holdsLoad: true,
@@ -1245,8 +1245,8 @@ export const KNOTS: Knot[] = [
       'Two ropes and wooden rungs, each held by a clove hitch at both ends: to climb a tree or a roof or get down a drop. Without poles, a single rope with butterfly loops every 40 cm works as foot loops.',
     ),
     steps: [
-      { text: l('Prepará los travesaños: palos sanos y firmes de 3 a 4 cm de grosor y unos 40 cm de largo. Marcá las dos cuerdas a la misma distancia, cada 30 a 35 cm.', 'Prepare the rungs: sound, strong sticks 3–4 cm thick and about 40 cm long. Mark both ropes at the same spacing, every 30–35 cm.') },
-      { text: l('En la primera marca hacé un ballestrinque alrededor de una punta del travesaño, a unos 5 cm del extremo.', 'At the first mark tie a clove hitch around one end of the rung, about 5 cm from the tip.') },
+      { text: l('Prepará los travesaños: palos sanos y firmes de 3 a 4 cm de grosor y unos 40 cm de largo, con una muesca (cintura) en cada punta donde va el ballestrinque. Marcá las dos cuerdas a la misma distancia, cada 30 a 35 cm.', 'Prepare the rungs: sound, strong sticks 3–4 cm thick and about 40 cm long, with a notch (waist) at each end where the clove hitch goes. Mark both ropes at the same spacing, every 30–35 cm.') },
+      { text: l('En la primera marca hacé un ballestrinque en la muesca de una punta del travesaño: se arma en seno sobre la cuerda continua, sin cortarla.', 'At the first mark tie a clove hitch in the notch at one end of the rung: it is made in the bight on the continuous rope, without cutting it.') },
       { text: l('Hacé lo mismo con la otra cuerda en la otra punta, a la misma altura. Para que no corran, hacé una muesca en cada punta del travesaño donde va el ballestrinque, o atá cada uno con hilo fuerte.', 'Do the same with the other rope at the other end, level with the first. So they cannot slide, cut a notch at each end of the rung where the clove hitch sits, or seize each one with strong twine.') },
       { text: l('Repetí escalón por escalón. Antes de subir, probala cerca del suelo cargando cada escalón con todo el peso.', 'Repeat rung by rung. Before climbing, test it close to the ground by putting your full weight on each rung.') },
     ],

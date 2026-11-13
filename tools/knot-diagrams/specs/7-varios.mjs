@@ -32,25 +32,30 @@ const chain = (n, end = false) => {
   return out;
 };
 
+// Dinámico (Munter) leído de la foto «Munter Hitch.jpg» (ver refs/dinamico.json): carga abajo a la izquierda, freno abajo a la derecha.
+const MUNTER = [[120, 345], [160, 288], [190, 240, 0.5], [200, 205], [203, 182, -1], [203, 160, -1], [195, 140], [172, 128], [150, 134], [140, 158], [140, 180, 1], [143, 210, 1], [160, 228], [190, 240, -0.5], [215, 248], [235, 235], [238, 205], [236, 178, 1], [232, 150, 1], [238, 132], [255, 128], [266, 145], [266, 165, -1], [266, 182, -1], [264, 230], [262, 290], [262, 345]];
+
 export default {
   dinamico: (() => {
-    // Mosquetón grande (pera) visto de frente: la cuerda trabaja sobre su barra de abajo (y ≈ 175).
+    // Mosquetón grande (pera) visto de frente: la cuerda trabaja sobre su barra de abajo (y ≈ 170).
     const pear = { kind: 'path', d: 'M200 15c-60 0-85 40-80 90l8 70c4 30 140 30 144 0l8-70c5-50-20-90-80-90zm0 18c45 0 63 32 60 72l-8 66c-3 18-101 18-104 0l-8-66c-3-40 15-72 60-72z', fill: '#9aa1ab', stroke: '#5c626b' };
-    // Carga abajo a la izquierda; sube por detrás de la barra, baja por delante, cruza la carga, otra vuelta al revés y sale el freno abajo a la derecha.
-    const munter = [[120, 345], [150, 260], [168, 205], [172, 182, -1], [182, 158], [205, 152], [214, 178, 1], [205, 210, 1], [178, 228, 2], [148, 222], [140, 190], [146, 176, -1], [165, 150], [215, 140], [236, 160], [240, 180, 1], [234, 230, 1], [250, 300], [272, 345]];
-    const handLoops = [[-20, 228], ...loopAt(150), ...loopAt(250), [420, 228]];
+    // Leído de la foto «Munter Hitch.jpg» (CC BY-SA 4.0): son dos senos con vueltas de mano contraria alrededor de la barra, con UN cruce debajo.
+    // La carga (abajo a la izquierda) sube POR DETRÁS de la barra, pasa por encima, baja POR DELANTE (primer seno), cruza POR DEBAJO de su propio tramo ascendente,
+    // sube de nuevo POR DELANTE de la barra, pasa por encima y baja POR DETRÁS: sale el freno.
+    const munter = MUNTER;
+    const flat = munter.map(([x, y, zz]) => (zz === undefined || Math.abs(zz) < 1 ? [x, y, zz] : [x, y]));
     return [
-      { ropes: [{ ...A, path: handLoops }], arrows: [[[250, 90], [200, 60], [150, 90]]] },
+      { height: 420, rope: 10, ropes: [{ ...A, path: flat }], arrows: [[[300, 120], [255, 160]], [[100, 120], [145, 160]]] },
       { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: munter }], arrows: [[[330, 150], [285, 120]]] },
       { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: munter }] },
-      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter.slice(0, -2), [220, 290], [175, 345]] }], arrows: [[[95, 300], [95, 340]], [[300, 300], [230, 335]]] },
+      { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter.slice(0, -3), [250, 250], [215, 300], [170, 345]] }], arrows: [[[95, 300], [95, 340]], [[300, 300], [230, 335]]] },
     ];
   })(),
   mula: (() => {
     const pear = { kind: 'path', d: 'M200 15c-60 0-85 40-80 90l8 70c4 30 140 30 144 0l8-70c5-50-20-90-80-90zm0 18c45 0 63 32 60 72l-8 66c-3 18-101 18-104 0l-8-66c-3-40 15-72 60-72z', fill: '#9aa1ab', stroke: '#5c626b' };
-    const munter = [[120, 345], [150, 260], [168, 205], [172, 182, -1], [182, 158], [205, 152], [214, 178, 1], [205, 210, 1], [178, 228, 2], [148, 222], [140, 190], [146, 176, -1], [165, 150], [215, 140], [236, 160], [240, 180, 1], [234, 230, 1]];
+    const munter = MUNTER.slice(0, -3);
     // El freno baja, pasa un seno por detrás de la carga y lo cierra como un cote corredizo alrededor de ella.
-    const behind = [[236, 262], [200, 278, -1], [130, 285, -1], [95, 290], [92, 312], [118, 318]];
+    const behind = [[262, 262], [200, 278, -1], [130, 285, -1], [95, 290], [92, 312], [118, 318]];
     const slip = [[150, 312, 2], [200, 305, 2], [222, 290], [210, 268], [185, 270, 2], [175, 300, 2], [195, 330], [245, 340]];
     return [
       { height: 420, rope: 10, zoom: [1.3, 200, 100], poles: [anchorBar, pear], ropes: [{ ...A, path: [...munter, ...behind, [160, 320], [250, 330]] }] },
@@ -60,12 +65,17 @@ export default {
     ];
   })(),
   guarda: (() => {
-    const two = [anchorBar, biner(170, 40), biner(230, 40)];
+    // Dos mosquetones iguales pegados (en la foto se ven casi superpuestos, uno detrás del otro): se dibujan apenas corridos.
+    const two = [anchorBar, biner(228, 22, 1.5), biner(192, 22, 1.5)];
+    // Paso 2 (foto del manual y VDiff, ver refs/guarda.json): el seno entra por el ojo de los DOS mosquetones: un tramo pasa por DELANTE de las barras de abajo, da la vuelta adentro y baja por DETRAS.
+    const clip = [[140, 345], [160, 290], [186, 208, 1], [194, 160, 1], [210, 130], [226, 160, -1], [232, 208, -1], [246, 290], [262, 345]];
+    // Paso 3: del lado que no carga (derecha) se saca una gaza de la cuerda y se mete por el ojo del mosquetón de la izquierda (por delante), sin tocar el otro.
+    const loopTail = [[246, 290], [236, 262], [200, 246, -0.5], [165, 226], [158, 208, 1], [156, 160, 1], [166, 122], [176, 160, -1], [172, 208, -1], [200, 250, 0.5], [250, 290], [275, 345]];
     return [
       { ...H, poles: two },
-      { ...H, poles: two, ropes: [{ ...A, path: [[150, 345], [158, 220], [162, 70, -1], [200, 40], [238, 70, -1], [242, 220], [250, 345]] }] },
-      { ...H, poles: two, ropes: [{ ...A, path: [[150, 345], [158, 220], [162, 70, -1], [200, 40], [238, 70, -1], [240, 150], [215, 175], [215, 120, 1], [228, 95, -1], [215, 150], [200, 210], [200, 345]] }] },
-      { ...H, poles: two, ropes: [{ ...A, path: [[150, 345], [158, 220], [162, 70, -1], [200, 40], [238, 70, -1], [240, 150], [215, 175], [215, 120, 1], [228, 95, -1], [215, 150], [200, 210], [200, 345]] }], arrows: [[[120, 300], [120, 340]], [[230, 340], [230, 290]]] },
+      { ...H, poles: two, ropes: [{ ...A, path: clip }] },
+      { ...H, poles: two, ropes: [{ ...A, path: [...clip.slice(0, 7), ...loopTail] }] },
+      { ...H, poles: two, ropes: [{ ...A, path: [...clip.slice(0, 7), ...loopTail] }], arrows: [[[100, 300], [100, 340]], [[310, 340], [310, 290]]] },
     ];
   })(),
   cornamusa: [
@@ -95,12 +105,18 @@ export default {
     { width: 420, ropes: [{ ...A, path: chain(4, true) }], arrows: [[[40, 100], [5, 100]]] },
   ],
   margarita: (() => {
-    const S = [[-20, 100], [150, 100], [290, 100], [322, 125], [290, 150], [200, 150], [110, 150], [78, 175], [110, 200], [250, 200], [420, 200]];
-    const hitched = [[-20, 100], [30, 100], [80, 120], [100, 175, 1], [95, 222], [68, 222], [58, 175, -1], [72, 128], [110, 100], [150, 100], [290, 100], [322, 125], [290, 150], [200, 150], [110, 150], [78, 175], [110, 200], [250, 200], [290, 198], [302, 175], [302, 125, 1], [310, 80], [335, 80], [345, 125, -1], [332, 175], [315, 200], [420, 200]];
+    // Tres tramos paralelos (arriba, medio, abajo) unidos por dos senos: el izquierdo (medio-abajo) y el derecho (arriba-medio).
+    const S = [[-20, 100], [340, 100], [378, 115], [378, 135], [340, 150], [40, 150], [14, 175], [40, 200], [420, 200]];
+    // Cada punta da una vuelta (cote) alrededor del cuello de su seno: baja POR ARRIBA de los dos tramos del cuello, sube POR DEBAJO y sigue (la punta del seno queda afuera de la vuelta).
+    const hitched = [
+      [-20, 70], [90, 62], [135, 72], [135, 100, 2], [135, 150, 2], [135, 200, 2], [135, 232, 2], [118, 248, 2], [100, 234, -1], [100, 200, -1], [100, 150, -1], [100, 116, -1], [114, 103, -1], [150, 100, -1],
+      [200, 100], [340, 100], [378, 115], [378, 135], [340, 150], [40, 150], [14, 175], [40, 200], [200, 200],
+      [290, 200], [300, 184, -1], [300, 150, -1], [300, 100, -1], [300, 70, -1], [285, 56, 2], [265, 68, 2], [265, 100, 2], [265, 150, 2], [265, 200, 2], [265, 232, 2], [285, 238], [330, 230], [420, 230],
+    ];
     return [
       { ropes: [{ ...A, path: S, end: false }] },
       { ropes: [{ ...A, path: hitched, end: false }] },
-      { ropes: [{ ...A, path: hitched, end: false }], arrows: [[[40, 60], [5, 60]], [[355, 240], [395, 240]]] },
+      { ropes: [{ ...A, path: hitched, end: false }], arrows: [[[40, 30], [5, 30]], [[355, 270], [395, 270]]] },
     ];
   })(),
 };
