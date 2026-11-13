@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom';
 import { Flag, Pencil, Plus, Radio, RadioTower, Trash2, Upload } from 'lucide-react';
 import { distanceMeters } from '@/core/geo/geo';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
-import { useSettings } from '@/core/settings/settings';
+import { useSettings, type Country } from '@/core/settings/settings';
 import { loadCountryData } from './country';
+import { usePlaceCountries } from './usePlaceCountry';
 import { distanceToPark, loadParks, nearestRadio, parkCountry, type EmergencyData, type ParksData } from './data';
 import { CopyButton, formatDistance, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { distanceToCountry, loadBorders, type BordersData } from './borders';
@@ -62,22 +63,44 @@ const FAR_M = 50_000;
 export function RadioPage() {
   const { t, i18n } = useTranslation();
   const { place, picker } = usePlacePicker();
-  const [data, setData] = useState<EmergencyData | null>(null);
-  const country = useSettings((s) => s.settings.country);
+  // El país es el del lugar elegido, no el de Ajustes: en un lugar de Perú salen las radios, parques y repetidoras de Perú; y a
+  // menos de 50 km de la frontera, también las emisoras del país vecino.
+  const { country, near } = usePlaceCountries(place);
+  const nearKey = near.join(',');
+  const [data, setData] = useState<Partial<Record<Country, EmergencyData>>>({});
   const [packageMissing, setPackageMissing] = useState(false);
   useEffect(() => {
+    let live = true;
     setPackageMissing(false);
-    loadCountryData(country).then(
-      (d) => setData(d.emergency),
-      () => {
-        setPackageMissing(true);
-        setData(null);
-      },
-    );
-  }, [country]);
+    void Promise.all(
+      near.map((c) =>
+        loadCountryData(c).then(
+          (d) => [c, d.emergency] as const,
+          () => [c, null] as const,
+        ),
+      ),
+    ).then((res) => {
+      if (!live) return;
+      // Sin el paquete del país del lugar (sin conexión y sin bajar) se avisa; el de un vecino que falta simplemente no suma.
+      setPackageMissing(res.some(([c, d]) => c === country && d === null));
+      setData(Object.fromEntries(res.filter((r): r is readonly [Country, EmergencyData] => r[1] !== null)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [nearKey]); // eslint-disable-line react-hooks/exhaustive-deps
   // Argentina: "Radio Nacional"; los demás países, con su título y su aclaración.
-  const radioKey = (key: 'nacionalTitle' | 'nacionalNote') => (country === 'AR' ? `radio.${key}` : `radio.${key}${country}`);
-  const stations = useMemo(() => (data && place ? nearestRadio(data, place.lat, place.lon) : []), [data, place?.lat, place?.lon]);
+  const radioKey = (key: 'nacionalTitle') => (country === 'AR' ? `radio.${key}` : `radio.${key}${country}`);
+  // Las más cercanas del país del lugar y de los países vecinos a menos de 50 km de su frontera: siempre la más cercana de cada país
+  // (aunque del otro lado queden más lejos que las tres de este) y el resto hasta tres, por distancia.
+  const stations = useMemo(() => {
+    if (!place) return [];
+    const perCountry = near.flatMap((c) => (data[c] ? [nearestRadio(data[c]!, place.lat, place.lon).map((s) => ({ ...s, country: c }))] : []));
+    const first = perCountry.flatMap((l) => (l[0] ? [l[0]] : []));
+    const rest = perCountry.flat().filter((s) => !first.includes(s)).sort((x, y) => x.distance - y.distance);
+    return [...first, ...rest].slice(0, Math.max(3, first.length)).sort((x, y) => x.distance - y.distance);
+  }, [data, nearKey, place?.lat, place?.lon]); // eslint-disable-line react-hooks/exhaustive-deps
+  const several = near.length > 1 && new Set(stations.map((s) => s.country)).size > 1;
   const fm = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const contacts = useContacts((s) => s.contacts);
   // Mis frecuencias: las que tienen lugar, de la más cercana a la más lejana; después el resto por nombre.
@@ -129,7 +152,7 @@ export function RadioPage() {
       </section>
 
       <section className="card stack" aria-labelledby="rn-title">
-        <h2 id="rn-title" className="section-title" style={{ margin: 0 }}>{t(radioKey('nacionalTitle'))}</h2>
+        <h2 id="rn-title" className="section-title" style={{ margin: 0 }}>{t(several ? 'radio.nacionalTitleMany' : radioKey('nacionalTitle'))}</h2>
         <p className="hint" style={{ margin: 0 }}>{t('radio.nacionalHint')}</p>
         {packageMissing ? (
           <p className="empty">{t('radio.packageMissing', { country: t(`country.${country}`) })}</p>
@@ -145,7 +168,7 @@ export function RadioPage() {
                     {s.call} · {s.city}
                   </span>
                   <span className="list-sub">
-                    {[s.province, t('radio.distance', { distance: formatDistance(s.distance, i18n.language) })].filter(Boolean).join(' · ')}
+                    {[several ? t(`country.${s.country}`) : null, s.province, t('radio.distance', { distance: formatDistance(s.distance, i18n.language) })].filter(Boolean).join(' · ')}
                   </span>
                 </span>
                 <span className="radio-freqs">
@@ -156,7 +179,9 @@ export function RadioPage() {
             ))}
           </ul>
         )}
-        <p className="hint" style={{ margin: 0 }}>{t(radioKey('nacionalNote'))}</p>
+        {(several ? [...new Set(stations.map((s) => s.country))] : [country]).map((c) => (
+          <p key={c} className="hint" style={{ margin: 0 }}>{t(c === 'AR' ? 'radio.nacionalNote' : `radio.nacionalNote${c}`)}</p>
+        ))}
       </section>
 
       <section className="card stack" aria-labelledby="distress-title">
@@ -175,13 +200,13 @@ export function RadioPage() {
         <Notice id="radio.distress">{t('radio.distressNote')}</Notice>
       </section>
 
-      {country !== 'UY' && <ParkSection place={place} />}
+      {country !== 'UY' && <ParkSection place={place} country={country} />}
 
       {(country === 'AR' || country === 'CL') && <MountainSection place={place} />}
 
       <RenerSection place={place} />
 
-      <RepeatersSection place={place} />
+      <RepeatersSection place={place} country={country} />
 
       <HamSection country={country} />
 
@@ -352,9 +377,8 @@ const OTHER_PARKS_SHOWN = 10;
  * publican una frecuencia, del más cercano al más lejano, para tenerlas antes
  * de salir.
  */
-function ParkSection({ place }: { place: { lat: number; lon: number } | null }) {
+function ParkSection({ place, country }: { place: { lat: number; lon: number } | null; country: Country }) {
   const { t, i18n } = useTranslation();
-  const country = useSettings((s) => s.settings.country);
   const [parks, setParks] = useState<ParksData | null>(null);
   useEffect(() => {
     void loadParks(country).then(setParks);
@@ -437,13 +461,12 @@ function formatKm(m: number, locale: string): string {
 /** Cuántas repetidoras cercanas se muestran (con un archivo de todo el país pueden ser cientos). */
 const REPEATERS_SHOWN = 25;
 
-function RepeatersSection({ place }: { place: { lat: number; lon: number } | null }) {
+function RepeatersSection({ place, country }: { place: { lat: number; lon: number } | null; country: Country }) {
   const { t, i18n } = useTranslation();
   const [list, setList] = useState<RepeaterList | null>(null);
   const [official, setOfficial] = useState<OfficialRepeaterList[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
-  const country = useSettings((s) => s.settings.country);
 
   // Listados oficiales (Chile): guardados en el dispositivo; sin conexión y sin bajar, no hay.
   useEffect(() => {

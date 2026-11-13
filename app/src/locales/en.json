@@ -659,6 +659,7 @@
       "attribution": "RepeaterBook data: \"Data courtesy of RepeaterBook.com\", for personal use. Confirm frequency and tone with the club before transmitting; transmitting requires a license."
     },
     "nacionalTitle": "Nearest Radio Nacional station",
+    "nacionalTitleMany": "Nearest national radio stations (both sides of the border)",
     "nacionalHint": "During a power or internet outage, a battery radio is how you hear what the authorities announce.",
     "distance": "{{distance}} away",
     "nacionalNote": "AM reaches farther (hundreds of km at night); FM sounds better but only near the station. Frequencies: Radio Nacional (via Wikipedia); check them with your radio.",
@@ -667,7 +668,7 @@
     "nacionalTitleBO": "Nearest Radio Patria Nueva (state radio) station",
     "nacionalNoteBO": "State radio: Red Patria Nueva (Radio Illimani), FM 94.3 and AM 1020 in La Paz, FM 93.7 in Cochabamba and repeaters in the capitals. Only La Paz and Cochabamba are confirmed: if you tune in another one in your city, let us know.",
     "nacionalTitlePE": "Nearest Radio Nacional del Perú station",
-    "nacionalNotePE": "Public radio: Radio Nacional del Perú (IRTP), FM 103.9 and AM 850 in Lima and stations in the main cities. AM reaches farther at night; FM only nearby. Frequencies outside Lima are not confirmed by IRTP: if yours differs, let us know.",
+    "nacionalNotePE": "Public radio: Radio Nacional del Perú (IRTP), FM 103.9 and AM 850 in Lima and 70 FM stations across the country. AM reaches farther at night; FM only nearby. Frequencies come from IRTP's official list (from 2021): if yours differs, let us know.",
     "nacionalTitleCL": "Nearest nationwide radio station",
     "nacionalNoteCL": "Chile has no national public radio: this shows the Radio Bío-Bío network (private, with stations in every region), which reports emergencies. SENAPRED official alerts also reach phones through the Emergency Alert System (SAE). Frequencies via Wikipedia; check them with your radio.",
     "packageMissing": "The {{country}} stations come with the country's offline data: it downloads automatically the first time there is a connection.",
