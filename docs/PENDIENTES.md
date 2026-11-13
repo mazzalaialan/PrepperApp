@@ -190,6 +190,32 @@ Idea: una sola entidad «Recorrido» con una línea y un origen (grabado, import
 ## Capa «agua en superficie» con ABI-Flood de NOAA (DESCARTADA el 2026-11-13)
 Decisión de quien dirige: si el dato tiene antigüedad (horas, solo de día, tapado por nubes), **no sirve como alerta para la app**, así que no se hace. Detalle del producto en `docs/FUENTES-DE-DATOS.md`, «Otros productos de NOAA». No es un reemplazo de la lluvia estimada retirada.
 
+## Sección «Navegación»: nivel de los ríos y otra información útil (idea del 2026-11-13, sin empezar)
+
+Pedido de quien dirige: una sección nueva que muestre, por ejemplo, **el nivel del río** y otra información relevante para quien navega o cruza cursos de agua. **Nada de esto está investigado todavía ni probado: las fuentes de abajo son candidatas a verificar** (cobertura, formato, licencia, si hay API abierta y sin clave, y si se puede consultar sin saltear protecciones).
+
+**Qué podría mostrar** (a decidir con quien dirige cuáles entran):
+- **Nivel y caudal de ríos** cerca del lugar elegido o de los waypoints guardados, con tendencia (sube o baja) y la fecha y hora de la lectura. Útil para navegar, pescar, remar (hay remo en Entrenamiento) y para decidir si **cruzar un río** en una salida de trekking.
+- **Crecidas y alertas hidrológicas** (informativas, como las demás alertas de la app).
+- **Mareas** (tabla del día y pleamar/bajamar) y **estado del mar**: altura de ola, período y oleaje, viento en el agua.
+- **Viento, visibilidad, sol y luna** (la luna y el sol ya se calculan en la app: reutilizar), y el pronóstico marítimo oficial si hay.
+- **Avisos a los navegantes** y cierres de puertos o pasos, si existe una fuente abierta.
+- Guardar un **río o puerto como favorito** y que avise cuando pase un umbral, como los avisos de lluvia por waypoint.
+
+**Fuentes candidatas (a verificar una por una, anotando fuente, licencia, fecha y formato como en `docs/FUENTES-DE-DATOS.md`):**
+- **Global:** la API de **inundaciones de Open-Meteo** (caudal de ríos pronosticado, del modelo GloFAS; la de Open-Meteo marina, para olas; ambas con licencia abierta pero **no son lecturas medidas** y la resolución es gruesa) y los cálculos astronómicos propios para mareas aproximadas o luna.
+- **Argentina:** INA (Instituto Nacional del Agua, red de alerta hidrológica con alturas medidas de los grandes ríos), Servicio de Hidrografía Naval (mareas y alturas del Río de la Plata y el Paraná), Prefectura Naval, y el SMN (pronóstico marítimo y avisos). Ojo: el SMN ya mostró protección anti-bot en su radar (ver «Radar del SMN»): **no se saltea**, se pide acceso formal.
+- **Chile:** DGA (Dirección General de Aguas: caudales y niveles en tiempo real), SHOA (mareas) y Directemar (meteorología marítima).
+- **Uruguay, Bolivia y Perú:** SENAMHI de Bolivia ya tiene alertas hidrológicas en texto (`active-hydro-alerts`, ver «Alertas oficiales»); SENAMHI de Perú (hidrología), INUMET y la Armada de cada país.
+
+**Diseño a tener en cuenta:**
+- **Sin conexión nunca se rompe:** guardar la última lectura con su **fecha y antigüedad bien visibles** («hace 3 h»); un nivel viejo no debe leerse como actual. Datos de ríos de 1 a 6 horas de atraso son normales.
+- **Informativo, nunca oficial:** mismas leyendas que las alertas del SMN (`legal.smn`); ante una crecida, lo oficial manda. No usarlo como única razón para cruzar un río: aviso de seguridad.
+- **Por país del lugar**, con el criterio de «priorizar el país donde estás» y las fronteras a 50 km (ver «PRIMERO PARA REVISAR»).
+- El peso de los datos se mide antes de bajar nada (servidor propio con caché, como la lluvia y los rayos: una consulta cada tanto para todos, no una por usuario).
+
+**Primer paso:** investigar las fuentes con `vikarg-investigador` (qué ríos y estaciones cubre cada una, si hay API abierta, licencia y atraso), empezando por Argentina y la API global de Open-Meteo, y con eso decidir con quien dirige qué entra en una primera versión. Antes de programar: ver si va como sección propia en el inicio (junto a Meteo) o dentro de Meteo.
+
 ## Hidroponía y acuaponía (idea charlada el 2026-11-12, sin empezar)
 - Prioridad: hidroponía sin electricidad (Kratky, raíz flotante) y sustrato; acuaponía en una segunda etapa sobre la misma base (registro de agua, peces, aireación de respaldo obligatoria).
 - **No usa la grilla de superficie de los canteros:** un sistema se define por sus **lugares para plantas ("macetines")**, que es el dato a cargar y el límite de plantas. Estructura: N torres o caños × niveles × macetines por nivel (o una cantidad total si es una bandeja). Cada siembra ocupa macetines, no cuadros de 30 cm; la distancia entre plantas no aplica.
