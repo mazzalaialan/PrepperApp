@@ -17,8 +17,8 @@
  * - Radios: Radiodifusión Nacional del Uruguay (Radio Uruguay y su red del
  *   interior) y la red de Radio Bío-Bío en Chile (privada, de cobertura nacional:
  *   Chile no tiene radio pública) y la Red Patria Nueva de Bolivia (solo las
- *   frecuencias confirmadas), ubicadas con GeoNames. De Radio Nacional del Perú
- *   no hay lista de frecuencias por ciudad publicada.
+ *   frecuencias confirmadas) y Radio Nacional del Perú (planilla oficial del IRTP),
+ *   ubicadas con GeoNames.
  *
  * Uso: node tools/country-data/build.mjs [UY|CL|BO|PE]   (necesita conexión; el resultado se versiona; sin país, todos)
  */
@@ -137,25 +137,82 @@ const RADIO_BO = [
 ];
 
 /**
- * Radio Nacional del Perú (IRTP): lista aportada por un usuario (myradioenvivo.pe), sin confirmar en el IRTP,
- * salvo Puno (100.9) y Trujillo (89.7), tomadas de «Red de Radio FM del IRTP» (datosabiertos.gob.pe, ODC-By, 2021-09-15).
+ * Radio Nacional del Perú (IRTP): las 70 estaciones FM y las 4 AM de las planillas oficiales «Red de Radio FM del IRTP» y «Red de Radio
+ * Nacional AM del IRTP» (datosabiertos.gob.pe, ODC-By: hay que atribuir; planilla del 2021-09-15, puede haber cambiado). Se descartó una
+ * lista anterior de un sitio de terceros (myradioenvivo.pe): ponía a Piura los valores de Ayabaca (850 AM y 89.1 FM; Piura es 100.5 FM) y
+ * AM de otras ciudades que la planilla oficial no trae (Ayacucho 1260, Cajamarca 1050, Chimbote 1020).
  */
 const RADIO_PE = [
-  ['Radio Nacional del Perú', 'Lima', 850, 103.9],
-  ['Radio Nacional del Perú', 'Abancay', null, 100.1],
-  ['Radio Nacional del Perú', 'Arequipa', null, 92.5],
-  ['Radio Nacional del Perú', 'Ayacucho', 1260, 97.9],
-  ['Radio Nacional del Perú', 'Cajamarca', 1050, 100.1],
-  ['Radio Nacional del Perú', 'Chiclayo', null, 101.7],
-  ['Radio Nacional del Perú', 'Chimbote', 1020, 105.1],
-  ['Radio Nacional del Perú', 'Cusco', null, 96.9],
-  ['Radio Nacional del Perú', 'Huancayo', null, 97.9],
+  ['Radio Nacional del Perú', 'Chachapoyas', null, 103.9],
+  ['Radio Nacional del Perú', 'Bagua', null, 91.3],
   ['Radio Nacional del Perú', 'Huaraz', null, 100.5],
+  ['Radio Nacional del Perú', 'Cabana', null, 101.3],
+  ['Radio Nacional del Perú', 'Chimbote', null, 105.1],
+  ['Radio Nacional del Perú', 'Yungay', null, 101.3],
+  ['Radio Nacional del Perú', 'Abancay', null, 100.1],
+  ['Radio Nacional del Perú', 'Andahuaylas', null, 101.1],
+  ['Radio Nacional del Perú', 'Arequipa', null, 92.5],
+  ['Radio Nacional del Perú', 'Puerto Lomas', null, 104.7, { province: 'Caravelí', lat: -15.5667, lon: -74.8333 }],
+  ['Radio Nacional del Perú', 'Yauca', null, 101.9],
+  ['Radio Nacional del Perú', 'Chivay', null, 103.7],
+  ['Radio Nacional del Perú', 'Ayacucho', null, 97.9],
+  ['Radio Nacional del Perú', 'Sivia', null, 104.7],
+  ['Radio Nacional del Perú', 'Cajamarca', null, 100.1],
+  ['Radio Nacional del Perú', 'Jaén', null, 101.1],
+  ['Radio Nacional del Perú', 'San Miguel', null, 100.3],
+  ['Radio Nacional del Perú', 'Cusco', null, 96.9],
+  ['Radio Nacional del Perú', 'Quillabamba', null, 99.9],
+  ['Radio Nacional del Perú', 'Sicuani', null, 103.3],
+  ['Radio Nacional del Perú', 'Acomayo', null, 100.7],
+  ['Radio Nacional del Perú', 'Paucartambo', null, 100.1],
+  ['Radio Nacional del Perú', 'Santo Tomás', null, 100.5],
+  ['Radio Nacional del Perú', 'Huancavelica', null, 101.9],
+  ['Radio Nacional del Perú', 'Huánuco', null, 100.9],
+  ['Radio Nacional del Perú', 'Tingo María', null, 99.7],
   ['Radio Nacional del Perú', 'Ica', null, 100.7],
-  ['Radio Nacional del Perú', 'Iquitos', 1120, 101.3],
-  ['Radio Nacional del Perú', 'Piura', 850, 89.1],
-  ['Radio Nacional del Perú', 'Puno', null, 100.9],
+  ['Radio Nacional del Perú', 'Nazca', null, 97.5],
+  ['Radio Nacional del Perú', 'Pisco', null, 90.9],
+  ['Radio Nacional del Perú', 'Chincha', null, 101.7],
+  ['Radio Nacional del Perú', 'Huancayo', null, 97.9],
+  ['Radio Nacional del Perú', 'Pichanaki', null, 95.9, { province: 'Chanchamayo', lat: -10.9253, lon: -74.8733 }],
+  ['Radio Nacional del Perú', 'Satipo', null, 100.3],
+  ['Radio Nacional del Perú', 'Chiclayo', null, 101.7],
   ['Radio Nacional del Perú', 'Trujillo', null, 89.7],
+  ['Radio Nacional del Perú', 'Huamachuco', null, 106.5],
+  ['Radio Nacional del Perú', 'Santiago de Chuco', null, 100.1],
+  ['Radio Nacional del Perú', 'Lunahuaná', null, 99.3],
+  ['Radio Nacional del Perú', 'Lima', 850, 103.9],
+  ['Radio Nacional del Perú', 'Comas', null, 89.3],
+  ['Radio Nacional del Perú', 'Cañete', null, 92.9],
+  ['Radio Nacional del Perú', 'Oyón', null, 100.1],
+  ['Radio Nacional del Perú', 'Iquitos', 1120, 101.3],
+  ['Radio Nacional del Perú', 'Nauta', null, 100.5],
+  ['Radio Nacional del Perú', 'Yurimaguas', null, 98.9],
+  ['Radio Nacional del Perú', 'Caballococha', null, 101.1],
+  ['Radio Nacional del Perú', 'Andoas', null, 101.1],
+  ['Radio Nacional del Perú', 'Puerto Maldonado', null, 101.3],
+  ['Radio Nacional del Perú', 'Iñapari', null, 102.5],
+  ['Radio Nacional del Perú', 'Moquegua', null, 101.5],
+  ['Radio Nacional del Perú', 'Omate', null, 100.1],
+  ['Radio Nacional del Perú', 'Ilo', null, 91.7],
+  ['Radio Nacional del Perú', 'Cerro de Pasco', null, 99.3],
+  ['Radio Nacional del Perú', 'Tapuc', null, 104.5],
+  ['Radio Nacional del Perú', 'Piura', null, 100.5],
+  ['Radio Nacional del Perú', 'Talara', null, 101.9],
+  ['Radio Nacional del Perú', 'Huancabamba', null, 100.9],
+  ['Radio Nacional del Perú', 'Sullana', null, 100.1],
+  ['Radio Nacional del Perú', 'Ilave', null, 98.9],
+  ['Radio Nacional del Perú', 'Puno', null, 100.9],
+  ['Radio Nacional del Perú', 'Juliaca', null, 100.5],
+  ['Radio Nacional del Perú', 'Ayaviri', null, 94.5],
+  ['Radio Nacional del Perú', 'Desaguadero', null, 94.1],
+  ['Radio Nacional del Perú', 'Moyobamba', null, 95.7],
+  ['Radio Nacional del Perú', 'Tarapoto', null, 103.9],
+  ['Radio Nacional del Perú', 'Tacna', 830, 99.9],
+  ['Radio Nacional del Perú', 'Tarata', null, 99.9],
+  ['Radio Nacional del Perú', 'Tumbes', 780, 99.7],
+  ['Radio Nacional del Perú', 'Zarumilla', null, 107.3],
+  ['Radio Nacional del Perú', 'Pucallpa', null, 95.3],
 ];
 
 const norm = (s) =>
@@ -460,4 +517,4 @@ const only = process.argv[2];
 if (!only || only === 'UY') await build('UY', RADIO_UY, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Radiodifusión Nacional del Uruguay (Wikipedia)' });
 if (!only || only === 'CL') await build('CL', RADIO_CL, { fire: 'Bomberos', police: 'Carabineros', health: 'Centro de salud', radioSource: 'Radio Bío-Bío (Wikipedia)' });
 if (!only || only === 'BO') await build('BO', RADIO_BO, { fire: 'Bomberos', police: 'Policía', health: 'Centro de salud', radioSource: 'Red Patria Nueva (State Media Monitor)' });
-if (!only || only === 'PE') await build('PE', RADIO_PE, { fire: 'Bomberos', police: 'Comisaría', health: 'Centro de salud', radioSource: 'Radio Nacional del Perú (myradioenvivo.pe, sin confirmar en el IRTP; Puno y Trujillo: IRTP vía datosabiertos.gob.pe, ODC-By)' });
+if (!only || only === 'PE') await build('PE', RADIO_PE, { fire: 'Bomberos', police: 'Comisaría', health: 'Centro de salud', radioSource: 'Radio Nacional del Perú (IRTP, datos abiertos de datosabiertos.gob.pe, ODC-By, planilla de 2021)' });

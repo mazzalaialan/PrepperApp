@@ -84,6 +84,20 @@ describe('paquetes de Bolivia y Perú', () => {
     expect(near.some((p) => (p.kind === 'medical' || p.kind === 'hospital') && p.source === 'official' && p.phone)).toBe(true);
   });
 
+  it('radio: Radio Nacional del Perú de la planilla oficial del IRTP (Piura es 100.5, no los 850 AM / 89.1 FM de Ayabaca; solo hay 4 AM)', () => {
+    expect(pe.radio.length).toBe(70);
+    const city = (c: string) => pe.radio.find((r) => r.city === c);
+    expect(city('Piura')).toMatchObject({ fm: 100.5, am: null });
+    expect(city('Puno')).toMatchObject({ fm: 100.9, am: null });
+    expect(city('Trujillo')).toMatchObject({ fm: 89.7, am: null });
+    expect(city('Juliaca')).toMatchObject({ fm: 100.5 });
+    // Ayacucho, Cajamarca y Chimbote figuraban con AM en un sitio de terceros que la planilla oficial no trae
+    for (const c of ['Ayacucho', 'Cajamarca', 'Chimbote']) expect(city(c)!.am).toBeNull();
+    expect(pe.radio.filter((r) => r.am).map((r) => r.city).sort()).toEqual(['Iquitos', 'Lima', 'Tacna', 'Tumbes']);
+    // todas con ubicación
+    expect(pe.radio.every((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon))).toBe(true);
+  });
+
   it('radio: Patria Nueva en La Paz; Radio Nacional en Lima', () => {
     expect(nearestRadio(bo, -16.5, -68.15, 1)[0]).toMatchObject({ city: 'La Paz', fm: 94.3, am: 1020 });
     expect(nearestRadio(pe, -12.05, -77.04, 1)[0]).toMatchObject({ city: 'Lima', fm: 103.9, am: 850 });
