@@ -2,6 +2,15 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
+## SIGUIENTE PUNTO (anotado el 2026-11-13): «Cuánto plantar para comer»
+
+Es el segundo de la lista de huerta (el primero, semillas propias, ya está hecho). Planificador de calorías por persona: «2 personas, 3 meses de papa: X m²». Qué hace falta:
+- **Datos por cultivo** (a investigar con `vikarg-investigador`, fuentes INTA/FAO y las tablas de composición de alimentos, anotando fuente, licencia y fecha como en `tools/garden-data/semillas-investigacion.json`): rendimiento en kg/m² con números (hoy `yield` de `crops.ts` es un texto como «2 a 3 kg/m²»), fracción comestible, kcal cada 100 g, proteínas, y cuánto aguanta almacenada tras la cosecha (ya hay `keepsDays` en `garden/store.ts`).
+- **Necesidad de calorías por persona** (edad, sexo, actividad; FAO/OMS; las personas y el peso salen de la ficha médica) y **qué parte de la comida** se quiere cubrir con la huerta (por ejemplo 100 %, 50 %, o «solo hortalizas»).
+- **Lógica:** m² por cultivo según los meses que se quiere cubrir y la época de cosecha de la zona (el calendario ya lo da), rotación y asociaciones; mostrar el resultado contra los canteros que ya tiene la persona (superficie real).
+- **A decidir con quien dirige antes de programar:** si el objetivo son calorías solamente o también proteínas, y si el planificador sugiere qué cultivos agregar para completar o solo calcula lo que se eligió.
+- Después sigue «Plagas y enfermedades» (punto 3 de «Huerta: mejoras pendientes») y la hidroponía.
+
 ## PRIMERA TAREA al reiniciarse el límite semanal (domingo ~15:00, hora de Argentina)
 
 Son los dos trabajos grandes que se dejaron para después del reinicio, porque gastan mucho uso de Claude. Se hacen **antes que cualquier otra cosa** y se corta antes del 95 % del límite.
@@ -9,7 +18,7 @@ Son los dos trabajos grandes que se dejaron para después del reinicio, porque g
 **Estado de la programación (2026-11-13):** la sesión que tenía la tarea del domingo 15/11 a las 15:07 (abierta desde `~/TP-Simulacion1`) **se cerró: esa tarea no va a correr.** Quien dirige ejecuta estos puntos a mano ahora, en otra sesión, y deja otras cosas programadas para el domingo. **Antes de arrancar:** `git fetch` y `git log origin/main`, revisar el `git stash` de nudos a medio revisar (`git stash show -p`; no borrarlo) y no abrir dos sesiones sobre los mismos archivos a la vez.
 
 1. **Nudos que faltan (primera pasada hecha el 2026-11-13, ver «Varios, amarres y escalera»; quedan mula, cornamusa, silla de bombero y cadena, la diagonal y el frapeo de las ataduras, y el ocho de dos gazas):** `specs/7-varios.mjs`, `8-amarres.mjs` y `9-escalera.mjs` (dinámico, mula, guarda, cornamusa, asiento de rappel, silla de bombero, cadena, margarita; amarres cuadrado, tijera, diagonal y trípode; escalera de cuerda) y el ocho de dos gazas. Bloqueo y pesca (prusik, machard, klemheist, bachmann, palomar, clinch, uni) **ya se hicieron** el 12/11 (ver «Diagramas de nudos»). Método: visión sobre fotos del manual y de Commons + `check.mjs` + `tipo.mjs`, un agente general por archivo de specs y verificación propia (montage + check + vitest) antes de cada commit. Hay trabajo a medias sin controlar de dinámico, mula y cornamusa en `git stash` («Nudos varios a medio revisar»): revisarlo antes de aplicarlo. Legibilidad pendiente: paso 3 del ancla y paso 2 del as de guía doble.
-2. **Investigación de datos de los ~44 cultivos** con fuentes INTA y FAO, en este orden (ver «Huerta: mejoras pendientes»): semillas propias, cuánto plantar para comer (calorías por persona) y plagas y enfermedades con control agroecológico. Las tareas de investigación se derivan a `vikarg-investigador`.
+2. **Investigación de datos de los ~44 cultivos** con fuentes INTA y FAO, en este orden (ver «Huerta: mejoras pendientes»; **semillas propias: HECHO el 2026-11-13**; sigue cuánto plantar para comer, ver arriba): semillas propias, cuánto plantar para comer (calorías por persona) y plagas y enfermedades con control agroecológico. Las tareas de investigación se derivan a `vikarg-investigador`.
 3. **Hidroponía y acuaponía:** investigación completa con fuentes y licencias para el diseño anotado en «Hidroponía y acuaponía» (sistemas sin electricidad primero, torres y macetines en vez de superficie, pH y EC por cultivo, soluciones, peces por región y normativa de exóticas). Queda como diseño en `docs/ARQUITECTURA.md`; todavía no se programa.
 
 ## Hecho
