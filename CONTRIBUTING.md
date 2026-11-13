@@ -16,7 +16,12 @@ Para aceptarlo, escribí en el pull request: «Acepto el acuerdo de contribució
 
 ## Antes de enviar
 
-- Corré `npm test` y `npx tsc --noEmit` en `app/` (y `npm test` en `server/` si tocás el servidor).
-- Los textos de la app van en `app/src/locales/es.json` y `en.json`.
+La guía completa de cómo se trabaja, se prueba y se publica está en [docs/COLABORAR.md](docs/COLABORAR.md); lo que falta hacer, en [docs/PENDIENTES.md](docs/PENDIENTES.md). Lo mínimo:
+
+- Corré `npm test` y `npm run typecheck` en `app/` (y lo mismo en `server/` si tocás el servidor).
+- Los textos de la app van en `app/src/locales/es.json` y `en.json`, en español rioplatense; los commits, en español.
+- No pongas mails personales en el código ni en la documentación (solo `contacto.vikarg@gmail.com`).
+- Cada dato o texto nuevo con su fuente y licencia (`docs/FUENTES-DE-DATOS.md`).
+- No publiques versiones ni toques producción: lo decide quien dirige el proyecto.
 
 Contacto: contacto.vikarg@gmail.com

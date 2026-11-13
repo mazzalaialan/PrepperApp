@@ -19,7 +19,7 @@ Es una Progressive Web App: se instala desde el navegador (Chrome o Edge) y func
 
 La arquitectura completa está en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
-Si vas a colaborar, empezá por [docs/COLABORAR.md](docs/COLABORAR.md) (cómo se trabaja, se prueba y se publica) y [docs/PENDIENTES.md](docs/PENDIENTES.md) (qué falta).
+Si vas a colaborar, empezá por [CONTRIBUTING.md](CONTRIBUTING.md) (acuerdo de contribución y mínimos), seguí con [docs/COLABORAR.md](docs/COLABORAR.md) (cómo se trabaja, se prueba y se publica) y mirá [docs/PENDIENTES.md](docs/PENDIENTES.md) (qué falta).
 
 ## Estructura
 
@@ -53,7 +53,7 @@ Para probar en un celular Android en la misma red: `npm run dev -- --host` y abr
 
 [GPL-3.0-or-later](LICENSE). Podés usar, estudiar, modificar y redistribuir el código; las versiones modificadas que se distribuyan deben publicarse bajo la misma licencia.
 
-También está disponible bajo una licencia comercial no exclusiva para quien no pueda o no quiera cumplir la GPL: contacto.vikarg@gmail.com. Para colaborar con código, ver [CONTRIBUTING.md](CONTRIBUTING.md).
+También está disponible bajo una licencia comercial no exclusiva para quien no pueda o no quiera cumplir la GPL: contacto.vikarg@gmail.com. Para colaborar con código, ver [CONTRIBUTING.md](CONTRIBUTING.md) y [docs/COLABORAR.md](docs/COLABORAR.md).
 
 ## Deploy
 

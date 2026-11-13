@@ -5,6 +5,7 @@ Este archivo se carga solo al abrir el proyecto. Lo largo está en `docs/COLABOR
 ## Reglas que no se discuten
 
 - **Idioma:** español rioplatense (voseo) con la persona; textos de la app, comentarios y commits, en español. Los nombres de la app son «Herramientas de Supervivencia por VikArg» (es) y «Survival Tools By VikArg» (en); el ícono dice «SurvTools».
+- **Aportes de otras personas:** van con el acuerdo de contribución de `CONTRIBUTING.md` (borrador pendiente de un abogado; no se toca su texto sin esa revisión). Es la puerta de entrada de los colaboradores externos.
 - **Nunca publiques sin aprobación explícita** de quien dirige el proyecto («publicalo», «sí, publicá»). Commitear y probar en local está bien; empujar una versión, no. Detalle en `docs/COLABORAR.md` §4.
 - **Nunca pongas el mail personal de nadie** en la app, los documentos, la configuración del servidor ni los commits. El único correo permitido es `contacto.vikarg@gmail.com` (`CONTACT_EMAIL`).
 - **Filosofía:** todo lo que pueda ser local y propio, lo es. Los servicios de terceros son opcionales, configurables y reemplazables. Ninguna función puede depender de la red. Decisiones completas en `docs/ARQUITECTURA.md`.
@@ -22,6 +23,7 @@ Este archivo se carga solo al abrir el proyecto. Lo largo está en `docs/COLABOR
 
 ## Documentos
 
+- `CONTRIBUTING.md`: acuerdo de contribución (doble licencia) y mínimos para enviar un aporte.
 - `docs/COLABORAR.md`: cómo se trabaja, se publica y se prueba; entorno y servidor; agentes; decisiones que no conviene revertir.
 - `docs/PENDIENTES.md`: lo hecho y lo que falta. **Arriba de todo está la primera tarea** (revisión de nudos y datos de cultivos, a hacer apenas se reinicia el límite semanal el domingo).
 - `docs/FUENTES-DE-DATOS.md`: lluvia, radar del SMN, alertas y teléfonos de Bolivia y Perú, calendarios de huerta: qué se probó y qué no sirve.

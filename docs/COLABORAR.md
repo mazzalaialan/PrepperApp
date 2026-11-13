@@ -9,6 +9,10 @@ Lo que ya estaba documentado no se repite acá:
 - Fuentes de datos investigadas y sus límites: `docs/FUENTES-DE-DATOS.md`.
 - Requisitos originales de Entrenamiento: `docs/ENTRENAMIENTO.md`.
 
+## 0. Antes de aportar código: el acuerdo de contribución
+
+VikArg se ofrece bajo GPL-3.0-or-later y también bajo una licencia comercial (doble licencia). Para poder hacerlo, **todo aporte de código de otra persona** va con el acuerdo de [`CONTRIBUTING.md`](../CONTRIBUTING.md): quien aporta conserva la titularidad y le da al titular del proyecto una licencia amplia (incluso comercial); el aporte se publica bajo GPL-3.0-or-later; y si usó herramientas de IA, lo indica. Se acepta escribiendo en el pull request: «Acepto el acuerdo de contribución de CONTRIBUTING.md». **El texto es un borrador pendiente de revisión por un abogado matriculado:** no se modifica sin esa revisión, y quien dirige decide a quién se le acepta un aporte. `CONTRIBUTING.md` es la puerta de entrada para colaboradores externos; este documento es la guía técnica de cómo se trabaja una vez dentro.
+
 ## 1. Quién dirige y cómo se trabaja
 
 - **Rol:** una persona desarrolla y supervisa; Claude Code implementa. Cada versión la aprueba quien dirige.
