@@ -136,6 +136,9 @@ Hay duplicación de información: un Track (línea con altura, hora, distancia y
 
 Idea: una sola entidad «Recorrido» con una línea y un origen (grabado, importado, planificado); los tramos con rumbo se calculan al mostrarlos; las rutas de solo waypoints, como otro tipo. Costo: migración de datos delicada (Dexie, sincronización con el servidor, seguimiento, mapa, pruebas, datos existentes); varios días. Decisión: se deja como pendiente, sin fecha.
 
+## Capa «agua en superficie» con ABI-Flood de NOAA (idea del 2026-11-13, sin empezar)
+Mapa de fracción de agua en superficie de 1 km (zonas anegadas) que NOAA publica cada hora y es de dominio público; el área `AOI004` cubre Sudamérica al sur del ecuador hasta 50,5° S. Limitaciones: solo de día, las nubes lo tapan y no es un dato de lluvia (**no reemplaza al `RRQPEF` retirado**). Antes de hacer nada: medirlo contra una inundación real y ver si el peso (~24 MB por hora de Sudamérica) conviene bajarlo en el servidor y servir un recorte. Todos los detalles, en `docs/FUENTES-DE-DATOS.md`, «Otros productos de NOAA».
+
 ## Hidroponía y acuaponía (idea charlada el 2026-11-12, sin empezar)
 - Prioridad: hidroponía sin electricidad (Kratky, raíz flotante) y sustrato; acuaponía en una segunda etapa sobre la misma base (registro de agua, peces, aireación de respaldo obligatoria).
 - **No usa la grilla de superficie de los canteros:** un sistema se define por sus **lugares para plantas ("macetines")**, que es el dato a cargar y el límite de plantas. Estructura: N torres o caños × niveles × macetines por nivel (o una cantidad total si es una bandeja). Cada siembra ocupa macetines, no cuadros de 30 cm; la distancia entre plantas no aplica.
