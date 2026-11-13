@@ -220,3 +220,39 @@ test('huerta: sol del cantero según su entorno y distribución de varias planta
   await layout.getByTestId('layout-plant-tomate').click();
   await expect(page.getByRole('dialog').getByLabel('Cultivo')).toHaveValue('tomate');
 });
+
+test('huerta: ficha del cultivo con «guardar semilla propia» (dificultad, aislamiento, cuánto dura y fuentes), en español e inglés', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+
+  // Zanahoria: bienal, difícil, aislamiento grande.
+  await page.goto('/#/garden/crops/zanahoria');
+  const seeds = page.getByTestId('seed-section');
+  await expect(seeds).toBeVisible();
+  await expect(seeds.getByRole('heading', { name: 'Guardar semilla propia' })).toBeVisible();
+  await expect(page.getByTestId('seed-level')).toHaveText('Difícil');
+  await expect(page.getByTestId('seed-isolation')).toContainText('1000 m');
+  await expect(seeds).toContainText('Bienal');
+  await expect(page.getByTestId('seed-caveat')).toBeVisible();
+  await seeds.getByText('Cómo cosechar, secar y guardar').click();
+  await expect(seeds.getByText('Cuándo cosechar')).toBeVisible();
+  await seeds.getByText('Fuentes', { exact: true }).click();
+  await expect(seeds.getByRole('link').first()).toHaveAttribute('href', /^https?:\/\//);
+  await expect(seeds).toContainText('solo se tomaron datos');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-60-seeds.png`, fullPage: true });
+
+  // Papa: no se multiplica por semilla, no lleva aislamiento.
+  await page.goto('/#/garden/crops/papa');
+  await expect(page.getByTestId('seed-section')).toContainText('Se multiplica por partes');
+  await expect(page.getByTestId('seed-isolation')).toContainText('No aplica');
+
+  // Tomate: fácil, años típicos.
+  await page.goto('/#/garden/crops/tomate');
+  await expect(page.getByTestId('seed-level')).toHaveText('Fácil');
+  await expect(page.getByTestId('seed-section')).toContainText('4 a 6 años');
+});

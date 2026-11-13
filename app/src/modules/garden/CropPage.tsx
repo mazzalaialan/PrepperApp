@@ -4,6 +4,7 @@ import { cropCalendar } from './calendar';
 import { CROP_BY_ID, cropName, gridFootprint, text } from './crops';
 import { CropLink, FAMILY_COLOR, GardenSources, MonthStrip, StripLegend } from './parts';
 import { useZonePlace, useGardenZone } from './status';
+import { SeedSection } from './SeedSection';
 
 /** Ficha de un cultivo, con su calendario en la zona. */
 export function CropPage() {
@@ -93,6 +94,8 @@ export function CropPage() {
           )}
         </dl>
       </section>
+
+      <SeedSection cropId={crop.id} />
 
       {(crop.companions.length > 0 || crop.companionHerbs) && (
         <section className="card stack">
