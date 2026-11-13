@@ -2750,7 +2750,8 @@
     "gpsError": "Couldn't read the GPS. Choose a waypoint from the list."
   },
   "knots": {
-    "betaPill": "Beta",
+    "betaPill": "BETA",
+    "betaNotReviewed": "A person has not reviewed them yet: do not rely on the drawing alone, compare it with the step text or another source before trusting a knot with your life.",
     "beta": "Beta feature, under development: the steps and drawings may contain errors.",
     "betaLink": "Report a problem",
     "betaReport": "Knot “{{name}}”, step {{n}}: the drawing is wrong because ",

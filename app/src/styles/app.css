@@ -4410,6 +4410,52 @@ a.module-card:hover {
   margin-left: auto;
 }
 
+/* Aviso de beta de los nudos: bien visible y sin botón para ocultarlo (ver BetaNotice.tsx). */
+.beta-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 2px solid var(--warn);
+  border-left-width: 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 16%, var(--surface));
+}
+.beta-banner-icon {
+  flex-shrink: 0;
+  color: var(--warn);
+  margin-top: 2px;
+}
+.beta-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+.beta-banner-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.beta-banner-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--warn);
+  color: var(--bg);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  vertical-align: 1px;
+}
+.beta-banner-sub {
+  margin: 6px 0 10px;
+  font-size: 0.92rem;
+}
+.beta-banner-link {
+  display: inline-flex;
+  width: auto;
+}
+
 /* Datos de emergencia en la pantalla de bloqueo (UnlockScreen). */
 .lock-emergency {
   margin-bottom: 12px;

@@ -18,6 +18,17 @@ test('cabuyería: buscar por uso (rappel → Machard), ficha, práctica, aprendi
 
   await page.getByRole('link', { name: /Guía de nudos/ }).click();
   await expect(page.getByTestId('knots-progress')).toHaveText('Aprendiste 0 de 50 nudos.');
+  // Apenas se entra a la Guía, justo debajo del título: aviso de beta bien visible y sin botón para ocultarlo.
+  const guideBeta = page.getByTestId('guide-beta');
+  await expect(guideBeta).toBeVisible();
+  await expect(guideBeta).toContainText('BETA');
+  await expect(guideBeta).toContainText('Opción beta, en desarrollo');
+  await expect(guideBeta).toContainText('Todavía no los revisó una persona');
+  await expect(guideBeta.getByRole('button')).toHaveCount(0);
+  const titleBox = await page.getByRole('heading', { level: 1 }).first().boundingBox();
+  const betaBox = await guideBeta.boundingBox();
+  expect(betaBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height - 1);
+  expect(betaBox!.y - (titleBox!.y + titleBox!.height)).toBeLessThan(80);
   await page.getByRole('button', { name: 'Rappel y escalada' }).click();
   await expect(page.getByText(/practicá primero con un instructor/)).toBeVisible();
   const list = page.getByTestId('knot-list');

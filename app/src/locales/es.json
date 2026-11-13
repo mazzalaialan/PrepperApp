@@ -2750,7 +2750,8 @@
     "gpsError": "No se pudo leer el GPS. Elegí un waypoint de la lista."
   },
   "knots": {
-    "betaPill": "Beta",
+    "betaPill": "BETA",
+    "betaNotReviewed": "Todavía no los revisó una persona: no te guíes solo por el dibujo, comparalo con el texto del paso o con otra fuente antes de confiar tu vida a un nudo.",
     "beta": "Opción beta, en desarrollo: los pasos y los dibujos pueden contener errores.",
     "betaLink": "Avisar un error",
     "betaReport": "Nudo «{{name}}», paso {{n}}: el dibujo está mal porque ",

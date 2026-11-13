@@ -9,6 +9,7 @@ import { ANCHOR_BY_ID } from './anchors';
 import { NEEDS } from './content';
 import { KNOT_PROPS, searchKnots, type KnotProp } from './search';
 import { Notice } from '@/ui/Notice';
+import { BetaNotice } from './BetaNotice';
 
 export const tl = (x: L, lang: string) => (lang.startsWith('en') ? x.en : x.es);
 
@@ -107,6 +108,7 @@ export function KnotGuidePage() {
   return (
     <div className="stack">
       <h1 className="page-title">{t('modules.knotGuide.title')}</h1>
+      <BetaNotice name={t('modules.knotGuide.title')} testId="guide-beta" />
       <p className="hint" style={{ margin: 0 }} data-testid="knots-progress">
         {t('knots.progress', { learned: learned.filter((id) => KNOT_BY_ID.has(id)).length, total: KNOT_BY_ID.size })}
       </p>

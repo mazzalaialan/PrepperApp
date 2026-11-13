@@ -11,28 +11,11 @@ import { creditFor, KNOT_BY_ID, knotImages, RISKY_USES, type Knot } from './knot
 import { tl } from './KnotGuidePage';
 import { KnotFigure } from './KnotFigure';
 import { Notice } from '@/ui/Notice';
+import { BetaNotice } from './BetaNotice';
 
 const src = (file: string) => `${import.meta.env.BASE_URL}knots/${file}`;
 
 /** Modo práctica: un paso por pantalla, imagen grande y voz. */
-/** Aviso de que el paso a paso es beta y puede tener errores; con enlace para reportar uno. No se puede ocultar. */
-function BetaNotice({ name, n, testId, onNavigate }: { name: string; n?: number; testId: string; onNavigate?: () => void }) {
-  const { t } = useTranslation();
-  return (
-    // Sin «Entendido»: mientras sea beta tiene que verse siempre; cuando un humano revise los nudos se saca.
-    <Notice id="knots.beta" testId={testId} dismissible={false}>
-      <span className="pill">{t('knots.betaPill')}</span> {t('knots.beta')}{' '}
-      <Link
-        className="btn-link"
-        to={`/about?${new URLSearchParams({ tipo: 'bug', texto: n ? t('knots.betaReport', { name, n }) : t('knots.betaReportGeneral', { name }) }).toString()}`}
-        onClick={onNavigate}
-      >
-        {t('knots.betaLink')}
-      </Link>
-    </Notice>
-  );
-}
-
 function Practice({ knot, onClose }: { knot: Knot; onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language.startsWith('en') ? 'en' : 'es';
