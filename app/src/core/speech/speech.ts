@@ -48,6 +48,18 @@ export function useSpeechVoice(lang: 'es' | 'en'): SpeechSynthesisVoice | null |
   return pickVoice(voices, lang);
 }
 
+/**
+ * Texto listo para la voz: sin «:». Algunos sintetizadores dicen «dos puntos» (o leen «10:40» como una hora). Una hora o un ritmo
+ * entre números queda con un espacio («10 40»; mejor decirlo con palabras, ver `spokenDuration`) y cualquier otro «:» pasa a coma
+ * (pausa corta).
+ */
+export function forSpeech(text: string): string {
+  return text
+    .replace(/(\d):(?=\d)/g, '$1 ')
+    .replace(/\s*:\s*/g, ', ')
+    .replace(/,\s*,/g, ',');
+}
+
 /** Lee las frases en orden, con una pausa natural entre cada una. Corta lo que se estuviera leyendo. */
 export function speak(lines: string[], voice: SpeechSynthesisVoice, rate = 0.95): void {
   const s = synth();
@@ -57,7 +69,7 @@ export function speak(lines: string[], voice: SpeechSynthesisVoice, rate = 0.95)
   setTimeout(() => {
     for (const text of lines) {
       if (!text.trim()) continue;
-      const u = new SpeechSynthesisUtterance(text);
+      const u = new SpeechSynthesisUtterance(forSpeech(text));
       u.voice = voice;
       u.lang = voice.lang;
       u.rate = rate;

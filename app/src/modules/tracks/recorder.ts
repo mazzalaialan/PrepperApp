@@ -10,7 +10,7 @@ import type { IntervalPlan } from '@/modules/training/intervals';
 import { analyzeRecording } from '@/modules/training/stats';
 import { trackStats, type TrackPoint } from './gpx';
 import { addLocked, clearLocked, newRecKey, prepareLocked, readLocked } from './lockedBuffer';
-import { addPoint, finishedTrack, joinLastSegments, SAVER_STEP_M, shouldAdd } from './record';
+import { addPoint, closeGap, dropOpenGap, finishedTrack, openGap, SAVER_STEP_M, shouldAdd } from './record';
 import { useSettings } from '@/core/settings/settings';
 import { useTracks } from './store';
 
@@ -49,7 +49,7 @@ interface RecorderState {
   /** Desde y hasta cuándo (ms) fue ese corte. */
   gapFrom: number | null;
   gapTo: number | null;
-  /** Qué se hizo con ese corte: `true` = se unió con una recta; `false` = quedó el hueco. */
+  /** Qué se hizo con ese corte: siempre se une con una recta (que suma su distancia y se dibuja en otro color). Los tracks viejos pueden haber quedado con hueco. */
   gapJoined: boolean | null;
   /** Precisión de la última posición del GPS (para mostrar por qué todavía no graba). */
   accuracy: number | null;
@@ -63,8 +63,6 @@ interface RecorderState {
   finish: (name?: string, opts?: FinishOptions) => Promise<Id | null>;
   /** Elige (o cambia) la actividad de lo que se está grabando: sigue siendo un recorrido, y además una sesión de Entrenamiento. */
   setActivity: (kind: WorkoutKind | null, packKg?: number | null) => void;
-  /** Después de un corte: unir con una recta el tramo de antes y el de después (por defecto quedan separados). */
-  joinGap: () => void;
   /** Marca una vuelta (botón de la pantalla en vivo): guarda el tiempo y la distancia acumulados. */
   lap: () => void;
 }
@@ -73,8 +71,6 @@ const IDLE = { status: 'idle', track: null, elapsedMs: 0, since: null, error: nu
 
 /** Más que esto con la pantalla apagada, se avisa que no se grabó. */
 const GAP_NOTICE_MS = 20_000;
-/** Un corte de menos de esto se une con una recta sin preguntar. */
-const GAP_AUTOJOIN_S = 180;
 let hiddenAt: number | null = null;
 
 let watchId: number | null = null;
@@ -121,7 +117,9 @@ function onPosition(p: GeolocationPosition) {
   // Con la hora (segundos): de ahí salen el tiempo en movimiento, el ritmo y los parciales del Entrenamiento.
   const point: TrackPoint = [fix.lat, fix.lon, p.coords.altitude ?? null, Math.round(p.timestamp / 1000)];
   const next = addPoint(segments, point);
-  useRecorder.setState({ track: { ...s.track, segments: next, ...trackStats(next) } });
+  // Si venía un corte (pantalla apagada), este primer punto cierra su recta: queda en el mismo tramo y suma su distancia.
+  const gaps = closeGap(s.track.gaps, point);
+  useRecorder.setState({ track: { ...s.track, segments: next, ...trackStats(next), ...(gaps ? { gaps } : {}) } });
   // Bloqueada no se puede cifrar con la bóveda: va cifrado con la clave de la grabación.
   if (!isUnlocked()) {
     if (s.track.recKey) addLocked(s.track.id, s.track.recKey, point);
@@ -182,7 +180,9 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     const s = get();
     if (s.status !== 'recording') return;
     stopWatch();
-    set({ status: 'paused', elapsedMs: s.elapsedMs + (s.since !== null ? Date.now() - s.since : 0), since: null, error: null });
+    // Un corte que todavía no tiene el punto de después no se une con lo que se camine en pausa.
+    const gaps = s.track ? dropOpenGap(s.track.gaps) : undefined;
+    set({ status: 'paused', elapsedMs: s.elapsedMs + (s.since !== null ? Date.now() - s.since : 0), since: null, error: null, ...(s.track && gaps ? { track: { ...s.track, gaps } } : {}) });
     await persist();
   },
 
@@ -209,18 +209,6 @@ export const useRecorder = create<RecorderState>((set, get) => ({
     const mark = { elapsedS: elapsedS(s), distanceM: Math.round(s.track.distanceM) };
     set({ track: { ...s.track, laps: [...(s.track.laps ?? []), mark] } });
     void persist();
-  },
-
-  joinGap() {
-    const s = get();
-    if (!s.track) return;
-    const segs = s.track.segments;
-    // El tramo nuevo es el último; se pega al anterior.
-    if (segs.length >= 2) {
-      const joined = joinLastSegments(segs);
-      set({ track: { ...s.track, segments: joined, ...trackStats(joined) } });
-    }
-    set({ gapS: null, gapFrom: null, gapTo: null, gapJoined: null });
   },
 
   async finish(name, opts) {
@@ -275,17 +263,16 @@ document.addEventListener('visibilitychange', () => {
   if (recording && hiddenAt !== null && Date.now() - hiddenAt >= GAP_NOTICE_MS) {
     const s = useRecorder.getState();
     const gapS = Math.round((Date.now() - hiddenAt) / 1000);
-    // Un corte corto se une solo con una recta (se sigue en el mismo tramo); uno largo queda como hueco (no se sabe por dónde fue
-    // ni cuánto), en un tramo nuevo. Se avisa qué se hizo y queda anotado en el track.
-    const joined = gapS < GAP_AUTOJOIN_S;
-    const segments = s.track && !joined && s.track.segments.at(-1)?.length ? [...s.track.segments, []] : s.track?.segments;
-    const gap = { from: hiddenAt, to: Date.now(), joined };
+    // Un corte siempre se une con una recta, en el mismo tramo: suma su distancia (menos de lo que se caminó, pero no se descarta) y se
+    // dibuja en otro color. Se anota desde dónde sale; el punto de llegada lo cierra el primer fix que llegue (ver `onPosition`).
+    const gap = { from: hiddenAt, to: Date.now() };
+    const last = s.track?.segments.at(-1)?.at(-1);
     useRecorder.setState({
       gapS,
       gapFrom: gap.from,
       gapTo: gap.to,
-      gapJoined: joined,
-      ...(s.track && segments ? { track: { ...s.track, segments, gaps: [...(s.track.gaps ?? []), gap] } } : {}),
+      gapJoined: true,
+      ...(s.track ? { track: { ...s.track, gaps: openGap(s.track.gaps, gap, last) } } : {}),
     });
   }
   hiddenAt = null;

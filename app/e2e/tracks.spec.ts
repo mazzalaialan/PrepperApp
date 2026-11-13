@@ -108,6 +108,7 @@ test('tracks de Wikiloc: importar, ver datos y perfil, ir a un punto y copiarlo 
 });
 
 test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al origen, pantalla negra y guardado', async ({ page, context }, testInfo) => {
+  test.setTimeout(150_000);
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -41.16, longitude: -71.42, accuracy: 5 });
   await page.goto('/');
@@ -177,9 +178,17 @@ test('grabar mi recorrido: sigue con la app bloqueada, pausa, mapa, volver al or
   await expect(bar).toContainText('Grabación en pausa');
   await bar.getByRole('button', { name: 'Seguir grabando' }).click();
 
+  // Atajos de la barra de grabación: el resumen del recorrido (la ficha del track) y el mapa con el recorrido en vivo.
+  await bar.getByTestId('rec-summary').click();
+  await expect(page).toHaveURL(/#\/orientation\/tracks\/[^/]+$/);
+  await expect(bar.getByTestId('rec-summary')).toHaveCount(0);
+  await expect(bar.getByTestId('rec-map')).toBeVisible();
   // En el mapa offline, con su botón y lo grabado dibujado.
   await context.route(/tiles\.openfreemap\.org|elevation-tiles-prod/, (route) => route.abort());
-  await page.goto('/#/orientation/maps');
+  await bar.getByTestId('rec-map').click();
+  await expect(page).toHaveURL(/#\/orientation\/maps$/);
+  await expect(bar.getByTestId('rec-map')).toHaveCount(0);
+  await expect(bar.getByTestId('rec-summary')).toBeVisible();
   await expect(page.locator('.maps-camera').getByRole('button', { name: 'Pausar la grabación' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('offline-map')).toHaveAttribute('data-recorded', '9');
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-31-track-recording.png` });
@@ -341,4 +350,150 @@ test('seguir un track en vivo: en el track, desviado, sentido inverso y llegada'
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-30-track-follow-full.png` });
   await page.getByRole('button', { name: 'Salir de pantalla completa' }).click();
   await expect(overlay).toHaveCount(0);
+});
+
+test('un corte de la grabación (pantalla apagada) se une con una recta que suma su distancia y se dibuja en otro color', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -41.16, longitude: -71.42, accuracy: 5 });
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.goto('/#/orientation/tracks');
+  await page.getByRole('button', { name: 'Grabar mi recorrido' }).click();
+  await page.getByTestId('rec-warn').getByRole('button', { name: 'Entendido' }).click();
+  await page.waitForTimeout(500);
+  const walk = async (lat: number) => {
+    await context.setGeolocation({ latitude: lat, longitude: -71.42, accuracy: 5 });
+    await page.waitForTimeout(300);
+  };
+  await walk(-41.161);
+  await walk(-41.162);
+  await expect(page.getByTestId('rec-stats')).toContainText('222 m');
+
+  // La pantalla se apaga 2 minutos (se adelanta el reloj de la página) y se vuelve.
+  await page.evaluate(() => {
+    const real = Date.now.bind(Date);
+    let offset = 0;
+    Date.now = () => real() + offset;
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    offset = 120_000;
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const warn = page.getByTestId('rec-warn');
+  await expect(warn).toContainText('Se unió con una línea recta, marcada en otro color');
+  await expect(warn).not.toContainText('Quedó un hueco');
+
+  // Al volver llega la posición, unos 610 m más adelante (en línea recta): la recta suma esa distancia.
+  await walk(-41.1675);
+  await expect(page.getByTestId('rec-stats')).toContainText(/8[0-9]\d m/);
+
+  // En el mapa se dibuja la recta del corte (una), aparte de lo medido.
+  await context.route(/tiles\.openfreemap\.org|elevation-tiles-prod/, (route) => route.abort());
+  await page.getByTestId('rec-map').click();
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-gap-lines', '1');
+});
+
+test('mapa: por defecto se ve el recorrido que se graba o el último; se puede elegir cuáles, ver todos o ninguno', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  // Tres recorridos importados (cada uno en su archivo).
+  const gpx = (name: string, lat: number) =>
+    `<?xml version="1.0"?><gpx version="1.1" creator="t" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>${name}</name><trkseg>` +
+    [0, 1, 2].map((i) => `<trkpt lat="${lat + i * 0.001}" lon="-71.42"><ele>800</ele></trkpt>`).join('') +
+    `</trkseg></trk></gpx>`;
+  await page.goto('/#/orientation/tracks');
+  for (const [name, lat] of [['Lunes', -41.1], ['Miércoles', -41.2], ['Viernes', -41.3]] as const) {
+    await page.getByTestId('tracks-file').setInputFiles({ name: `${name}.gpx`, mimeType: 'application/gpx+xml', buffer: Buffer.from(gpx(name, lat)) });
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+    await page.goto('/#/orientation/tracks');
+    await page.waitForTimeout(1100); // fechas distintas (el orden sale de cuándo se guardó)
+  }
+  await page.goto('/#/orientation/maps');
+  const map = page.getByTestId('offline-map');
+  const picker = page.getByTestId('track-picker');
+  // Automático (por defecto): solo el último, no los tres encimados.
+  await expect(picker).toBeVisible();
+  await expect(page.getByTestId('track-mode-auto')).toHaveAttribute('aria-pressed', 'true');
+  await expect(map).toHaveAttribute('data-tracks-shown', '1');
+  await expect(page.getByTestId('track-mode-hint')).toContainText('el último');
+  // Todos.
+  await page.getByTestId('track-mode-all').click();
+  await expect(map).toHaveAttribute('data-tracks-shown', '3');
+  // Ninguno.
+  await page.getByTestId('track-mode-none').click();
+  await expect(map).toHaveAttribute('data-tracks-shown', '0');
+  // Elegir: con la lista, del más nuevo al más viejo, y cada casilla suma o saca uno.
+  await page.getByTestId('track-mode-chosen').click();
+  await expect(map).toHaveAttribute('data-tracks-shown', '0');
+  const choices = page.getByTestId('track-choices').getByRole('checkbox');
+  await expect(choices).toHaveCount(3);
+  await expect(page.getByTestId('track-choices').getByRole('listitem').first()).toContainText('Viernes');
+  await choices.nth(1).check();
+  await expect(map).toHaveAttribute('data-tracks-shown', '1');
+  await choices.nth(2).check();
+  await expect(map).toHaveAttribute('data-tracks-shown', '2');
+  await expect(page.getByTestId('track-mode-hint')).toContainText('Se ven 2 recorridos');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-32-track-picker.png`, fullPage: true });
+  // La elección queda guardada al volver a abrir el mapa.
+  await page.goto('/#/orientation/tracks');
+  await page.goto('/#/orientation/maps');
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-tracks-shown', '2');
+  // Desde la ficha de un recorrido («Ver en el mapa») ese recorrido se ve siempre, con el modo en Ninguno.
+  await page.getByTestId('track-mode-none').click();
+  await page.goto('/#/orientation/tracks');
+  await page.getByRole('link', { name: /Lunes/ }).first().click();
+  await page.getByRole('link', { name: /Ver en el mapa/ }).click();
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-tracks-shown', '1');
+});
+
+test('Tracks: los cargados y mis recorridos van en pestañas separadas, con buscador, para que al buscar uno cargado no salgan todos los míos', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -41.16, longitude: -71.42, accuracy: 5 });
+  await page.goto('/');
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Repetir contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear bóveda' }).click();
+  await page.getByLabel('Ya la anoté en un lugar seguro').check();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('link', { name: 'Inicio' })).toBeVisible();
+  const gpx = (name: string) =>
+    `<?xml version="1.0"?><gpx version="1.1" creator="t" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>${name}</name><trkseg><trkpt lat="-41.1" lon="-71.4"><ele>800</ele></trkpt><trkpt lat="-41.101" lon="-71.4"><ele>810</ele></trkpt></trkseg></trk></gpx>`;
+  await page.goto('/#/orientation/tracks');
+  // Solo cargados: lista sola, sin pestañas.
+  for (const name of ['Cerro Platita', 'Refugio Frey']) {
+    await page.getByTestId('tracks-file').setInputFiles({ name: `${name}.gpx`, mimeType: 'application/gpx+xml', buffer: Buffer.from(gpx(name)) });
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+    await page.goto('/#/orientation/tracks');
+  }
+  await expect(page.getByTestId('tracks-tabs')).toHaveCount(0);
+  await expect(page.getByTestId('tracks-list')).toContainText('Cerro Platita');
+  // Se graba un recorrido propio: aparecen las pestañas y se abre la de los míos (se está grabando).
+  await page.getByRole('button', { name: 'Grabar mi recorrido' }).click();
+  await page.getByTestId('rec-warn').getByRole('button', { name: 'Entendido' }).click();
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId('tracks-tabs')).toBeVisible();
+  await page.reload();
+  await page.getByLabel('Contraseña').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Desbloquear' }).click();
+  await expect(page.getByTestId('tracks-tab-imported')).toHaveText('Cargados (2)');
+  await expect(page.getByTestId('tracks-tab-mine')).toHaveText('Mis recorridos (1)');
+  await page.getByTestId('tracks-tab-imported').click();
+  // Los cargados no mezclan los míos.
+  await expect(page.getByTestId('tracks-list')).toContainText('Cerro Platita');
+  await expect(page.getByTestId('tracks-list')).not.toContainText('Grabando');
+  await expect(page.getByTestId('tracks-list').getByRole('listitem')).toHaveCount(2);
+  await page.getByTestId('tracks-tab-mine').click();
+  await expect(page.getByTestId('tracks-list').getByRole('listitem')).toHaveCount(1);
+  await expect(page.getByTestId('tracks-list')).not.toContainText('Cerro Platita');
 });

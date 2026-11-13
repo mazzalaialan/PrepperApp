@@ -108,6 +108,10 @@ export interface Settings {
   knotsLearned: string[];
   /** Avisos que el usuario dio por leídos con «Entendido» (ver ui/Notice.tsx). */
   dismissedNotices: string[];
+  /** Qué recorridos se dibujan en el mapa: el que se graba o el último (`auto`), los elegidos, todos o ninguno. */
+  mapTracksMode: 'auto' | 'none' | 'chosen' | 'all';
+  /** Los recorridos elegidos (ids), para el modo `chosen`. */
+  mapTracksChosen: string[];
   /** Última actividad elegida en Entrenamiento. */
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
@@ -248,6 +252,8 @@ export const DEFAULT_SETTINGS: Settings = {
   gardenWateredAt: {},
   knotsLearned: [],
   dismissedNotices: [],
+  mapTracksMode: 'auto',
+  mapTracksChosen: [],
   trainingKind: 'walk',
   trainingVoice: false,
   trainingCountdownS: 0,

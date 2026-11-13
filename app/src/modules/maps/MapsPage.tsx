@@ -9,6 +9,8 @@ import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useHeading } from '@/core/sensors/useHeading';
 import { useSettings, type MapLayers } from '@/core/settings/settings';
 import { RecordButton, useRecordedLines } from '@/modules/tracks/Recording';
+import { gapLines } from '@/modules/tracks/record';
+import { useRecorder } from '@/modules/tracks/recorder';
 import { useTracks } from '@/modules/tracks/store';
 import { routePoints, useWaypoints } from '@/modules/waypoints/store';
 import { loadGeoData } from '@/modules/weathermap/geo';
@@ -21,6 +23,8 @@ import type { ImportedMap } from './imported';
 import { MapView, type MapTrack, type ViewState } from './MapView';
 import { useMapTools } from './MapTools';
 import { useMapZones, type MapZone } from './store';
+import { TrackPicker } from './TrackPicker';
+import { tracksToShow } from './trackSelect';
 import { carryPrevailing, chooseSnowline, chooseWind, fetchFreezingSeries, fetchSnowline, needsLivePrevailing, needsRefresh, readSnowline, saveSnowline, type Snowline } from './snowline';
 import { compassList, fetchPrevailing, leeAspects } from './wind';
 import { archiveContains, serverMaps, type ServerMaps } from './sources';
@@ -223,17 +227,28 @@ export function MapsPage() {
     () => [...routeMap.values()].map((r) => ({ id: r.id, name: r.name, points: routePoints(r, waypointMap).map((w) => [w.lon, w.lat] as [number, number]) })),
     [routeMap, waypointMap],
   );
+  // Qué recorridos se dibujan (ver trackSelect.ts): con muchos tracks superpuestos no se entiende nada, así que por defecto solo el que se
+  // graba o el último; se pueden elegir, ver todos o ninguno. El que se abre desde su ficha se ve siempre.
+  const trackMode = useSettings((s) => s.settings.mapTracksMode);
+  const trackChosen = useSettings((s) => s.settings.mapTracksChosen);
+  const recStatus = useRecorder((s) => s.status);
+  const recGaps = useRecorder((s) => s.track?.gaps);
+  const focusIds = useMemo(() => (params.get('track') ? [params.get('track')!] : params.get('tracks') ? params.get('tracks')!.split(',') : []), [params]);
+  const shownTracks = useMemo(() => tracksToShow(trackMap.values(), trackMode, trackChosen, recStatus !== 'idle', focusIds), [trackMap, trackMode, trackChosen, recStatus, focusIds]);
   const tracks = useMemo<MapTrack[]>(
     () =>
       // El que se está grabando va aparte, en su color.
-      [...trackMap.values()].filter((tr) => !tr.recording).map((tr) => ({
+      shownTracks.map((tr, index) => ({
         id: tr.id,
         name: tr.name,
+        index,
         lines: tr.segments.map((seg) => seg.map(([lat, lon]) => [lon, lat] as [number, number])),
         points: tr.waypoints.map((w) => ({ name: w.name, lat: w.lat, lon: w.lon })),
       })),
-    [trackMap],
+    [shownTracks],
   );
+  // Los cortes (pantalla apagada) de lo que se graba y de lo que se ve: rectas punteadas en otro color.
+  const gapLinesAll = useMemo(() => [...gapLines(recGaps), ...shownTracks.flatMap((tr) => gapLines(tr.gaps))], [recGaps, shownTracks]);
   const recorded = useRecordedLines();
   const here = useMemo(() => (fix ? { lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy } : null), [fix]);
   const tools = useMapTools(fix ? { lat: fix.lat, lon: fix.lon, alt: fix.alt } : null);
@@ -330,6 +345,7 @@ export function MapsPage() {
           heading={heading?.trueHeading ?? null}
           onFollowBreak={() => setFollow(false)}
           recorded={recorded}
+          gapLines={gapLinesAll}
           onMove={(v) => {
             lastView = v;
             setView(v);
@@ -382,6 +398,7 @@ export function MapsPage() {
             </button>
           ))}
         </div>
+        {layers.tracks && <TrackPicker tracks={trackMap.values()} recordingActive={recStatus !== 'idle'} />}
         {layers.slope && (
           <div className="stack" style={{ gap: 4 }} data-testid="slope-legend">
             <ul className="incl-legend">

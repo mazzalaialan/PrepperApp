@@ -30,10 +30,3 @@ export function currentSpeedMs(segments: TrackPoint[][]): number {
 export const paceFromMs = (ms: number): number => (ms > 0 ? 1000 / ms : 0);
 /** m/s → km/h. */
 export const kmhFromMs = (ms: number): number => ms * 3.6;
-
-/** Texto que lee la voz al cerrar un kilómetro: "Kilómetro 3. Tiempo 18:05. Ritmo 5:58." */
-export function kmAnnouncement(km: number, totalS: number, lastSplitS: number | undefined, t: (key: string, o?: Record<string, unknown>) => string, clock: (s: number) => string, pace: (s: number) => string): string {
-  return lastSplitS
-    ? t('training.live.voiceKm', { km, time: clock(totalS), pace: pace(lastSplitS) })
-    : t('training.live.voiceKmShort', { km, time: clock(totalS) });
-}

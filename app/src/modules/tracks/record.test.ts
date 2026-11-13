@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Track } from '@/core/model/types';
-import { addPoint, finishedTrack, firstPoints, joinLastSegments, SAVER_STEP_M, shouldAdd } from './record';
+import { addPoint, closeGap, dropOpenGap, finishedTrack, firstPoints, gapLines, joinLastSegments, openGap, SAVER_STEP_M, shouldAdd } from './record';
 import { trackStats } from './gpx';
 
 const track = (segments: Track['segments']): Track =>
@@ -72,5 +72,55 @@ describe('grabación del recorrido', () => {
     expect(joined).toHaveLength(1);
     expect(trackStats(joined).distanceM).toBeGreaterThan(apart + 900);
     expect(joinLastSegments([before])).toEqual([before]);
+  });
+});
+
+describe('cortes de la grabación (pantalla apagada)', () => {
+  // Va por una calle hacia el norte; la pantalla se apaga y vuelve unos 600 m más adelante.
+  const before: [number, number, number | null, number][] = [[-41.1, -71.3, null, 1000], [-41.101, -71.3, null, 1010]];
+  const after: [number, number, number | null, number] = [-41.1065, -71.3, null, 1700];
+
+  it('el corte se une siempre con una recta y suma su distancia: es menos de lo caminado, pero no se descarta', () => {
+    const gaps = openGap(undefined, { from: 1_010_000, to: 1_700_000 }, before[1]);
+    expect(gaps).toEqual([{ from: 1_010_000, to: 1_700_000, joined: true, a: [-41.101, -71.3] }]);
+    const closed = closeGap(gaps, after)!;
+    expect(closed[0]).toMatchObject({ joined: true, a: [-41.101, -71.3], b: [-41.1065, -71.3] });
+    expect(closed[0]!.lengthM).toBeGreaterThan(550);
+    expect(closed[0]!.lengthM).toBeLessThan(650);
+    // Sigue en el mismo tramo: la distancia del recorrido incluye la recta.
+    const segments = addPoint([before], after);
+    expect(segments).toHaveLength(1);
+    const total = trackStats(segments).distanceM;
+    const walkedOnly = trackStats([before]).distanceM;
+    expect(total).toBeGreaterThan(walkedOnly + closed[0]!.lengthM! - 5);
+  });
+
+  it('las rectas de los cortes cerrados salen en [lon, lat] para dibujarlas en otro color; las abiertas no', () => {
+    const open = openGap(undefined, { from: 1, to: 2 }, before[1]);
+    expect(gapLines(open)).toEqual([]);
+    const closed = closeGap(open, after);
+    expect(gapLines(closed)).toEqual([[[-71.3, -41.101], [-71.3, -41.1065]]]);
+    expect(gapLines(undefined)).toEqual([]);
+  });
+
+  it('un corte sin punto de antes no tiene recta, y cerrar dos veces no cambia nada', () => {
+    const noLast = openGap(undefined, { from: 1, to: 2 }, undefined);
+    expect(closeGap(noLast, after)).toEqual(noLast);
+    const closed = closeGap(openGap(undefined, { from: 1, to: 2 }, before[1]), after);
+    expect(closeGap(closed, [-42, -71, null, 5000])).toEqual(closed);
+  });
+
+  it('si se pausa antes de que llegue el punto de después, ese corte queda sin recta (lo que se camina en pausa no se une)', () => {
+    const open = openGap(undefined, { from: 1, to: 2 }, before[1]);
+    expect(dropOpenGap(open)).toEqual([{ from: 1, to: 2, joined: false }]);
+    const closed = closeGap(open, after);
+    expect(dropOpenGap(closed)).toEqual(closed);
+  });
+
+  it('sobrevive a terminar la grabación: las coordenadas de la recta se guardan en el corte, aunque el recorrido se simplifique', () => {
+    const withGap = { ...track([[...before, after]]), gaps: closeGap(openGap(undefined, { from: 1_010_000, to: 1_700_000 }, before[1]), after) } as Track;
+    const done = finishedTrack(withGap, 900)!;
+    expect(gapLines(done.gaps)).toEqual([[[-71.3, -41.101], [-71.3, -41.1065]]]);
+    expect(done.distanceM).toBeGreaterThan(600);
   });
 });

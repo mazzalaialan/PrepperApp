@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Circle, Gauge, Moon, Pause, Play, Square, TriangleAlert, Undo2 } from 'lucide-react';
+import { ChevronUp, Circle, ClipboardList, Gauge, Map as MapIcon, Menu, Moon, Pause, Play, Square, TriangleAlert, Undo2 } from 'lucide-react';
 import { usePocket } from '@/core/power/pocket';
 import { useWakeLock } from '@/core/power/useWakeLock';
 import { useSettings } from '@/core/settings/settings';
 import { formatDistance } from '@/core/units/units';
 import type { WorkoutKind } from '@/core/model/types';
 import { ACTIVITIES, ACTIVITY_KINDS } from '@/modules/training/activities';
+import { useKmVoice } from '@/modules/training/kmVoice';
 import { useBodyWeight, useTrainingFormat } from '@/modules/training/format';
 import { Dialog } from '@/ui/Dialog';
 import { MAX_ACCURACY_M } from './record';
@@ -154,7 +155,11 @@ export function RecordingBar() {
   const [notice, setNotice] = useState<string | null>(null);
   /** Nombre que se está poniendo al terminar (null: sin el diálogo). */
   const [naming, setNaming] = useState<string | null>(null);
+  /** En la pantalla «en vivo» la barra está plegada (los controles grandes están ahí): este botón la despliega. */
+  const [menuOpen, setMenuOpen] = useState(false);
   useWakeLock(status === 'recording');
+  // Voz al cerrar cada kilómetro, en cualquier pantalla (no solo en «en vivo»).
+  useKmVoice();
   // El reloj avanza solo mientras graba.
   useEffect(() => {
     if (status !== 'recording') return;
@@ -176,8 +181,47 @@ export function RecordingBar() {
   }
 
   const points = track.segments.flat().length;
-  // En la pantalla en vivo de Entrenamiento los controles están en grande; acá queda solo el aviso.
-  if (pathname === '/training/live') return <RecWarning />;
+  const onLive = pathname === '/training/live';
+  const summaryTo = `/orientation/tracks/${track.id}`;
+  const onMap = pathname === '/orientation/maps';
+  const onSummary = pathname === summaryTo;
+  // Atajos al mapa con el recorrido en vivo y al resumen del recorrido (la ficha del track), desde cualquier pantalla.
+  const shortcuts = (
+    <>
+      {!onMap && (
+        <Link className="icon-btn rec-act" to="/orientation/maps" aria-label={t('tracks.rec.map')} title={t('tracks.rec.map')} data-testid="rec-map">
+          <MapIcon size={20} />
+          <span className="rec-lbl">{t('tracks.rec.mapShort')}</span>
+        </Link>
+      )}
+      {!onSummary && (
+        <Link className="icon-btn rec-act" to={summaryTo} aria-label={t('tracks.rec.summary')} title={t('tracks.rec.summary')} data-testid="rec-summary">
+          <ClipboardList size={20} />
+          <span className="rec-lbl">{t('tracks.rec.summaryShort')}</span>
+        </Link>
+      )}
+    </>
+  );
+  // En la pantalla en vivo de Entrenamiento los controles están en grande: la barra queda plegada, con los atajos y un botón
+  // para desplegar el menú de grabación completo.
+  if (onLive && !menuOpen) {
+    return (
+      <>
+        <section className={`rec-bar rec-${status}`} aria-label={t('tracks.rec.bar')} data-testid="rec-bar-live">
+          <span className="rec-dot" aria-hidden />
+          <strong className="rec-info">{status === 'recording' ? t('tracks.rec.recording') : t('tracks.rec.paused')}</strong>
+          <span className="rec-actions">
+            {shortcuts}
+            <button className="icon-btn rec-act" type="button" onClick={() => setMenuOpen(true)} aria-expanded={false} aria-label={t('tracks.rec.menu')} title={t('tracks.rec.menu')} data-testid="rec-menu-open">
+              <Menu size={20} />
+              <span className="rec-lbl">{t('tracks.rec.menuShort')}</span>
+            </button>
+          </span>
+        </section>
+        <RecWarning />
+      </>
+    );
+  }
   const backTo = `/orientation/tracks/${track.id}/follow`;
   const goingBack = pathname === backTo && search.includes('back');
   return (
@@ -220,15 +264,24 @@ export function RecordingBar() {
             <span className="rec-lbl">{t('tracks.rec.backShort')}</span>
           </Link>
         )}
-        <Link className="icon-btn rec-act" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
-          <Gauge size={20} />
-          <span className="rec-lbl">{t('tracks.rec.liveShort')}</span>
-        </Link>
+        {shortcuts}
+        {!onLive && (
+          <Link className="icon-btn rec-act" to="/training/live" aria-label={t('training.live.open')} title={t('training.live.open')} data-testid="rec-live">
+            <Gauge size={20} />
+            <span className="rec-lbl">{t('tracks.rec.liveShort')}</span>
+          </Link>
+        )}
         <PocketButton labeled />
         <button className="icon-btn rec-act rec-finish" type="button" onClick={() => setNaming(track.name)} aria-label={t('tracks.rec.finish')} title={t('tracks.rec.finish')}>
           <Square size={18} fill="currentColor" />
           <span className="rec-lbl">{t('tracks.rec.finishShort')}</span>
         </button>
+        {onLive && (
+          <button className="icon-btn rec-act" type="button" onClick={() => setMenuOpen(false)} aria-expanded aria-label={t('tracks.rec.menuHide')} title={t('tracks.rec.menuHide')} data-testid="rec-menu-close">
+            <ChevronUp size={20} />
+            <span className="rec-lbl">{t('tracks.rec.menuHideShort')}</span>
+          </button>
+        )}
       </span>
       <RecWarning />
       {naming !== null && <FinishDialog initialName={naming} points={points} onClose={() => setNaming(null)} />}

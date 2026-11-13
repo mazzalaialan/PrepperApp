@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSource, Map as MlMap } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
+import { TRACK_PALETTE } from './trackSelect';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { angleDiff } from '@/core/sensors/heading';
 import { useEffectiveTheme } from '@/core/settings/theme';
@@ -61,6 +62,8 @@ interface Props {
   done?: [number, number][] | null;
   /** Recorrido que se está grabando, en tramos de [lon, lat]. */
   recorded?: [number, number][][] | null;
+  /** Rectas de los cortes (pantalla apagada) de lo grabado y de los tracks a la vista, en [lon, lat]: van en otro color y punteadas. */
+  gapLines?: [number, number][][];
   onMove: (view: ViewState) => void;
   onWaypoint: (id: string) => void;
   /** Herramienta activa: el toque en el mapa marca un punto (y no abre waypoints). */
@@ -79,6 +82,8 @@ interface Props {
 export interface MapTrack {
   id: string;
   name: string;
+  /** Posición en la lista de los que se ven (da el color cuando hay varios a la vez). */
+  index?: number;
   /** Segmentos en [lon, lat]. */
   lines: [number, number][][];
   points: { name: string; lon: number; lat: number }[];
@@ -113,7 +118,7 @@ function data(p: Props) {
     } as FeatureCollection,
     'track-lines': {
       type: 'FeatureCollection',
-      features: p.tracks.map((t) => ({ type: 'Feature', properties: { id: t.id, name: t.name }, geometry: { type: 'MultiLineString', coordinates: t.lines } })),
+      features: p.tracks.map((t) => ({ type: 'Feature', properties: { id: t.id, name: t.name, i: t.index ?? 0 }, geometry: { type: 'MultiLineString', coordinates: t.lines } })),
     } as FeatureCollection,
     'track-points': {
       type: 'FeatureCollection',
@@ -124,6 +129,9 @@ function data(p: Props) {
       : EMPTY) as FeatureCollection,
     'track-rec': (p.recorded?.some((s) => s.length > 1)
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: p.recorded.filter((s) => s.length > 1) } }] }
+      : EMPTY) as FeatureCollection,
+    'track-gaps': (p.gapLines?.length
+      ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: p.gapLines } }] }
       : EMPTY) as FeatureCollection,
     here: (p.here
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { accuracy: p.here.accuracy }, geometry: { type: 'Point', coordinates: [p.here.lon, p.here.lat] } }] }
@@ -179,7 +187,7 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
   map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': c.accent, 'line-width': 2 } });
   // Tracks importados: en otro color, para no confundirlos con las rutas propias.
   const tracks = p.showTracks ? 'visible' : 'none';
-  map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.info, 'line-width': 3.5, 'line-opacity': 0.9 } });
+  map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['at', ['%', ['get', 'i'], TRACK_PALETTE.length], ['literal', [c.info, ...TRACK_PALETTE.slice(1)]]], 'line-width': 3.5, 'line-opacity': 0.9 } });
   map.addLayer({ id: 'track-done', type: 'line', source: 'track-done', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.accent, 'line-width': 5 } });
   // Lo que vas grabando: en verde, encima del track que seguís.
   map.addLayer({
@@ -188,6 +196,14 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
     source: 'track-rec',
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': c.ok, 'line-width': 4, 'line-opacity': 0.95 },
+  });
+  // Los cortes (pantalla apagada): una recta punteada en otro color, para distinguirla de lo medido.
+  map.addLayer({
+    id: 'track-gaps',
+    type: 'line',
+    source: 'track-gaps',
+    layout: { 'line-cap': 'butt', 'line-join': 'round' },
+    paint: { 'line-color': c.warn, 'line-width': 4, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.95 },
   });
   map.addLayer({ id: 'track-points', type: 'circle', source: 'track-points', layout: { visibility: tracks }, paint: { 'circle-radius': 4.5, 'circle-color': c.info, 'circle-stroke-color': c.bg, 'circle-stroke-width': 1.5 } });
   map.addLayer({
@@ -381,7 +397,10 @@ export function MapView(props: Props) {
     // Puntos grabados a la vista (para las pruebas).
     container.current?.setAttribute('data-recorded', String(props.recorded?.flat().length ?? 0));
     container.current?.setAttribute('data-measure', String(props.measure?.length ?? 0));
-  }, [props.waypoints, props.routes, props.tracks, props.done, props.recorded, props.here, props.zones, props.preview, props.outline, props.measure, props.target]);
+    // Rectas de corte y recorridos guardados a la vista (para las pruebas).
+    container.current?.setAttribute('data-gap-lines', String(props.gapLines?.length ?? 0));
+    container.current?.setAttribute('data-tracks-shown', String(props.tracks.length));
+  }, [props.waypoints, props.routes, props.tracks, props.done, props.recorded, props.gapLines, props.here, props.zones, props.preview, props.outline, props.measure, props.target]);
 
   useEffect(() => {
     const m = map.current;

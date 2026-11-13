@@ -784,6 +784,20 @@
     "saveWaypoint": "Guardar como waypoint"
   },
   "maps": {
+    "trackPicker": {
+      "title": "Recorridos que se ven",
+      "mode": {"auto": "Automático", "chosen": "Elegir", "all": "Todos", "none": "Ninguno"},
+      "hint": {
+        "auto": "Se ve el recorrido que estás grabando o, si no grabás ninguno, el último. Así no se superponen todos.",
+        "chosen_one": "Se ve 1 recorrido de los que elegiste (y el que estés grabando).",
+        "chosen_other": "Se ven {{count}} recorridos de los que elegiste (y el que estés grabando).",
+        "all": "Se ven todos los recorridos guardados; cada uno con su color. Con muchos, conviene elegir.",
+        "none": "No se ve ningún recorrido guardado (el que estés grabando sí)."
+      },
+      "more": "Ver todos ({{count}})",
+      "fewer": "Ver menos",
+      "clear": "Quitar la selección"
+    },
     "offline":"Sin conexión: se ven las zonas descargadas y, fuera de ellas, solo el contorno del país.",
     "goHere": "Ir a mi ubicación",
     "center": "Centro: {{coords}} · zoom {{zoom}}",
@@ -1622,7 +1636,7 @@
     "noWeight": "Sin tu peso no se calculan las calorías.",
     "noWeightLink": "Cargalo en tu ficha médica.",
     "followLabel": "Seguir una ruta o un track", "followNone": "Sin ruta", "followRoute": "Ruta: {{name}}", "followTrack": "Track: {{name}}",
-    "live": {"activity": "Actividad", "activityNone": "Elegir al terminar", "time": "Tiempo", "title": "Sesión en curso", "none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}}.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
+    "live": {"activity": "Actividad", "activityNone": "Elegir al terminar", "time": "Tiempo", "title": "Sesión en curso", "none": "No hay ninguna sesión grabándose.", "paceNow": "Ritmo ahora", "speedNow": "Velocidad ahora", "paceAvg": "Ritmo promedio", "speedAvg": "Velocidad promedio", "ascent": "Desnivel", "calories": "Calorías", "voiceOn": "Voz cada km", "voiceOff": "Sin voz", "open": "Ver la sesión en vivo", "spoken": {"hour_one": "{{count}} hora", "hour_other": "{{count}} horas", "minute_one": "{{count}} minuto", "minute_other": "{{count}} minutos", "second_one": "{{count}} segundo", "second_other": "{{count}} segundos"}, "voiceKm": "Kilómetro {{km}}. Tiempo {{time}}. Ritmo {{pace}} por kilómetro.", "voiceKmShort": "Kilómetro {{km}}. Tiempo {{time}}."},
     "how": {"title": "Cómo me fue", "feeling": "Cómo me sentí", "f1": "muy mal", "f2": "mal", "f3": "normal", "f4": "bien", "f5": "muy bien", "terrain": "Terreno o lugar", "weather": "Clima al terminar", "wind": "viento {{kmh}} km/h", "t": {"road": "Calle o ruta", "trail": "Sendero", "mountain": "Montaña", "sand": "Arena o playa", "track": "Pista", "water": "Agua", "indoor": "Bajo techo", "mixed": "Mixto"}},
     "goals": {"title": "Objetivos de la semana", "hint": "Dejá en blanco los que no quieras. El avance se ve acá arriba y se cuenta de lunes a domingo.", "distanceKm": "Distancia (km)", "minutes": "Tiempo (minutos)", "sessions": "Actividades", "reached": "¡cumplido!"},
     "exportGpx": "Exportar GPX",
@@ -1936,8 +1950,13 @@
     }
   },
   "tracks": {
+    "tabsLabel": "Qué tracks ver",
+    "tabs": {"imported": "Cargados ({{count}})", "mine": "Mis recorridos ({{count}})"},
+    "search": "Buscar por nombre",
+    "noMatch": "Ningún track coincide con «{{q}}».",
     "gapsTitle": "Cortes de la grabación",
     "gapItemJoined": "{{from}} a {{to}}: pantalla apagada, se unió con una recta.",
+    "gapItemJoinedLen": "{{from}} a {{to}}: pantalla apagada, se unió con una recta de {{length}} (en otro color en el mapa; suma menos de lo que caminaste).",
     "gapItemKept": "{{from}} a {{to}}: pantalla apagada, quedó un hueco.",
     "seeWorkout": "Ver la sesión de entrenamiento",
     "importFormats": "Se pueden importar archivos GPX, KML, KMZ y TCX, también comprimidos (.gz).",
@@ -2013,12 +2032,16 @@
       "rotateNoCompass": "Sin brújula en este dispositivo: el dibujo queda con el norte arriba."
     },
     "rec": {
-      "gapJoined": "Con la pantalla apagada no se grabó entre las {{from}} y las {{to}} ({{time}}). Como fue corto, se unió con una línea recta. Para que no pase, dejá la app abierta con la pantalla negra (luna).",
+      "gapJoined": "Con la pantalla apagada no se grabó entre las {{from}} y las {{to}} ({{time}}). Se unió con una línea recta, marcada en otro color: suma esa distancia, que es menos de lo que caminaste. Para que no pase, dejá la app abierta con la pantalla negra (luna).",
       "gapKept": "Con la pantalla apagada no se grabó entre las {{from}} y las {{to}} ({{time}}). Quedó un hueco en el recorrido (no suma distancia). Para que no pase, dejá la app abierta con la pantalla negra (luna).",
       "pauseShort": "Pausa",
       "resumeShort": "Seguir",
       "backShort": "Origen",
       "liveShort": "En vivo",
+      "map": "Ver el mapa con el recorrido en vivo", "mapShort": "Mapa",
+      "summary": "Ver el resumen del recorrido", "summaryShort": "Resumen",
+      "menu": "Mostrar el menú de grabación", "menuShort": "Menú",
+      "menuHide": "Ocultar el menú de grabación", "menuHideShort": "Ocultar",
       "pocketShort": "Bolsillo",
       "finishShort": "Terminar",
       "start": "Grabar mi recorrido",

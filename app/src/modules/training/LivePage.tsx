@@ -15,7 +15,7 @@ import { LiveShareCard } from './LiveShareCard';
 import { beep, buzz, say } from './cues';
 import { advance, type RunState } from './intervals';
 import { loadRun, saveRun } from './runState';
-import { currentSpeedMs, kmAnnouncement, kmhFromMs, paceFromMs } from './live';
+import { currentSpeedMs, kmhFromMs, paceFromMs } from './live';
 import { analyzeRecording, formatClock } from './stats';
 
 /**
@@ -48,22 +48,7 @@ export function LivePage() {
   // Sin actividad elegida se muestra como una caminata (ritmo); las calorías esperan a que se elija.
   const def = ACTIVITIES[kind ?? 'walk'];
 
-  // Voz: al cerrar cada kilómetro lee el tiempo y el ritmo de ese kilómetro.
-  const spokenKm = useRef(0);
-  const km = stats?.splitsS.length ?? 0;
-  useEffect(() => {
-    if (km < spokenKm.current) spokenKm.current = km;
-    if (!voice || km === spokenKm.current || km === 0 || !('speechSynthesis' in window)) {
-      spokenKm.current = km;
-      return;
-    }
-    spokenKm.current = km;
-    const text = kmAnnouncement(km, elapsed, stats!.splitsS.at(-1), t, formatClock, (s) => f.pace(s).replace('/km', '').replace('/mi', '').trim());
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = i18n.language;
-    window.speechSynthesis.speak(u);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [km, voice]);
+  // La voz al cerrar cada kilómetro la da la barra de la grabación (`useKmVoice`), en cualquier pantalla.
 
   // Intervalos: en qué etapa se está (el estado se guarda para no perderlo si se recarga la app) y un aviso
   // (pitido, vibración y voz) al cambiar de etapa y en los últimos 3 segundos de las de tiempo.

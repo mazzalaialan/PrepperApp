@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Circle, Footprints, Route, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Circle, Footprints, Route, Search, Trash2, Upload } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { formatAltitude, formatDistance } from '@/core/units/units';
 import { GpxError } from './gpx';
@@ -11,7 +11,15 @@ import { trackFromBytes } from './importTrack';
 import { useTracks } from './store';
 import { confirmAction } from '@/ui/confirm';
 
-/** Tracks importados de un GPX (Wikiloc u otra app) y grabados con la app: aparte de los waypoints y rutas propios. */
+type Kind = 'imported' | 'mine';
+/** La pestaña que se estaba viendo, para volver a ella al reabrir la pantalla. */
+let lastKind: Kind | null = null;
+const plain = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+/**
+ * Tracks importados de un GPX (Wikiloc u otra app) y grabados con la app: aparte de los waypoints y rutas propios.
+ * Los dos tipos van en pestañas separadas: con muchos recorridos propios, al buscar un track cargado no tienen que aparecer todos.
+ */
 export function TracksPage() {
   const { t, i18n } = useTranslation();
   const recStatus = useRecorder((s) => s.status);
@@ -26,7 +34,23 @@ export function TracksPage() {
   }
   const file = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const list = useMemo(() => [...tracks.values()].filter((x) => !x.routeId).sort((a, b) => a.name.localeCompare(b.name, i18n.language)), [tracks, i18n.language]);
+  const all = useMemo(() => [...tracks.values()].filter((x) => !x.routeId), [tracks]);
+  // Cargados: por nombre. Míos (grabados): del más nuevo al más viejo.
+  const groups = useMemo(
+    () => ({
+      imported: all.filter((x) => !x.recorded).sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
+      mine: all.filter((x) => x.recorded).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    }),
+    [all, i18n.language],
+  );
+  // Al abrir: la pestaña de antes; si se está grabando, la de los míos; y si solo hay de un tipo, esa.
+  const [pickedKind, setKind] = useState<Kind | null>(() => (recStatus !== 'idle' ? 'mine' : lastKind));
+  const both = groups.imported.length > 0 && groups.mine.length > 0;
+  const kind: Kind = both ? (pickedKind ?? 'imported') : groups.mine.length > 0 ? 'mine' : 'imported';
+  const [query, setQuery] = useState('');
+  const inGroup = groups[kind];
+  const q = plain(query.trim());
+  const list = useMemo(() => (q ? inGroup.filter((x) => plain(x.name).includes(q)) : inGroup), [inGroup, q]);
 
   async function handleFile(f: File) {
     setError(null);
@@ -72,8 +96,35 @@ export function TracksPage() {
         </button>
       )}
 
-      {list.length === 0 ? (
+      {both && (
+        <div className="segmented" role="group" aria-label={t('tracks.tabsLabel')} data-testid="tracks-tabs">
+          {(['imported', 'mine'] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              aria-pressed={kind === k}
+              onClick={() => {
+                lastKind = k;
+                setKind(k);
+                setQuery('');
+              }}
+              data-testid={`tracks-tab-${k}`}
+            >
+              {t(`tracks.tabs.${k}`, { count: groups[k].length })}
+            </button>
+          ))}
+        </div>
+      )}
+      {inGroup.length > 5 && (
+        <div className="input-group">
+          <Search size={18} aria-hidden style={{ alignSelf: 'center' }} />
+          <input className="input" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('tracks.search')} aria-label={t('tracks.search')} data-testid="tracks-search" />
+        </div>
+      )}
+      {all.length === 0 ? (
         <p className="empty">{t('tracks.empty')}</p>
+      ) : list.length === 0 ? (
+        <p className="empty" data-testid="tracks-nomatch">{q ? t('tracks.noMatch', { q: query.trim() }) : t('tracks.empty')}</p>
       ) : (
         <ul className="list" data-testid="tracks-list">
           {list.map((tr) => (

@@ -2943,7 +2943,9 @@ a.module-card:hover {
 
 .rec-actions {
   display: flex;
-  flex: none;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 2px;
 }
 
@@ -4476,4 +4478,13 @@ a.module-card:hover {
 .lock-card-fields ul {
   margin: 0;
   padding-left: 1.1rem;
+}
+
+/* Selector de recorridos del mapa: el cuadradito es del color con el que se dibuja el recorrido. */
+.track-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
 }

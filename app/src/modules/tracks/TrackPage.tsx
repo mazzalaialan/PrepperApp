@@ -197,7 +197,7 @@ function TrackDetail({ track }: { track: Track }) {
             <ul className="list">
               {track.gaps.map((g) => (
                 <li key={g.from} className="hint">
-                  {t(g.joined ? 'tracks.gapItemJoined' : 'tracks.gapItemKept', { from: new Date(g.from).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }), to: new Date(g.to).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }) })}
+                  {t(g.joined ? (g.lengthM !== undefined ? 'tracks.gapItemJoinedLen' : 'tracks.gapItemJoined') : 'tracks.gapItemKept', { from: new Date(g.from).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }), to: new Date(g.to).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }), length: dist(g.lengthM ?? 0) })}
                 </li>
               ))}
             </ul>

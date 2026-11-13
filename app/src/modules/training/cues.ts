@@ -3,6 +3,8 @@
  * el nombre de la etapa. Todo es opcional y falla en silencio (el navegador
  * puede bloquear el sonido hasta que la persona toque la pantalla).
  */
+import { forSpeech } from '@/core/speech/speech';
+
 let ctx: AudioContext | null = null;
 
 export function beep(freq = 880, ms = 150): void {
@@ -34,7 +36,7 @@ export function say(text: string, lang: string, opts: { rate?: number; interrupt
     if (!('speechSynthesis' in window)) return;
     // Para avisos que tienen que caer en un momento justo: se corta lo que siga sonando para que no se acumulen y se atrasen.
     if (opts.interrupt) window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(forSpeech(text));
     u.lang = lang;
     if (opts.rate) u.rate = opts.rate;
     window.speechSynthesis.speak(u);

@@ -557,6 +557,14 @@ export interface TrackGap {
   from: number;
   to: number;
   joined: boolean;
+  /**
+   * Extremos de la recta con la que se unió el corte ([lat, lon]: el último punto antes y el primero después) y su largo en metros.
+   * Se guardan aparte porque al terminar el recorrido se simplifica y esos puntos pueden perderse; con ellos el corte se dibuja
+   * en otro color. Esa distancia SÍ suma al recorrido (es menos de lo que se caminó, pero no se descarta).
+   */
+  a?: [number, number];
+  b?: [number, number];
+  lengthM?: number;
 }
 
 export interface Track extends BaseEntity {

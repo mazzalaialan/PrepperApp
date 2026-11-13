@@ -784,6 +784,20 @@
     "saveWaypoint": "Save as waypoint"
   },
   "maps": {
+    "trackPicker": {
+      "title": "Routes shown",
+      "mode": {"auto": "Automatic", "chosen": "Choose", "all": "All", "none": "None"},
+      "hint": {
+        "auto": "Shows the route you are recording or, if none, the last one. This way they do not all overlap.",
+        "chosen_one": "1 of the routes you chose is shown (and the one you are recording).",
+        "chosen_other": "{{count}} of the routes you chose are shown (and the one you are recording).",
+        "all": "All saved routes are shown, each in its own color. With many, it is better to choose.",
+        "none": "No saved route is shown (the one you are recording is)."
+      },
+      "more": "Show all ({{count}})",
+      "fewer": "Show fewer",
+      "clear": "Clear selection"
+    },
     "offline":"Offline: downloaded areas are shown; elsewhere only the country outline.",
     "goHere": "Go to my location",
     "center": "Center: {{coords}} · zoom {{zoom}}",
@@ -1622,7 +1636,7 @@
     "noWeight": "Calories are not calculated without your weight.",
     "noWeightLink": "Add it to your medical record.",
     "followLabel": "Follow a route or a track", "followNone": "No route", "followRoute": "Route: {{name}}", "followTrack": "Track: {{name}}",
-    "live": {"activity": "Activity", "activityNone": "Choose when finishing", "time": "Time", "title": "Session in progress", "none": "No session is being recorded.", "paceNow": "Pace now", "speedNow": "Speed now", "paceAvg": "Average pace", "speedAvg": "Average speed", "ascent": "Ascent", "calories": "Calories", "voiceOn": "Voice every km", "voiceOff": "No voice", "open": "Open the live session", "voiceKm": "Kilometer {{km}}. Time {{time}}. Pace {{pace}}.", "voiceKmShort": "Kilometer {{km}}. Time {{time}}."},
+    "live": {"activity": "Activity", "activityNone": "Choose when finishing", "time": "Time", "title": "Session in progress", "none": "No session is being recorded.", "paceNow": "Pace now", "speedNow": "Speed now", "paceAvg": "Average pace", "speedAvg": "Average speed", "ascent": "Ascent", "calories": "Calories", "voiceOn": "Voice every km", "voiceOff": "No voice", "open": "Open the live session", "spoken": {"hour_one": "{{count}} hour", "hour_other": "{{count}} hours", "minute_one": "{{count}} minute", "minute_other": "{{count}} minutes", "second_one": "{{count}} second", "second_other": "{{count}} seconds"}, "voiceKm": "Kilometer {{km}}. Time {{time}}. Pace {{pace}} per kilometer.", "voiceKmShort": "Kilometer {{km}}. Time {{time}}."},
     "how": {"title": "How it went", "feeling": "How I felt", "f1": "awful", "f2": "bad", "f3": "okay", "f4": "good", "f5": "great", "terrain": "Terrain or place", "weather": "Weather at the end", "wind": "wind {{kmh}} km/h", "t": {"road": "Road or street", "trail": "Trail", "mountain": "Mountain", "sand": "Sand or beach", "track": "Track", "water": "Water", "indoor": "Indoor", "mixed": "Mixed"}},
     "goals": {"title": "Weekly goals", "hint": "Leave blank any you do not want. Progress shows here and counts Monday to Sunday.", "distanceKm": "Distance (km)", "minutes": "Time (minutes)", "sessions": "Activities", "reached": "reached!"},
     "exportGpx": "Export GPX",
@@ -1936,8 +1950,13 @@
     }
   },
   "tracks": {
+    "tabsLabel": "Which tracks to show",
+    "tabs": {"imported": "Imported ({{count}})", "mine": "My routes ({{count}})"},
+    "search": "Search by name",
+    "noMatch": "No track matches “{{q}}”.",
     "gapsTitle": "Recording gaps",
     "gapItemJoined": "{{from}} to {{to}}: screen off, joined with a straight line.",
+    "gapItemJoinedLen": "{{from}} to {{to}}: screen off, joined with a straight line of {{length}} (another color on the map; it counts less than you walked).",
     "gapItemKept": "{{from}} to {{to}}: screen off, left as a gap.",
     "seeWorkout": "See the training session",
     "importFormats": "You can import GPX, KML, KMZ and TCX files, also compressed (.gz).",
@@ -2013,12 +2032,16 @@
       "rotateNoCompass": "No compass on this device: the drawing stays north-up."
     },
     "rec": {
-      "gapJoined": "Nothing was recorded with the screen off between {{from}} and {{to}} ({{time}}). It was short, so it was joined with a straight line. To avoid it, keep the app open with the black screen (moon).",
+      "gapJoined": "Nothing was recorded with the screen off between {{from}} and {{to}} ({{time}}). It was joined with a straight line, shown in another color: that distance counts, and it is less than you walked. To avoid it, keep the app open with the black screen (moon).",
       "gapKept": "Nothing was recorded with the screen off between {{from}} and {{to}} ({{time}}). The route has a gap there (it adds no distance). To avoid it, keep the app open with the black screen (moon).",
       "pauseShort": "Pause",
       "resumeShort": "Resume",
       "backShort": "Origin",
       "liveShort": "Live",
+      "map": "See the map with the live route", "mapShort": "Map",
+      "summary": "See the route summary", "summaryShort": "Summary",
+      "menu": "Show the recording menu", "menuShort": "Menu",
+      "menuHide": "Hide the recording menu", "menuHideShort": "Hide",
       "pocketShort": "Pocket",
       "finishShort": "Finish",
       "start": "Record my trip",
