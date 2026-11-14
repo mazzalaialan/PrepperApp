@@ -28,6 +28,11 @@ Tres investigadores y el agente legal revisaron fuentes por país (JSON con prue
 ### Con permiso previo (por ahora solo enlace a la página oficial)
 SHN Argentina (derechos reservados; shn@hidro.gob.ar, verificar dominio), SENAMHI Bolivia (niveles de ríos y Titicaca), DGA Chile (por SIAC), SHOA, DINAGUA, CARU, SOHMA, IOC Sea Level Monitoring (no comercial; registrarse con `contacto.vikarg@gmail.com`). El agente legal dejó un borrador de correo; **no se envió ninguno**.
 
+### Decisión de quien dirige (2026-11-13) sobre licencias
+- **Sin licencia declarada: se usa** (con cita, fecha del dato y enlace). Alcanza a SHN, SENAMHI Bolivia, INA, Armada de Chile, DINAGUA, CARU, SOHMA, INUMET.
+- **Licencia no comercial: se arma y se usa igual** (IOC, SHOA, DGA, Open-Meteo gratis), válido mientras la app sea gratuita y sin publicidad. Cada fuente lleva su licencia en un catálogo y se puede **apagar** en la copia institucional o paga.
+- Sigue sin hacerse: saltear captcha o anti-bot (SHOA, DHN, SITPORT) y usar fuentes que exigen registro sin registrarse (IOC).
+
 ### Riesgos que decidir
 - **La copia institucional de la escuela (EAAM) es uso comercial:** no puede llevar Open-Meteo gratis, IOC, SHOA ni DGA sin plan pago o permiso expreso. Cada permiso que se pida debe cubrir versiones institucionales o pagas.
 - Son datos de seguridad náutica: aviso de responsabilidad a revisar por un abogado matriculado.
