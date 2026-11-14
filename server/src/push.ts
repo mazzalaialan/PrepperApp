@@ -13,7 +13,7 @@ export type GardenPush =
 
 /** Contenido de la notificación; la app la arma en el idioma del usuario (ver app/src/sw.ts). */
 export interface PushPayload {
-  type: 'alerts' | 'rain' | 'lightning' | 'test' | 'update' | 'hazard' | 'garden' | 'official' | 'volcano' | 'outing';
+  type: 'alerts' | 'rain' | 'lightning' | 'test' | 'update' | 'hazard' | 'garden' | 'official' | 'volcano' | 'river' | 'outing';
   alerts?: { itemName: string; kind: string; dueDate: string | null }[];
   /** Aviso de lluvia en un lugar; `label` null = "donde estoy", y `fixAt` es de cuándo es esa ubicación. */
   rain?: { placeId: string; label: string | null; state: 'raining' | 'soon'; inMinutes: number; mm: number; fixAt: string | null; observedMmH?: number; stronger?: boolean };
@@ -70,6 +70,22 @@ export interface PushPayload {
     /** Organismo que da el nivel: OAVV (Argentina) o CENVUL (Perú). Sin él, OAVV. */
     source?: 'OAVV' | 'CENVUL';
   };
+  /** Un río llegó al nivel de alerta o de evacuación de su estación (o bajó a aguas bajas) cerca de un lugar (ver rivers/watch.ts). */
+  river?: {
+    placeId: string;
+    label: string | null;
+    fixAt: string | null;
+    station: string;
+    river: string;
+    state: 'alert' | 'evac' | 'low';
+    level: number;
+    threshold: number;
+    /** Cuándo se midió (ISO). */
+    at: string;
+    distanceKm: number;
+    bearing: number;
+    stock?: string[];
+  };
   /** Huerta: helada (por lugar), riego (por lugar) o las tareas del día juntas (ver garden/watch.ts). */
   garden?: GardenPush;
   /** Pasó la hora límite de regreso de una salida: el texto ya viene escrito por la app en su idioma (ver outings/watch.ts). */
@@ -86,7 +102,7 @@ export interface PushSender {
 
 /** Prioridad del push (RFC 8030): alta para lo que no puede esperar. */
 export function urgencyOf(payload: PushPayload): 'high' | 'normal' {
-  return payload.type === 'outing' || payload.type === 'hazard' || payload.type === 'official' || payload.type === 'volcano' || payload.type === 'lightning' || payload.type === 'rain' || payload.garden?.kind === 'frost' ? 'high' : 'normal';
+  return payload.type === 'outing' || payload.type === 'hazard' || payload.type === 'official' || payload.type === 'volcano' || payload.type === 'river' || payload.type === 'lightning' || payload.type === 'rain' || payload.garden?.kind === 'frost' ? 'high' : 'normal';
 }
 
 /** Claves VAPID: se generan en el primer arranque y se guardan en la base. */

@@ -24,6 +24,8 @@ import { fetchAshSigmets } from './official/sigmet.ts';
 import { createPeCache, fetchSenamhiBo, fetchSenamhiPe } from './official/senamhi.ts';
 import { fetchCenvul } from './volcanoes/cenvul.ts';
 import { fetchVolcanoAlerts, type VolcanoAlert } from './volcanoes/oavv.ts';
+import { fetchRiverLevels } from './rivers/ina.ts';
+import { loadRiverCatalog, RIVER_EVERY_MS, runRiverWatch, stationsToWatch, type RiverStation } from './rivers/watch.ts';
 import { runVolcanoWatch, volcanoReadStamp, VOLCANO_EVERY_MS } from './volcanoes/watch.ts';
 import { createMailNotifier, createSourceMonitor } from './monitor/sources.ts';
 
@@ -186,6 +188,34 @@ async function hazardTick() {
 }
 const hazardTimer = setInterval(() => void hazardTick(), 5 * 60_000);
 
+// Niveles de los ríos de Argentina (INA): cada media hora, solo de las estaciones que tienen un lugar guardado a menos de 5 km.
+let riverStations: RiverStation[] | null = null;
+let riverBusy = false;
+async function riverTick() {
+  if (!config.hazardsEnabled || !config.appDir || !hasPlaces(db) || riverBusy) return;
+  riverBusy = true;
+  try {
+    riverStations ??= loadRiverCatalog(`${config.appDir}/data/rivers-AR.json`);
+    const now = new Date();
+    const watch = stationsToWatch(db, riverStations, now, config.rainHereMaxAgeMs);
+    if (!watch.length) return;
+    try {
+      const levels = await fetchRiverLevels(watch.map((s) => s.series), now);
+      await monitor.ok('ina', 'Los niveles de los ríos (INA)');
+      const { sent, removed } = await runRiverWatch(db, push, watch, levels, now, config.rainHereMaxAgeMs);
+      if (sent || removed) app.log.info({ sent, removed }, 'avisos de ríos enviados');
+    } catch (err) {
+      await monitor.fail('ina', 'Los niveles de los ríos (INA)', err);
+      app.log.warn({ err: String(err) }, 'no se pudieron leer los niveles de los ríos del INA');
+    }
+  } catch (err) {
+    app.log.error(err, 'fallaron los avisos de ríos');
+  } finally {
+    riverBusy = false;
+  }
+}
+const riverTimer = setInterval(() => void riverTick(), RIVER_EVERY_MS);
+
 // Alertas oficiales (SMN, DMC, INUMET): cada 10 minutos, para el mapa y para avisar. Se bajan solo los CAP nuevos.
 let officialBusy = false;
 let volcanoesAt = 0;
@@ -316,6 +346,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     clearInterval(observedRainTimer);
     clearInterval(lightningTimer);
     clearInterval(hazardTimer);
+    clearInterval(riverTimer);
     clearInterval(officialTimer);
     clearInterval(gardenTimer);
     clearInterval(outingTimer);

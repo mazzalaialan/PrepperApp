@@ -108,3 +108,15 @@ describe('Bolivia y Perú', () => {
     expect(volcanoNotification({ ...v, source: undefined }, 'es').body).toMatch(/OAVV/);
   });
 });
+
+describe('aviso de un río cerca de un lugar', () => {
+  const r = { placeId: 'w1', label: 'Muelle', fixAt: null, station: 'Buenos Aires', river: 'Río de la Plata', state: 'alert' as const, level: 3.5, threshold: 3.3, at: '2026-11-14T15:00:00Z', distanceKm: 1.2, bearing: 0, stock: undefined };
+  it('alerta, evacuación y aguas bajas, con el lugar y el umbral', async () => {
+    const { riverNotification } = await import('./format');
+    expect(riverNotification(r, 'es').title).toBe('Río de la Plata en Buenos Aires: 3,50 m, sobre el nivel de alerta (3,30 m) · a 1,2 km al norte de Muelle');
+    expect(riverNotification({ ...r, state: 'evac', threshold: 3.9, level: 4 }, 'es').title).toContain('sobre el nivel de evacuación (3,90 m)');
+    expect(riverNotification({ ...r, state: 'low', threshold: 0.21, level: 0.15 }, 'es').title).toContain('en aguas bajas (bajo 0,21 m)');
+    expect(riverNotification(r, 'es').body).toMatch(/INA .*no oficial/);
+    expect(riverNotification(r, 'en').title).toBe('Río de la Plata at Buenos Aires: 3.50 m, above the alert level (3.30 m) · 1.2 km north of Muelle');
+  });
+});

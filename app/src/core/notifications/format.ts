@@ -49,6 +49,9 @@ const TEXT = {
     volcanoBodyCENVUL: 'Según el Centro Vulcanológico Nacional del Instituto Geofísico del Perú (CENVUL). Tocá para ver el reporte. Seguí las indicaciones de Defensa Civil (INDECI).',
     sources: { SENAMHI_BO: 'SENAMHI Bolivia', SENAMHI_PE: 'SENAMHI Perú', SIGMET: 'SIGMET' } as Record<string, string>,
     volcanoLevels: { yellow: 'amarilla', orange: 'naranja', red: 'roja' },
+    river: (river: string, station: string, level: string, status: string, km: string, dir: string, place: string) => `${river} en ${station}: ${level} m, ${status} · a ${km} km al ${dir} de ${place}`,
+    riverStates: { alert: (m: string) => `sobre el nivel de alerta (${m} m)`, evac: (m: string) => `sobre el nivel de evacuación (${m} m)`, low: (m: string) => `en aguas bajas (bajo ${m} m)` },
+    riverBody: (at: string) => `Medido ${at}. Dato del INA (Alerta Hidrológico). Aviso informativo, no oficial: seguí las indicaciones de Defensa Civil y de Prefectura. Tocá para ver los niveles.`,
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Incluye ${places}.`,
     officialHere: 'tu ubicación',
@@ -99,6 +102,9 @@ const TEXT = {
     volcanoBodyCENVUL: 'According to the National Volcano Center of the Geophysical Institute of Peru (CENVUL). Tap to see the report. Follow civil defense (INDECI) instructions.',
     sources: { SENAMHI_BO: 'SENAMHI Bolivia', SENAMHI_PE: 'SENAMHI Peru', SIGMET: 'SIGMET' } as Record<string, string>,
     volcanoLevels: { yellow: 'yellow', orange: 'orange', red: 'red' },
+    river: (river: string, station: string, level: string, status: string, km: string, dir: string, place: string) => `${river} at ${station}: ${level} m, ${status} · ${km} km ${dir} of ${place}`,
+    riverStates: { alert: (m: string) => `above the alert level (${m} m)`, evac: (m: string) => `above the evacuation level (${m} m)`, low: (m: string) => `at low water (below ${m} m)` },
+    riverBody: (at: string) => `Measured ${at}. Data from INA (Alerta Hidrológico). Informational, not official: follow civil defense and coast guard instructions. Tap to see the levels.`,
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Includes ${places}.`,
     officialHere: 'your location',
@@ -283,6 +289,33 @@ export function volcanoNotification(v: VolcanoPush, lang: Lang, now = Date.now()
   const title = tx.volcano(volcanoTitle(v.name), tx.volcanoLevels[v.level], Math.max(1, v.distanceKm), dir, v.label ?? tx.officialHere);
   const extra = (v.stock?.length ? `\n${tx.hazardStock(v.stock.join(', '))}` : '') + lastFixNote(v.fixAt, lang, now);
   return { title, body: (v.source === 'CENVUL' ? tx.volcanoBodyCENVUL : tx.volcanoBody) + extra };
+}
+
+/** Río que llegó a su nivel de alerta, de evacuación o de aguas bajas cerca de un lugar (ver server/src/rivers/watch.ts). ⚠ Mismo tipo que `river` en server/src/push.ts. */
+export interface RiverPush {
+  placeId: string;
+  label: string | null;
+  fixAt: string | null;
+  station: string;
+  river: string;
+  state: 'alert' | 'evac' | 'low';
+  level: number;
+  threshold: number;
+  at: string;
+  distanceKm: number;
+  bearing: number;
+  stock?: string[];
+}
+
+export function riverNotification(r: RiverPush, lang: Lang, now = Date.now()): { title: string; body: string } {
+  const tx = TEXT[lang];
+  const dir = tx.dirs[Math.round((((r.bearing % 360) + 360) % 360) / 45) % 8]!;
+  const num = new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const km = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  const title = tx.river(r.river, r.station, num.format(r.level), tx.riverStates[r.state](num.format(r.threshold)), km.format(Math.max(0.1, r.distanceKm)), dir, r.label ?? tx.officialHere);
+  const measured = new Date(r.at).toLocaleString(lang, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const extra = (r.stock?.length ? `\n${tx.hazardStock(r.stock.join(', '))}` : '') + lastFixNote(r.fixAt, lang, now);
+  return { title, body: tx.riverBody(measured) + extra };
 }
 
 export function lightningNotification(l: LightningPush, lang: Lang, now = Date.now()): { title: string; body: string } {

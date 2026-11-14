@@ -12,6 +12,7 @@ import {
   hazardNotification,
   officialNotification,
   type OfficialPush,
+  riverNotification,
   volcanoNotification,
   type VolcanoPush,
   type AlertSummary,
@@ -19,6 +20,7 @@ import {
   type HazardPush,
   type LightningPush,
   type RainPush,
+  type RiverPush,
   type UpdatePush,
 } from '@/core/notifications/format';
 import { selectNotifiable } from '@/core/notifications/notifiable';
@@ -78,7 +80,7 @@ async function show(title: string, body: string, url = ALERTS_URL) {
 
 /** Push del servidor propio: el contenido llega cifrado de punta a punta. */
 self.addEventListener('push', (event) => {
-  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush; volcano?: VolcanoPush; outing?: { outingId: string; title: string; body: string } };
+  const payload = (event.data?.json() ?? {}) as { type?: string; alerts?: AlertSummary[]; rain?: RainPush; lightning?: LightningPush; update?: UpdatePush; hazard?: HazardPush; garden?: GardenPush; official?: OfficialPush; volcano?: VolcanoPush; river?: RiverPush; outing?: { outingId: string; title: string; body: string } };
   event.waitUntil(
     (async () => {
       const lang = await language();
@@ -136,6 +138,19 @@ self.addEventListener('push', (event) => {
           renotify: true,
           ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
           data: { url: '#/weather/map' },
+        } as NotificationOptions);
+      } else if (payload.type === 'river' && payload.river) {
+        const r = payload.river;
+        const { title, body } = riverNotification(r, lang);
+        const urgent = r.state !== 'low';
+        await self.registration.showNotification(title, {
+          body,
+          icon: ICON,
+          badge: ICON,
+          tag: `river-${r.station}`,
+          renotify: true,
+          ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
+          data: { url: '#/orientation/navigation' },
         } as NotificationOptions);
       } else if (payload.type === 'garden' && payload.garden) {
         const g = payload.garden;

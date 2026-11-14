@@ -36,6 +36,15 @@ export function loadTides(): Promise<TidesData> {
 /** Hasta dónde se considera cercana una estación: más lejos, la marea del lugar puede ser muy distinta. */
 export const NEAR_KM = 100;
 
+/**
+ * ¿La marea de acá depende mucho del viento y del caudal? Pasa en el Río de la Plata y el Delta del Paraná: la estación «Buenos Aires»
+ * o un lugar dentro de ese estuario. Con vientos del sudeste (sudestada) el agua sube más de un metro sobre lo calculado y con
+ * viento del oeste o norte baja; las crecidas del Paraná y del Uruguay también suman.
+ */
+export function isEstuary(station: Pick<TideStation, 'name'>, lat: number, lon: number): boolean {
+  return station.name === 'Buenos Aires' || (lat <= -32.5 && lat >= -36.5 && lon >= -61 && lon <= -54.5);
+}
+
 export interface NearStation {
   station: TideStation;
   km: number;

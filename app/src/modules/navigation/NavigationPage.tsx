@@ -1,10 +1,13 @@
 import { useTranslation } from 'react-i18next';
+import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { NavigationNotice } from './NavigationNotice';
+import { RiversCard } from './RiversCard';
 import { TidesCard } from './TidesCard';
 
-/** Navegación: mareas (hoy), y más adelante nivel de ríos y oleaje. Todo orientativo. */
+/** Navegación: mareas y niveles de los ríos de Argentina (y, más adelante, oleaje). Todo orientativo. */
 export function NavigationPage() {
   const { t } = useTranslation();
+  const { place, picker } = usePlacePicker();
   return (
     <div className="stack">
       <h1 className="page-title">{t('modules.navigation.title')}</h1>
@@ -12,7 +15,9 @@ export function NavigationPage() {
         {t('navigation.intro')}
       </p>
       <NavigationNotice />
-      <TidesCard />
+      {picker}
+      <RiversCard place={place} />
+      <TidesCard place={place} />
     </div>
   );
 }

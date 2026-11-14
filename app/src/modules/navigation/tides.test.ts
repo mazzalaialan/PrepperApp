@@ -54,3 +54,17 @@ describe('mareas sin conexión', () => {
     expect(tideLevelAt(s, curve[10]!.time)).toBeCloseTo(curve[10]!.level, 2);
   });
 });
+
+describe('estuario del Río de la Plata', () => {
+  it('Buenos Aires y los lugares dentro del estuario avisan que el viento cambia la marea real', async () => {
+    const { isEstuary } = await import('./tides');
+    expect(isEstuary({ name: 'Buenos Aires' }, -34.6, -58.4)).toBe(true);
+    // Montevideo, Colonia y el Delta (estación más cercana: Buenos Aires u otra).
+    expect(isEstuary({ name: 'Mar Del Plata' }, -34.9, -56.2)).toBe(true);
+    expect(isEstuary({ name: 'Mar Del Plata' }, -34.2, -58.6)).toBe(true);
+    // La costa abierta o el Pacífico no.
+    expect(isEstuary({ name: 'Mar Del Plata' }, -38.0, -57.55)).toBe(false);
+    expect(isEstuary({ name: 'Valparaiso' }, -33.0, -71.6)).toBe(false);
+    expect(isEstuary({ name: 'Puerto Madryn' }, -42.77, -65.04)).toBe(false);
+  });
+});

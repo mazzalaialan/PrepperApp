@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
-import { loadTides, nearestStations, NEAR_KM, tideCurve, tideExtremes, tideLevelAt, type TidesData } from './tides';
+import type { PickedPlace } from '@/modules/waypoints/PlacePicker';
+import { isEstuary, loadTides, nearestStations, NEAR_KM, tideCurve, tideExtremes, tideLevelAt, type TidesData } from './tides';
 
 const DAY_MS = 86_400_000;
 const DAYS = 3;
@@ -50,9 +50,8 @@ function TideChart({ curve, now, label, locale }: { curve: { time: Date; level: 
 }
 
 /** Mareas sin conexión de la estación más cercana al lugar elegido. */
-export function TidesCard() {
+export function TidesCard({ place }: { place: PickedPlace | null }) {
   const { t, i18n } = useTranslation();
-  const { place, picker } = usePlacePicker();
   const [data, setData] = useState<TidesData | null>(null);
   const [failed, setFailed] = useState(false);
   const [chosen, setChosen] = useState(0);
@@ -93,7 +92,6 @@ export function TidesCard() {
       <p className="hint" style={{ margin: 0 }}>
         {t('navigation.tides.intro')}
       </p>
-      {picker}
       {failed && <p className="error">{t('navigation.tides.unavailable')}</p>}
       {data && place && station && pick && (
         <>
@@ -112,6 +110,14 @@ export function TidesCard() {
           {pick.km > NEAR_KM && (
             <p className="error" role="alert" data-testid="tide-far">
               {t('navigation.tides.far', { km: km.format(pick.km) })}
+            </p>
+          )}
+          {isEstuary(station, place.lat, place.lon) && (
+            <p className="rain-notice" role="alert" data-testid="tide-estuary" style={{ margin: 0 }}>
+              <span className="update-text">
+                <strong>{t('navigation.tides.estuaryTitle')}</strong>
+                <span className="hint">{t('navigation.tides.estuary')}</span>
+              </span>
             </p>
           )}
           {station.issues.length > 0 && (
