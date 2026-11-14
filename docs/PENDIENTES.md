@@ -2,15 +2,15 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
-## Mapa: recorridos cargados vs. míos (HECHO el 2026-11-13, sin publicar)
+## Mapa: recorridos cargados vs. míos (HECHO el 2026-11-13, publicado en la 0.64.0)
 
 Tras la 0.63.0 quien dirige no veía en el celular ni su recorrido guardado ni uno cargado de Wikiloc. Causa probable: el modo «Automático» mostraba **un solo** recorrido (el último, de cualquier tipo), así que los cargados dejaron de verse. Cambio: «Recorridos que se ven» tiene ahora un interruptor **Cargados** (los de archivos; se ven todos o ninguno; **encendido por defecto**, `mapImportedShow`) y las opciones Automático / Elegir / Todos / Ninguno aplican solo a **Mis recorridos** (`recorded`). El color de las líneas pasó de la expresión `at` a `match` (más compatible). No pude reproducirlo en un celular real: **hay que confirmarlo en el teléfono tras publicar**. Pruebas: `trackSelect.test.ts` y el e2e de `tracks.spec.ts` (el modo de «Mis recorridos» se cubre solo con pruebas unitarias).
 
-## Oferta de mapas sin conexión al llegar a otro país (HECHO el 2026-11-13, sin publicar)
+## Oferta de mapas sin conexión al llegar a otro país (HECHO el 2026-11-13, publicado en la 0.64.0)
 
 Al detectar un país distinto al de Ajustes, y si hay conexión, no se dijo «No, gracias» para ese país (`mapOfferDismissed`) y ninguna zona ya bajada cubre el punto, aparece «Llegaste a X: ¿bajar el mapa de acá…?». «Ver mapas» abre `/orientation/maps?bajar=lat,lon`: el mapa se centra ahí y se abre el panel de zona (no baja nada hasta confirmar). Código: `mapOfferFor` en `countryAutomation.ts`, aviso en `CountryNotices.tsx`, `?bajar` en `MapsPage.tsx`. Pruebas: unitaria y 2 e2e en `country-detect.spec.ts`.
 
-## Volcanes: reintento tras una falla (HECHO el 2026-11-13, sin publicar)
+## Volcanes: reintento tras una falla (HECHO el 2026-11-13, publicado en la 0.64.0)
 
 El servidor leía OAVV y CENVUL cada 30 min, pero tras una falla de cualquiera esperaba otros 30 min completos para reintentar. Ahora, si una fuente falla, reintenta en la vuelta siguiente de alertas (10 min). Lógica en `volcanoReadStamp` (`server/src/volcanoes/watch.ts`), prueba en `server/test/volcano-retry.test.ts`.
 
@@ -42,7 +42,7 @@ Hoy «Buscar cercanos» solo trae combustible de ruta (`amenity=fuel`). Se quier
 - Sin fuente hoy: nivel en metros de los ríos de Chile, estado de puertos, nivel del mar en vivo de Uruguay, Perú (solo alertas por color; DHN con anti-bot, no se esquiva).
 - Chile: SHOA (captcha de AWS) y SITPORT inaccesibles; Uruguay: DINAGUA con 11 a 18 h de atraso (mostrar siempre la fecha, no usar para alertas).
 
-## Priorizar el país donde estás (HECHO el 2026-11-13, sin publicar; antes «PRIMERO PARA REVISAR»)
+## Priorizar el país donde estás (HECHO el 2026-11-13, publicado en la 0.63.0; antes «PRIMERO PARA REVISAR»)
 
 Se hizo la noche del 13/11 con las decisiones de quien dirige (ver abajo). Commiteado y probado, **sin publicar**.
 
@@ -271,6 +271,13 @@ Pedido de quien dirige: una sección nueva que muestre, por ejemplo, **el nivel 
 - El peso de los datos se mide antes de bajar nada (servidor propio con caché, como la lluvia y los rayos: una consulta cada tanto para todos, no una por usuario).
 
 **Primer paso:** investigar las fuentes con `vikarg-investigador` (qué ríos y estaciones cubre cada una, si hay API abierta, licencia y atraso), empezando por Argentina y la API global de Open-Meteo, y con eso decidir con quien dirige qué entra en una primera versión. Antes de programar: ver si va como sección propia en el inicio (junto a Meteo) o dentro de Meteo.
+
+## Herramientas de desarrollo a evaluar (anotado el 2026-11-14; nada instalado)
+Ideas que surgieron al conversar; ninguna se instala sin que quien dirige lo decida, y siempre aisladas (localhost, sin tocar producción ni el repositorio).
+- **Headroom** (proxy local que comprime salidas de herramientas, logs y código antes de llegar al modelo; `headroom proxy --port 8787` + `ANTHROPIC_BASE_URL`, o `headroom wrap claude`, deshacible con `unwrap`). Puede bajar el consumo del límite semanal. **Es la más relevante.** Prueba propuesta: un día, solo en una sesión, comparando consumo y errores por falta de información; riesgos: recorta líneas clave de un log, pasa la clave de API por un proceso local, es otra pieza que puede fallar.
+- **MemPalace** (memoria local de conversaciones en ChromaDB, vía MCP): poco útil hoy, ya hay memoria de proyecto, `CLAUDE.md` y `docs/`; riesgo de guardar datos personales textuales.
+- **OmniRoute** (gateway local que junta proveedores y cuentas): solo tendría sentido para Ollama local o una sola cuenta propia; juntar cuentas puede violar términos de los proveedores.
+- **frontend-design** (skill/plugin de Claude Code): poco útil con el diseño actual; posible para pantallas nuevas (Navegación, página pública de salidas) respetando los estilos y la accesibilidad existentes.
 
 ## Hidroponía y acuaponía (idea charlada el 2026-11-12, sin empezar)
 - Prioridad: hidroponía sin electricidad (Kratky, raíz flotante) y sustrato; acuaponía en una segunda etapa sobre la misma base (registro de agua, peces, aireación de respaldo obligatoria).
