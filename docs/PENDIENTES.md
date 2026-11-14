@@ -31,6 +31,25 @@ SHN Argentina (derechos reservados; shn@hidro.gob.ar, verificar dominio), SENAMH
 ### Categoría «Náutica» (pedida el 2026-11-14)
 Hoy «Buscar cercanos» solo trae combustible de ruta (`amenity=fuel`). Se quiere una categoría **Náutica** con: combustible para embarcaciones (`amenity=fuel` + `boat=yes`, `waterway=fuel`), marinas (`leisure=marina`), rampas (`leisure=slipway`), guarderías de lanchas (`amenity=boat_storage`), muelles y amarras (`man_made=pier`, mooring) y talleres náuticos (`shop=boat`, `craft=boatbuilder`, `shop=ship_chandler`). Va con la misma mecánica que los otros servicios (`tools/services-data/build.mjs`, paquetes por país). **Primero se cuenta cuántos puntos hay por país en OpenStreetMap** (consulta de solo conteo, resultado más abajo cuando llegue), porque el combustible náutico está poco cargado, sobre todo en ríos y lagos del interior. Se integra al plan de Navegación.
 
+#### Conteo en OpenStreetMap (2026-11-14, Overpass, solo conteo; © OpenStreetMap contributors, ODbL)
+| | AR | CL | UY | BO | PE |
+|---|---|---|---|---|---|
+| Combustible náutico (`waterway=fuel`) | 7 | 3 | 1 | 0 | 5 |
+| Marinas (`leisure=marina`) | 256 | 87 | 19 | 5 | 45 |
+| Rampas (`leisure=slipway`) | 258 | 250 | 19 | 0 | 9 |
+| Guardería (`amenity=boat_storage`) | 57 | 10 | 0 | 1 | 3 |
+| Alquiler (`amenity=boat_rental`) | 35 | 6 | 1 | 62 | 17 |
+| Muelles (`man_made=pier`) | 3244 | 2662 | 195 | 349 | 510 |
+| Amarras (`mooring=*`, `seamark:type=mooring`) | 385 | 26 | 20 | 28 | 29 |
+| Talleres y comercios (`shop=boat`, `craft=boatbuilder`…) | 53 | 5 | 1 | 0 | 3 |
+
+- `amenity=fuel` con `boat=yes`/`marine=yes` da 0 en los cinco países; todo el combustible náutico es `waterway=fuel`. `waterway=boat_ramp`, `leisure=mooring` y `amenity=boat_repair` no se usan (0).
+- **Útiles:** marinas (con nombre: AR 55 %, CL 80 %, UY 74 %), rampas de AR y CL (solo 16 a 23 % con nombre), alquiler y guarderías de AR.
+- **Muelles:** ~75 a 85 % del total, solo ~5 % con nombre y mezclan pasarelas y muelles de pesca: no sirven como lista sin filtrar.
+- **Combustible y talleres:** casi no hay en ningún país; Bolivia sin nada salvo alquiler (62) y 5 marinas. Perú subcartografiado.
+- **No se midió** costa contra interior. Cobertura parcial y desigual: se muestra «sin confirmar», salvo marinas con nombre. No hay fuente oficial consultada.
+- Detalle crudo: scratchpad de la sesión (`osm2/`). Para generar el paquete usar `tools/services-data/build.mjs`, no Overpass directo.
+
 ### Decisión de quien dirige (2026-11-13) sobre licencias
 - **Sin licencia declarada: se usa** (con cita, fecha del dato y enlace). Alcanza a SHN, SENAMHI Bolivia, INA, Armada de Chile, DINAGUA, CARU, SOHMA, INUMET.
 - **Licencia no comercial: se arma y se usa igual** (IOC, SHOA, DGA, Open-Meteo gratis), válido mientras la app sea gratuita y sin publicidad. Cada fuente lleva su licencia en un catálogo y se puede **apagar** en la copia institucional o paga.
