@@ -50,6 +50,13 @@ Hoy «Buscar cercanos» solo trae combustible de ruta (`amenity=fuel`). Se quier
 - **No se midió** costa contra interior. Cobertura parcial y desigual: se muestra «sin confirmar», salvo marinas con nombre. No hay fuente oficial consultada.
 - Detalle crudo: scratchpad de la sesión (`osm2/`). Para generar el paquete usar `tools/services-data/build.mjs`, no Overpass directo.
 
+### Plan por etapas aprobado (2026-11-14)
+1. Base de la sección (pantalla Navegación en Orientación, aviso fijo, catálogo de fuentes con licencia e interruptor de apagado, datos con hora y sin conexión).
+2. **Orden:** primero mareas (sin conexión, constantes armónicas) y la categoría Náutica; después ríos de Argentina (INA), oleaje y caudal modelado (Open-Meteo), Chile/Uruguay/IOC, Bolivia.
+3. **Notificaciones push por río (decididas el 2026-11-14, van en la primera versión):** solo si hay un **waypoint o lugar guardado cerca del río** que pueda verse afectado por una **inundación o por un nivel extremadamente bajo**. Se usa el sistema de avisos existente (una vez por estación y lugar, otra vez si empeora). Umbrales: los de Prefectura/INA para crecida; para bajante, un percentil bajo del histórico de la estación.
+4. **Bolivia:** se incluye si hay datos (SENAMHI, niveles en PDF y Titicaca), al final por ser lo más frágil.
+5. Sin enviar correos de permiso, sin saltear captcha; un e2e completo al final de cada lote; no se publica sin aprobación.
+
 ### Decisión de quien dirige (2026-11-13) sobre licencias
 - **Sin licencia declarada: se usa** (con cita, fecha del dato y enlace). Alcanza a SHN, SENAMHI Bolivia, INA, Armada de Chile, DINAGUA, CARU, SOHMA, INUMET.
 - **Licencia no comercial: se arma y se usa igual** (IOC, SHOA, DGA, Open-Meteo gratis), válido mientras la app sea gratuita y sin publicidad. Cada fuente lleva su licencia en un catálogo y se puede **apagar** en la copia institucional o paga.
