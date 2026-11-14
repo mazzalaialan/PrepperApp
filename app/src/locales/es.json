@@ -937,7 +937,10 @@
       "volcanoes": "Volcanes",
       "waypoints": "Mis waypoints",
       "lightning": "Rayos",
-      "official": "Alertas oficiales"
+      "official": "Alertas oficiales",
+      "rivers": "Ríos",
+      "riverLevels": "Niveles de ríos",
+      "tides": "Mareas"
     },
     "needsServer": "Necesita el servidor propio (Ajustes → Conexiones)",
     "lightningStatus": "{{count}} rayos en la región · actualizado {{time}}",
@@ -965,7 +968,10 @@
       "volcanoes": "Volcanes activos en los últimos 10.000 años (Smithsonian); en naranja, los que entraron en erupción desde 1900. Con las alertas oficiales prendidas, los que tienen alerta técnica del OAVV (Argentina) o del CENVUL (Perú) van más grandes, en amarillo, naranja o rojo",
       "fires": "🔥 Focos de calor detectados por satélite (VIIRS, NASA) en las últimas 24–48 h: puntos rojos, con una llama por grupo",
       "hazards": "Alertas de desastres (GDACS, ONU y Comisión Europea): 🌀 ciclón o huracán, 🌊 inundación, 🏜️ sequía, 🔥 incendio forestal, 🌋 erupción. Fondo verde, naranja o rojo según la gravedad",
-      "wind": "Viento por zona en {{unit}}; la flecha indica hacia dónde sopla"
+      "wind": "Viento por zona en {{unit}}; la flecha indica hacia dónde sopla",
+      "rivers": "Ríos de América del Sur (Natural Earth): líneas azules, más gruesas cuanto mayor es el río",
+      "riverLevels": "Niveles de ríos: INA (Argentina) y SENAMHI (Bolivia). Círculo rojo, evacuación; naranja, alerta; amarillo, aguas bajas; azul, normal; gris, sin lectura o sin umbrales (Bolivia). Tocá una estación para ver el detalle",
+      "tides": "◆ Estaciones de mareas (cálculo en el teléfono, sin conexión). Tocá una para ver la marea de ahora y la próxima pleamar y bajamar"
     },
     "severity": {"Extreme": "extrema", "Severe": "severa", "Moderate": "moderada", "Minor": "leve", "Unknown": "sin nivel"},
     "volcanoAlert": "Alerta técnica {{level}} ({{agency}}): tocá \"Más información\" para ver el último reporte",
@@ -991,6 +997,14 @@
     "eruptionUnknown": "Sin erupciones registradas con fecha",
     "bce": "{{year}} a. C.",
     "windLine": "Viento {{speed}} · ráfagas {{gusts}}",
+    "riverMeasured": "Medido {{ago}}",
+    "riverLevel": "Nivel {{value}}",
+    "riverBoLevel": "{{cm}} cm sobre la escala, lectura del {{date}} (SENAMHI Bolivia)",
+    "riverThresholds": "Alerta {{alert}} · Evacuación {{evac}} · Aguas bajas {{low}}",
+    "riverNoReading": "Sin lectura reciente",
+    "navMore": "Ver todo en Navegación",
+    "tideNearTitle": "Marea: {{name}}",
+    "tideNext": "Próxima {{what}}: {{time}} ({{level}} m)",
     "myWaypoint": "Waypoint guardado",
     "moreInfo": "Más información",
     "disclaimer": "Datos orientativos de fuentes abiertas (NASA, USGS, GDACS, RainViewer, Open-Meteo, Smithsonian). No son alertas oficiales: ante una emergencia seguí las indicaciones del SMN, Protección Civil o el organismo de tu país."

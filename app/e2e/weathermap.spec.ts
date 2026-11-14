@@ -268,3 +268,46 @@ test('alertas oficiales: zonas en el mapa, las de donde estoy y el texto del org
   await expect(page.getByTestId('alerts-here')).toContainText('Tormentas');
   await context.setOffline(false);
 });
+
+test('mapa de tiempo: capas de Navegación (ríos, niveles de ríos y mareas) con su ficha al tocar', async ({ page, context }, testInfo) => {
+  await mockSources(page);
+  // INA simulado: el Río de la Plata en Buenos Aires por encima del nivel de alerta (3,3 m).
+  await context.route('https://alerta.ina.gob.ar/**', (route) =>
+    route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: [{ series_id: 85, timestart: new Date(Date.now() - 3_600_000).toISOString(), valor: 3.5 }] }),
+  );
+  await setup(page);
+  await page.goto('/#/weather/map');
+  await expect(page.getByTestId('weather-map')).toBeVisible();
+  // Apagadas por defecto: nada de Navegación hasta que se prenden.
+  for (const name of ['Ríos', 'Niveles de ríos', 'Mareas']) await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Clima por zona' }).click();
+  await page.getByRole('button', { name: 'Alertas oficiales' }).click();
+  await page.getByRole('button', { name: 'Ríos', exact: true }).click();
+  await page.getByRole('button', { name: 'Niveles de ríos' }).click();
+  await page.getByRole('button', { name: 'Mareas', exact: true }).click();
+  await expect(page.getByText(/Ríos de América del Sur \(Natural Earth\)/)).toBeVisible();
+  await expect(page.getByText(/Niveles de ríos: INA \(Argentina\) y SENAMHI/)).toBeVisible();
+  await page.waitForTimeout(1200);
+
+  // Una estación de mareas: la marea de ahora y las próximas.
+  await tap(page, -65.04, -42.77);
+  const card = page.getByTestId('map-feature');
+  await expect(card).toContainText('Marea: Puerto Madryn');
+  await expect(card).toContainText(/Ahora [+−-]\d,\d\d m \((subiendo|bajando)\)/);
+  await expect(card).toContainText(/Próxima (pleamar|bajamar):/);
+  await expect(card.getByTestId('feature-nav-link')).toHaveAttribute('href', /weather\/navigation/);
+
+  // Una estación del INA con el nivel medido y el estado frente a sus umbrales.
+  await tap(page, -58.3993, -34.5611);
+  await expect(card).toContainText('Buenos Aires · Río de la Plata');
+  await expect(card).toContainText('Nivel 3,50 m · Alerta');
+  await expect(card).toContainText('Alerta 3,30 m · Evacuación 3,90 m · Aguas bajas 0,21 m');
+  await page.getByRole('button', { name: 'Satélite (nubes)' }).click();
+  await page.getByRole('button', { name: 'Lluvia estimada (satélite)' }).click();
+  await page.waitForTimeout(700);
+  await page.getByTestId('weather-map').screenshot({ path: `e2e-results/screens/${testInfo.project.name}-17c-navigation-layers.png` });
+
+  // El enlace lleva a la pantalla de Navegación.
+  await card.getByTestId('feature-nav-link').click();
+  await expect(page.getByRole('heading', { name: 'Navegación' })).toBeVisible();
+});

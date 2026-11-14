@@ -12,6 +12,9 @@
  *   Smithsonian Institution (Volcanoes of the World, uso libre citando la fuente):
  *   https://volcano.si.edu
  *
+ * - Ríos (líneas centrales de Natural Earth 1:10m, dominio público) de América del Sur.
+ *   `node build.mjs --solo-rios` reemplaza solo los ríos en el archivo ya generado (sin volver a bajar volcanos ni provincias).
+ *
  * Las geometrías se simplifican (Douglas-Peucker) y se redondean: el mapa es un
  * contorno de referencia, no cartografía de precisión.
  *
@@ -89,6 +92,39 @@ function rings(geometry, tolerance, minArea = MIN_RING_AREA) {
     .map((ring) => simplify(ring, tolerance))
     .filter((ring) => ring.length >= 4)
     .map((ring) => ring.flatMap(([lon, lat]) => [r3(lon), r3(lat)]));
+}
+
+/** Grados: ~2 km; un río es una línea de referencia. */
+const RIVER_TOLERANCE = 0.02;
+/** América del Sur: [oeste, sur, este, norte]. */
+const SOUTH_AMERICA = [-83, -58, -33, 14];
+
+/** Líneas centrales de ríos de Natural Earth → [{ name, rank, lines: [[lon, lat, lon, lat, …]] }]. `rank` 1 es el mayor. */
+async function riversOf() {
+  const data = await get(`${NE}/ne_10m_rivers_lake_centerlines.geojson`);
+  const [w, so, e, n] = SOUTH_AMERICA;
+  const inside = ([lon, lat]) => lon >= w && lon <= e && lat >= so && lat <= n;
+  const out = [];
+  for (const f of data.features) {
+    if (f.properties.featurecla !== 'River') continue;
+    const parts = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+    const lines = parts
+      .filter((line) => line.some(inside))
+      .map((line) => simplify(line, RIVER_TOLERANCE))
+      .filter((line) => line.length >= 2)
+      .map((line) => line.flatMap(([lon, lat]) => [r3(lon), r3(lat)]));
+    if (lines.length) out.push({ name: f.properties.name ?? '', rank: f.properties.scalerank, lines });
+  }
+  return out.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+}
+
+if (process.argv.includes('--solo-rios')) {
+  const { readFile } = await import('node:fs/promises');
+  const data = JSON.parse(await readFile(OUT, 'utf8'));
+  data.rivers = await riversOf();
+  await writeFile(OUT, JSON.stringify(data));
+  console.log(`ríos: ${data.rivers.length} → ${OUT} (${JSON.stringify(data).length} bytes)`);
+  process.exit(0);
 }
 
 const [admin1, admin0hi, places, admin0, volcanoes] = await Promise.all([
@@ -174,13 +210,14 @@ const volcanoRows = volcanoes.features
   .sort((a, b) => a.name.localeCompare(b.name));
 
 const data = {
-  source: 'Natural Earth (dominio público) · Global Volcanism Program, Smithsonian Institution',
+  source: 'Natural Earth (dominio público; provincias, contorno y ríos) · Global Volcanism Program, Smithsonian Institution',
   regions,
   neighbors,
   borders,
   countries,
   capitals,
   volcanoes: volcanoRows,
+  rivers: await riversOf(),
 };
 await mkdir(dirname(OUT), { recursive: true });
 await writeFile(OUT, JSON.stringify(data));

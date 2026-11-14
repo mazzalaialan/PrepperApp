@@ -13,6 +13,8 @@ import { FullscreenStage } from '@/ui/FullscreenStage';
 import { loadGeoData, type GeoData } from './geo';
 import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
+import { useNavLayers } from './navLayers';
+import { tideExtremes, tideLevelAt } from '@/modules/navigation/tides';
 import { fitBounds, homeBounds, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
 import { Notice } from '@/ui/Notice';
 import {
@@ -56,7 +58,7 @@ const SETTLE_MS = 500;
 /** Teselas de radar por cuadro (si hacen falta más, se usa un zoom menor). */
 const RADAR_TILES_MAX = 16;
 const PRELOAD_PARALLEL = 4;
-const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['official', 'satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'waypoints'];
+const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['official', 'satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'rivers', 'riverLevels', 'tides', 'waypoints'];
 /** Cada cuánto se piden los rayos (el satélite saca un archivo cada 20 s). */
 const LIGHTNING_MS = 20_000;
 /** La lluvia estimada sale cada 10 minutos. */
@@ -86,6 +88,7 @@ export function WeatherMapPage() {
   const [version, setVersion] = useState(0);
   const [online, setOnline] = useState(navigator.onLine);
   const [now, setNow] = useState(() => Date.now());
+  const nav = useNavLayers({ rivers: layers.rivers, riverLevels: layers.riverLevels, tides: layers.tides }, serverUrl, online);
 
   const [quakes, setQuakes] = useState<{ fetchedAt: string; items: Quake[] } | null>(null);
   const [hazards, setHazards] = useState<{ fetchedAt: string; items: Hazard[] } | null>(null);
@@ -453,6 +456,9 @@ export function WeatherMapPage() {
             hazards={layers.hazards ? (hazards?.items ?? null) : null}
             official={showOfficial ? activeAlerts : null}
             volcanoes={layers.volcanoes ? geo.volcanoes : null}
+            showRivers={layers.rivers}
+            riverPoints={nav.riverPoints}
+            tidePoints={nav.tidePoints}
             volcanoAlerts={showOfficial ? (official?.volcanoes ?? null) : null}
             waypoints={waypoints}
             here={here}
@@ -595,6 +601,9 @@ function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zon
     [layers.volcanoes, 'volcano', t('weatherMap.legend.volcanoes')],
     [layers.fires, 'fire', t('weatherMap.legend.fires')],
     [layers.lightning, 'lightning', t('weatherMap.legend.lightning')],
+    [layers.rivers, 'rivers', t('weatherMap.legend.rivers')],
+    [layers.riverLevels, 'riverLevels', t('weatherMap.legend.riverLevels')],
+    [layers.tides, 'tides', t('weatherMap.legend.tides')],
   ];
   const shown = items.filter(([on]) => on);
   if (shown.length === 0) return null;
@@ -624,10 +633,12 @@ function FeatureCard({
 }) {
   const { t, i18n } = useTranslation();
   const n1 = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
+  const n2 = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const when = new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   let title = '';
   let lines: string[] = [];
   let link: string | null = null;
+  let to: string | null = null;
   switch (feature.kind) {
     case 'quake': {
       const q = feature.item;
@@ -687,6 +698,42 @@ function FeatureCard({
       ];
       break;
     }
+    case 'river': {
+      const r = feature.item;
+      const day = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short' });
+      const m = (v: number | null) => (v === null ? '—' : `${n2.format(v)} m`);
+      title = r.river ? `${r.name} · ${r.river}` : r.name;
+      if (r.source === 'bo') {
+        lines = [
+          t('weatherMap.riverBoLevel', { cm: r.level ?? '—', date: r.at ? day.format(new Date(r.at)) : '—' }),
+          r.trend ? t(`navigation.bolivia.trend.${r.trend}`) : '',
+        ].filter(Boolean);
+      } else {
+        lines = [
+          r.level !== null && r.at
+            ? `${t('weatherMap.riverLevel', { value: m(r.level) })} · ${t(`navigation.rivers.state.${r.state === 'unknown' ? 'normal' : r.state}`)} · ${t('weatherMap.riverMeasured', { ago: when.format(new Date(r.at)) })}`
+            : t('weatherMap.riverNoReading'),
+          r.alert !== null || r.evac !== null || r.low !== null ? t('weatherMap.riverThresholds', { alert: m(r.alert), evac: m(r.evac), low: m(r.low) }) : '',
+        ].filter(Boolean);
+      }
+      to = '/weather/navigation';
+      break;
+    }
+    case 'tide': {
+      const st = feature.item.station;
+      const at = new Date(now);
+      const lvl = tideLevelAt(st, at);
+      const soon = tideLevelAt(st, new Date(now + 10 * 60_000));
+      const sgn = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'always' });
+      title = t('weatherMap.tideNearTitle', { name: st.name });
+      const next = tideExtremes(st, at, new Date(now + 14 * 3_600_000))
+        .filter((e) => e.time.getTime() >= now)
+        .slice(0, 2)
+        .map((e) => t('weatherMap.tideNext', { what: t(e.high ? 'navigation.tides.high' : 'navigation.tides.low').toLowerCase(), time: when.format(e.time), level: sgn.format(e.level) }));
+      lines = [t('navigation.tides.now', { level: sgn.format(lvl), trend: t(soon >= lvl ? 'navigation.tides.rising' : 'navigation.tides.falling') }), ...next];
+      to = '/weather/navigation';
+      break;
+    }
     case 'waypoint':
       title = feature.item.name;
       lines = [t('weatherMap.myWaypoint')];
@@ -705,6 +752,11 @@ function FeatureCard({
           {l}
         </p>
       ))}
+      {to && (
+        <Link to={to} data-testid="feature-nav-link">
+          {t('weatherMap.navMore')}
+        </Link>
+      )}
       {link && (
         <a href={link} target="_blank" rel="noreferrer">
           <ExternalLink size={14} aria-hidden /> {t('weatherMap.moreInfo')}

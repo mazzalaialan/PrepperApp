@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import type { WeatherMapValue } from '@/core/settings/settings';
 import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels';
 import type { GeoData, Volcano } from './geo';
+import type { NavState, RiverPoint, TidePoint } from './navLayers';
 import { fitBounds, homeBounds, pan, project, unproject, zoomAt, type Size, type View } from './projection';
 import { readyImage } from './images';
 import { alertCovers, type Flash, type Hazard, type HazardLevel, type OfficialAlert, type OfficialSeverity, type VolcanoAlert, volcanoAlertAt, type Quake, type ZoneWeather } from './sources';
@@ -29,6 +30,8 @@ export type MapFeature =
   | { kind: 'hazard'; item: Hazard }
   | { kind: 'official'; item: OfficialAlert }
   | { kind: 'volcano'; item: Volcano }
+  | { kind: 'river'; item: RiverPoint }
+  | { kind: 'tide'; item: TidePoint }
   | { kind: 'zone'; item: ZoneWeather }
   | { kind: 'waypoint'; item: MapWaypoint };
 
@@ -44,6 +47,11 @@ interface Props {
   /** Alertas oficiales vigentes (SMN, DMC, INUMET): zonas pintadas por severidad. */
   official: OfficialAlert[] | null;
   volcanoes: Volcano[] | null;
+  /** Líneas de los ríos del mapa base. */
+  showRivers?: boolean;
+  /** Estaciones de niveles de ríos y de mareas (capas de Navegación). */
+  riverPoints?: RiverPoint[] | null;
+  tidePoints?: TidePoint[] | null;
   /** Nivel de alerta técnica (OAVV): el volcán se pinta de amarillo, naranja o rojo, más grande. */
   volcanoAlerts?: VolcanoAlert[] | null;
   waypoints: MapWaypoint[] | null;
@@ -288,6 +296,8 @@ function hitTest(x: number, y: number, size: Size, view: View, p: Props): MapFea
   p.quakes?.forEach((q) => consider(q.lon, q.lat, { kind: 'quake', item: q }, quakeRadius(q.mag) / 2));
   p.hazards?.forEach((h) => consider(h.lon, h.lat, { kind: 'hazard', item: h }, 4));
   p.volcanoes?.forEach((v) => consider(v.lon, v.lat, { kind: 'volcano', item: v }));
+  p.riverPoints?.forEach((r) => consider(r.lon, r.lat, { kind: 'river', item: r }, -4));
+  p.tidePoints?.forEach((t) => consider(t.lon, t.lat, { kind: 'tide', item: t }, -4));
   p.zones?.forEach((z) => consider(z.lon, z.lat, { kind: 'zone', item: z }));
   const point = (best as { f: MapFeature } | null)?.f ?? null;
   if (point || !p.official?.length) return point;
@@ -368,6 +378,27 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
   }
   ctx.globalAlpha = 1;
 
+  // Ríos: línea azul, más gruesa cuanto mayor es el río (rank 1 a 9).
+  if (p.showRivers) {
+    ctx.strokeStyle = c.info!;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const r of p.geo.rivers) {
+      ctx.globalAlpha = r.rank <= 4 ? 0.85 : 0.6;
+      ctx.lineWidth = r.rank <= 2 ? 2.2 : r.rank <= 5 ? 1.5 : 1;
+      ctx.beginPath();
+      for (const line of r.lines) {
+        for (let i = 0; i < line.length; i += 2) {
+          const s = proj(line[i]!, line[i + 1]!);
+          if (i === 0) ctx.moveTo(s.x, s.y);
+          else ctx.lineTo(s.x, s.y);
+        }
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // Zonas de las alertas oficiales: relleno suave y borde del color de la severidad (las graves encima).
   for (const a of [...(p.official ?? [])].reverse()) {
     const color = c[`s${OFFICIAL_COLOR[a.severity]}`]!;
@@ -421,6 +452,34 @@ function draw(el: HTMLCanvasElement, size: Size, view: View, p: Props, tick: num
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Niveles de ríos: círculo del color del estado (evacuación, alerta, aguas bajas, normal; gris sin dato). Estaciones de mareas: rombo.
+  const RIVER_COLOR: Record<NavState, string> = { evac: c.s6!, alert: c.s5!, low: c.s4!, normal: c.info!, unknown: c.muted! };
+  for (const r of [...(p.riverPoints ?? [])].sort((a, b) => Number(a.state !== 'unknown' && a.state !== 'normal') - Number(b.state !== 'unknown' && b.state !== 'normal'))) {
+    const s = proj(r.lon, r.lat);
+    const hot = r.state === 'evac' || r.state === 'alert' || r.state === 'low';
+    ctx.fillStyle = RIVER_COLOR[r.state];
+    ctx.strokeStyle = c.bg!;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, hot ? 7 : 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  for (const tp of p.tidePoints ?? []) {
+    const s = proj(tp.lon, tp.lat);
+    ctx.fillStyle = c.info!;
+    ctx.strokeStyle = c.text!;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y - 7);
+    ctx.lineTo(s.x + 6, s.y);
+    ctx.lineTo(s.x, s.y + 7);
+    ctx.lineTo(s.x - 6, s.y);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
   }
 

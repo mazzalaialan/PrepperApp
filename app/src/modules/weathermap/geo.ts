@@ -44,6 +44,8 @@ export interface GeoData {
   countries: { code: string; name: { es: string; en: string }; label: [number, number] }[];
   capitals: Capital[];
   volcanoes: Volcano[];
+  /** Ríos de América del Sur (Natural Earth): `rank` 1 es el mayor; cada línea es [lon, lat, lon, lat, …]. */
+  rivers: { name: string; rank: number; lines: number[][] }[];
 }
 
 let pending: Promise<GeoData> | null = null;
