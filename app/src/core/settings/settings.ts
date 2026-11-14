@@ -112,6 +112,8 @@ export interface Settings {
   mapTracksMode: 'auto' | 'none' | 'chosen' | 'all';
   /** Los recorridos elegidos (ids), para el modo `chosen`. */
   mapTracksChosen: string[];
+  /** Mostrar en el mapa los recorridos cargados desde archivos (Wikiloc, GPX…). */
+  mapImportedShow: boolean;
   /** País donde se detectó que estás (por la última ubicación) y los vecinos a menos de 50 km de su frontera; `null` = todavía no se detectó. */
   detectedCountry: Country | null;
   detectedNear: Country[];
@@ -261,6 +263,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dismissedNotices: [],
   mapTracksMode: 'auto',
   mapTracksChosen: [],
+  mapImportedShow: true,
   detectedCountry: null,
   detectedNear: [],
   countryOfferDismissed: [],

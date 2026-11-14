@@ -187,7 +187,7 @@ function addOverlays(map: MlMap, c: MapColors, p: Props) {
   map.addLayer({ id: 'preview-line', type: 'line', source: 'preview', paint: { 'line-color': c.accent, 'line-width': 2 } });
   // Tracks importados: en otro color, para no confundirlos con las rutas propias.
   const tracks = p.showTracks ? 'visible' : 'none';
-  map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['at', ['%', ['get', 'i'], TRACK_PALETTE.length], ['literal', [c.info, ...TRACK_PALETTE.slice(1)]]], 'line-width': 3.5, 'line-opacity': 0.9 } });
+  map.addLayer({ id: 'track-lines', type: 'line', source: 'track-lines', layout: { visibility: tracks, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['match', ['%', ['to-number', ['get', 'i'], 0], TRACK_PALETTE.length], ...TRACK_PALETTE.slice(1).flatMap((color, k) => [k + 1, color]), c.info] as unknown as string, 'line-width': 3.5, 'line-opacity': 0.9 } });
   map.addLayer({ id: 'track-done', type: 'line', source: 'track-done', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': c.accent, 'line-width': 5 } });
   // Lo que vas grabando: en verde, encima del track que seguís.
   map.addLayer({

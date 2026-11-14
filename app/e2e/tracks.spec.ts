@@ -422,35 +422,22 @@ test('mapa: por defecto se ve el recorrido que se graba o el último; se puede e
   await page.goto('/#/orientation/maps');
   const map = page.getByTestId('offline-map');
   const picker = page.getByTestId('track-picker');
-  // Automático (por defecto): solo el último, no los tres encimados.
+  // Los tres son cargados desde archivo: por defecto se ven todos (interruptor «Cargados») y las opciones de «Mis recorridos» no aparecen
+  // porque no hay ninguno grabado (esas reglas se prueban en trackSelect.test.ts).
   await expect(picker).toBeVisible();
-  await expect(page.getByTestId('track-mode-auto')).toHaveAttribute('aria-pressed', 'true');
-  await expect(map).toHaveAttribute('data-tracks-shown', '1');
-  await expect(page.getByTestId('track-mode-hint')).toContainText('el último');
-  // Todos.
-  await page.getByTestId('track-mode-all').click();
+  const toggle = page.getByTestId('track-imported-toggle').getByRole('checkbox');
+  await expect(toggle).toBeChecked();
+  await expect(page.getByTestId('track-imported-toggle')).toContainText('Cargados (3)');
   await expect(map).toHaveAttribute('data-tracks-shown', '3');
-  // Ninguno.
-  await page.getByTestId('track-mode-none').click();
-  await expect(map).toHaveAttribute('data-tracks-shown', '0');
-  // Elegir: con la lista, del más nuevo al más viejo, y cada casilla suma o saca uno.
-  await page.getByTestId('track-mode-chosen').click();
-  await expect(map).toHaveAttribute('data-tracks-shown', '0');
-  const choices = page.getByTestId('track-choices').getByRole('checkbox');
-  await expect(choices).toHaveCount(3);
-  await expect(page.getByTestId('track-choices').getByRole('listitem').first()).toContainText('Viernes');
-  await choices.nth(1).check();
-  await expect(map).toHaveAttribute('data-tracks-shown', '1');
-  await choices.nth(2).check();
-  await expect(map).toHaveAttribute('data-tracks-shown', '2');
-  await expect(page.getByTestId('track-mode-hint')).toContainText('Se ven 2 recorridos');
+  await expect(page.getByTestId('track-mode-auto')).toHaveCount(0);
   await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-32-track-picker.png`, fullPage: true });
-  // La elección queda guardada al volver a abrir el mapa.
+  // Apagar «Cargados»: no se ve ninguno, y queda guardado al volver a abrir el mapa.
+  await toggle.uncheck();
+  await expect(map).toHaveAttribute('data-tracks-shown', '0');
   await page.goto('/#/orientation/tracks');
   await page.goto('/#/orientation/maps');
-  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-tracks-shown', '2');
-  // Desde la ficha de un recorrido («Ver en el mapa») ese recorrido se ve siempre, con el modo en Ninguno.
-  await page.getByTestId('track-mode-none').click();
+  await expect(page.getByTestId('offline-map')).toHaveAttribute('data-tracks-shown', '0');
+  // Desde la ficha de un recorrido («Ver en el mapa») ese recorrido se ve siempre, con los cargados apagados.
   await page.goto('/#/orientation/tracks');
   await page.getByRole('link', { name: /Lunes/ }).first().click();
   await page.getByRole('link', { name: /Ver en el mapa/ }).click();

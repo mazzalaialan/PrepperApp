@@ -16,21 +16,38 @@ export function selectableTracks(tracks: Iterable<Track>): Track[] {
   return [...tracks].filter((t) => !t.recording && !t.routeId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** Los recorridos que grabaste vos (el resto son los cargados desde un archivo: Wikiloc, GPX…). */
+export const isMine = (t: Track): boolean => !!t.recorded;
+
 /**
- * Los que se dibujan según el modo. `recordingActive`: hay una grabación en curso o en pausa (se ve aparte, siempre).
+ * Los que se dibujan. Se manejan por separado:
+ *  - **cargados** (de archivos): se ven todos o ninguno (`showImported`);
+ *  - **mis recorridos**: según el modo (automático = el que se graba o el último, elegir, todos o ninguno).
+ * `recordingActive`: hay una grabación en curso o en pausa (se ve aparte, siempre).
  * `focus`: los que se abrieron desde su ficha («Ver en el mapa»): se ven siempre, con cualquier modo.
  */
-export function tracksToShow(tracks: Iterable<Track>, mode: TrackShowMode, chosen: Id[], recordingActive: boolean, focus: Id[] = []): Track[] {
-  const all = selectableTracks(tracks);
+export function tracksToShow(
+  tracks: Iterable<Track>,
+  mode: TrackShowMode,
+  chosen: Id[],
+  recordingActive: boolean,
+  focus: Id[] = [],
+  showImported = true,
+): Track[] {
+  const everything = selectableTracks(tracks);
+  const all = everything.filter(isMine);
+  const imported = showImported ? everything.filter((t) => !isMine(t)) : [];
   const pick = (ids: Set<Id>) => all.filter((t) => ids.has(t.id));
-  let shown: Track[];
-  if (mode === 'all') shown = all;
-  else if (mode === 'none') shown = [];
-  else if (mode === 'chosen') shown = pick(new Set(chosen));
-  else shown = recordingActive || !all[0] ? [] : [all[0]];
+  let mine: Track[];
+  if (mode === 'all') mine = all;
+  else if (mode === 'none') mine = [];
+  else if (mode === 'chosen') mine = pick(new Set(chosen));
+  else mine = recordingActive || !all[0] ? [] : [all[0]];
+  let shown = [...imported, ...mine];
   if (focus.length) {
     const have = new Set(shown.map((t) => t.id));
-    shown = [...shown, ...pick(new Set(focus.filter((id) => !have.has(id))))];
+    const rest = new Set(focus.filter((id) => !have.has(id)));
+    shown = [...shown, ...everything.filter((t) => rest.has(t.id))];
   }
   return shown;
 }

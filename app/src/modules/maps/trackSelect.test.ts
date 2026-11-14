@@ -9,12 +9,14 @@ const track = (name: string, createdAt: string, over: Partial<Track> = {}): Trac
   ...over,
 });
 
-const mon = track('lunes', '2026-11-02T09:00:00Z');
-const wed = track('miércoles', '2026-11-04T09:00:00Z');
-const fri = track('viernes', '2026-11-06T09:00:00Z');
+const mon = track('lunes', '2026-11-02T09:00:00Z', { recorded: true });
+const wed = track('miércoles', '2026-11-04T09:00:00Z', { recorded: true });
+const fri = track('viernes', '2026-11-06T09:00:00Z', { recorded: true });
 const grabando = track('en curso', '2026-11-08T09:00:00Z', { recording: true });
 const deRuta = track('de una ruta', '2026-11-09T09:00:00Z', { routeId: 'r1' });
+const wikiloc = track('wikiloc', '2026-11-10T09:00:00Z');
 const all = [mon, fri, wed, grabando, deRuta];
+const conCargados = [...all, wikiloc];
 const names = (ts: Track[]) => ts.map((t) => t.name);
 
 describe('qué recorridos se ven en el mapa', () => {
@@ -39,5 +41,17 @@ describe('qué recorridos se ven en el mapa', () => {
     expect(names(tracksToShow(all, 'none', [], false, [mon.id]))).toEqual(['lunes']);
     expect(names(tracksToShow(all, 'auto', [], true, [wed.id]))).toEqual(['miércoles']);
     expect(names(tracksToShow(all, 'all', [], false, [mon.id]))).toEqual(['viernes', 'miércoles', 'lunes']);
+  });
+
+  it('los cargados de archivos van aparte: se ven todos o ninguno, sin importar el modo de «mis recorridos»', () => {
+    expect(names(tracksToShow(conCargados, 'auto', [], false))).toEqual(['wikiloc', 'viernes']);
+    expect(names(tracksToShow(conCargados, 'none', [], false))).toEqual(['wikiloc']);
+    expect(names(tracksToShow(conCargados, 'chosen', [mon.id], false))).toEqual(['wikiloc', 'lunes']);
+    expect(names(tracksToShow(conCargados, 'auto', [], true))).toEqual(['wikiloc']);
+    // Apagados: solo queda lo que corresponde a «mis recorridos».
+    expect(names(tracksToShow(conCargados, 'auto', [], false, [], false))).toEqual(['viernes']);
+    expect(names(tracksToShow(conCargados, 'none', [], false, [], false))).toEqual([]);
+    // Abierto desde su ficha: se ve aunque los cargados estén apagados.
+    expect(names(tracksToShow(conCargados, 'none', [], false, [wikiloc.id], false))).toEqual(['wikiloc']);
   });
 });

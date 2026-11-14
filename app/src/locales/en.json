@@ -789,6 +789,9 @@
   "maps": {
     "trackPicker": {
       "title": "Routes shown",
+      "imported": "Loaded ({{count}})",
+      "importedHint": "The ones you uploaded from a file (Wikiloc, GPX…): all shown or none.",
+      "mine": "My routes",
       "mode": {"auto": "Automatic", "chosen": "Choose", "all": "All", "none": "None"},
       "hint": {
         "auto": "Shows the route you are recording or, if none, the last one. This way they do not all overlap.",

@@ -789,6 +789,9 @@
   "maps": {
     "trackPicker": {
       "title": "Recorridos que se ven",
+      "imported": "Cargados ({{count}})",
+      "importedHint": "Los que subiste desde un archivo (Wikiloc, GPX…): se ven todos o ninguno.",
+      "mine": "Mis recorridos",
       "mode": {"auto": "Automático", "chosen": "Elegir", "all": "Todos", "none": "Ninguno"},
       "hint": {
         "auto": "Se ve el recorrido que estás grabando o, si no grabás ninguno, el último. Así no se superponen todos.",

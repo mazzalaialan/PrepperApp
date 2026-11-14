@@ -236,10 +236,11 @@ export function MapsPage() {
   // graba o el último; se pueden elegir, ver todos o ninguno. El que se abre desde su ficha se ve siempre.
   const trackMode = useSettings((s) => s.settings.mapTracksMode);
   const trackChosen = useSettings((s) => s.settings.mapTracksChosen);
+  const showImported = useSettings((s) => s.settings.mapImportedShow);
   const recStatus = useRecorder((s) => s.status);
   const recGaps = useRecorder((s) => s.track?.gaps);
   const focusIds = useMemo(() => (params.get('track') ? [params.get('track')!] : params.get('tracks') ? params.get('tracks')!.split(',') : []), [params]);
-  const shownTracks = useMemo(() => tracksToShow(trackMap.values(), trackMode, trackChosen, recStatus !== 'idle', focusIds), [trackMap, trackMode, trackChosen, recStatus, focusIds]);
+  const shownTracks = useMemo(() => tracksToShow(trackMap.values(), trackMode, trackChosen, recStatus !== 'idle', focusIds, showImported), [trackMap, trackMode, trackChosen, recStatus, focusIds, showImported]);
   const tracks = useMemo<MapTrack[]>(
     () =>
       // El que se está grabando va aparte, en su color.

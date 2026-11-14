@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/core/settings/settings';
 import type { Track } from '@/core/model/types';
 import { formatDistance } from '@/core/units/units';
-import { selectableTracks, TRACK_PALETTE, TRACK_SHOW_MODES, tracksToShow } from './trackSelect';
+import { isMine, selectableTracks, TRACK_PALETTE, TRACK_SHOW_MODES, tracksToShow } from './trackSelect';
 
 /** Cuántos se listan antes de «Ver todos» (con tres salidas por semana la lista crece rápido). */
 const FIRST = 8;
@@ -19,10 +19,14 @@ export function TrackPicker({ tracks, recordingActive }: { tracks: Iterable<Trac
   const units = useSettings((s) => s.settings.units);
   const update = useSettings((s) => s.update);
   const [all, setAll] = useState(false);
-  const list = selectableTracks(tracks);
-  if (list.length === 0) return null;
+  const showImported = useSettings((s) => s.settings.mapImportedShow);
+  const everything = selectableTracks(tracks);
+  const importedCount = everything.filter((x) => !isMine(x)).length;
+  const list = everything.filter(isMine);
+  if (everything.length === 0) return null;
   // El color de cada uno es su lugar entre los que se ven, el mismo que usa el mapa.
-  const shown = tracksToShow(list, mode, chosen, recordingActive);
+  const shown = tracksToShow(everything, mode, chosen, recordingActive, [], showImported);
+  const shownMine = shown.filter(isMine);
   const colorOf = (id: string) => {
     const i = shown.findIndex((x) => x.id === id);
     return i < 0 ? null : (TRACK_PALETTE[i % TRACK_PALETTE.length] ?? null);
@@ -32,7 +36,19 @@ export function TrackPicker({ tracks, recordingActive }: { tracks: Iterable<Trac
   return (
     <div className="stack" style={{ gap: 8 }} data-testid="track-picker">
       <h3 className="section-title" style={{ margin: 0, fontSize: '1rem' }}>{t('maps.trackPicker.title')}</h3>
-      <div className="chips" role="group" aria-label={t('maps.trackPicker.title')}>
+      {importedCount > 0 && (
+        <label className="check" data-testid="track-imported-toggle">
+          <input type="checkbox" checked={showImported} onChange={(e) => void update({ mapImportedShow: e.target.checked })} />
+          <span className="list-main">
+            <span className="list-title">{t('maps.trackPicker.imported', { count: importedCount })}</span>
+            <span className="list-sub">{t('maps.trackPicker.importedHint')}</span>
+          </span>
+        </label>
+      )}
+      {list.length > 0 && (
+        <>
+      <h4 className="section-title" style={{ margin: 0, fontSize: '0.95rem' }}>{t('maps.trackPicker.mine')}</h4>
+      <div className="chips" role="group" aria-label={t('maps.trackPicker.mine')}>
         {TRACK_SHOW_MODES.map((m) => (
           <button key={m} type="button" className="chip" aria-pressed={mode === m} onClick={() => void update({ mapTracksMode: m })} data-testid={`track-mode-${m}`}>
             {t(`maps.trackPicker.mode.${m}`)}
@@ -40,7 +56,7 @@ export function TrackPicker({ tracks, recordingActive }: { tracks: Iterable<Trac
         ))}
       </div>
       <p className="hint" style={{ margin: 0 }} data-testid="track-mode-hint">
-        {t(`maps.trackPicker.hint.${mode}`, { count: shown.length })}
+        {t(`maps.trackPicker.hint.${mode}`, { count: shownMine.length })}
       </p>
       {mode === 'chosen' && (
         <>
@@ -75,6 +91,8 @@ export function TrackPicker({ tracks, recordingActive }: { tracks: Iterable<Trac
               </button>
             )}
           </div>
+        </>
+      )}
         </>
       )}
     </div>

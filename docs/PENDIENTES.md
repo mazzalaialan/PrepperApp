@@ -2,6 +2,10 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
+## Mapa: recorridos cargados vs. míos (HECHO el 2026-11-13, sin publicar)
+
+Tras la 0.63.0 quien dirige no veía en el celular ni su recorrido guardado ni uno cargado de Wikiloc. Causa probable: el modo «Automático» mostraba **un solo** recorrido (el último, de cualquier tipo), así que los cargados dejaron de verse. Cambio: «Recorridos que se ven» tiene ahora un interruptor **Cargados** (los de archivos; se ven todos o ninguno; **encendido por defecto**, `mapImportedShow`) y las opciones Automático / Elegir / Todos / Ninguno aplican solo a **Mis recorridos** (`recorded`). El color de las líneas pasó de la expresión `at` a `match` (más compatible). No pude reproducirlo en un celular real: **hay que confirmarlo en el teléfono tras publicar**. Pruebas: `trackSelect.test.ts` y el e2e de `tracks.spec.ts` (el modo de «Mis recorridos» se cubre solo con pruebas unitarias).
+
 ## Oferta de mapas sin conexión al llegar a otro país (HECHO el 2026-11-13, sin publicar)
 
 Al detectar un país distinto al de Ajustes, y si hay conexión, no se dijo «No, gracias» para ese país (`mapOfferDismissed`) y ninguna zona ya bajada cubre el punto, aparece «Llegaste a X: ¿bajar el mapa de acá…?». «Ver mapas» abre `/orientation/maps?bajar=lat,lon`: el mapa se centra ahí y se abre el panel de zona (no baja nada hasta confirmar). Código: `mapOfferFor` en `countryAutomation.ts`, aviso en `CountryNotices.tsx`, `?bajar` en `MapsPage.tsx`. Pruebas: unitaria y 2 e2e en `country-detect.spec.ts`.
