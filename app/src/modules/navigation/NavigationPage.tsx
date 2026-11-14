@@ -3,6 +3,10 @@ import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { NavigationNotice } from './NavigationNotice';
 import { RiversCard } from './RiversCard';
 import { TidesCard } from './TidesCard';
+import { ChileMarineCard } from './ChileMarineCard';
+import { SourcesCard } from './SourcesCard';
+import { UruguayMarineCard } from './UruguayMarineCard';
+import { sourceEnabled } from './sources';
 import { WavesCard } from './WavesCard';
 
 /** Navegación: niveles de los ríos de Argentina, mareas y oleaje con viento. Todo orientativo. */
@@ -19,7 +23,10 @@ export function NavigationPage() {
       {picker}
       <RiversCard place={place} />
       <TidesCard place={place} />
-      <WavesCard place={place} />
+      {sourceEnabled('open-meteo') && <WavesCard place={place} />}
+      <ChileMarineCard place={place} />
+      <UruguayMarineCard place={place} />
+      <SourcesCard />
     </div>
   );
 }

@@ -156,3 +156,86 @@ test('Navegación: en un río o tierra adentro el modelo marino no cubre el punt
   await expect(page.getByTestId('waves-none')).toContainText('no cubre este punto', { timeout: 15_000 });
   await expect(page.getByTestId('wave-now')).toHaveCount(0);
 });
+
+test('Navegación: pronóstico marítimo de la Armada de Chile para tu zona y lista de fuentes con licencia', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.route('https://meteoarmada.directemar.cl/**', (route) =>
+    route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: {
+        titulo: 'x',
+        pronostico: {
+          periodo_validez: { inicio: '141200 UTC', fin: '151200 UTC' },
+          pronostico_detallado: [
+            { 'id-zona': 3, zona: 'Zona Tres (Valparaíso a Constitución)', viento: 'N/NW 15/25 KT OCASIONAL 30 KT', mar_oceanico: 'MAREJADILLA A MAREJADA (1.0/2.5 M)', mar_bahia: 'RIZADA EN BAHIAS.', visibilidad: 'BUENA (10 KM)', nubosidad: 'NUBLADO', situacion_sinoptica: 'CIRCULACION CICLONICA.' },
+            { 'id-zona': 4, zona: 'Zona Cuatro (Constitución a I.Mocha)', viento: 'S/SE 10/20 KT', mar_oceanico: 'MAREJADA (1.5/2.5 M)' },
+          ],
+        },
+      },
+    }),
+  );
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -33.6, longitude: -71.62, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/orientation/navigation');
+  const mine = page.getByTestId('chile-mine');
+  await expect(mine).toContainText('Zona Tres (Valparaíso a Constitución)', { timeout: 20_000 });
+  await expect(mine).toContainText('N/NW 15/25 kt ocasional 30 kt');
+  await expect(mine).toContainText('Marejadilla a marejada (1.0/2.5 m)');
+  await expect(page.getByTestId('chile-validity')).toContainText('14 12:00 UTC');
+  await expect(page.getByTestId('chile-zone-4')).toBeVisible();
+  await expect(page.getByTestId('chile-source')).toContainText('Armada de Chile');
+  // Lista de fuentes con licencia.
+  const sources = page.getByTestId('sources-card');
+  await expect(sources).toContainText('CC BY 4.0');
+  await expect(page.getByTestId('source-open-meteo')).toContainText('solo para uso no comercial');
+  await expect(page.getByTestId('source-ina')).toContainText('Sin licencia declarada');
+});
+
+test('Navegación: la tarjeta de Chile no aparece fuera de Chile', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -34.56, longitude: -58.4, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/orientation/navigation');
+  await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('chile-card')).toHaveCount(0);
+});
+
+test('Navegación: aviso marino de INUMET en el Río de la Plata (también del lado argentino) con la situación sinóptica', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.route('https://www.inumet.gub.uy/**', (route) =>
+    route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: {
+        activo: 1,
+        fechaInicioValidez: '2026-11-14',
+        horaInicioValidez: '00:00',
+        fechaEmision: '2026-11-13 23:34:17',
+        situacionSinoptica: 'Borde occidental de sistema de alta presión que continúa desplazándose al ENE.',
+        zonasDescripcion: [{ zonaId: 'RDP', tipo: 'visibilidad', zonaNombre: 'Río de la Plata', descripcion: 'Se formula por neblinas y bancos de nieblas. Validez: desde las 0800 UTC.' }],
+      },
+    }),
+  );
+  await context.grantPermissions(['geolocation']);
+  // Buenos Aires, orilla argentina del estuario.
+  await context.setGeolocation({ latitude: -34.56, longitude: -58.4, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/orientation/navigation');
+  const warnings = page.getByTestId('uy-warnings');
+  await expect(warnings).toContainText('Río de la Plata · visibilidad', { timeout: 20_000 });
+  await expect(warnings).toContainText('neblinas y bancos de nieblas');
+  await expect(page.getByTestId('uy-synoptic')).toContainText('sistema de alta presión');
+  await expect(page.getByTestId('uy-issued')).toContainText('2026-11-13 23:34:17');
+  await expect(page.getByTestId('uy-source')).toContainText('INUMET');
+});
+
+test('Navegación: el aviso de INUMET no aparece lejos del Río de la Plata (Puerto Madryn)', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -42.77, longitude: -65.04, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/orientation/navigation');
+  await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('uy-card')).toHaveCount(0);
+});

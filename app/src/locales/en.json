@@ -1369,6 +1369,39 @@
     "intro": "River levels in Argentina, tides, waves and wind, for sailing, paddling or fishing.",
     "noticeTitle": "For guidance only",
     "notice": "It does not replace nautical charts, official tables, navigational warnings or the maritime authority's instructions. Check official channels (radio, NAVTEX) before going out.",
+    "uruguay": {
+      "title": "INUMET marine warning (Uruguay)",
+      "intro": "Official warning for the Río de la Plata and the Uruguay river: expected fog, wind and waves.",
+      "loading": "Looking up the warning…",
+      "error": "The INUMET warning could not be loaded. Try again with a connection.",
+      "offlineSaved": "Offline: showing the last saved warning (requested {{when}}).",
+      "issued": "Issued {{when}}; in effect from {{from}}.",
+      "none": "No warnings in effect by zone right now.",
+      "synoptic": "Synoptic situation",
+      "source": "Source: INUMET (Uruguayan Meteorological Institute). Official warning, informational: when sailing also check the Navy (SOHMA)."
+    },
+    "chile": {
+      "title": "Chilean Navy marine forecast",
+      "intro": "Official forecast by zones of the Chilean coast: wind, sea state and visibility.",
+      "loading": "Looking up the forecast…",
+      "error": "The Navy forecast could not be loaded. Try again with a connection.",
+      "offlineSaved": "Offline: showing the last saved forecast (requested {{when}}).",
+      "validity": "Valid from day {{from}} until day {{to}} (UTC).",
+      "yourZone": "The coastal zone that matches your latitude (approximate):",
+      "others": "Other zones",
+      "wind": "Wind (knots)",
+      "ocean": "Open sea",
+      "bay": "Sea in bays",
+      "visibility": "Visibility",
+      "clouds": "Cloud cover",
+      "synoptic": "Synoptic situation",
+      "source": "Source: Chilean Navy Weather Service (Directemar). Official marine forecast, informational: check the Maritime Authority's notices before going out."
+    },
+    "sources": {
+      "title": "Sources and licenses",
+      "intro": "Where the data on this screen comes from and under what license. If a source declares no license, it is used citing it and showing the date of the data.",
+      "license": "License"
+    },
     "waves": {
       "title": "Waves and wind",
       "intro": "Forecast wave height and period and wind for the chosen place. It is a model, not a measurement, with cells of about 9 km.",

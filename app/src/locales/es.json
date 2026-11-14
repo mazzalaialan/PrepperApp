@@ -1369,6 +1369,39 @@
     "intro": "Nivel de los ríos de Argentina, mareas, oleaje y viento, para quien navega, rema o pesca.",
     "noticeTitle": "Información orientativa",
     "notice": "No reemplaza las cartas náuticas, las tablas oficiales, los radioavisos ni las indicaciones de la autoridad marítima. Verificá por los canales oficiales (radio, NAVTEX) antes de navegar.",
+    "uruguay": {
+      "title": "Aviso marino de INUMET (Uruguay)",
+      "intro": "Aviso oficial del Río de la Plata y del río Uruguay: niebla, viento y olas previstos.",
+      "loading": "Buscando el aviso…",
+      "error": "No se pudo cargar el aviso de INUMET. Probá de nuevo con conexión.",
+      "offlineSaved": "Sin conexión: se ve el último aviso guardado (pedido {{when}}).",
+      "issued": "Emitido el {{when}}; rige desde {{from}}.",
+      "none": "Sin avisos vigentes por zona en este momento.",
+      "synoptic": "Situación sinóptica",
+      "source": "Fuente: INUMET (Instituto Uruguayo de Meteorología). Aviso oficial, informativo: para navegar consultá también a la Armada Nacional (SOHMA)."
+    },
+    "chile": {
+      "title": "Pronóstico marítimo de la Armada de Chile",
+      "intro": "Pronóstico oficial por zonas de la costa de Chile: viento, estado del mar y visibilidad.",
+      "loading": "Buscando el pronóstico…",
+      "error": "No se pudo cargar el pronóstico de la Armada. Probá de nuevo con conexión.",
+      "offlineSaved": "Sin conexión: se ve el último pronóstico guardado (pedido {{when}}).",
+      "validity": "Vale desde el día {{from}} hasta el día {{to}} (hora UTC).",
+      "yourZone": "La zona de la costa que corresponde a tu latitud (aproximada):",
+      "others": "Otras zonas",
+      "wind": "Viento (nudos)",
+      "ocean": "Mar oceánico",
+      "bay": "Mar en bahías",
+      "visibility": "Visibilidad",
+      "clouds": "Nubosidad",
+      "synoptic": "Situación sinóptica",
+      "source": "Fuente: Servicio Meteorológico de la Armada de Chile (Directemar). Pronóstico oficial para la mar, informativo: para navegar consultá los avisos de la Autoridad Marítima."
+    },
+    "sources": {
+      "title": "Fuentes y licencias",
+      "intro": "De dónde salen los datos de esta pantalla y con qué licencia. Si una fuente no declara licencia, se usa citándola y mostrando la fecha del dato.",
+      "license": "Licencia"
+    },
     "waves": {
       "title": "Oleaje y viento",
       "intro": "Altura y período de las olas y viento previstos para el lugar elegido. Es un modelo, no una medición, con celdas de unos 9 km.",

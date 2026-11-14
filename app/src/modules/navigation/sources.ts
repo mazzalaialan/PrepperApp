@@ -1,0 +1,91 @@
+/**
+ * Fuentes de Navegación con su licencia. Decisión de quien dirige (2026-11-14): sin licencia declarada se usa (citando y con la fecha del
+ * dato) y con licencia no comercial se usa mientras la app sea gratuita y sin publicidad. Para una copia paga, con publicidad o
+ * institucional (por ejemplo la de una escuela) se compila con `VITE_COMMERCIAL=1` y se apagan las fuentes que prohíben el uso comercial.
+ */
+export type SourceId = 'ina' | 'tides' | 'open-meteo' | 'armada-cl' | 'inumet' | 'ioc';
+export type LicenseKind = 'open' | 'undeclared' | 'non-commercial';
+
+export interface NavSource {
+  id: SourceId;
+  name: string;
+  /** Qué datos da dentro de Navegación. */
+  provides: string;
+  license: LicenseKind;
+  /** Texto de la licencia o de su estado, como lo dice la fuente. */
+  licenseText: string;
+  url: string;
+  /** Cita que corresponde mostrar. */
+  cite: string;
+}
+
+export const NAV_SOURCES: NavSource[] = [
+  {
+    id: 'ina',
+    name: 'INA — Alerta Hidrológico',
+    provides: 'Niveles de los ríos de Argentina y sus umbrales',
+    license: 'undeclared',
+    licenseText: 'Sin licencia declarada para la API (el sitio institucional es CC BY 4.0)',
+    url: 'https://alerta.ina.gob.ar/',
+    cite: 'Instituto Nacional del Agua (INA), Alerta Hidrológico; escalas de Prefectura Naval y Red Hidrológica Nacional',
+  },
+  {
+    id: 'tides',
+    name: 'Constantes armónicas TICON-4',
+    provides: 'Mareas calculadas sin conexión',
+    license: 'open',
+    licenseText: 'CC BY 4.0 (uso comercial permitido, con cita)',
+    url: 'https://doi.org/10.17882/109129',
+    cite: 'Hart-Davis, Dettmering y Seitz (2025), TICON-4, SEANOE, doi 10.17882/109129; a través de la base abierta Neaps (MIT). Se modificó el formato.',
+  },
+  {
+    id: 'open-meteo',
+    name: 'Open-Meteo Marine',
+    provides: 'Oleaje y viento previstos',
+    license: 'non-commercial',
+    licenseText: 'Datos CC BY 4.0; la API gratuita es solo para uso no comercial (para uso comercial hay un plan pago)',
+    url: 'https://open-meteo.com/',
+    cite: 'Open-Meteo.com; modelos de Météo-France, ECMWF, NOAA y DWD',
+  },
+  {
+    id: 'armada-cl',
+    name: 'Armada de Chile, Servicio Meteorológico',
+    provides: 'Pronóstico marítimo por zonas de Chile',
+    license: 'undeclared',
+    licenseText: 'Sin licencia declarada; el servidor permite el acceso (robots.txt vacío, CORS abierto)',
+    url: 'https://meteoarmada.directemar.cl/',
+    cite: 'Servicio Meteorológico de la Armada de Chile (Directemar)',
+  },
+  {
+    id: 'inumet',
+    name: 'INUMET (Uruguay), aviso marino',
+    provides: 'Aviso marino oficial del Río de la Plata y el río Uruguay',
+    license: 'undeclared',
+    licenseText: 'Sin licencia declarada en esa ruta (el portal de datos abiertos de INUMET usa la Licencia de Datos Abiertos de Uruguay, que permite uso comercial con cita); CORS abierto',
+    url: 'https://www.inumet.gub.uy/',
+    cite: 'Instituto Uruguayo de Meteorología (INUMET), aviso marino',
+  },
+  {
+    id: 'ioc',
+    name: 'IOC Sea Level Station Monitoring Facility',
+    provides: 'Nivel del mar medido casi en vivo (pendiente: falta la aprobación de la cuenta)',
+    license: 'non-commercial',
+    licenseText: 'Prohíbe el uso comercial; hay que registrarse; datos sin control de calidad',
+    url: 'https://www.ioc-sealevelmonitoring.org/',
+    cite: 'Flanders Marine Institute (VLIZ); Intergovernmental Oceanographic Commission (IOC) (2026): Sea level station monitoring facility. doi 10.14284/482',
+  },
+];
+
+/** ¿Es una copia comercial (paga, con publicidad o institucional)? Se decide al compilar. */
+export const COMMERCIAL_BUILD: boolean = import.meta.env.VITE_COMMERCIAL === '1';
+
+/** ¿Se puede usar esta fuente? En una copia comercial se apagan las de licencia no comercial. */
+export function sourceEnabled(id: SourceId, commercial: boolean = COMMERCIAL_BUILD): boolean {
+  const s = NAV_SOURCES.find((x) => x.id === id);
+  return !!s && !(commercial && s.license === 'non-commercial');
+}
+
+/** Las fuentes que se muestran en la lista de licencias de la pantalla (las apagadas no). */
+export function visibleSources(commercial: boolean = COMMERCIAL_BUILD): NavSource[] {
+  return NAV_SOURCES.filter((s) => sourceEnabled(s.id, commercial));
+}
