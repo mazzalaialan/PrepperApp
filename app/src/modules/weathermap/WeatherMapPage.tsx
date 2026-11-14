@@ -14,6 +14,7 @@ import { loadGeoData, type GeoData } from './geo';
 import { imageSettled, preload } from './images';
 import { MapCanvas, type MapFeature, type Overlay } from './MapCanvas';
 import { useNavLayers } from './navLayers';
+import { RiverForecastLine } from './RiverForecastLine';
 import { tideExtremes, tideLevelAt } from '@/modules/navigation/tides';
 import { fitBounds, homeBounds, tileBBox, tilesFor, tileZoom, toMercator, viewBBox, zoomAt, type Size, type View } from './projection';
 import { Notice } from '@/ui/Notice';
@@ -751,6 +752,7 @@ function FeatureCard({
           {l}
         </p>
       ))}
+      {feature.kind === 'river' && feature.item.station?.forecast?.length ? <RiverForecastLine station={feature.item.station} now={now} /> : null}
       {to && (
         <Link to={to} data-testid="feature-nav-link">
           {t('weatherMap.navMore')}

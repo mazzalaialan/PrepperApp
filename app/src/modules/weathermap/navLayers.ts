@@ -27,6 +27,8 @@ export interface RiverPoint {
   low: number | null;
   /** Bolivia: ascenso, descenso o se mantiene. */
   trend?: 'rising' | 'falling' | 'steady';
+  /** INA: la estación del catálogo (para pedir su pronóstico al tocarla). */
+  station?: RiverStation;
 }
 
 export interface TidePoint {
@@ -39,7 +41,7 @@ export interface TidePoint {
 export function inaPoints(stations: RiverStation[], readings: Map<number, RiverReading>): RiverPoint[] {
   return stations.map((s) => {
     const r = readings.get(s.series);
-    return { id: `ina-${s.id}`, source: 'ina', name: s.name, river: s.river, lon: s.lon, lat: s.lat, state: r ? riverState(r.level, s) : 'unknown', level: r?.level ?? null, at: r?.at ?? null, alert: s.alert, evac: s.evac, low: s.low };
+    return { id: `ina-${s.id}`, source: 'ina', name: s.name, river: s.river, lon: s.lon, lat: s.lat, state: r ? riverState(r.level, s) : 'unknown', level: r?.level ?? null, at: r?.at ?? null, alert: s.alert, evac: s.evac, low: s.low, station: s };
   });
 }
 

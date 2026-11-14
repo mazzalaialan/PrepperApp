@@ -275,6 +275,16 @@ test('mapa de tiempo: capas de Navegación (ríos con sus niveles, y mareas) con
   await context.route('https://alerta.ina.gob.ar/**', (route) =>
     route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: [{ series_id: 85, timestart: new Date(Date.now() - 3_600_000).toISOString(), valor: 3.5 }] }),
   );
+  // Pronóstico del INA de Rosario (alerta en 5,00 m): sube hasta 5,2 m al cuarto día.
+  await context.route('https://alerta.ina.gob.ar/a5/sim/calibrados/289/**', (route) => {
+    const day = 86_400_000;
+    const t0 = Math.floor(Date.now() / day) * day;
+    const values = [4.4, 4.6, 4.9, 5.2, 5.1, 4.8];
+    return route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: [{ id: 1, forecast_date: new Date(t0).toISOString(), series: [{ estacion_id: 34, pronosticos: values.flatMap((v, i) => ['medio', 'inferior', 'superior'].map((q) => ({ timestart: new Date(t0 + i * day).toISOString(), valor: q === 'medio' ? v : q === 'inferior' ? v - 0.3 : v + 0.4, qualifier: q }))) }] }],
+    });
+  });
   await setup(page);
   await page.goto('/#/weather/map');
   await expect(page.getByTestId('weather-map')).toBeVisible();
@@ -300,6 +310,15 @@ test('mapa de tiempo: capas de Navegación (ríos con sus niveles, y mareas) con
   await expect(card).toContainText('Buenos Aires · Río de la Plata');
   await expect(card).toContainText('Nivel 3,50 m · Alerta');
   await expect(card).toContainText('Alerta 3,30 m · Evacuación 3,90 m · Aguas bajas 0,21 m');
+  // Una estación con pronóstico: al tocarla se pide su modelo y la ficha dice el máximo y cuándo llega a la alerta.
+  await tap(page, -60.6308, -32.9433);
+  await expect(card).toContainText('Rosario · Paraná inferior');
+  await expect(page.getByTestId('map-river-forecast')).toContainText('Pronóstico del INA: máximo 5,20 m', { timeout: 15_000 });
+  await expect(page.getByTestId('map-river-forecast')).toContainText(/Llegaría a nivel de alerta \(5,00 m\)/);
+  // Una sin pronóstico (Buenos Aires) no muestra esa línea.
+  await tap(page, -58.3993, -34.5611);
+  await expect(card).toContainText('Buenos Aires · Río de la Plata');
+  await expect(page.getByTestId('map-river-forecast')).toHaveCount(0);
   await page.getByRole('button', { name: 'Satélite (nubes)' }).click();
   await page.getByRole('button', { name: 'Lluvia estimada (satélite)' }).click();
   await page.waitForTimeout(700);
