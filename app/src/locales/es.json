@@ -1366,9 +1366,30 @@
     "disclaimer": "Es el riesgo por la pendiente del terreno: el peligro real depende también del estado de la nieve y del clima. Medida orientativa; no reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
   },
   "navigation": {
-    "intro": "Nivel de los ríos de Argentina y mareas, para quien navega, rema o pesca. Más adelante: oleaje.",
+    "intro": "Nivel de los ríos de Argentina, mareas, oleaje y viento, para quien navega, rema o pesca.",
     "noticeTitle": "Información orientativa",
     "notice": "No reemplaza las cartas náuticas, las tablas oficiales, los radioavisos ni las indicaciones de la autoridad marítima. Verificá por los canales oficiales (radio, NAVTEX) antes de navegar.",
+    "waves": {
+      "title": "Oleaje y viento",
+      "intro": "Altura y período de las olas y viento previstos para el lugar elegido. Es un modelo, no una medición, con celdas de unos 9 km.",
+      "loading": "Buscando el pronóstico…",
+      "offline": "Sin conexión y sin un pronóstico guardado de este lugar.",
+      "offlineSaved": "Sin conexión: se ve el último pronóstico guardado de este lugar (pedido {{when}}).",
+      "error": "No se pudo cargar el pronóstico. Probá de nuevo con conexión.",
+      "none": "El modelo marino no cubre este punto (ríos, lagos y tierra adentro). Probá con un lugar en la costa, el mar abierto o el Río de la Plata.",
+      "period": "período {{s}} s",
+      "from": "del {{dir}}",
+      "swell": "Oleaje de fondo: {{h}} m, período {{s}} s",
+      "wind": "Viento",
+      "knots": "nudos",
+      "gusts": "ráfagas {{v}}",
+      "chartLabel": "Gráfico de la altura de las olas de los próximos 3 días",
+      "next": "Cada 6 horas",
+      "model": "Punto del modelo a unos {{km}} km del lugar elegido. No sirve para navegar cerca de la costa: las olas reales cerca de la orilla, en una bahía o en una boca de río pueden ser muy distintas.",
+      "source": "Datos: Open-Meteo Marine (modelos de Météo-France, ECMWF, NOAA y DWD) y Open-Meteo para el viento; licencia CC BY 4.0. Pronóstico, no medición.",
+      "state": { "calm": "Calma", "smooth": "Rizada", "slight": "Marejadilla", "moderate": "Marejada", "rough": "Fuerte marejada", "veryRough": "Gruesa", "high": "Muy gruesa", "veryHigh": "Arbolada", "phenomenal": "Montañosa" },
+      "compass": { "N": "norte", "NE": "noreste", "E": "este", "SE": "sudeste", "S": "sur", "SW": "sudoeste", "W": "oeste", "NW": "noroeste" }
+    },
     "rivers": {
       "title": "Ríos de Argentina",
       "intro": "Nivel de los ríos cerca del lugar elegido, medido por el INA, con los niveles de alerta y de evacuación de cada estación.",

@@ -125,15 +125,19 @@ export function RiversCard({ place }: { place: PickedPlace | null }) {
           );
         })}
       </ul>
-      <p className="hint" style={{ margin: 0 }}>
-        {t('navigation.rivers.reference')}
-      </p>
-      <p className="hint" style={{ margin: 0 }} data-testid="rivers-source">
-        {t('navigation.rivers.source', { source: data?.source ?? 'INA' })}
-      </p>
-      <p className="hint" style={{ margin: 0 }}>
-        {t('navigation.rivers.alerts')}
-      </p>
+      {near.length > 0 && (
+        <>
+          <p className="hint" style={{ margin: 0 }}>
+            {t('navigation.rivers.reference')}
+          </p>
+          <p className="hint" style={{ margin: 0 }} data-testid="rivers-source">
+            {t('navigation.rivers.source', { source: data?.source ?? 'INA' })}
+          </p>
+          <p className="hint" style={{ margin: 0 }}>
+            {t('navigation.rivers.alerts')}
+          </p>
+        </>
+      )}
     </section>
   );
 }

@@ -3,8 +3,9 @@ import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { NavigationNotice } from './NavigationNotice';
 import { RiversCard } from './RiversCard';
 import { TidesCard } from './TidesCard';
+import { WavesCard } from './WavesCard';
 
-/** Navegación: mareas y niveles de los ríos de Argentina (y, más adelante, oleaje). Todo orientativo. */
+/** Navegación: niveles de los ríos de Argentina, mareas y oleaje con viento. Todo orientativo. */
 export function NavigationPage() {
   const { t } = useTranslation();
   const { place, picker } = usePlacePicker();
@@ -18,6 +19,7 @@ export function NavigationPage() {
       {picker}
       <RiversCard place={place} />
       <TidesCard place={place} />
+      <WavesCard place={place} />
     </div>
   );
 }

@@ -1366,9 +1366,30 @@
     "disclaimer": "This is the risk from the slope angle: actual danger also depends on the snowpack and weather. Approximate reading; it doesn't replace the avalanche forecast or training for snowy terrain."
   },
   "navigation": {
-    "intro": "River levels in Argentina and tides, for sailing, paddling or fishing. Coming later: waves.",
+    "intro": "River levels in Argentina, tides, waves and wind, for sailing, paddling or fishing.",
     "noticeTitle": "For guidance only",
     "notice": "It does not replace nautical charts, official tables, navigational warnings or the maritime authority's instructions. Check official channels (radio, NAVTEX) before going out.",
+    "waves": {
+      "title": "Waves and wind",
+      "intro": "Forecast wave height and period and wind for the chosen place. It is a model, not a measurement, with cells of about 9 km.",
+      "loading": "Looking up the forecast…",
+      "offline": "Offline and no saved forecast for this place.",
+      "offlineSaved": "Offline: showing the last saved forecast for this place (requested {{when}}).",
+      "error": "The forecast could not be loaded. Try again with a connection.",
+      "none": "The marine model does not cover this point (rivers, lakes and inland). Try a coastal place, the open sea or the Río de la Plata.",
+      "period": "period {{s}} s",
+      "from": "from the {{dir}}",
+      "swell": "Swell: {{h}} m, period {{s}} s",
+      "wind": "Wind",
+      "knots": "knots",
+      "gusts": "gusts {{v}}",
+      "chartLabel": "Wave height chart for the next 3 days",
+      "next": "Every 6 hours",
+      "model": "Model point about {{km}} km from the chosen place. Not for navigating near the coast: real waves close to shore, in a bay or at a river mouth can be very different.",
+      "source": "Data: Open-Meteo Marine (Météo-France, ECMWF, NOAA and DWD models) and Open-Meteo for wind; CC BY 4.0. Forecast, not a measurement.",
+      "state": { "calm": "Calm", "smooth": "Smooth", "slight": "Slight", "moderate": "Moderate", "rough": "Rough", "veryRough": "Very rough", "high": "High", "veryHigh": "Very high", "phenomenal": "Phenomenal" },
+      "compass": { "N": "north", "NE": "northeast", "E": "east", "SE": "southeast", "S": "south", "SW": "southwest", "W": "west", "NW": "northwest" }
+    },
     "rivers": {
       "title": "Rivers of Argentina",
       "intro": "River levels near the chosen place, measured by INA, with each station's alert and evacuation levels.",
