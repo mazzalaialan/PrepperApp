@@ -24,6 +24,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-contacto.vikarg@gmail.com}
       MAIL_FROM: ${MAIL_FROM:-}
       PUBLIC_URL: ${PUBLIC_URL:-https://${DOMAIN}}
+      # Clave de la API del IOC (mareógrafos medidos); vacía, esa función queda apagada.
+      IOC_API_KEY: ${IOC_API_KEY:-}
     volumes:
       - vikarg-data:/data
       # Mapas offline (vector.pmtiles y elevation.pmtiles); vacía, la app usa las fuentes públicas. Ver docs/SERVIDOR.md.

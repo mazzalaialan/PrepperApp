@@ -17,6 +17,7 @@ import { mapRoutes } from './routes/maps.ts';
 import { libraryRoutes } from './routes/library.ts';
 import { dataRoutes } from './routes/data.ts';
 import { riversRoutes } from './routes/rivers.ts';
+import { iocRoutes } from './routes/ioc.ts';
 import { rainMapRoutes } from './routes/rainMap.ts';
 import { liveSessionRoutes } from './routes/liveSessions.ts';
 import { sharedOutingRoutes } from './routes/sharedOutings.ts';
@@ -59,6 +60,7 @@ export async function buildApp(
   libraryRoutes(app, config);
   dataRoutes(app, config);
   riversRoutes(app, config);
+  iocRoutes(app, config);
   officialRoutes(app, official);
   app.addHook('onClose', () => maps.close());
 

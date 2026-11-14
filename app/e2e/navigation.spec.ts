@@ -295,3 +295,48 @@ test('Navegación: la tarjeta de Bolivia no aparece fuera de Bolivia', async ({ 
   await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('bo-card')).toHaveCount(0);
 });
+
+test('Navegación: mareógrafo medido del IOC sobre la marea calculada (Antofagasta), y sin conexión queda la última lectura', async ({ page, context }, testInfo) => {
+  await mockOpenMeteo(page);
+  // El servidor propio responde (simulado) con 30 horas de lecturas cada 10 minutos: una marea de 12,4 h y 0,8 m de amplitud.
+  let asked = '';
+  await context.route('https://valhallarust2.ddns.net/api/ioc/*', (route) => {
+    asked = route.request().url();
+    const now = Date.now();
+    const points = Array.from({ length: 180 }, (_, i) => {
+      const ms = now - (179 - i) * 600_000;
+      return [ms, 5.4 + 0.8 * Math.sin((2 * Math.PI * ms) / (12.42 * 3_600_000))];
+    });
+    return route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { code: 'anto2', sensor: 'rad', fetchedAt: now, stale: false, points } });
+  });
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -23.65, longitude: -70.4, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('tide-station')).toContainText('Antofagasta', { timeout: 15_000 });
+  const gauge = page.getByTestId('tide-gauge-dev');
+  await expect(gauge).toContainText('Mareógrafo de Antofagasta:', { timeout: 15_000 });
+  await expect(gauge).toContainText(/(sigue lo calculado|m por (encima|debajo) de lo calculado) \(medido a las \d\d:\d\d\)/);
+  expect(asked).toMatch(/\/api\/ioc\/anto2$/);
+  await expect(page.getByTestId('tide-measured-line')).toHaveCount(1);
+  await expect(page.getByTestId('tide-gauge')).toContainText('IOC');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-97-navigation-gauge.png`, fullPage: true });
+
+  // Sin conexión queda la última lectura guardada.
+  await context.setOffline(true);
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('tide-gauge-dev')).toContainText('Mareógrafo de Antofagasta:', { timeout: 15_000 });
+});
+
+test('Navegación: sin mareógrafo medido cerca (Puerto Madryn sí, Buenos Aires no) no aparece la línea medida', async ({ page, context }) => {
+  await context.route('https://valhallarust2.ddns.net/api/ioc/*', (route) => route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, json: { error: 'disabled' } }));
+  await context.grantPermissions(['geolocation']);
+  // Buenos Aires: sin mareógrafo en el catálogo; Madryn: lo hay pero el servidor lo tiene apagado (sin clave).
+  await context.setGeolocation({ latitude: -34.6, longitude: -58.4, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('tide-station')).toContainText('Buenos Aires', { timeout: 15_000 });
+  await expect(page.getByTestId('tide-gauge')).toHaveCount(0);
+  await expect(page.getByTestId('tide-measured-line')).toHaveCount(0);
+});

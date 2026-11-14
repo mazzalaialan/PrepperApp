@@ -20,6 +20,8 @@ export interface Config {
   schedulerIntervalMs: number;
   /** Pronóstico para los avisos de lluvia (API compatible con Open-Meteo). */
   weatherUrl: string;
+  /** Clave de la API del IOC (mareógrafos medidos); vacía, la función se apaga. */
+  iocApiKey: string | null;
   /** Cada cuánto revisar la lluvia en los lugares con aviso. */
   rainIntervalMs: number;
   /** Hasta qué antigüedad se usa la última ubicación conocida de "donde estoy". */
@@ -73,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     appDir: env.APP_DIR?.trim() || null,
     schedulerIntervalMs: Number(env.SCHEDULER_INTERVAL_MINUTES ?? 10) * 60_000,
     weatherUrl: env.WEATHER_URL?.trim() || 'https://api.open-meteo.com',
+    iocApiKey: env.IOC_API_KEY?.trim() || null,
     rainIntervalMs: Number(env.RAIN_INTERVAL_MINUTES ?? 15) * 60_000,
     rainHereMaxAgeMs: Number(env.RAIN_HERE_MAX_AGE_HOURS ?? 24) * 3_600_000,
     lightningEnabled: (env.LIGHTNING_ENABLED ?? 'true') !== 'false',

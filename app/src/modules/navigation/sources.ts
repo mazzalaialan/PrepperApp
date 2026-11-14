@@ -77,7 +77,7 @@ export const NAV_SOURCES: NavSource[] = [
   {
     id: 'ioc',
     name: 'IOC Sea Level Station Monitoring Facility',
-    provides: 'Nivel del mar medido casi en vivo (pendiente: falta la aprobación de la cuenta)',
+    provides: 'Nivel del mar medido casi en vivo (mareógrafos de Chile, Perú y Argentina), vía el servidor con una clave de API',
     license: 'non-commercial',
     licenseText: 'Prohíbe el uso comercial; hay que registrarse; datos sin control de calidad',
     url: 'https://www.ioc-sealevelmonitoring.org/',

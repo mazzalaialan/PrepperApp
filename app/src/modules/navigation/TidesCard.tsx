@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSettings } from '@/core/settings/settings';
 import type { PickedPlace } from '@/modules/waypoints/PlacePicker';
+import { fetchIocLevels, iocNear, loadIocCatalog, loadSavedIoc, measuredSeries, saveIoc, type IocCatalog, type IocLevels } from './ioc';
+import { sourceEnabled } from './sources';
 import { isEstuary, loadTides, nearestStations, NEAR_KM, tideCurve, tideExtremes, tideLevelAt, type TidesData } from './tides';
 
 const DAY_MS = 86_400_000;
 const DAYS = 3;
 
 /** Gráfico de la marea de los próximos días, con la línea de «ahora» y los días marcados. */
-function TideChart({ curve, now, label, locale }: { curve: { time: Date; level: number }[]; now: Date; label: string; locale: string }) {
+function TideChart({ curve, now, label, locale, measured }: { curve: { time: Date; level: number }[]; now: Date; label: string; locale: string; measured?: { time: Date; level: number }[] }) {
   const W = 600;
   const H = 170;
   const pad = { l: 38, r: 8, t: 10, b: 22 };
   const t0 = curve[0]!.time.getTime();
   const t1 = curve[curve.length - 1]!.time.getTime();
-  const levels = curve.map((p) => p.level);
+  const seen = measured?.filter((p) => p.time.getTime() >= t0 && p.time.getTime() <= t1) ?? [];
+  const levels = [...curve, ...seen].map((p) => p.level);
   const lo = Math.floor(Math.min(...levels) * 2) / 2;
   const hi = Math.ceil(Math.max(...levels) * 2) / 2;
   const x = (ms: number) => pad.l + ((ms - t0) / (t1 - t0)) * (W - pad.l - pad.r);
@@ -36,6 +40,7 @@ function TideChart({ curve, now, label, locale }: { curve: { time: Date; level: 
       ))}
       <path d={area} className="tide-area" />
       <path d={path} className="tide-line" />
+      {seen.length > 1 && <path d={seen.map((p, i) => `${i ? 'L' : 'M'}${x(p.time.getTime()).toFixed(1)} ${y(p.level).toFixed(1)}`).join('')} className="tide-measured" data-testid="tide-measured-line" />}
       {midnights.map((d) => (
         <g key={d.getTime()}>
           <line x1={x(d.getTime())} x2={x(d.getTime())} y1={pad.t} y2={H - pad.b} className="tide-day" />
@@ -78,6 +83,33 @@ export function TidesCard({ place }: { place: PickedPlace | null }) {
   const end = useMemo(() => new Date(start.getTime() + DAYS * DAY_MS), [start]);
   const curve = useMemo(() => (station ? tideCurve(station, start, end) : []), [station, start, end]);
   const extremes = useMemo(() => (station ? tideExtremes(station, new Date(now.getTime() - 3 * 3_600_000), end).filter((e) => e.time.getTime() >= now.getTime() - 3_600_000) : []), [station, now.getHours(), end]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Mareógrafo medido (IOC) a menos de 30 km de la estación: lo pide el servidor, que guarda la clave; sin conexión queda el último guardado.
+  const server = useSettings((s) => s.settings.serverUrl)?.trim() || null;
+  const iocOn = sourceEnabled('ioc');
+  const [iocCatalog, setIocCatalog] = useState<IocCatalog | null>(null);
+  useEffect(() => {
+    if (iocOn) void loadIocCatalog().then(setIocCatalog, () => undefined);
+  }, [iocOn]);
+  const gauge = useMemo(() => (iocCatalog && station ? iocNear(iocCatalog.stations, station.lat, station.lon) : null), [iocCatalog, station]);
+  const gaugeCode = gauge?.station.code ?? null;
+  const [levels, setLevels] = useState<IocLevels | null>(null);
+  useEffect(() => {
+    setLevels(gaugeCode ? loadSavedIoc(gaugeCode) : null);
+    if (!gaugeCode || !server || !navigator.onLine) return;
+    let cancelled = false;
+    fetchIocLevels(server, gaugeCode).then(
+      (l) => {
+        if (cancelled) return;
+        saveIoc(l);
+        setLevels(l);
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [gaugeCode, server]);
+  const measured = useMemo(() => (levels && station ? measuredSeries(levels, station) : null), [levels, station]);
   const levelNow = station ? tideLevelAt(station, now) : null;
   const levelSoon = station ? tideLevelAt(station, new Date(now.getTime() + 10 * 60_000)) : null;
   const nf = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'always' });
@@ -130,7 +162,27 @@ export function TidesCard({ place }: { place: PickedPlace | null }) {
               {t('navigation.tides.now', { level: nf.format(levelNow), trend: t(levelSoon >= levelNow ? 'navigation.tides.rising' : 'navigation.tides.falling') })}
             </p>
           )}
-          {curve.length > 1 && <TideChart curve={curve} now={now} label={t('navigation.tides.chartLabel', { days: DAYS })} locale={i18n.language} />}
+          {curve.length > 1 && <TideChart curve={curve} now={now} label={t('navigation.tides.chartLabel', { days: DAYS })} locale={i18n.language} measured={measured?.points} />}
+          {measured && gauge && (
+            <div className="stack" style={{ gap: 4 }} data-testid="tide-gauge">
+              <p style={{ margin: 0 }} data-testid="tide-gauge-dev">
+                <strong>{t('navigation.tides.gaugeTitle', { name: gauge.station.name })}</strong>{' '}
+                {t(Math.abs(measured.deviation) < 0.05 ? 'navigation.tides.gaugeSame' : measured.deviation > 0 ? 'navigation.tides.gaugeAbove' : 'navigation.tides.gaugeBelow', {
+                  value: nf.format(Math.abs(measured.deviation)).replace(/^[+-]/, ''),
+                  time: measured.lastAt.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }),
+                })}
+              </p>
+              {measured.rms > 0.4 && (
+                <p className="hint" style={{ margin: 0 }} data-testid="tide-gauge-noisy">
+                  {t('navigation.tides.gaugeNoisy')}
+                </p>
+              )}
+              <p className="hint" style={{ margin: 0 }}>
+                {t('navigation.tides.gaugeNote', { operator: gauge.station.operator || gauge.station.name })}
+                {levels?.stale ? ` ${t('navigation.tides.gaugeStale')}` : ''}
+              </p>
+            </div>
+          )}
           <h3 className="section-title" style={{ margin: 0, fontSize: '1rem' }}>
             {t('navigation.tides.next')}
           </h3>

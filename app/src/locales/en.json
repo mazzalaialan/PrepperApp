@@ -1483,7 +1483,14 @@
       "high": "High tide",
       "low": "Low tide",
       "reference": "Heights in meters above (+) or below (−) the station's mean sea level; not chart datum. Times in the phone's time zone.",
-      "source": "Data: {{source}} (generated {{date}})."
+      "source": "Data: {{source}} (generated {{date}}).",
+      "gaugeTitle": "Tide gauge at {{name}}:",
+      "gaugeSame": "the water follows the prediction (measured at {{time}}).",
+      "gaugeAbove": "the water is {{value}} m above the prediction (measured at {{time}}).",
+      "gaugeBelow": "the water is {{value}} m below the prediction (measured at {{time}}).",
+      "gaugeNoisy": "The measurement is far from the predicted tide: it may be wind, pressure or a faulty sensor. Take it with care.",
+      "gaugeNote": "Dashed line: measured level ({{operator}}, via IOC), not quality-controlled and shifted to the level of the predicted curve. Offline, the last saved reading is kept.",
+      "gaugeStale": "Could not update: this is the last saved reading."
     }
   },
   "declination": {

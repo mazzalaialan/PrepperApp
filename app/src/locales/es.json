@@ -1483,7 +1483,14 @@
       "high": "Pleamar",
       "low": "Bajamar",
       "reference": "Alturas en metros sobre (+) o bajo (−) el nivel medio del mar de la estación; no son las del cero de las cartas. Horas en la zona horaria del teléfono.",
-      "source": "Datos: {{source}} (generado el {{date}})."
+      "source": "Datos: {{source}} (generado el {{date}}).",
+      "gaugeTitle": "Mareógrafo de {{name}}:",
+      "gaugeSame": "el agua sigue lo calculado (medido a las {{time}}).",
+      "gaugeAbove": "el agua está {{value}} m por encima de lo calculado (medido a las {{time}}).",
+      "gaugeBelow": "el agua está {{value}} m por debajo de lo calculado (medido a las {{time}}).",
+      "gaugeNoisy": "La medición se separa mucho de la marea calculada: puede ser el viento, la presión o un sensor con fallas. Tomala con cuidado.",
+      "gaugeNote": "Línea punteada: nivel medido ({{operator}}, vía IOC), sin control de calidad y llevado al nivel de la curva calculada. Sin conexión queda la última lectura guardada.",
+      "gaugeStale": "No se pudo actualizar: es la última lectura guardada."
     }
   },
   "declination": {

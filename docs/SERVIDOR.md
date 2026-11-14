@@ -251,3 +251,7 @@ Borra el dispositivo y, en cascada, sus vencimientos, lugares de avisos, huerta,
 - Cada dispositivo recibe un token propio al registrarse. El servidor guarda solo su hash.
 - Los códigos de transferencia son de un solo uso. Una IP que prueba más de 20 códigos inválidos en 10 minutos queda bloqueada temporalmente.
 - El servidor corre como usuario sin privilegios dentro del contenedor.
+
+## Mareógrafos medidos del IOC
+
+`GET /api/ioc/:code` devuelve las últimas 30 horas de un mareógrafo (un punto cada 10 minutos, un solo sensor). Necesita `IOC_API_KEY` en `deploy/.env` (se pide en ioc-sealevelmonitoring.org con una cuenta del grupo «Access gauges API»); sin ella responde 404 y la app no muestra la línea medida. Solo atiende los códigos de `app/public/data/ioc-stations.json` (se regenera con `node tools/tide-data/ioc.mjs`) y guarda cada respuesta 5 minutos; si el IOC falla, devuelve la última buena (hasta 6 horas) marcada `stale`. Uso no comercial: en una copia paga o institucional se apaga con `VITE_COMMERCIAL=1` y sin clave.

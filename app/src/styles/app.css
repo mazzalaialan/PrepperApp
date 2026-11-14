@@ -4522,6 +4522,13 @@ a.module-card:hover {
   stroke-width: 2.5;
   stroke-linejoin: round;
 }
+.tide-measured {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  stroke-linejoin: round;
+}
 .tide-now {
   stroke: var(--accent);
   stroke-width: 2;
