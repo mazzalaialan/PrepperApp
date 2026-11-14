@@ -28,6 +28,9 @@ Tres investigadores y el agente legal revisaron fuentes por país (JSON con prue
 ### Con permiso previo (por ahora solo enlace a la página oficial)
 SHN Argentina (derechos reservados; shn@hidro.gob.ar, verificar dominio), SENAMHI Bolivia (niveles de ríos y Titicaca), DGA Chile (por SIAC), SHOA, DINAGUA, CARU, SOHMA, IOC Sea Level Monitoring (no comercial; registrarse con `contacto.vikarg@gmail.com`). El agente legal dejó un borrador de correo; **no se envió ninguno**.
 
+### Categoría «Náutica» (pedida el 2026-11-14)
+Hoy «Buscar cercanos» solo trae combustible de ruta (`amenity=fuel`). Se quiere una categoría **Náutica** con: combustible para embarcaciones (`amenity=fuel` + `boat=yes`, `waterway=fuel`), marinas (`leisure=marina`), rampas (`leisure=slipway`), guarderías de lanchas (`amenity=boat_storage`), muelles y amarras (`man_made=pier`, mooring) y talleres náuticos (`shop=boat`, `craft=boatbuilder`, `shop=ship_chandler`). Va con la misma mecánica que los otros servicios (`tools/services-data/build.mjs`, paquetes por país). **Primero se cuenta cuántos puntos hay por país en OpenStreetMap** (consulta de solo conteo, resultado más abajo cuando llegue), porque el combustible náutico está poco cargado, sobre todo en ríos y lagos del interior. Se integra al plan de Navegación.
+
 ### Decisión de quien dirige (2026-11-13) sobre licencias
 - **Sin licencia declarada: se usa** (con cita, fecha del dato y enlace). Alcanza a SHN, SENAMHI Bolivia, INA, Armada de Chile, DINAGUA, CARU, SOHMA, INUMET.
 - **Licencia no comercial: se arma y se usa igual** (IOC, SHOA, DGA, Open-Meteo gratis), válido mientras la app sea gratuita y sin publicidad. Cada fuente lleva su licencia en un catálogo y se puede **apagar** en la copia institucional o paga.
