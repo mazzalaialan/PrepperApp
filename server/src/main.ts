@@ -24,7 +24,7 @@ import { fetchAshSigmets } from './official/sigmet.ts';
 import { createPeCache, fetchSenamhiBo, fetchSenamhiPe } from './official/senamhi.ts';
 import { fetchCenvul } from './volcanoes/cenvul.ts';
 import { fetchVolcanoAlerts, type VolcanoAlert } from './volcanoes/oavv.ts';
-import { runVolcanoWatch } from './volcanoes/watch.ts';
+import { runVolcanoWatch, volcanoReadStamp, VOLCANO_EVERY_MS } from './volcanoes/watch.ts';
 import { createMailNotifier, createSourceMonitor } from './monitor/sources.ts';
 
 const config = loadConfig();
@@ -235,12 +235,13 @@ async function officialTick() {
       app.log.warn({ err: String(err) }, 'no se pudieron leer los SIGMET de ceniza');
     }
     // Nivel de alerta de los volcanes (OAVV de Argentina y CENVUL de Perú): cambia despacio, cada media hora.
-    if (Date.now() - volcanoesAt > 30 * 60_000) {
+    if (Date.now() - volcanoesAt > VOLCANO_EVERY_MS) {
       const sources = [
         { id: 'OAVV', label: 'El nivel de alerta de los volcanes (OAVV, SEGEMAR)', read: () => fetchVolcanoAlerts() },
         { id: 'CENVUL', label: 'El nivel de alerta de los volcanes de Perú (CENVUL, IGP)', read: () => fetchCenvul() },
       ] as const;
       const volcanoes: VolcanoAlert[] = [];
+      let volcanoFailed = false;
       for (const { id, label, read } of sources) {
         try {
           volcanoes.push(...(await read()));
@@ -248,13 +249,15 @@ async function officialTick() {
         } catch (err) {
           await monitor.fail(id, label, err);
           failed.push(id);
+          volcanoFailed = true;
           // Si falla, quedan los de esa fuente de la vuelta anterior.
           volcanoes.push(...officialStore.volcanoes.filter((v) => v.source === id));
           app.log.warn({ err: String(err), source: id }, 'no se pudo leer el nivel de alerta de los volcanes');
         }
       }
       officialStore.volcanoes = volcanoes;
-      volcanoesAt = Date.now();
+      // Si falló una fuente se reintenta pronto (antes esperaba 30 min completos).
+      volcanoesAt = volcanoReadStamp(!volcanoFailed);
       const v = await runVolcanoWatch(db, push, volcanoes, new Date(), config.rainHereMaxAgeMs);
       if (v.sent || v.removed) app.log.info(v, 'avisos de volcanes enviados');
     }

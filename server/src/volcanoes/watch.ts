@@ -84,3 +84,13 @@ export async function runVolcanoWatch(db: Db, push: PushSender, volcanoes: Volca
   }
   return result;
 }
+
+/** Cada cuánto se leen los volcanes cuando todo anda bien. */
+export const VOLCANO_EVERY_MS = 30 * 60_000;
+/** Si una fuente falló, se reintenta en la próxima vuelta de alertas (10 min), no a la media hora. */
+export const VOLCANO_RETRY_MS = 5 * 60_000;
+
+/** Marca de la última lectura: si falló alguna fuente queda adelantada para reintentar pronto. */
+export function volcanoReadStamp(allOk: boolean, now = Date.now()): number {
+  return allOk ? now : now - (VOLCANO_EVERY_MS - VOLCANO_RETRY_MS);
+}

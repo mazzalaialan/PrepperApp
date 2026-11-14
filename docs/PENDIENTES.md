@@ -2,6 +2,10 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
+## Volcanes: reintento tras una falla (HECHO el 2026-11-13, sin publicar)
+
+El servidor leía OAVV y CENVUL cada 30 min, pero tras una falla de cualquiera esperaba otros 30 min completos para reintentar. Ahora, si una fuente falla, reintenta en la vuelta siguiente de alertas (10 min). Lógica en `volcanoReadStamp` (`server/src/volcanoes/watch.ts`), prueba en `server/test/volcano-retry.test.ts`.
+
 ## Priorizar el país donde estás (HECHO el 2026-11-13, sin publicar; antes «PRIMERO PARA REVISAR»)
 
 Se hizo la noche del 13/11 con las decisiones de quien dirige (ver abajo). Commiteado y probado, **sin publicar**.
