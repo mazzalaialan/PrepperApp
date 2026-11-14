@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 import { onLocation } from '@/core/geo/locationEvents';
 import { useSettings, type Country } from '@/core/settings/settings';
+import { distanceMeters } from '@/core/geo/geo';
+import { useMapZones } from '@/modules/maps/store';
 import { loadBorders } from './borders';
 import { prefetchCountry } from './country';
 import { downloadsSilently, missingDownload, networkInfo } from './countryDownload';
@@ -20,9 +22,11 @@ interface NoticesState {
   offer: Country | null;
   /** Descarga pendiente de confirmar (datos móviles o conexión desconocida). */
   ask: { countries: Country[]; bytes: number } | null;
+  /** Oferta de bajar mapas sin conexión del lugar donde llegaste. */
+  mapOffer: { country: Country; lat: number; lon: number } | null;
 }
 
-export const useCountryNotices = create<NoticesState>(() => ({ offer: null, ask: null }));
+export const useCountryNotices = create<NoticesState>(() => ({ offer: null, ask: null, mapOffer: null }));
 
 /** Las descargas que se dijo «Ahora no» en esta sesión (para no insistir con la misma). */
 const declined = new Set<string>();
@@ -36,6 +40,23 @@ export function offerFor(detected: Country | null, home: Country, dismissed: Cou
 export function refreshOffer(): void {
   const s = useSettings.getState().settings;
   useCountryNotices.setState({ offer: offerFor(s.detectedCountry, s.country, s.countryOfferDismissed) });
+}
+
+/**
+ * ¿Hay que ofrecer bajar mapas del lugar? Si estás en un país que no es el de la app, no dijiste «No, gracias» para él,
+ * hay conexión (si no, no se podría bajar) y ninguna zona ya bajada cubre el punto.
+ */
+export function mapOfferFor(
+  detected: Country,
+  home: Country,
+  dismissed: Country[],
+  zones: { lat: number; lon: number; radiusKm: number }[],
+  at: { lat: number; lon: number },
+  online: boolean,
+): { country: Country; lat: number; lon: number } | null {
+  if (!online || detected === home || dismissed.includes(detected)) return null;
+  if (zones.some((z) => distanceMeters(z, at) <= z.radiusKm * 1000)) return null;
+  return { country: detected, lat: at.lat, lon: at.lon };
 }
 
 /** Baja los datos de los países detectados que falten, o pregunta antes si no hay Wi-Fi seguro. */
@@ -52,9 +73,11 @@ export async function downloadFor(d: DetectedCountries): Promise<void> {
   useCountryNotices.setState({ ask: { countries, bytes: missing.bytes } });
 }
 
-async function onDetected(d: DetectedCountries): Promise<void> {
+async function onDetected(d: DetectedCountries, at: { lat: number; lon: number }): Promise<void> {
   await useSettings.getState().update({ detectedCountry: d.country, detectedNear: d.near });
   refreshOffer();
+  const s = useSettings.getState().settings;
+  useCountryNotices.setState({ mapOffer: mapOfferFor(d.country, s.country, s.mapOfferDismissed, useMapZones.getState().zones, at, navigator.onLine) });
   await downloadFor(d);
 }
 
@@ -68,7 +91,7 @@ export function useCountryAutomation(): void {
         const s = useSettings.getState().settings;
         return s.detectedCountry ? { country: s.detectedCountry, near: s.detectedNear } : null;
       },
-      onChange: (d) => void onDetected(d),
+      onChange: (d, at) => void onDetected(d, at),
     });
     const off = onLocation(detector.note);
     return () => {

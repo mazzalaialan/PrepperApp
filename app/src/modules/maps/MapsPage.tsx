@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FeatureCollection } from 'geojson';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -77,7 +77,12 @@ export function MapsPage() {
   const caps = useCapabilities((s) => s.caps);
   const heading = useHeading(fix, follow && (caps?.orientation ?? false));
   const [online, setOnline] = useState(navigator.onLine);
-  const [initial] = useState<ViewState>(() => (focusTrack ? trackView(focusTrack) : null) ?? lastView ?? (zones[0] ? { lat: zones[0].lat, lon: zones[0].lon, zoom: 11 } : DEFAULT_VIEW));
+  // ?bajar=lat,lon (oferta al llegar a otro país): el mapa abre en ese lugar y el panel de descarga de zona.
+  const [bajar] = useState(() => {
+    const m = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(params.get('bajar') ?? '');
+    return m ? { lat: Number(m[1]), lon: Number(m[2]) } : null;
+  });
+  const [initial] = useState<ViewState>(() => (focusTrack ? trackView(focusTrack) : null) ?? (bajar ? { ...bajar, zoom: 10 } : null) ?? lastView ?? (zones[0] ? { lat: zones[0].lat, lon: zones[0].lon, zoom: 11 } : DEFAULT_VIEW));
   const [view, setView] = useState<ViewState>(initial);
   const [flyTo, setFlyTo] = useState<(ViewState & { key: number }) | null>(null);
   const [outline, setOutline] = useState<FeatureCollection | null>(null);
@@ -268,6 +273,15 @@ export function MapsPage() {
     setPanel({ name: t('maps.defaultName', { n: zones.length + 1 }), radiusKm: 10, detail: 'trails' });
     if (view.zoom < 9) setFlyTo({ ...view, zoom: 10, key: Date.now() });
   }
+
+  const bajarOpened = useRef(false);
+  useEffect(() => {
+    if (bajar && online && !bajarOpened.current) {
+      bajarOpened.current = true;
+      openPanel();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bajar, online]);
 
   async function startDownload() {
     if (!panel || !plan || !source?.ok) return;

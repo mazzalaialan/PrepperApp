@@ -2,9 +2,33 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
+## Oferta de mapas sin conexión al llegar a otro país (HECHO el 2026-11-13, sin publicar)
+
+Al detectar un país distinto al de Ajustes, y si hay conexión, no se dijo «No, gracias» para ese país (`mapOfferDismissed`) y ninguna zona ya bajada cubre el punto, aparece «Llegaste a X: ¿bajar el mapa de acá…?». «Ver mapas» abre `/orientation/maps?bajar=lat,lon`: el mapa se centra ahí y se abre el panel de zona (no baja nada hasta confirmar). Código: `mapOfferFor` en `countryAutomation.ts`, aviso en `CountryNotices.tsx`, `?bajar` en `MapsPage.tsx`. Pruebas: unitaria y 2 e2e en `country-detect.spec.ts`.
+
 ## Volcanes: reintento tras una falla (HECHO el 2026-11-13, sin publicar)
 
 El servidor leía OAVV y CENVUL cada 30 min, pero tras una falla de cualquiera esperaba otros 30 min completos para reintentar. Ahora, si una fuente falla, reintenta en la vuelta siguiente de alertas (10 min). Lógica en `volcanoReadStamp` (`server/src/volcanoes/watch.ts`), prueba en `server/test/volcano-retry.test.ts`.
+
+## Sección «Navegación» (nivel de ríos, mareas, oleaje): investigación hecha el 2026-11-13, plan para decidir
+
+Tres investigadores y el agente legal revisaron fuentes por país (JSON con pruebas en el scratchpad de la sesión; resumen en `docs/FUENTES-DE-DATOS.md`, sección Navegación). **Falta que quien dirige decida el alcance.**
+
+### Propuesta de versión 1 (solo fuentes de licencia clara)
+1. **Argentina:** INA a5 (alturas medidas, caudales y pronóstico de la Red Hidrológica; citar a la SIPH y la fecha del dato), umbrales de alerta de Prefectura, AIC.
+2. **Mareas sin conexión:** constantes armónicas abiertas (CC BY 4.0, ~56 puertos sudamericanos; no hay para Uruguay) calculadas en el teléfono; mostrar la atribución de cada estación y «no usar para navegar».
+3. **Oleaje y caudal modelado:** Open-Meteo Marine y Flood (gratis mientras la app sea gratuita y sin publicidad; Flood necesita un catálogo de puntos ajustados al cauce, armado en el servidor).
+4. **Chile y Uruguay:** pronóstico marítimo de la Armada de Chile (JSON abierto, sin licencia declarada: pedir permiso) e INUMET (pronóstico marino, 15 puntos).
+5. **Aviso fijo** en toda la sección: información orientativa, no reemplaza cartas, tablas oficiales, radioavisos ni NAVTEX. Cada dato muestra organismo, hora, enlace y licencia.
+
+### Con permiso previo (por ahora solo enlace a la página oficial)
+SHN Argentina (derechos reservados; shn@hidro.gob.ar, verificar dominio), SENAMHI Bolivia (niveles de ríos y Titicaca), DGA Chile (por SIAC), SHOA, DINAGUA, CARU, SOHMA, IOC Sea Level Monitoring (no comercial; registrarse con `contacto.vikarg@gmail.com`). El agente legal dejó un borrador de correo; **no se envió ninguno**.
+
+### Riesgos que decidir
+- **La copia institucional de la escuela (EAAM) es uso comercial:** no puede llevar Open-Meteo gratis, IOC, SHOA ni DGA sin plan pago o permiso expreso. Cada permiso que se pida debe cubrir versiones institucionales o pagas.
+- Son datos de seguridad náutica: aviso de responsabilidad a revisar por un abogado matriculado.
+- Sin fuente hoy: nivel en metros de los ríos de Chile, estado de puertos, nivel del mar en vivo de Uruguay, Perú (solo alertas por color; DHN con anti-bot, no se esquiva).
+- Chile: SHOA (captcha de AWS) y SITPORT inaccesibles; Uruguay: DINAGUA con 11 a 18 h de atraso (mostrar siempre la fecha, no usar para alertas).
 
 ## Priorizar el país donde estás (HECHO el 2026-11-13, sin publicar; antes «PRIMERO PARA REVISAR»)
 

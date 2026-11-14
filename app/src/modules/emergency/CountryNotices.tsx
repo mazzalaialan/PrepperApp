@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Download, Map as MapIcon, MapPin } from 'lucide-react';
 import { useSettings } from '@/core/settings/settings';
 import { prefetchCountry } from './country';
 import { declineDownload, refreshOffer, useCountryNotices } from './countryAutomation';
@@ -12,14 +13,16 @@ import { formatBytes } from './countryDownload';
  */
 export function CountryNotices() {
   const { t, i18n } = useTranslation();
-  const { offer, ask } = useCountryNotices();
+  const { offer, ask, mapOffer } = useCountryNotices();
+  const mapDismissed = useSettings((s) => s.settings.mapOfferDismissed);
+  const navigate = useNavigate();
   const country = useSettings((s) => s.settings.country);
   const dismissed = useSettings((s) => s.settings.countryOfferDismissed);
   const update = useSettings((s) => s.update);
   const [busy, setBusy] = useState(false);
   const name = (c: string) => t(`country.${c}`);
 
-  if (!offer && !ask) return null;
+  if (!offer && !ask && !mapOffer) return null;
   return (
     <div className="rain-notices" role="status" data-testid="country-notices">
       {offer && (
@@ -48,6 +51,37 @@ export function CountryNotices() {
             data-testid="country-offer-no"
           >
             {t('countryOffer.no')}
+          </button>
+        </div>
+      )}
+      {mapOffer && (
+        <div className="rain-notice country-notice" data-testid="map-offer">
+          <MapIcon size={20} aria-hidden />
+          <span className="update-text">
+            <strong>{t('mapOffer.title', { country: name(mapOffer.country) })}</strong>
+            <span className="hint">{t('mapOffer.hint')}</span>
+          </span>
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => {
+              useCountryNotices.setState({ mapOffer: null });
+              navigate(`/orientation/maps?bajar=${mapOffer.lat.toFixed(4)},${mapOffer.lon.toFixed(4)}`);
+            }}
+            data-testid="map-offer-yes"
+          >
+            {t('mapOffer.yes')}
+          </button>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => {
+              useCountryNotices.setState({ mapOffer: null });
+              void update({ mapOfferDismissed: [...mapDismissed, mapOffer.country] });
+            }}
+            data-testid="map-offer-no"
+          >
+            {t('mapOffer.no')}
           </button>
         </div>
       )}

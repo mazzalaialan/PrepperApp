@@ -1238,6 +1238,12 @@
       "saturn": "Saturn"
     }
   },
+  "mapOffer": {
+    "title": "You arrived in {{country}}: download the map here for offline use?",
+    "hint": "We open the map at this spot so you can choose the zone size. Nothing is downloaded until you confirm.",
+    "yes": "See maps",
+    "no": "No, thanks"
+  },
   "countryOffer": {
     "title": "You are in {{country}}: use {{country}} in the app?",
     "hint": "We already show its emergency numbers and data. If you change, {{country}} becomes the app country (now {{current}}). You can change it anytime in Settings.",

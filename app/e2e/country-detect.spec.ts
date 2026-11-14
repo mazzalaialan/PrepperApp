@@ -96,3 +96,26 @@ test('Buscar cercanos usa el país del lugar elegido: en un lugar de Perú, los 
   await expect.poll(async () => (await stored(page)).includes('PE.json'), { timeout: 30_000 }).toBe(true);
   await expect(page.getByTestId('nearby-status')).toBeVisible();
 });
+
+test('al llegar a otro país se ofrece bajar el mapa del lugar: «Ver mapas» abre el panel de zona ahí', async ({ page }) => {
+  await setConnection(page, null);
+  await start(page);
+  await page.goto('/#/first-aid/radio');
+  await expect(page.getByTestId('map-offer')).toContainText('Llegaste a Perú', { timeout: 15_000 });
+  await page.getByTestId('map-offer-yes').click();
+  await expect(page).toHaveURL(/orientation\/maps\?bajar=-9\.03/);
+  // El panel de descarga de zona queda abierto, sin bajar nada todavía.
+  await expect(page.getByTestId('zone-panel')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('map-offer')).toHaveCount(0);
+});
+
+test('«No, gracias» a la oferta de mapas se recuerda y no vuelve a aparecer', async ({ page }) => {
+  await setConnection(page, null);
+  await start(page);
+  await page.goto('/#/first-aid/radio');
+  await expect(page.getByTestId('map-offer')).toBeVisible({ timeout: 15_000 });
+  await page.getByTestId('map-offer-no').click();
+  await expect(page.getByTestId('map-offer')).toHaveCount(0);
+  const dismissed = await page.evaluate(() => document.querySelector('[data-testid="map-offer"]'));
+  expect(dismissed).toBeNull();
+});

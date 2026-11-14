@@ -117,6 +117,8 @@ export interface Settings {
   detectedNear: Country[];
   /** Países para los que dijiste «No, gracias» al aviso «Estás en X: ¿usar X en la app?» (no se vuelve a preguntar). */
   countryOfferDismissed: Country[];
+  /** Países para los que dijiste «No, gracias» a la oferta de bajar mapas sin conexión al llegar. */
+  mapOfferDismissed: Country[];
   /** Última actividad elegida en Entrenamiento. */
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
@@ -262,6 +264,7 @@ export const DEFAULT_SETTINGS: Settings = {
   detectedCountry: null,
   detectedNear: [],
   countryOfferDismissed: [],
+  mapOfferDismissed: [],
   trainingKind: 'walk',
   trainingVoice: false,
   trainingCountdownS: 0,

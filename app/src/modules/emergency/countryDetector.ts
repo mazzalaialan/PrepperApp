@@ -32,7 +32,7 @@ export interface DetectorOptions {
   load: () => Promise<BordersData>;
   /** Lo que hay guardado hasta ahora: solo se avisa si el resultado es distinto. */
   current: () => DetectedCountries | null;
-  onChange: (d: DetectedCountries) => void;
+  onChange: (d: DetectedCountries, at: { lat: number; lon: number }) => void;
   /** Espera tras la última ubicación antes de calcular (el GPS manda una por segundo). */
   debounceMs?: number;
 }
@@ -62,7 +62,7 @@ export function createCountryDetector(opts: DetectorOptions): { note: (lat: numb
       return;
     }
     const d = detectCountries(borders, lat, lon);
-    if (d && !sameDetection(d, opts.current())) opts.onChange(d);
+    if (d && !sameDetection(d, opts.current())) opts.onChange(d, { lat, lon });
   }
   return {
     note(lat, lon) {

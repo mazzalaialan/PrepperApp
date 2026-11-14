@@ -29,6 +29,19 @@ describe('qué hacer al detectar otro país', () => {
     expect(offerFor('CL', 'AR', ['PE'])).toBe('CL');
   });
 
+  it('la oferta de mapas: otro país, sin «No, gracias», con conexión y sin zona bajada que cubra el punto', async () => {
+    const { mapOfferFor } = await load();
+    const at = { lat: -12.05, lon: -77.04 };
+    const zone = { lat: -12.05, lon: -77.04, radiusKm: 10 };
+    expect(mapOfferFor('PE', 'AR', [], [], at, true)).toEqual({ country: 'PE', ...at });
+    expect(mapOfferFor('AR', 'AR', [], [], at, true)).toBeNull();
+    expect(mapOfferFor('PE', 'AR', ['PE'], [], at, true)).toBeNull();
+    expect(mapOfferFor('PE', 'AR', [], [], at, false)).toBeNull();
+    expect(mapOfferFor('PE', 'AR', [], [zone], at, true)).toBeNull();
+    // Una zona lejana no cubre el punto.
+    expect(mapOfferFor('PE', 'AR', [], [{ lat: -13.5, lon: -72, radiusKm: 10 }], at, true)).not.toBeNull();
+  });
+
   it('con Wi-Fi baja solo los datos del país y de los vecinos, sin preguntar', async () => {
     const { downloadFor, useCountryNotices } = await load();
     setNetwork('wifi');

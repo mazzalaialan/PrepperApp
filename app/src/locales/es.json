@@ -1238,6 +1238,12 @@
       "saturn": "Saturno"
     }
   },
+  "mapOffer": {
+    "title": "Llegaste a {{country}}: ¿bajar el mapa de acá para usarlo sin conexión?",
+    "hint": "Te abrimos el mapa en este lugar para que elijas el tamaño de la zona. No se baja nada hasta que confirmes.",
+    "yes": "Ver mapas",
+    "no": "No, gracias"
+  },
   "countryOffer": {
     "title": "Estás en {{country}}: ¿usar {{country}} en la app?",
     "hint": "Ya te mostramos sus números de emergencia y sus datos. Si cambiás, {{country}} pasa a ser el país de la app (ahora es {{current}}). Podés cambiarlo cuando quieras en Ajustes.",
