@@ -189,10 +189,8 @@ export interface WeatherMapLayers {
   lightning: boolean;
   /** Alertas oficiales de los servicios meteorológicos (SMN, DMC, INUMET), desde el servidor propio. */
   official: boolean;
-  /** Líneas de los ríos (Natural Earth), junto al contorno. */
+  /** Ríos: las líneas (Natural Earth y OpenStreetMap) y sus estaciones de nivel (INA de Argentina, SENAMHI de Bolivia), pintadas según su estado. */
   rivers: boolean;
-  /** Estaciones de niveles de ríos (INA de Argentina, SENAMHI de Bolivia), pintadas según su estado. */
-  riverLevels: boolean;
   /** Estaciones de mareas (cálculo en el teléfono). */
   tides: boolean;
 }
@@ -246,7 +244,7 @@ export const DEFAULT_SETTINGS: Settings = {
   duskPlace: null,
   starmapRed: true,
   starmapLayers: { constellationLines: true, constellationNames: true, starNames: true, planets: true, guide: true, grid: true },
-  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, official: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true, rivers: false, riverLevels: false, tides: false },
+  weatherMapLayers: { satellite: true, radar: false, regionWeather: true, official: true, earthquakes: true, hazards: true, fires: false, volcanoes: true, waypoints: true, satRain: true, lightning: true, rivers: false, tides: false },
   weatherMapValue: 'temp',
   mapSource: 'auto',
   mapLayers: { hillshade: true, contours: true, mine: true, tracks: true, slope: false, windLoad: true, cornices: true, terrain3d: false },

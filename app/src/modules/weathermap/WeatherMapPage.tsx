@@ -58,7 +58,7 @@ const SETTLE_MS = 500;
 /** Teselas de radar por cuadro (si hacen falta más, se usa un zoom menor). */
 const RADAR_TILES_MAX = 16;
 const PRELOAD_PARALLEL = 4;
-const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['official', 'satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'rivers', 'riverLevels', 'tides', 'waypoints'];
+const LAYER_KEYS: (keyof WeatherMapLayers)[] = ['official', 'satellite', 'satRain', 'radar', 'regionWeather', 'earthquakes', 'hazards', 'fires', 'volcanoes', 'lightning', 'rivers', 'tides', 'waypoints'];
 /** Cada cuánto se piden los rayos (el satélite saca un archivo cada 20 s). */
 const LIGHTNING_MS = 20_000;
 /** La lluvia estimada sale cada 10 minutos. */
@@ -88,7 +88,7 @@ export function WeatherMapPage() {
   const [version, setVersion] = useState(0);
   const [online, setOnline] = useState(navigator.onLine);
   const [now, setNow] = useState(() => Date.now());
-  const nav = useNavLayers({ rivers: layers.rivers, riverLevels: layers.riverLevels, tides: layers.tides }, serverUrl, online);
+  const nav = useNavLayers({ rivers: layers.rivers, tides: layers.tides }, serverUrl, online);
 
   const [quakes, setQuakes] = useState<{ fetchedAt: string; items: Quake[] } | null>(null);
   const [hazards, setHazards] = useState<{ fetchedAt: string; items: Hazard[] } | null>(null);
@@ -602,7 +602,6 @@ function Legend({ layers, zoneValue, windUnit }: { layers: WeatherMapLayers; zon
     [layers.fires, 'fire', t('weatherMap.legend.fires')],
     [layers.lightning, 'lightning', t('weatherMap.legend.lightning')],
     [layers.rivers, 'rivers', t('weatherMap.legend.rivers')],
-    [layers.riverLevels, 'riverLevels', t('weatherMap.legend.riverLevels')],
     [layers.tides, 'tides', t('weatherMap.legend.tides')],
   ];
   const shown = items.filter(([on]) => on);

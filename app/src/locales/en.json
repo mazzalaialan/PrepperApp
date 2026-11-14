@@ -939,7 +939,6 @@
       "lightning": "Lightning",
       "official": "Official alerts",
       "rivers": "Rivers",
-      "riverLevels": "River levels",
       "tides": "Tides"
     },
     "needsServer": "Needs your own server (Settings → Connections)",
@@ -969,8 +968,7 @@
       "fires": "🔥 Hotspots detected by satellite (VIIRS, NASA) in the last 24–48 h: red dots, with a flame per cluster",
       "hazards": "Disaster alerts (GDACS, UN and European Commission): 🌀 cyclone or hurricane, 🌊 flood, 🏜️ drought, 🔥 wildfire, 🌋 eruption. Green, orange or red background by severity",
       "wind": "Wind by area in {{unit}}; the arrow shows where it blows to",
-      "rivers": "Rivers of South America (Natural Earth): blue lines, thicker the bigger the river",
-      "riverLevels": "River levels: INA (Argentina) and SENAMHI (Bolivia). Red circle, evacuation; orange, alert; yellow, low water; blue, normal; grey, no reading or no thresholds (Bolivia). Tap a station for details",
+      "rivers": "Rivers of South America: blue lines, thicker the bigger the river, and their level stations from INA (Argentina) and SENAMHI (Bolivia). Red circle, evacuation; orange, alert; yellow, low water; blue, normal; grey, no reading or no thresholds (Bolivia). Tap a station for details. Lines: Natural Earth and © OpenStreetMap contributors",
       "tides": "◆ Tide stations (computed on the phone, offline). Tap one for the current tide and the next high and low"
     },
     "severity": {"Extreme": "extreme", "Severe": "severe", "Moderate": "moderate", "Minor": "minor", "Unknown": "no level"},

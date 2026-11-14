@@ -12,7 +12,9 @@
  *   Smithsonian Institution (Volcanoes of the World, uso libre citando la fuente):
  *   https://volcano.si.edu
  *
- * - Ríos (líneas centrales de Natural Earth 1:10m, dominio público) de América del Sur.
+ * - Ríos de América del Sur: líneas centrales de Natural Earth 1:10m (dominio público) y, para que todo río con
+ *   estación de nivel (INA, SENAMHI Bolivia) aparezca, los cursos de OpenStreetMap (ODbL, © OpenStreetMap contributors)
+ *   a menos de 12 km de una estación, como el Paraná de las Palmas, que Natural Earth no trae.
  *   `node build.mjs --solo-rios` reemplaza solo los ríos en el archivo ya generado (sin volver a bajar volcanos ni provincias).
  *
  * Las geometrías se simplifican (Douglas-Peucker) y se redondean: el mapa es un
@@ -21,7 +23,8 @@
  * Uso: node tools/geo-data/build.mjs   (necesita conexión; el resultado se versiona)
  */
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { overpass } from '../lib/overpass.mjs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -99,8 +102,35 @@ const RIVER_TOLERANCE = 0.02;
 /** América del Sur: [oeste, sur, este, norte]. */
 const SOUTH_AMERICA = [-83, -58, -33, 14];
 
-/** Líneas centrales de ríos de Natural Earth → [{ name, rank, lines: [[lon, lat, lon, lat, …]] }]. `rank` 1 es el mayor. */
+/** Distancia (grados) a la que se simplifican los cursos de OpenStreetMap: ~500 m. */
+const OSM_RIVER_TOLERANCE = 0.005;
+const STATION_RADIUS_M = 12_000;
+const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/^rio /, '').trim();
+
+/** Cursos de agua de OpenStreetMap cerca de las estaciones de nivel de ríos que Natural Earth no trae (por nombre). */
+async function osmRiversNearStations(known) {
+  const dir = new URL('../../app/public/data/', import.meta.url);
+  const stations = [];
+  for (const f of ['rivers-AR.json', 'rivers-BO.json']) stations.push(...JSON.parse(await readFile(new URL(f, dir), 'utf8')).stations);
+  const around = stations.map((s) => `way(around:${STATION_RADIUS_M},${s.lat},${s.lon})["waterway"="river"];`).join('\n');
+  const elements = await overpass(`[out:json][timeout:180];(\n${around}\n);out geom tags;`);
+  const byName = new Map();
+  for (const el of elements) {
+    const name = el.tags?.name;
+    if (!name || !el.geometry || el.geometry.length < 2 || known.has(normName(name))) continue;
+    const line = simplify(el.geometry.map((g) => [g.lon, g.lat]), OSM_RIVER_TOLERANCE).flatMap(([lon, lat]) => [r3(lon), r3(lat)]);
+    if (line.length >= 4) byName.set(name, [...(byName.get(name) ?? []), line]);
+  }
+  return [...byName].map(([name, lines]) => ({ name, rank: 6, osm: true, lines })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Ríos: Natural Earth y los de OpenStreetMap cerca de estaciones → [{ name, rank, lines: [[lon, lat, lon, lat, …]] }]. `rank` 1 es el mayor. */
 async function riversOf() {
+  const ne = await neRivers();
+  return [...ne, ...(await osmRiversNearStations(new Set(ne.map((r) => normName(r.name)))))];
+}
+
+async function neRivers() {
   const data = await get(`${NE}/ne_10m_rivers_lake_centerlines.geojson`);
   const [w, so, e, n] = SOUTH_AMERICA;
   const inside = ([lon, lat]) => lon >= w && lon <= e && lat >= so && lat <= n;
@@ -119,7 +149,6 @@ async function riversOf() {
 }
 
 if (process.argv.includes('--solo-rios')) {
-  const { readFile } = await import('node:fs/promises');
   const data = JSON.parse(await readFile(OUT, 'utf8'));
   data.rivers = await riversOf();
   await writeFile(OUT, JSON.stringify(data));
@@ -210,7 +239,7 @@ const volcanoRows = volcanoes.features
   .sort((a, b) => a.name.localeCompare(b.name));
 
 const data = {
-  source: 'Natural Earth (dominio público; provincias, contorno y ríos) · Global Volcanism Program, Smithsonian Institution',
+  source: 'Natural Earth (dominio público; provincias, contorno y ríos) · © OpenStreetMap contributors (ODbL; ríos cerca de estaciones de nivel) · Global Volcanism Program, Smithsonian Institution',
   regions,
   neighbors,
   borders,

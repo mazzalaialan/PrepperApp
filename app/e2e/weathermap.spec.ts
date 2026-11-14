@@ -269,7 +269,7 @@ test('alertas oficiales: zonas en el mapa, las de donde estoy y el texto del org
   await context.setOffline(false);
 });
 
-test('mapa de tiempo: capas de Navegación (ríos, niveles de ríos y mareas) con su ficha al tocar', async ({ page, context }, testInfo) => {
+test('mapa de tiempo: capas de Navegación (ríos con sus niveles, y mareas) con su ficha al tocar', async ({ page, context }, testInfo) => {
   await mockSources(page);
   // INA simulado: el Río de la Plata en Buenos Aires por encima del nivel de alerta (3,3 m).
   await context.route('https://alerta.ina.gob.ar/**', (route) =>
@@ -279,14 +279,12 @@ test('mapa de tiempo: capas de Navegación (ríos, niveles de ríos y mareas) co
   await page.goto('/#/weather/map');
   await expect(page.getByTestId('weather-map')).toBeVisible();
   // Apagadas por defecto: nada de Navegación hasta que se prenden.
-  for (const name of ['Ríos', 'Niveles de ríos', 'Mareas']) await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'false');
+  for (const name of ['Ríos', 'Mareas']) await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('button', { name: 'Clima por zona' }).click();
   await page.getByRole('button', { name: 'Alertas oficiales' }).click();
   await page.getByRole('button', { name: 'Ríos', exact: true }).click();
-  await page.getByRole('button', { name: 'Niveles de ríos' }).click();
   await page.getByRole('button', { name: 'Mareas', exact: true }).click();
-  await expect(page.getByText(/Ríos de América del Sur \(Natural Earth\)/)).toBeVisible();
-  await expect(page.getByText(/Niveles de ríos: INA \(Argentina\) y SENAMHI/)).toBeVisible();
+  await expect(page.getByText(/Ríos de América del Sur: líneas azules.*estaciones de nivel del INA \(Argentina\) y del SENAMHI/)).toBeVisible();
   await page.waitForTimeout(1200);
 
   // Una estación de mareas: la marea de ahora y las próximas.

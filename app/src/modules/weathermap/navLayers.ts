@@ -60,7 +60,7 @@ export function tidePoints(data: TidesData): TidePoint[] {
 const REFRESH_MS = 10 * 60_000;
 
 /** Carga lo que piden las capas encendidas (los niveles se refrescan cada 10 minutos; sin conexión quedan los últimos guardados). */
-export function useNavLayers(on: { rivers: boolean; riverLevels: boolean; tides: boolean }, serverUrl: string | null | undefined, online: boolean) {
+export function useNavLayers(on: { rivers: boolean; tides: boolean }, serverUrl: string | null | undefined, online: boolean) {
   const [ina, setIna] = useState<RiversData | null>(null);
   const [readings, setReadings] = useState<Map<number, RiverReading>>(() => loadSavedReadings());
   const [boCatalog, setBoCatalog] = useState<BoCatalog | null>(null);
@@ -69,16 +69,16 @@ export function useNavLayers(on: { rivers: boolean; riverLevels: boolean; tides:
   const server = serverUrl?.trim() || null;
 
   useEffect(() => {
-    if (!on.riverLevels) return;
+    if (!on.rivers) return;
     void loadRivers().then(setIna, () => undefined);
     void loadBoCatalog().then(setBoCatalog, () => undefined);
-  }, [on.riverLevels]);
+  }, [on.rivers]);
   useEffect(() => {
     if (on.tides) void loadTides().then(setTides, () => undefined);
   }, [on.tides]);
 
   useEffect(() => {
-    if (!on.riverLevels || !ina || !online) return;
+    if (!on.rivers || !ina || !online) return;
     let cancelled = false;
     const load = () => {
       fetchReadings(ina.stations.map((s) => s.series)).then(
@@ -105,12 +105,12 @@ export function useNavLayers(on: { rivers: boolean; riverLevels: boolean; tides:
       cancelled = true;
       clearInterval(id);
     };
-  }, [on.riverLevels, ina, online, server]);
+  }, [on.rivers, ina, online, server]);
 
   const riverPoints = useMemo<RiverPoint[] | null>(() => {
-    if (!on.riverLevels || !ina) return null;
+    if (!on.rivers || !ina) return null;
     return [...inaPoints(ina.stations, readings), ...(boCatalog ? boPoints(boCatalog, boLevels) : [])];
-  }, [on.riverLevels, ina, readings, boCatalog, boLevels]);
+  }, [on.rivers, ina, readings, boCatalog, boLevels]);
   const tideList = useMemo(() => (on.tides && tides ? tidePoints(tides) : null), [on.tides, tides]);
   return { riverPoints, tidePoints: tideList };
 }

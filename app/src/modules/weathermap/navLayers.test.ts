@@ -34,10 +34,12 @@ describe('capas de Navegación del mapa', () => {
     expect(tidePoints(tides)).toHaveLength(tides.stations.length);
   });
 
-  it('el mapa base trae ríos de América del Sur con sus líneas, incluidos los grandes', () => {
+  it('el mapa base trae ríos de América del Sur con sus líneas, incluidos los grandes y los brazos del Delta con estaciones de nivel', () => {
     expect(geo.rivers.length).toBeGreaterThan(100);
     const names = new Set(geo.rivers.map((r) => r.name));
     for (const n of ['Paraná', 'Uruguay', 'Colorado', 'Madeira', 'Bío-Bío']) expect(names.has(n), n).toBe(true);
+    for (const n of ['Río Paraná de las Palmas', 'Río Paraná Guazú', 'Río Luján', 'Río Paraguay']) expect(names.has(n), n).toBe(true);
+    expect(geo.source).toContain('OpenStreetMap');
     for (const r of geo.rivers) for (const l of r.lines) expect(l.length % 2 === 0 && l.length >= 4).toBe(true);
   });
 });

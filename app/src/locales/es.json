@@ -939,7 +939,6 @@
       "lightning": "Rayos",
       "official": "Alertas oficiales",
       "rivers": "Ríos",
-      "riverLevels": "Niveles de ríos",
       "tides": "Mareas"
     },
     "needsServer": "Necesita el servidor propio (Ajustes → Conexiones)",
@@ -969,8 +968,7 @@
       "fires": "🔥 Focos de calor detectados por satélite (VIIRS, NASA) en las últimas 24–48 h: puntos rojos, con una llama por grupo",
       "hazards": "Alertas de desastres (GDACS, ONU y Comisión Europea): 🌀 ciclón o huracán, 🌊 inundación, 🏜️ sequía, 🔥 incendio forestal, 🌋 erupción. Fondo verde, naranja o rojo según la gravedad",
       "wind": "Viento por zona en {{unit}}; la flecha indica hacia dónde sopla",
-      "rivers": "Ríos de América del Sur (Natural Earth): líneas azules, más gruesas cuanto mayor es el río",
-      "riverLevels": "Niveles de ríos: INA (Argentina) y SENAMHI (Bolivia). Círculo rojo, evacuación; naranja, alerta; amarillo, aguas bajas; azul, normal; gris, sin lectura o sin umbrales (Bolivia). Tocá una estación para ver el detalle",
+      "rivers": "Ríos de América del Sur: líneas azules, más gruesas cuanto mayor es el río, y sus estaciones de nivel del INA (Argentina) y del SENAMHI (Bolivia). Círculo rojo, evacuación; naranja, alerta; amarillo, aguas bajas; azul, normal; gris, sin lectura o sin umbrales (Bolivia). Tocá una estación para ver el detalle. Líneas: Natural Earth y © OpenStreetMap contributors",
       "tides": "◆ Estaciones de mareas (cálculo en el teléfono, sin conexión). Tocá una para ver la marea de ahora y la próxima pleamar y bajamar"
     },
     "severity": {"Extreme": "extrema", "Severe": "severa", "Moderate": "moderada", "Minor": "leve", "Unknown": "sin nivel"},
