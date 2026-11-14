@@ -77,6 +77,6 @@ step BO.json /repo/tools/country-data/build.mjs BO
 step PE.json /repo/tools/country-data/build.mjs PE
 # Servicios de "Buscar cercanos": un archivo por categoría y país.
 for cc in AR CL UY BO PE; do
-  for cat in fuel tyres repair pharmacy aed vet water shelter atm; do step "$cat-$cc.json" /repo/tools/services-data/build.mjs "$cc" "$cat"; done
+  for cat in fuel tyres repair pharmacy aed vet water shelter atm nautical; do step "$cat-$cc.json" /repo/tools/services-data/build.mjs "$cc" "$cat"; done
 done
 echo "== $(date '+%F %T') terminado"

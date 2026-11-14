@@ -1,6 +1,7 @@
 import { distanceMeters } from '@/core/geo/geo';
 import type { ContactKind } from '@/core/model/types';
 import type { FuelType, NearbyPlace } from './data';
+import { NAUTICAL_LABEL } from './nautical';
 import { CATEGORY_KIND, type ServiceCategory } from './services';
 
 /**
@@ -43,9 +44,52 @@ async function overpass(query: string): Promise<OsmElement[]> {
 
 const pos = (e: OsmElement) => (e.lat !== undefined ? { lat: e.lat, lon: e.lon! } : e.center ?? null);
 
+/**
+ * ¿Es un servicio náutico? Combustible para embarcaciones (`waterway=fuel`, o una estación con `boat`/`marine=yes`), marinas,
+ * rampas, guarderías y alquiler de embarcaciones, talleres y comercios náuticos, amarras y boyas (sirven para kayak y remo en un río).
+ * Muelles: solo los que tienen nombre y no son privados (hay miles, casi sin nombre y muchos privados). Las mismas etiquetas que usa tools/services-data/build.mjs.
+ */
+export function isNautical(tags: Record<string, string>): boolean {
+  // Un muelle sin nombre o privado no entra por ninguna vía (ni siquiera porque tenga `mooring=*`).
+  if (tags.man_made === 'pier' && !isNamedPublicPier(tags)) return false;
+  return (
+    tags.waterway === 'fuel' ||
+    (tags.amenity === 'fuel' && (tags.boat === 'yes' || tags.marine === 'yes')) ||
+    tags.leisure === 'marina' ||
+    tags.leisure === 'slipway' ||
+    tags.amenity === 'boat_storage' ||
+    tags.amenity === 'boat_rental' ||
+    tags.shop === 'boat' ||
+    tags.shop === 'boat_repair' ||
+    tags.shop === 'ship_chandler' ||
+    tags.craft === 'boatbuilder' ||
+    (!!tags.mooring && tags.mooring !== 'no') ||
+    tags['seamark:type'] === 'mooring' ||
+    isNamedPublicPier(tags)
+  );
+}
+
+/** Un muelle con nombre y que no esté marcado como privado: los demás son miles, sin nombre y muchos privados. */
+export function isNamedPublicPier(tags: Record<string, string>): boolean {
+  return tags.man_made === 'pier' && !!tags.name && tags.access !== 'private' && tags.access !== 'no';
+}
+
+/** Qué es, para mostrar en la lista. */
+export function nauticalType(tags: Record<string, string>): string {
+  if (tags.waterway === 'fuel' || tags.amenity === 'fuel') return NAUTICAL_LABEL.fuel;
+  if (tags.leisure === 'marina') return NAUTICAL_LABEL.marina;
+  if (tags.leisure === 'slipway') return NAUTICAL_LABEL.slipway;
+  if (tags.amenity === 'boat_storage') return NAUTICAL_LABEL.storage;
+  if (tags.amenity === 'boat_rental') return NAUTICAL_LABEL.rental;
+  if (tags.man_made === 'pier') return NAUTICAL_LABEL.pier;
+  if (tags.shop || tags.craft) return NAUTICAL_LABEL.shop;
+  return NAUTICAL_LABEL.mooring;
+}
+
 export function osmKind(tags: Record<string, string>): ContactKind | null {
   if (tags.amenity === 'police') return 'police';
   if (tags.amenity === 'fire_station') return 'fire';
+  if (isNautical(tags)) return 'nautical';
   if (tags.amenity === 'fuel') return 'fuel';
   if (tags.amenity === 'pharmacy' || tags.healthcare === 'pharmacy') return 'pharmacy';
   if (tags.emergency === 'defibrillator') return 'aed';
@@ -79,6 +123,20 @@ export function osmFuels(tags: Record<string, string>): FuelType[] {
  * Lo que se le pide a Overpass de cada categoría de servicios: las mismas
  * etiquetas que usa tools/services-data/build.mjs para los archivos sin conexión.
  */
+export const NAUTICAL_SELECTORS = [
+  'nwr["waterway"="fuel"]',
+  'nwr["amenity"="fuel"]["boat"="yes"]',
+  'nwr["amenity"="fuel"]["marine"="yes"]',
+  'nwr["leisure"="marina"]',
+  'nwr["leisure"="slipway"]',
+  'nwr["amenity"="boat_storage"]',
+  'nwr["amenity"="boat_rental"]',
+  'nwr["shop"~"^(boat|boat_repair|ship_chandler)$"]',
+  'nwr["craft"="boatbuilder"]',
+  'nwr["mooring"]["mooring"!="no"]',
+  'nwr["seamark:type"="mooring"]',
+  'nwr["man_made"="pier"]["name"]["access"!~"^(private|no)$"]',
+];
 const SHELTER_TYPES = 'basic_hut|lean_to|rock_shelter|weather_shelter';
 export const SERVICE_SELECTORS: Record<ServiceCategory, string[]> = {
   fuel: ['nwr["amenity"="fuel"]'],
@@ -90,6 +148,7 @@ export const SERVICE_SELECTORS: Record<ServiceCategory, string[]> = {
   water: ['nwr["amenity"="drinking_water"]', 'nwr["amenity"="water_point"]', 'nwr["man_made"="water_tap"]["drinking_water"="yes"]', 'nwr["natural"="spring"]'],
   shelter: ['nwr["tourism"="alpine_hut"]', 'nwr["tourism"="wilderness_hut"]', `nwr["amenity"="shelter"]["shelter_type"~"^(${SHELTER_TYPES})$"]`],
   atm: ['nwr["amenity"="atm"]', 'nwr["amenity"="bank"]["atm"="yes"]'],
+  nautical: NAUTICAL_SELECTORS,
 };
 
 /** Tipo que se muestra de un servicio (como en los archivos sin conexión): bandera, red del cajero, clase de refugio o de agua. */
@@ -100,12 +159,14 @@ export function serviceDetail(kind: ContactKind, tags: Record<string, string>): 
   }
   if (kind === 'shelter') return tags.tourism === 'alpine_hut' ? 'Refugio de montaña' : tags.tourism === 'wilderness_hut' ? 'Refugio no atendido' : 'Vivac o reparo';
   if (kind === 'atm') return tags.network ?? tags.brand ?? tags.operator ?? '';
+  if (kind === 'nautical') return nauticalType(tags);
   return tags.brand ?? tags.operator ?? '';
 }
 
 /** Aclaración de un servicio: dónde está el desfibrilador; altura y capacidad de un refugio. */
 function serviceNote(kind: ContactKind, tags: Record<string, string>): string {
   if (kind === 'aed') return tags['defibrillator:location'] ?? tags['defibrillator:location:es'] ?? tags.description ?? '';
+  if (kind === 'nautical' && tags.man_made === 'pier') return 'Confirmá que sea de uso público';
   if (kind === 'shelter') return [tags.ele && `${tags.ele} m`, tags.capacity && `capacidad ${tags.capacity}`].filter(Boolean).join(' · ');
   return '';
 }

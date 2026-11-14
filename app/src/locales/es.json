@@ -87,6 +87,7 @@
     "weight": {"title": "Peso", "desc": "Tu peso, su historial y tu IMC"},
     "outings": {"title": "Salidas", "desc": "Agrupá varias actividades en una salida, con su mapa y desnivel"},
     "compass": { "title": "Brújula", "desc": "Rumbo magnético y geográfico" },
+    "navigation": { "title": "Navegación", "desc": "Mareas y, pronto, ríos y oleaje" },
     "declination": { "title": "Declinómetro", "desc": "Declinación, rumbos y machete" },
     "altimeter": { "title": "Altímetro", "desc": "Altura por GPS, desnivel y alarma" },
     "inclinometer": { "title": "Inclinómetro", "desc": "Pendiente y riesgo de avalancha" },
@@ -498,6 +499,7 @@
       "water": "Agua",
       "shelter": "Refugio",
       "atm": "Cajero automático",
+      "nautical": "Náutica",
       "doctor": "Médico",
       "vet": "Veterinario",
       "insurance": "Obra social",
@@ -516,7 +518,10 @@
     "nearbyTitle": "Buscar cercanos",
     "radius": "Hasta",
     "filter": "Mostrar",
-    "filters": { "all": "Todo", "police": "Policía", "fire": "Bomberos", "health": "Salud", "civilDefense": "Defensa Civil", "vehicle": "Vehículos", "water": "Agua", "shelter": "Refugios", "atm": "Cajeros" },
+    "filters": { "all": "Todo", "police": "Policía", "fire": "Bomberos", "health": "Salud", "civilDefense": "Defensa Civil", "vehicle": "Vehículos", "water": "Agua", "shelter": "Refugios", "atm": "Cajeros", "nautical": "Náutica" },
+    "nauticalTypesLabel": "Tipos de Náutica",
+    "nauticalTypes": { "fuel": "Combustible", "marina": "Marinas", "slipway": "Rampas", "storage": "Guarderías", "rental": "Alquiler", "shop": "Talleres", "mooring": "Amarras", "pier": "Muelles" },
+    "nauticalNone": "Elegí al menos un tipo de arriba para ver resultados.",
     "fuels": { "gasoline": "Nafta", "diesel": "Gasoil", "cng": "GNC", "lpg": "GLP" },
     "subfilters": { "care": "Hospitales y centros de atención", "pharmacy": "Farmacias", "aed": "Desfibriladores (DEA)", "vet": "Veterinarias", "fuel": "Estaciones de servicio", "tyres": "Gomerías", "repair": "Talleres mecánicos" },
     "viewOnMap": "Ver en el mapa",
@@ -1359,6 +1364,29 @@
       "extreme": "Alto · más de 55°: paredes y roca, la nieve casi no se acumula; puede caerte nieve o una avalancha de más arriba."
     },
     "disclaimer": "Es el riesgo por la pendiente del terreno: el peligro real depende también del estado de la nieve y del clima. Medida orientativa; no reemplaza el pronóstico de avalanchas ni la formación en terreno nevado."
+  },
+  "navigation": {
+    "intro": "Mareas para quien navega, rema o pesca. Más adelante: nivel de los ríos y oleaje.",
+    "noticeTitle": "Información orientativa",
+    "notice": "No reemplaza las cartas náuticas, las tablas oficiales, los radioavisos ni las indicaciones de la autoridad marítima. Verificá por los canales oficiales (radio, NAVTEX) antes de navegar.",
+    "tides": {
+      "title": "Mareas",
+      "intro": "Se calculan en tu teléfono, sin conexión, con las constantes de la estación más cercana. Es la marea astronómica: el viento, la presión y las crecidas la cambian (en el Río de la Plata y en el Delta pueden sumar o restar más de un metro).",
+      "unavailable": "No se pudieron cargar los datos de mareas. Con conexión se bajan una vez y quedan guardados.",
+      "stations": "Estaciones cercanas",
+      "distance": "a {{km}} km",
+      "far": "La estación más cercana está a {{km}} km: la marea de tu lugar puede ser muy distinta. Usala solo como referencia (Uruguay y Bolivia no tienen estación).",
+      "issues": "Esta estación tiene datos de calidad limitada (pocos años o muy viejos): tomala con cuidado.",
+      "now": "Ahora {{level}} m ({{trend}})",
+      "rising": "subiendo",
+      "falling": "bajando",
+      "chartLabel": "Gráfico de la marea de los próximos {{days}} días",
+      "next": "Pleamares y bajamares",
+      "high": "Pleamar",
+      "low": "Bajamar",
+      "reference": "Alturas en metros sobre (+) o bajo (−) el nivel medio del mar de la estación; no son las del cero de las cartas. Horas en la zona horaria del teléfono.",
+      "source": "Datos: {{source}} (generado el {{date}})."
+    }
   },
   "declination": {
     "intro": "La declinación es el ángulo entre el norte geográfico (el de los mapas y el GPS) y el norte magnético (al que apunta la aguja). Cambia según el lugar y con los años. Se calcula sin conexión con el modelo magnético mundial (WMM).",

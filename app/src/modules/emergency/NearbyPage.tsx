@@ -11,6 +11,7 @@ import { CATEGORY_KIND, loadService, SERVICE_KINDS, serviceNearby, type ServiceC
 
 const EMPTY_DATA: EmergencyData = { sources: { fire: '', police: '', health: '', radio: '' }, fire: [], police: [], health: [], radio: [] };
 import { fetchOsmNearby } from './osm';
+import { NAUTICAL_IDS, nauticalIdOf, type NauticalId } from './nautical';
 import { formatDistance, KindIcon, MapLink, ParkRadioList, PhoneActions } from './parts';
 import { useContacts } from './store';
 
@@ -23,8 +24,8 @@ const RADII = [5, 15, 30, 50, 100, 200, 0];
 const OSM_MAX_KM = 200;
 /** Sin límite: cuántos de cada tipo. */
 const NEAREST_PER_KIND = 3;
-type Filter = 'all' | 'police' | 'fire' | 'health' | 'civilDefense' | 'vehicle' | 'water' | 'shelter' | 'atm';
-const FILTERS: Filter[] = ['all', 'police', 'fire', 'health', 'civilDefense', 'vehicle', 'water', 'shelter', 'atm'];
+type Filter = 'all' | 'police' | 'fire' | 'health' | 'civilDefense' | 'vehicle' | 'water' | 'shelter' | 'atm' | 'nautical';
+const FILTERS: Filter[] = ['all', 'police', 'fire', 'health', 'civilDefense', 'vehicle', 'water', 'shelter', 'atm', 'nautical'];
 /** Lo que se está mirando: un filtro sin opciones o la opción elegida de Salud o Vehículos. */
 type Selection = Exclude<Filter, 'health' | 'vehicle'> | 'care' | 'pharmacy' | 'aed' | 'vet' | 'fuel' | 'tyres' | 'repair';
 /** Opciones de Salud y de Vehículos; la primera es la que viene elegida. */
@@ -52,6 +53,7 @@ const SELECTION_KINDS: Record<Selection, ContactKind[]> = {
   water: ['water'],
   shelter: ['shelter'],
   atm: ['atm'],
+  nautical: ['nautical'],
 };
 /** Categoría de los archivos de servicios de una selección (null: servicios de emergencia). */
 const serviceOf = (sel: Selection): ServiceCategory | null => (sel in CATEGORY_KIND ? (sel as ServiceCategory) : null);
@@ -69,9 +71,19 @@ export function NearbyPage() {
   const [radiusKm, setRadiusKm] = useState(15);
   const [filter, setFilter] = useState<Filter>('all');
   const [sub, setSub] = useState<Selection | null>(null);
+  /** Tipos de Náutica que se muestran (todos al empezar). */
+  const [nauticalOn, setNauticalOn] = useState<Set<NauticalId>>(() => new Set(NAUTICAL_IDS));
+  const toggleNautical = (id: NauticalId) =>
+    setNauticalOn((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   const selection: Selection = sub ?? (filter as Selection);
   const service = serviceOf(selection);
   const matches = (k: ContactKind) => SELECTION_KINDS[selection].includes(k);
+  // En Náutica, además, solo los tipos elegidos (uno que no se reconoce se deja).
+  const typeOn = (p: NearbyPlace) => selection !== 'nautical' || p.kind !== 'nautical' || ((id) => id === null || nauticalOn.has(id))(nauticalIdOf(p.detail));
   function chooseFilter(f: Filter) {
     setFilter(f);
     // Salud y Vehículos arrancan con su primera opción (hospitales y centros de atención; estaciones de servicio).
@@ -169,9 +181,9 @@ export function NearbyPage() {
     return parks ? withParks(merged, parks, place.lat, place.lon).sort((a, b) => a.distance - b.distance) : merged;
   }, [data, dataNear, serviceData, serviceNear, parks, place?.lat, place?.lon, osm, searchKey]);
   const results = radiusKm === 0 ? nearestPerKind(everything, NEAREST_PER_KIND) : everything.filter((p) => p.distance <= radiusKm * 1000);
-  const shown = results.filter((r) => matches(r.kind));
+  const shown = results.filter((r) => matches(r.kind) && typeOn(r));
   // Nada en el rango: igual se muestra lo más cercano de cada tipo, aunque esté lejos.
-  const fallback = radiusKm !== 0 && shown.length === 0 ? nearestPerKind(everything.filter((r) => matches(r.kind)), 1) : [];
+  const fallback = radiusKm !== 0 && shown.length === 0 ? nearestPerKind(everything.filter((r) => matches(r.kind) && typeOn(r)), 1) : [];
   const visible = (fallback.length ? fallback : shown).slice(0, MAX_SHOWN);
 
   const savedKeys = useMemo(() => new Set([...contacts.values()].map((c) => `${c.name}|${c.lat?.toFixed(4)}|${c.lon?.toFixed(4)}`)), [contacts]);
@@ -226,6 +238,19 @@ export function NearbyPage() {
           </button>
         ))}
       </div>
+      {filter === 'nautical' && (
+        <div className="chips nearby-subfilters" role="group" aria-label={t('emergency.nauticalTypesLabel')} data-testid="nautical-types">
+          {NAUTICAL_IDS.map((id) => {
+            const count = results.filter((r) => r.kind === 'nautical' && nauticalIdOf(r.detail) === id).length;
+            return (
+              <button key={id} type="button" className="chip" aria-pressed={nauticalOn.has(id)} onClick={() => toggleNautical(id)} data-testid={`nautical-type-${id}`}>
+                {t(`emergency.nauticalTypes.${id}`)} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {filter === 'nautical' && nauticalOn.size === 0 && <p className="hint" data-testid="nautical-none">{t('emergency.nauticalNone')}</p>}
       {SUBFILTERS[filter] && (
         <div className="chips nearby-subfilters" role="group" aria-label={t(`emergency.filters.${filter}`)} data-testid="nearby-subfilters">
           {SUBFILTERS[filter]!.map((s) => (

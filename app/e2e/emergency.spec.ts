@@ -406,3 +406,57 @@ test('buscar cercanos: Salud y Vehículos con sus opciones, estaciones de servic
   await page.getByTestId('nearby-map-toggle').click();
   await expect(list.locator('li').first()).toBeVisible();
 });
+
+test('buscar cercanos: Náutica con sus tipos, que se pueden sacar y poner para ver solo lo que sirve', async ({ page }) => {
+  await mockOsm(page);
+  // Lo náutico que devuelve OpenStreetMap cerca de Bariloche (la consulta de Náutica pide `leisure=marina`).
+  await page.context().route('https://overpass-api.de/**', async (route) => {
+    const query = new URLSearchParams(route.request().postData() ?? '').get('data') ?? '';
+    if (!query.includes('"leisure"="marina"')) return route.fallback();
+    await route.fulfill({
+      json: {
+        elements: [
+          { type: 'node', id: 11, lat: -41.136, lon: -71.306, tags: { leisure: 'marina', name: 'Club Náutico Nahuel' } },
+          { type: 'node', id: 12, lat: -41.15, lon: -71.32, tags: { leisure: 'slipway' } },
+          { type: 'node', id: 13, lat: -41.16, lon: -71.33, tags: { mooring: 'buoy', name: 'Boya del Moreno' } },
+          { type: 'node', id: 14, lat: -41.17, lon: -71.34, tags: { man_made: 'pier', name: 'Muelle Viejo' } },
+          { type: 'node', id: 15, lat: -41.18, lon: -71.35, tags: { waterway: 'fuel', name: 'Surtidor del Lago' } },
+        ],
+      },
+    });
+  });
+  await setup(page);
+  await page.goto('/#/first-aid/contacts/nearby');
+  const list = page.getByTestId('nearby-list');
+  await page.getByRole('button', { name: 'Náutica', exact: true }).click();
+  const types = page.getByTestId('nautical-types');
+  await expect(types.getByRole('button')).toHaveCount(8);
+  // Al empezar están todos puestos.
+  for (const id of ['fuel', 'marina', 'slipway', 'storage', 'rental', 'shop', 'mooring', 'pier']) {
+    await expect(page.getByTestId(`nautical-type-${id}`)).toHaveAttribute('aria-pressed', 'true');
+  }
+  await expect(list.getByText('Club Náutico Nahuel')).toBeVisible();
+  await expect(list.getByText('Boya del Moreno')).toBeVisible();
+  await expect(list.getByText('Muelle Viejo')).toBeVisible();
+  await expect(list.getByText('Surtidor del Lago')).toBeVisible();
+  await expect(page.getByTestId('nautical-type-marina')).toContainText(/Marinas \([1-9]\d*\)/);
+  await expect(list.getByText('Confirmá que sea de uso público').first()).toBeVisible();
+  // Sacar un tipo lo saca de la lista; los demás siguen.
+  await page.getByTestId('nautical-type-marina').click();
+  await expect(page.getByTestId('nautical-type-marina')).toHaveAttribute('aria-pressed', 'false');
+  await expect(list.getByText('Club Náutico Nahuel')).toHaveCount(0);
+  await expect(list.getByText('Boya del Moreno')).toBeVisible();
+  // Solo amarras: se sacan los demás.
+  for (const id of ['fuel', 'slipway', 'storage', 'rental', 'shop', 'pier']) await page.getByTestId(`nautical-type-${id}`).click();
+  await expect(list.getByText('Boya del Moreno')).toBeVisible();
+  await expect(list.getByText('Muelle Viejo')).toHaveCount(0);
+  await expect(list.getByText('Surtidor del Lago')).toHaveCount(0);
+  // Sin ningún tipo: aviso y lista vacía.
+  await page.getByTestId('nautical-type-mooring').click();
+  await expect(page.getByTestId('nautical-none')).toBeVisible();
+  await expect(list.getByText('Boya del Moreno')).toHaveCount(0);
+  // Volver a poner uno lo trae de nuevo.
+  await page.getByTestId('nautical-type-pier').click();
+  await expect(list.getByText('Muelle Viejo')).toBeVisible();
+  await expect(page.getByTestId('nautical-none')).toHaveCount(0);
+});

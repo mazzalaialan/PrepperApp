@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Dialog } from '@/ui/Dialog';
 import { useCapabilities } from '@/core/capabilities/capabilities';
-import { Check, Banknote, Copy, Disc3, Droplet, ExternalLink, Flame, Fuel, Pill, Tent, Wrench, Zap, HeartPulse, Hospital, LifeBuoy, Map as MapIcon, MapPinned, Navigation, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
+import { Anchor, Check, Banknote, Copy, Disc3, Droplet, ExternalLink, Flame, Fuel, Pill, Tent, Wrench, Zap, HeartPulse, Hospital, LifeBuoy, Map as MapIcon, MapPinned, Navigation, PawPrint, Phone, Radio, Shield, ShieldPlus, Stethoscope, type LucideIcon } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { dialable, mapsUrl } from './national';
 import type { ParkRadio } from './data';
@@ -22,6 +22,7 @@ const KIND_ICON: Record<ContactKind, LucideIcon> = {
   water: Droplet,
   shelter: Tent,
   atm: Banknote,
+  nautical: Anchor,
   other: Phone,
   radio: Radio,
   doctor: Stethoscope,
@@ -30,7 +31,7 @@ const KIND_ICON: Record<ContactKind, LucideIcon> = {
 };
 
 /** Tipos que se eligen en un contacto (las frecuencias de radio se cargan desde Radio). */
-export const CONTACT_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense', 'pharmacy', 'aed', 'fuel', 'tyres', 'carRepair', 'water', 'shelter', 'atm', 'doctor', 'vet', 'insurance', 'other'];
+export const CONTACT_KINDS: ContactKind[] = ['police', 'fire', 'medical', 'hospital', 'civilDefense', 'pharmacy', 'aed', 'fuel', 'tyres', 'carRepair', 'water', 'shelter', 'atm', 'nautical', 'doctor', 'vet', 'insurance', 'other'];
 
 export function KindIcon({ kind, size = 22 }: { kind: ContactKind; size?: number }) {
   const Icon = KIND_ICON[kind];

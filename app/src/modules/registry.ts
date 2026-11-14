@@ -31,7 +31,7 @@ import {
   Sprout,
   Tags,
   Triangle,
-  Warehouse, Scale, Shirt, Timer, Metronome } from 'lucide-react';
+  Warehouse, Scale, Shirt, Timer, Metronome, Waves } from 'lucide-react';
 import type { Capability, CapabilityMap } from '@/core/capabilities/capabilities';
 
 /** En el orden en que se muestran en Inicio. */
@@ -71,6 +71,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'declination', section: 'orientation', icon: Magnet, implemented: true, path: '/orientation/declination' },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, implemented: true, path: '/orientation/inclinometer', requires: ['motion'] },
   { id: 'altimeter', section: 'orientation', icon: Mountain, implemented: true, path: '/orientation/altimeter', requires: ['geolocation'] },
+  { id: 'navigation', section: 'orientation', icon: Waves, implemented: true, path: '/orientation/navigation', degradesWithout: ['geolocation'] },
   { id: 'maps', section: 'orientation', icon: MapIcon, implemented: true, path: '/orientation/maps', degradesWithout: ['geolocation'] },
   // Las rutas van dentro de Waypoints (abajo), no como módulo aparte.
   { id: 'waypoints', section: 'orientation', icon: MapPin, implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },

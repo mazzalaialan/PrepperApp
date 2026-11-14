@@ -1,0 +1,10 @@
+{
+  "name": "vikarg-tide-data",
+  "private": true,
+  "type": "module",
+  "description": "Genera app/public/data/tides.json (constantes armónicas de mareas de Sudamérica) desde la base abierta @neaps/tide-database. Instalar con `npm install --ignore-scripts`.",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": {
+    "@neaps/tide-database": "0.10.20260924"
+  }
+}

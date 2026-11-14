@@ -13,7 +13,7 @@ export const ROUTE_PATHS = [
   '/first-aid/contacts/:id', '/first-aid/location', '/first-aid/guides', '/first-aid/guides/:topicId', '/first-aid/radio',
   '/first-aid/radio/:id', '/documents', '/documents/:id', '/transfer', '/orientation', '/orientation/waypoints',
   '/orientation/waypoints/:id', '/orientation/waypoints/:id/go', '/orientation/go', '/orientation/compass', '/orientation/declination', '/orientation/inclinometer', '/orientation/altimeter', '/training', '/training/workouts', '/training/live', '/training/weight', '/training/stopwatch', '/training/tools', '/training/metronome', '/training/gear', '/training/workouts/new', '/training/workouts/:id', '/training/outings', '/training/outings/:id',
-  '/orientation/starmap', '/orientation/maps', '/orientation/routes', '/orientation/tracks', '/orientation/tracks/:id',
+  '/orientation/starmap', '/orientation/navigation', '/orientation/maps', '/orientation/routes', '/orientation/tracks', '/orientation/tracks/:id',
   '/orientation/tracks/:id/follow', '/orientation/routes/:id', '/orientation/routes/:id/go/:step', '/weather', '/weather/sky',
   '/weather/forecast', '/weather/map', '/knots', '/knots/guide', '/knots/guide/:id', '/knots/anchors', '/knots/anchors/:id', '/knots/ropes', '/knots/glossary',
   '/garden', '/garden/calendar', '/garden/crops/:id', '/garden/beds', '/garden/beds/:id', '/field', '/library', '/library/books', '/library/search', '/library/read/:id', '/settings', '/about', '/about/licenses',

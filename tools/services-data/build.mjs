@@ -158,6 +158,44 @@ export const CATEGORIES = {
     type: (t) => (t.tourism === 'alpine_hut' ? 'Refugio de montaña' : t.tourism === 'wilderness_hut' ? 'Refugio no atendido' : 'Vivac o reparo'),
     note: (t) => [t.ele && `${t.ele} m`, t.capacity && `capacidad ${t.capacity}`].filter(Boolean).join(' · '),
   },
+  // Náutica: combustible para embarcaciones, marinas, rampas, guarderías, alquiler, talleres y amarras o boyas. Sin muelles (miles, casi sin nombre).
+  // Mismas etiquetas que app/src/modules/emergency/osm.ts (isNautical, NAUTICAL_SELECTORS).
+  nautical: {
+    selectors: [
+      'nwr["waterway"="fuel"]',
+      'nwr["amenity"="fuel"]["boat"="yes"]',
+      'nwr["amenity"="fuel"]["marine"="yes"]',
+      'nwr["leisure"="marina"]',
+      'nwr["leisure"="slipway"]',
+      'nwr["amenity"="boat_storage"]',
+      'nwr["amenity"="boat_rental"]',
+      'nwr["shop"~"^(boat|boat_repair|ship_chandler)$"]',
+      'nwr["craft"="boatbuilder"]',
+      'nwr["mooring"]["mooring"!="no"]',
+      'nwr["seamark:type"="mooring"]',
+      // Solo muelles con nombre y no privados (hay miles, casi sin nombre y muchos privados).
+      'nwr["man_made"="pier"]["name"]["access"!~"^(private|no)$"]',
+    ],
+    type: (t) =>
+      t.waterway === 'fuel' || t.amenity === 'fuel'
+        ? 'Combustible para embarcaciones'
+        : t.leisure === 'marina'
+          ? 'Marina'
+          : t.leisure === 'slipway'
+            ? 'Rampa para embarcaciones'
+            : t.amenity === 'boat_storage'
+              ? 'Guardería de embarcaciones'
+              : t.amenity === 'boat_rental'
+                ? 'Alquiler de embarcaciones'
+                : t.man_made === 'pier'
+                  ? 'Muelle'
+                  : t.shop || t.craft
+                  ? 'Taller o comercio náutico'
+                  : 'Amarra o boya',
+    note: (t) => (t.man_made === 'pier' ? 'Confirmá que sea de uso público' : ''),
+    // Un muelle sin nombre o privado no entra aunque tenga `mooring=*` (esa etiqueta lo traería por la otra puerta).
+    keep: (t) => t.man_made !== 'pier' || (!!t.name && t.access !== 'private' && t.access !== 'no'),
+  },
   atm: {
     selectors: ['nwr["amenity"="atm"]', 'nwr["amenity"="bank"]["atm"="yes"]'],
     // La red (Banelco, Link, Redbanc…) o el banco.

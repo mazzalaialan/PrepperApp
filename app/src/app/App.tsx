@@ -58,6 +58,7 @@ const CompassPage = page(() => import('@/modules/compass/CompassPage').then((m) 
 const AltimeterPage = page(() => import('@/modules/altimeter/AltimeterPage').then((m) => ({ default: m.AltimeterPage })));
 const DeclinationPage = page(() => import('@/modules/declination/DeclinationPage').then((m) => ({ default: m.DeclinationPage })));
 const RecommendationsPage = page(() => import('@/modules/recommendations/RecommendationsPage').then((m) => ({ default: m.RecommendationsPage })));
+const NavigationPage = page(() => import('@/modules/navigation/NavigationPage').then((m) => ({ default: m.NavigationPage })));
 const StarMapPage = page(() => import('@/modules/starmap/StarMapPage').then((m) => ({ default: m.StarMapPage })));
 const InclinometerPage = page(() => import('@/modules/inclinometer/InclinometerPage').then((m) => ({ default: m.InclinometerPage })));
 const GoToPage = page(() => import('@/modules/waypoints/GoToPage').then((m) => ({ default: m.GoToPage })));
@@ -145,6 +146,7 @@ const router = createHashRouter([
       { path: '/orientation/inclinometer', element: <InclinometerPage /> },
       { path: '/orientation/altimeter', element: <AltimeterPage /> },
       { path: '/orientation/starmap', element: <StarMapPage /> },
+      { path: '/orientation/navigation', element: <NavigationPage /> },
       {
         path: '/orientation/maps',
         element: (

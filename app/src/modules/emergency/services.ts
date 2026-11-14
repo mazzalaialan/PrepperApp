@@ -7,14 +7,14 @@ import type { NearbyPlace, Place } from './data';
 /**
  * Servicios que no son de emergencia para "Buscar cercanos": vehículos
  * (estaciones de servicio, gomerías, talleres), salud (farmacias,
- * desfibriladores, veterinarias), agua, refugios y cajeros. Un archivo por
+ * desfibriladores, veterinarias), agua, refugios y cajeros y náutica (marinas, rampas, guarderías, alquiler, combustible y talleres para embarcaciones). Un archivo por
  * categoría y país (`data/<categoría>-<país>.json`, tools/services-data), que
  * se baja una vez con el país y queda guardado, como los paquetes por país.
  * Van aparte de los datos de emergencia para no agrandar la descarga inicial.
  */
 
-export type ServiceCategory = 'fuel' | 'tyres' | 'repair' | 'pharmacy' | 'aed' | 'vet' | 'water' | 'shelter' | 'atm';
-export const SERVICE_CATEGORIES: ServiceCategory[] = ['fuel', 'tyres', 'repair', 'pharmacy', 'aed', 'vet', 'water', 'shelter', 'atm'];
+export type ServiceCategory = 'fuel' | 'tyres' | 'repair' | 'pharmacy' | 'aed' | 'vet' | 'water' | 'shelter' | 'atm' | 'nautical';
+export const SERVICE_CATEGORIES: ServiceCategory[] = ['fuel', 'tyres', 'repair', 'pharmacy', 'aed', 'vet', 'water', 'shelter', 'atm', 'nautical'];
 
 /** Tipo de contacto de cada categoría (con el que se guarda y se dibuja). */
 export const CATEGORY_KIND: Record<ServiceCategory, ContactKind> = {
@@ -27,6 +27,7 @@ export const CATEGORY_KIND: Record<ServiceCategory, ContactKind> = {
   water: 'water',
   shelter: 'shelter',
   atm: 'atm',
+  nautical: 'nautical',
 };
 
 /** Tipos de contacto que vienen de estos archivos (no son servicios de emergencia). */

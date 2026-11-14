@@ -87,6 +87,7 @@
     "weight": {"title": "Weight", "desc": "Your weight, its history and your BMI"},
     "outings": {"title": "Outings", "desc": "Group several activities into an outing, with its map and elevation"},
     "compass": { "title": "Compass", "desc": "Magnetic and true heading" },
+    "navigation": { "title": "Navigation", "desc": "Tides and, soon, rivers and waves" },
     "declination": { "title": "Declinometer", "desc": "Declination, bearings and cheat sheet" },
     "altimeter": { "title": "Altimeter", "desc": "GPS altitude, climb and alarm" },
     "inclinometer": { "title": "Inclinometer", "desc": "Slope angle and avalanche risk" },
@@ -498,6 +499,7 @@
       "water": "Water",
       "shelter": "Shelter",
       "atm": "ATM",
+      "nautical": "Boating",
       "doctor": "Doctor",
       "vet": "Vet",
       "insurance": "Health insurance",
@@ -516,7 +518,10 @@
     "nearbyTitle": "Find nearby",
     "radius": "Up to",
     "filter": "Show",
-    "filters": { "all": "All", "police": "Police", "fire": "Fire", "health": "Health", "civilDefense": "Civil Defense", "vehicle": "Vehicles", "water": "Water", "shelter": "Shelters", "atm": "ATMs" },
+    "filters": { "all": "All", "police": "Police", "fire": "Fire", "health": "Health", "civilDefense": "Civil Defense", "vehicle": "Vehicles", "water": "Water", "shelter": "Shelters", "atm": "ATMs", "nautical": "Boating" },
+    "nauticalTypesLabel": "Boating types",
+    "nauticalTypes": { "fuel": "Fuel", "marina": "Marinas", "slipway": "Ramps", "storage": "Boat storage", "rental": "Rentals", "shop": "Repair shops", "mooring": "Moorings", "pier": "Piers" },
+    "nauticalNone": "Pick at least one type above to see results.",
     "fuels": { "gasoline": "Gasoline", "diesel": "Diesel", "cng": "CNG", "lpg": "LPG" },
     "subfilters": { "care": "Hospitals and clinics", "pharmacy": "Pharmacies", "aed": "Defibrillators (AED)", "vet": "Vets", "fuel": "Gas stations", "tyres": "Tire shops", "repair": "Car repair" },
     "viewOnMap": "View on map",
@@ -1359,6 +1364,29 @@
       "extreme": "High · over 55°: walls and rock, snow hardly builds up; snow or an avalanche can still come from above."
     },
     "disclaimer": "This is the risk from the slope angle: actual danger also depends on the snowpack and weather. Approximate reading; it doesn't replace the avalanche forecast or training for snowy terrain."
+  },
+  "navigation": {
+    "intro": "Tides for sailing, paddling or fishing. Coming later: river levels and waves.",
+    "noticeTitle": "For guidance only",
+    "notice": "It does not replace nautical charts, official tables, navigational warnings or the maritime authority's instructions. Check official channels (radio, NAVTEX) before going out.",
+    "tides": {
+      "title": "Tides",
+      "intro": "Calculated on your phone, offline, from the nearest station's constants. This is the astronomical tide: wind, pressure and river floods change it (in the Río de la Plata and the Delta they can add or subtract over a meter).",
+      "unavailable": "The tide data could not be loaded. With a connection it downloads once and stays saved.",
+      "stations": "Nearby stations",
+      "distance": "{{km}} km away",
+      "far": "The nearest station is {{km}} km away: the tide at your spot may be very different. Use it only as a reference (Uruguay and Bolivia have no station).",
+      "issues": "This station has limited data quality (few years or very old): use it with care.",
+      "now": "Now {{level}} m ({{trend}})",
+      "rising": "rising",
+      "falling": "falling",
+      "chartLabel": "Tide chart for the next {{days}} days",
+      "next": "High and low tides",
+      "high": "High tide",
+      "low": "Low tide",
+      "reference": "Heights in meters above (+) or below (−) the station's mean sea level; not chart datum. Times in the phone's time zone.",
+      "source": "Data: {{source}} (generated {{date}})."
+    }
   },
   "declination": {
     "intro": "Declination is the angle between true north (the one on maps and GPS) and magnetic north (where the needle points). It changes with place and over the years. It's computed offline with the World Magnetic Model (WMM).",

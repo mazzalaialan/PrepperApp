@@ -19,6 +19,7 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@neaps/tide-predictor": "0.11.0",
     "astronomy-engine": "2.1.19",
     "dexie": "^4.4.7",
     "fflate": "^0.8.3",

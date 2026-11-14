@@ -10,7 +10,7 @@ import type { Config } from '../config.ts';
  * Solo estos archivos: nada de rutas arbitrarias.
  */
 /** Servicios para "Buscar cercanos" (tools/services-data): un archivo por categoría y país. */
-const SERVICE_CATEGORIES = ['fuel', 'tyres', 'repair', 'pharmacy', 'aed', 'vet', 'water', 'shelter', 'atm'];
+const SERVICE_CATEGORIES = ['fuel', 'tyres', 'repair', 'pharmacy', 'aed', 'vet', 'water', 'shelter', 'atm', 'nautical'];
 const SERVICE_COUNTRIES = ['AR', 'CL', 'UY', 'BO', 'PE'];
 export const DATA_FILES = new Set([
   'CL.json',
