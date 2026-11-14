@@ -24,8 +24,9 @@ import { fetchAshSigmets } from './official/sigmet.ts';
 import { createPeCache, fetchSenamhiBo, fetchSenamhiPe } from './official/senamhi.ts';
 import { fetchCenvul } from './volcanoes/cenvul.ts';
 import { fetchVolcanoAlerts, type VolcanoAlert } from './volcanoes/oavv.ts';
+import { fetchForecasts, type StationForecast } from './rivers/forecast.ts';
 import { fetchRiverLevels } from './rivers/ina.ts';
-import { loadRiverCatalog, RIVER_EVERY_MS, runRiverWatch, stationsToWatch, type RiverStation } from './rivers/watch.ts';
+import { loadRiverCatalog, RIVER_EVERY_MS, runRiverForecastWatch, runRiverWatch, stationsToWatch, type RiverLevel, type RiverStation } from './rivers/watch.ts';
 import { runVolcanoWatch, volcanoReadStamp, VOLCANO_EVERY_MS } from './volcanoes/watch.ts';
 import { createMailNotifier, createSourceMonitor } from './monitor/sources.ts';
 
@@ -191,6 +192,8 @@ const hazardTimer = setInterval(() => void hazardTick(), 5 * 60_000);
 // Niveles de los ríos de Argentina (INA): cada media hora, solo de las estaciones que tienen un lugar guardado a menos de 5 km.
 let riverStations: RiverStation[] | null = null;
 let riverBusy = false;
+const RIVER_FORECAST_EVERY_MS = 3 * 3_600_000;
+let riverForecasts: { at: number; map: Map<number, StationForecast> } | null = null;
 async function riverTick() {
   if (!config.hazardsEnabled || !config.appDir || !hasPlaces(db) || riverBusy) return;
   riverBusy = true;
@@ -199,14 +202,28 @@ async function riverTick() {
     const now = new Date();
     const watch = stationsToWatch(db, riverStations, now, config.rainHereMaxAgeMs);
     if (!watch.length) return;
+    let levels = new Map<number, RiverLevel>();
     try {
-      const levels = await fetchRiverLevels(watch.map((s) => s.series), now);
+      levels = await fetchRiverLevels(watch.map((s) => s.series), now);
       await monitor.ok('ina', 'Los niveles de los ríos (INA)');
       const { sent, removed } = await runRiverWatch(db, push, watch, levels, now, config.rainHereMaxAgeMs);
       if (sent || removed) app.log.info({ sent, removed }, 'avisos de ríos enviados');
     } catch (err) {
       await monitor.fail('ina', 'Los niveles de los ríos (INA)', err);
       app.log.warn({ err: String(err) }, 'no se pudieron leer los niveles de los ríos del INA');
+    }
+    // Avisos anticipados con el pronóstico del INA (se baja cada 3 horas como máximo, solo de las estaciones vigiladas que lo tienen).
+    try {
+      const withForecast = watch.filter((s) => s.forecast?.length);
+      if (withForecast.length) {
+        if (!riverForecasts || now.getTime() - riverForecasts.at > RIVER_FORECAST_EVERY_MS) {
+          riverForecasts = { at: now.getTime(), map: await fetchForecasts(withForecast) };
+        }
+        const { sent, removed } = await runRiverForecastWatch(db, push, withForecast, riverForecasts.map, levels, now, config.rainHereMaxAgeMs);
+        if (sent || removed) app.log.info({ sent, removed }, 'avisos anticipados de ríos enviados');
+      }
+    } catch (err) {
+      app.log.warn({ err: String(err) }, 'fallaron los avisos anticipados de ríos');
     }
   } catch (err) {
     app.log.error(err, 'fallaron los avisos de ríos');

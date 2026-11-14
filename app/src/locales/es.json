@@ -1489,7 +1489,7 @@
       "state": { "evac": "Evacuación", "alert": "Alerta", "low": "Aguas bajas", "normal": "Normal" },
       "reference": "Niveles en metros sobre el cero de escala de cada estación (no son iguales entre estaciones). El estado compara con los umbrales de esa estación.",
       "source": "Datos: {{source}}.",
-      "alerts": "Si guardás un lugar a menos de 5 km de una de estas estaciones y tenés activados los avisos de peligro con el servidor, te avisamos cuando el río llega al nivel de alerta o evacuación, o baja a aguas bajas."
+      "alerts": "Si guardás un lugar a menos de 5 km de una de estas estaciones y tenés activados los avisos de peligro con el servidor, te avisamos cuando el río llega al nivel de alerta o evacuación, o baja a aguas bajas. Si el pronóstico del INA indica que el río va a llegar a alguno de esos niveles en los próximos 7 días, también te avisamos con anticipación (solo en las estaciones que tienen pronóstico)."
     },
     "tides": {
       "title": "Mareas",

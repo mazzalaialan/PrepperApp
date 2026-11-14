@@ -117,6 +117,13 @@ describe('aviso de un río cerca de un lugar', () => {
     expect(riverNotification({ ...r, state: 'evac', threshold: 3.9, level: 4 }, 'es').title).toContain('sobre el nivel de evacuación (3,90 m)');
     expect(riverNotification({ ...r, state: 'low', threshold: 0.21, level: 0.15 }, 'es').title).toContain('en aguas bajas (bajo 0,21 m)');
     expect(riverNotification(r, 'es').body).toMatch(/INA .*no oficial/);
+    // Aviso anticipado: el pronóstico del INA dice que llegará a un nivel.
+    const fc = { ...r, forecast: true, level: 5.1, threshold: 5, at: '2026-11-16T15:00:00Z' };
+    const f = riverNotification(fc, 'es');
+    expect(f.title).toMatch(/^Pronóstico: Río de la Plata en Buenos Aires llegaría al nivel de alerta \(5,00 m\) el .* · a 1,2 km al norte de Muelle$/);
+    expect(f.body).toMatch(/Altura prevista: 5,10 m\. Pronóstico del INA.*no oficial/);
+    expect(riverNotification({ ...fc, state: 'low', threshold: 1.64 }, 'es').title).toContain('llegaría a aguas bajas (bajo 1,64 m)');
+    expect(riverNotification(fc, 'en').title).toMatch(/^Forecast: Río de la Plata at Buenos Aires would reach the alert level \(5\.00 m\) on .* · 1\.2 km north of Muelle$/);
     expect(riverNotification(r, 'en').title).toBe('Río de la Plata at Buenos Aires: 3.50 m, above the alert level (3.30 m) · 1.2 km north of Muelle');
   });
 });

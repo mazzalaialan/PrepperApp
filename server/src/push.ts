@@ -80,8 +80,10 @@ export interface PushPayload {
     state: 'alert' | 'evac' | 'low';
     level: number;
     threshold: number;
-    /** Cuándo se midió (ISO). */
+    /** Cuándo se midió (ISO); si es un aviso anticipado, cuándo el pronóstico indica que llegará. */
     at: string;
+    /** Aviso anticipado: el INA pronostica que llegará a ese nivel (`level` es la altura prevista). */
+    forecast?: boolean;
     distanceKm: number;
     bearing: number;
     stock?: string[];

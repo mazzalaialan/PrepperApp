@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { Db } from '../db.ts';
 import { bearingDeg, distanceKm, withoutDuplicateHere } from '../places.ts';
 import type { PushSender, PushSubscriptionJson } from '../push.ts';
+import { crossings, type StationForecast } from './forecast.ts';
 
 /**
  * Niveles de los ríos de Argentina (INA, Alerta Hidrológico): avisa cuando un río llega al nivel de alerta o de evacuación de su
@@ -21,6 +22,8 @@ export interface RiverStation {
   low: number | null;
   /** Serie de altura del INA. */
   series: number;
+  /** Modelos del INA que pronostican su altura, del mejor al peor (ver rivers/forecast.ts). */
+  forecast?: number[];
 }
 
 export type RiverState = 'evac' | 'alert' | 'low' | 'normal';
@@ -161,6 +164,87 @@ export async function runRiverWatch(
       }
       for (const h of hit) mark.run(deviceId, h.row.place_id, key, rank(state), now.getTime());
       result.sent++;
+    }
+  }
+  return result;
+}
+
+/**
+ * Aviso anticipado: el pronóstico del INA (la línea principal, no la banda) indica que el río llegará dentro de 7 días al nivel de
+ * alerta, de evacuación o a aguas bajas, y hay un lugar guardado a menos de 5 km. Solo si hoy el río todavía no está en ese nivel
+ * (si ya lo está, avisa `runRiverWatch`). Una vez por estación y lugar y por nivel (alerta, evacuación); cuando el pronóstico deja de
+ * cruzar, se borra lo avisado y un pronóstico futuro vuelve a avisar.
+ */
+export async function runRiverForecastWatch(
+  db: Db,
+  push: PushSender,
+  stations: RiverStation[],
+  forecasts: Map<number, StationForecast>,
+  levels: Map<number, RiverLevel>,
+  now = new Date(),
+  hereMaxAgeMs = 24 * 3_600_000,
+): Promise<{ sent: number; removed: number }> {
+  const result = { sent: 0, removed: 0 };
+  const rows = watchedPlaces(db, now, hereMaxAgeMs);
+  const byDevice = new Map<string, PlaceRow[]>();
+  for (const r of rows) byDevice.set(r.device_id, [...(byDevice.get(r.device_id) ?? []), r]);
+  const forget = db.prepare('DELETE FROM hazard_notices WHERE event_key = ?');
+  const previous = db.prepare('SELECT level FROM hazard_notices WHERE device_id = ? AND place_id = ? AND event_key = ?');
+  const mark = db.prepare('INSERT OR REPLACE INTO hazard_notices (device_id, place_id, event_key, level, notified_at) VALUES (?, ?, ?, ?, ?)');
+  const removeDevice = db.prepare('DELETE FROM devices WHERE id = ?');
+
+  for (const s of stations) {
+    const f = forecasts.get(s.id);
+    if (!f) continue;
+    const { high, low } = crossings(f, s, now.getTime());
+    // El pronóstico dejó de cruzar: se olvida lo avisado.
+    if (!high) forget.run(`river-fc:${s.id}`);
+    if (!low) forget.run(`river-fc-low:${s.id}`);
+    const l = levels.get(s.series);
+    const live = l && now.getTime() - Date.parse(l.at) <= RIVER_MAX_AGE_MS ? riverState(l.level, s) : 'normal';
+    for (const c of [high, low]) {
+      if (!c) continue;
+      // Si el río ya está en ese nivel (o más grave), el aviso en vivo se ocupa.
+      if (rank(live) >= rank(c.kind) && (c.kind === 'low' ? live === 'low' : live !== 'low')) continue;
+      const key = c.kind === 'low' ? `river-fc-low:${s.id}` : `river-fc:${s.id}`;
+      for (const [deviceId, places] of byDevice) {
+        const hit = places
+          .map((row) => ({ row, km: distanceKm(row, s) }))
+          .filter(({ row, km }) => {
+            if (km > RIVER_RADIUS_KM) return false;
+            const before = previous.get(deviceId, row.place_id, key) as { level: number } | undefined;
+            return !before || before.level < rank(c.kind);
+          })
+          .sort((a, b) => a.km - b.km);
+        if (!hit.length) continue;
+        const { row, km } = hit[0]!;
+        const stock = [...new Set(hit.filter((h) => h.row.stock).map((h) => h.row.label ?? ''))].filter(Boolean);
+        const delivered = await push.send(JSON.parse(row.subscription) as PushSubscriptionJson, {
+          type: 'river',
+          river: {
+            placeId: row.place_id,
+            label: row.label,
+            fixAt: row.fix_at,
+            station: s.name,
+            river: s.river,
+            state: c.kind,
+            level: c.value,
+            threshold: c.threshold,
+            at: new Date(c.t).toISOString(),
+            forecast: true,
+            distanceKm: Math.round(km * 10) / 10,
+            bearing: Math.round(bearingDeg(row, s)) % 360,
+            ...(stock.length ? { stock } : {}),
+          },
+        });
+        if (!delivered) {
+          removeDevice.run(deviceId);
+          result.removed++;
+          continue;
+        }
+        for (const h of hit) mark.run(deviceId, h.row.place_id, key, rank(c.kind), now.getTime());
+        result.sent++;
+      }
     }
   }
   return result;

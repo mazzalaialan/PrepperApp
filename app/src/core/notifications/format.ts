@@ -51,6 +51,9 @@ const TEXT = {
     volcanoLevels: { yellow: 'amarilla', orange: 'naranja', red: 'roja' },
     river: (river: string, station: string, level: string, status: string, km: string, dir: string, place: string) => `${river} en ${station}: ${level} m, ${status} · a ${km} km al ${dir} de ${place}`,
     riverStates: { alert: (m: string) => `sobre el nivel de alerta (${m} m)`, evac: (m: string) => `sobre el nivel de evacuación (${m} m)`, low: (m: string) => `en aguas bajas (bajo ${m} m)` },
+    riverForecast: (river: string, station: string, status: string, when: string, km: string, dir: string, place: string) => `Pronóstico: ${river} en ${station} llegaría ${status} el ${when} · a ${km} km al ${dir} de ${place}`,
+    riverForecastStates: { alert: (m: string) => `al nivel de alerta (${m} m)`, evac: (m: string) => `al nivel de evacuación (${m} m)`, low: (m: string) => `a aguas bajas (bajo ${m} m)` },
+    riverForecastBody: (level: string) => `Altura prevista: ${level} m. Pronóstico del INA (Alerta Hidrológico), puede cambiar con la lluvia. Aviso informativo, no oficial: seguí las indicaciones de Defensa Civil y de Prefectura. Tocá para ver el pronóstico.`,
     riverBody: (at: string) => `Medido ${at}. Dato del INA (Alerta Hidrológico). Aviso informativo, no oficial: seguí las indicaciones de Defensa Civil y de Prefectura. Tocá para ver los niveles.`,
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Incluye ${places}.`,
@@ -104,6 +107,9 @@ const TEXT = {
     volcanoLevels: { yellow: 'yellow', orange: 'orange', red: 'red' },
     river: (river: string, station: string, level: string, status: string, km: string, dir: string, place: string) => `${river} at ${station}: ${level} m, ${status} · ${km} km ${dir} of ${place}`,
     riverStates: { alert: (m: string) => `above the alert level (${m} m)`, evac: (m: string) => `above the evacuation level (${m} m)`, low: (m: string) => `at low water (below ${m} m)` },
+    riverForecast: (river: string, station: string, status: string, when: string, km: string, dir: string, place: string) => `Forecast: ${river} at ${station} would reach ${status} on ${when} · ${km} km ${dir} of ${place}`,
+    riverForecastStates: { alert: (m: string) => `the alert level (${m} m)`, evac: (m: string) => `the evacuation level (${m} m)`, low: (m: string) => `low water (below ${m} m)` },
+    riverForecastBody: (level: string) => `Expected height: ${level} m. INA forecast (Alerta Hidrológico); it can change with rain. Informational, not official: follow civil defense and coast guard instructions. Tap to see the forecast.`,
     riverBody: (at: string) => `Measured ${at}. Data from INA (Alerta Hidrológico). Informational, not official: follow civil defense and coast guard instructions. Tap to see the levels.`,
     official: (source: string, headline: string) => `${source}: ${headline}`,
     officialWhere: (places: string) => `Includes ${places}.`,
@@ -302,6 +308,8 @@ export interface RiverPush {
   level: number;
   threshold: number;
   at: string;
+  /** Aviso anticipado: el INA pronostica que llegará a ese nivel (`level` es la altura prevista y `at`, cuándo). */
+  forecast?: boolean;
   distanceKm: number;
   bearing: number;
   stock?: string[];
@@ -312,6 +320,14 @@ export function riverNotification(r: RiverPush, lang: Lang, now = Date.now()): {
   const dir = tx.dirs[Math.round((((r.bearing % 360) + 360) % 360) / 45) % 8]!;
   const num = new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const km = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  if (r.forecast) {
+    const when = new Date(r.at).toLocaleString(lang, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const fcExtra = (r.stock?.length ? `\n${tx.hazardStock(r.stock.join(', '))}` : '') + lastFixNote(r.fixAt, lang, now);
+    return {
+      title: tx.riverForecast(r.river, r.station, tx.riverForecastStates[r.state](num.format(r.threshold)), when, km.format(Math.max(0.1, r.distanceKm)), dir, r.label ?? tx.officialHere),
+      body: tx.riverForecastBody(num.format(r.level)) + fcExtra,
+    };
+  }
   const title = tx.river(r.river, r.station, num.format(r.level), tx.riverStates[r.state](num.format(r.threshold)), km.format(Math.max(0.1, r.distanceKm)), dir, r.label ?? tx.officialHere);
   const measured = new Date(r.at).toLocaleString(lang, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const extra = (r.stock?.length ? `\n${tx.hazardStock(r.stock.join(', '))}` : '') + lastFixNote(r.fixAt, lang, now);

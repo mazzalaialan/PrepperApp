@@ -1489,7 +1489,7 @@
       "state": { "evac": "Evacuation", "alert": "Alert", "low": "Low water", "normal": "Normal" },
       "reference": "Levels in meters above each station's own scale zero (not comparable between stations). The status compares with that station's thresholds.",
       "source": "Data: {{source}}.",
-      "alerts": "If you save a place within 5 km of one of these stations and have hazard alerts on with the server, we notify you when the river reaches the alert or evacuation level, or drops to low water."
+      "alerts": "If you save a place within 5 km of one of these stations and have hazard alerts on with the server, we notify you when the river reaches the alert or evacuation level, or drops to low water. If the INA forecast says the river will reach one of those levels within the next 7 days, we also warn you in advance (only for stations that have a forecast)."
     },
     "tides": {
       "title": "Tides",

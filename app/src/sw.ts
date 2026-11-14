@@ -142,12 +142,13 @@ self.addEventListener('push', (event) => {
       } else if (payload.type === 'river' && payload.river) {
         const r = payload.river;
         const { title, body } = riverNotification(r, lang);
-        const urgent = r.state !== 'low';
+        // El aviso anticipado (pronóstico) no es tan urgente como el nivel ya alcanzado: sin vibración larga ni quedarse fija.
+        const urgent = r.state !== 'low' && !r.forecast;
         await self.registration.showNotification(title, {
           body,
           icon: ICON,
           badge: ICON,
-          tag: `river-${r.station}`,
+          tag: r.forecast ? `river-fc-${r.station}` : `river-${r.station}`,
           renotify: true,
           ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
           data: { url: '#/weather/navigation' },
