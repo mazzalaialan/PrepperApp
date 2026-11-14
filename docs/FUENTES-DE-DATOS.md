@@ -91,3 +91,14 @@ Para los 43 cultivos de la huerta: dificultad, ciclo, polinización, distancia d
 ## Radio: qué país se muestra (13 de noviembre de 2026)
 
 Los paquetes por país (`app/public/data/<país>.json`) traen cada uno sus emisoras de radio pública (Argentina: Radio Nacional; Chile: Radio Bío-Bío; Uruguay: Radio Uruguay; Bolivia: Red Patria Nueva; Perú: Radio Nacional del Perú, 70 FM y 4 AM de la planilla del IRTP). La pantalla de Radio carga el paquete del país **del lugar elegido** y, cerca de una frontera (menos de 50 km), también el del país vecino (ver `app/src/modules/emergency/usePlaceCountry.ts`). Los parques ya tenían su propia lista de países vecinos (`PARK_NEIGHBORS` en `data.ts`) y las frecuencias de montaña usan la misma distancia de 50 km.
+
+## Navegación: ríos, mareas y oleaje (consulta del 2026-11-13)
+
+Resumen de la investigación; el plan y las decisiones pendientes están en `docs/PENDIENTES.md`. Nada de esto está implementado.
+
+- **Argentina:** INA a5 (API con alturas, caudales y pronóstico; permite CORS; licencia no declarada para la API, el sitio madre es CC BY 4.0; citar a la SIPH). Las redes de Prefectura y del SHN que trae el INA figuran como no públicas: no usarlas sin permiso. SHN: «todos los derechos reservados», pedir permiso. AIC y umbrales de Prefectura: citar.
+- **Chile:** Armada (meteoarmada.directemar.cl, JSON `regionalMaritimo`, bahías y canales; sin licencia declarada, robots.txt permite todo). DGA Hidrolínea: visor con sesión, condición del MOP «solo sin fines comerciales», pedir permiso. SHOA: AWS WAF con captcha (no se esquiva), canal formal shoa@shoa.cl. SITPORT: sin respuesta. IOC: ~45 mareógrafos casi en vivo (no comercial, registro obligatorio).
+- **Uruguay:** INUMET pronóstico marino (JSON sin clave, modelo GFS de 27 km). DINAGUA (API interna, 11 a 18 h de atraso, sin términos; credenciales formales por dinagua.servicios@ambiente.gub.uy), CARU (HTML por HTTP sin TLS, el dato más fresco del río Uruguay), SOHMA (tablas de marea 2026 en PDF, estaciones). No hay constantes armónicas ni mareógrafo IOC.
+- **Bolivia / Perú:** SENAMHI Bolivia con niveles de ríos y Titicaca pero «derechos reservados»; Perú solo alertas hidrológicas por color (DHN con anti-bot, no se esquiva).
+- **Globales:** Open-Meteo Marine (oleaje, modelo; «not suitable for coastal navigation») y Flood (caudal modelado, celda de 5 km: necesita puntos ajustados al cauce); CC BY 4.0, pero la API gratuita es solo no comercial. Constantes armónicas CC BY 4.0 (TICON-4 vía tide-database, ~56 puertos sudamericanos, cálculo local).
+- **Descartados por ahora:** WorldTides (pago), UHSLC (4 a 6 semanas de atraso), WaveWatch III directo, y todo lo bloqueado o caído.
