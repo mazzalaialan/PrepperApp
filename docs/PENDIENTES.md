@@ -2,29 +2,28 @@
 
 Plan acordado el 7 de noviembre de 2026, de lo más fácil a lo más complejo; estado al 8 de noviembre. Cada punto se hace con sus pruebas y su commit; se publica solo cuando se decide. Lo hecho desde la 0.43.0 está commiteado y todavía sin publicar.
 
-## PRIMERO PARA REVISAR (anotado el 2026-11-13; decisiones tomadas el mismo día; a trabajar desde las 20:00): priorizar el país donde estás
+## Priorizar el país donde estás (HECHO el 2026-11-13, sin publicar; antes «PRIMERO PARA REVISAR»)
 
-Pedido de quien dirige, **antes** de «Cuánto plantar para comer». Sale de lo que pasó con la radio (0.62.0), donde la pantalla traía el país de Ajustes en vez del del lugar.
+Se hizo la noche del 13/11 con las decisiones de quien dirige (ver abajo). Commiteado y probado, **sin publicar**.
 
-### Decisiones (2026-11-13, todas de quien dirige)
-1. **Teléfonos de emergencia cuando el GPS dice un país y Ajustes otro:** primero los del lugar donde estás; debajo, **diferenciados**, los del país de Ajustes. **No se cambia Ajustes solo.** En una emergencia lo correcto es el número local.
-2. **País nuevo detectado:** la app **descarga sus datos y ofrece cambiar** el país de Ajustes con un aviso «Estás en Perú: ¿usar Perú en la app?» con «Cambiar» y «No, gracias» (recordar el «No, gracias» por país para no insistir). No cambia nada sola.
-3. **Cuándo descarga:** **con Wi-Fi, sin avisar; con datos móviles, preguntando antes y mostrando cuánto pesa** (Perú: unos 4 MB entre paquete, servicios y parques; los demás, menos de 1 MB). Nota técnica: el tipo de conexión (`navigator.connection.type`) solo existe en Chrome de Android; en iPhone y otros navegadores no se puede saber si es Wi-Fi: tratarlo como «desconocida» y **preguntar** (lo más prudente). Respetar también `saveData`.
-4. **Cuándo revisa el país:** **cada vez que se ingresa o elige una coordenada o se actualiza la ubicación** (selector de lugar, waypoints, GPS cuando la app ya lo pide), **sin pedir GPS extra ni segundo plano y cuidando que no consuma mucho:** reaccionar al evento (no a un temporizador), con *debounce*, guardando el último país detectado y la celda de ~10 km para no recalcular, y actuar **solo si el país cambió**. Que cuente: `countryAt` sobre las fronteras ya cargadas es barato; lo caro es bajar datos, y eso ya está decidido en el punto 3.
+### Decisiones (2026-11-13, de quien dirige)
+1. **Teléfonos de emergencia con el GPS en un país y Ajustes en otro:** primero los del lugar donde estás; debajo, **diferenciados**, los de Ajustes. **No se cambia Ajustes solo.**
+2. **País nuevo detectado:** se **descargan sus datos y se ofrece cambiar** el país de la app («Estás en Perú: ¿usar Perú en la app?», «Cambiar» / «No, gracias»; el «No, gracias» se recuerda por país).
+3. **Descarga:** **Wi-Fi sin avisar; datos móviles o conexión desconocida, preguntando antes y mostrando el peso.** En iPhone y casi todos los navegadores no se puede saber si es Wi-Fi (`navigator.connection.type` solo existe en Chrome de Android): ahí se pregunta. El ahorro de datos (`saveData`) también hace preguntar.
+4. **Cuándo revisa el país:** al elegir o ingresar una coordenada, o al actualizarse la ubicación; **sin pedir GPS extra ni segundo plano**, con *debounce* (1,5 s), celda de ~10 km y solo actúa si el país cambió.
 
-### Qué hay que hacer
-**A. Que las pantallas prioricen el país del lugar, no el de Ajustes.**
-- La radio ya lo hace (`modules/emergency/usePlaceCountry.ts`: país del lugar por fronteras y, a menos de 50 km de una frontera, también el vecino; Ajustes queda de respaldo cuando no hay lugar o cae fuera de los países de la app).
-- Aplicar lo mismo en «Buscar cercanos» (`NearbyPage.tsx`: usa `settings.country` para el paquete, los servicios y los parques), en los **teléfonos de emergencia** y la guía según el país (`national.ts`, pantalla de Contactos: decisión 1) y en cualquier otra pantalla que lea `settings.country` (`grep "settings.country"`; hoy son las de emergencia, la huerta por zona y los avisos).
-- Ofrecer un único lugar para esto (un hook como `usePlaceCountries`, ya hecho para la radio) en vez de repetir la lógica.
+### Cómo quedó
+- **Detector** (`modules/emergency/countryDetector.ts`): `detectCountries` (país por fronteras + vecinos a menos de 50 km), caché de celda y *debounce*; avisa solo si cambió. **Eventos de ubicación** (`core/geo/locationEvents.ts`): cada punto del GPS (`useGeolocation`, `currentPosition`) y cada lugar elegido o escrito en el selector de lugar (`PlacePicker`) avisan; no se agrega ningún GPS nuevo.
+- **País donde estás** (`currentCountry.ts`, hook `useCurrentCountry`): el detectado (guardado en `settings.detectedCountry` y `detectedNear`) o, si no hay, el de Ajustes. Lo usan: números de emergencia de Contactos (los del lugar arriba y los de Ajustes aparte, `NationalList`), tarjeta de emergencia de la pantalla de bloqueo, guía de primeros auxilios (con un aviso si difiere), «Mi ubicación» (respaldo), vista inicial de los mapas, Radio y «Buscar cercanos» (país del lugar **y vecinos a 50 km**, cada país por su cuenta para no perder el cartel «Oficial»). La **zona de la huerta** sale del país del propio lugar (`usePlaceCountry`), no del de Ajustes.
+- **Descarga** (`countryDownload.ts`, `countryAutomation.ts`, `CountryNotices.tsx`): archivos que usa cada país (`countryFiles`), peso (`data-sizes.json`, se regenera con `npm run data-sizes`; una prueba avisa si quedó viejo), qué falta (`missingDownload`), regla de conexión y los avisos de arriba de la app. Solo se pregunta por lo que **falta**: las pantallas (Radio, Cercanos) ya bajan el paquete del país del lugar porque lo necesitan para funcionar.
+- **Voz:** ninguna voz dice «dos puntos» (`forSpeech`); un «:» al final pasa a punto y en el medio a coma.
+- Pruebas: unitarias (detector, descarga y su regla, automatismo) y e2e `e2e/country-detect.spec.ts` (aviso, pregunta, Wi-Fi, «No, gracias» que no insiste, «Cambiar», números del lugar con los de Ajustes debajo).
 
-**B. Que descargue los datos del país donde estás apenas lo detecte.**
-- Hoy `useCountryPrefetch` (`modules/emergency/country.ts`) baja en segundo plano **solo el paquete del país de Ajustes** (emergencias, localidades, servicios, repetidoras de Chile y parques); si viajás, no baja nada del país nuevo hasta cambiarlo a mano, y sin conexión no hay datos.
-- Cambiarlo para bajar el paquete del país detectado y de los vecinos a menos de 50 km (los mismos archivos de hoy: `<país>.json`, servicios, parques, repetidoras), según las decisiones 2, 3 y 4.
-- El **mapa sin conexión** (zonas grandes) se baja aparte y es mucho más pesado: no lo cambia esto, pero el aviso debe decir que los mapas del país nuevo no se bajaron solos.
-
-### Pruebas
-e2e con Ajustes en un país y el GPS en otro (como la de la radio en `e2e/peru-bolivia.spec.ts`): que salgan los datos y los números del lugar, que el paquete se baje (queda en caché) sin tocar Ajustes, que el aviso de «Cambiar» funcione y que «No, gracias» no insista; con la conexión simulada como Wi-Fi, datos móviles y desconocida. Unitarias del hook y de la lógica de «cambió el país» (sin recalcular de más).
+### Pendiente
+- **Mantener actualizado lo ya guardado.** Hoy (`dataFile.ts`) un archivo guardado se revisa **solo cuando se usa**, y con la copia del servidor solo si hay uno configurado; se compara por día (`generatedAt`). Falta que, al detectar un país, se revise la antigüedad de lo guardado y se refresque lo que tenga más de un mes (y que los servicios, que hoy no se revisan al bajar «lo que falta», también).
+- **Los mapas sin conexión de otros países no se bajan solos** (el aviso lo dice): son mucho más pesados y se bajan aparte, desde Mapas. Ver si conviene ofrecerlos.
+- **Probar en un celular real**: el tipo de conexión (Wi-Fi o datos) solo se puede verificar en Chrome de Android.
+- **Revisar otras pantallas** que puedan tener su propia idea de «país» (por ejemplo avisos de clima y de rayos del servidor): no se tocaron.
 
 ## SIGUIENTE PUNTO (anotado el 2026-11-13): «Cuánto plantar para comer»
 

@@ -56,8 +56,11 @@ export function useSpeechVoice(lang: 'es' | 'en'): SpeechSynthesisVoice | null |
 export function forSpeech(text: string): string {
   return text
     .replace(/(\d):(?=\d)/g, '$1 ')
+    // Un «:» al final (anuncia lo que sigue en otra frase) pasa a punto; en el medio, a coma.
+    .replace(/\s*:\s*$/, '.')
     .replace(/\s*:\s*/g, ', ')
-    .replace(/,\s*,/g, ',');
+    .replace(/,\s*,/g, ',')
+    .trim();
 }
 
 /** Lee las frases en orden, con una pausa natural entre cada una. Corta lo que se estuviera leyendo. */

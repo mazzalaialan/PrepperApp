@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCapability } from '@/core/capabilities/capabilities';
 import { formatDecimal, formatDms, parseCoordinates, type LatLon } from '@/core/geo/geo';
 import { MapPickButton } from '@/modules/maps/MapPickButton';
+import { reportLocation } from '@/core/geo/locationEvents';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import { useSettings } from '@/core/settings/settings';
 import { GpsStatus } from './components';
@@ -40,6 +41,11 @@ export function usePlacePicker(): { place: PickedPlace | null; picker: ReactNode
   if (choice === GPS && fix) place = { lat: fix.lat, lon: fix.lon, alt: fix.alt, label: t('place.myLocation') };
   else if (choice === MANUAL && parsed) place = { ...parsed, alt: null, label: formatDms(parsed, t('geo.westLetter')) };
   else if (choice !== GPS && choice !== MANUAL && saved) place = { lat: saved.lat, lon: saved.lon, alt: saved.alt, label: saved.name };
+
+  // Un lugar elegido o escrito a mano cuenta como ubicación nueva (el país donde estás se detecta con eso, sin pedir el GPS).
+  useEffect(() => {
+    if (place) reportLocation(place.lat, place.lon);
+  }, [place?.lat, place?.lon]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function choose(value: string) {
     if (value === MANUAL) {

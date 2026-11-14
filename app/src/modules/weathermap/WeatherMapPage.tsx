@@ -6,6 +6,7 @@ import { ArrowLeft, ExternalLink, Locate, Minus, Pause, Play, Plus, RefreshCw, S
 import { currentPosition } from '@/core/geo/useGeolocation';
 import { useBatterySaver } from '@/core/power/saver';
 import { useSettings, type WeatherMapLayers, type WeatherMapValue } from '@/core/settings/settings';
+import { useCurrentCountry } from '@/modules/emergency/currentCountry';
 import { useUnits } from '@/modules/weather/parts';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { FullscreenStage } from '@/ui/FullscreenStage';
@@ -71,7 +72,7 @@ export function WeatherMapPage() {
   const serverUrl = useSettings((s) => s.settings.serverUrl);
   const system = useSettings((s) => s.settings.units);
   const update = useSettings((s) => s.update);
-  const country = useSettings((s) => s.settings.country);
+  const { here: country } = useCurrentCountry();
   const saver = useBatterySaver();
   const u = useUnits(system, i18n.language);
   const waypointMap = useWaypoints((s) => s.waypoints);

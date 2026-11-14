@@ -1,5 +1,5 @@
 import { i18n } from '@/core/i18n/i18n';
-import { useSettings } from '@/core/settings/settings';
+import { useCurrentCountry } from '@/modules/emergency/currentCountry';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { WeatherMapValue } from '@/core/settings/settings';
 import { tempLevel, windLevel, type ScaleColor } from '@/modules/weather/levels';
@@ -174,7 +174,7 @@ export function quakeAge(time: number, now: number): ScaleColor {
 }
 
 export function MapCanvas(props: Props) {
-  const country = useSettings((st) => st.settings.country);
+  const { here: country } = useCurrentCountry();
   const { view, onView, onSelect } = props;
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);

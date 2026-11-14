@@ -4,8 +4,8 @@ import { Check, List, Map as MapIcon, Save } from 'lucide-react';
 import type { ContactKind } from '@/core/model/types';
 import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { emptyContact } from './ContactEditPage';
-import { useSettings } from '@/core/settings/settings';
 import { loadCountryData } from './country';
+import { usePlaceCountries } from './usePlaceCountry';
 import { loadParks, mergeNearby, nearestPerKind, officialNearby, withParks, type EmergencyData, type NearbyPlace, type ParksData } from './data';
 import { CATEGORY_KIND, loadService, SERVICE_KINDS, serviceNearby, type ServiceCategory, type ServiceData } from './services';
 
@@ -64,6 +64,8 @@ export function NearbyPage() {
   const contacts = useContacts((s) => s.contacts);
   const save = useContacts((s) => s.save);
   const [data, setData] = useState<EmergencyData | null>(null);
+  /** Los datos de los países vecinos a menos de 50 km (cada uno aparte: cada archivo dice si es oficial o de OpenStreetMap). */
+  const [dataNear, setDataNear] = useState<EmergencyData[]>([]);
   const [radiusKm, setRadiusKm] = useState(15);
   const [filter, setFilter] = useState<Filter>('all');
   const [sub, setSub] = useState<Selection | null>(null);
@@ -80,39 +82,54 @@ export function NearbyPage() {
   const [osmState, setOsmState] = useState<'idle' | 'loading' | 'error' | 'offline'>('idle');
   const [attempt, setAttempt] = useState(0);
 
-  const country = useSettings((s) => s.settings.country);
+  // El país es el del lugar elegido (no el de Ajustes) y, a menos de 50 km de una frontera, también cuentan los del país vecino.
+  const { country, near } = usePlaceCountries(place);
+  const nearKey = near.join(',');
   const [packageMissing, setPackageMissing] = useState(false);
   const [parks, setParks] = useState<ParksData | null>(null);
   const [serviceData, setServiceData] = useState<ServiceData | null>(null);
+  const [serviceNear, setServiceNear] = useState<ServiceData[]>([]);
   // La categoría de servicios elegida (estaciones, farmacias, agua…): archivo aparte, se baja una vez.
   // Sin conexión y sin bajar, solo lo que traiga OpenStreetMap en vivo.
   useEffect(() => {
     setServiceData(null);
+    setServiceNear([]);
     if (!service) return;
     let cancelled = false;
-    loadService(service, country).then(
-      (d) => !cancelled && setServiceData(d),
-      () => undefined,
-    );
+    void Promise.all(near.map((c) => loadService(service, c).catch(() => null))).then((list) => {
+      if (cancelled) return;
+      setServiceData(list[0] ?? null);
+      setServiceNear(list.slice(1).filter((d): d is ServiceData => d !== null));
+    });
     return () => {
       cancelled = true;
     };
-  }, [service, country]);
+  }, [service, nearKey]); // eslint-disable-line react-hooks/exhaustive-deps
   // Parques nacionales y áreas de CONAF (intendencias, oficinas y frecuencias): Argentina y Chile.
   useEffect(() => {
     void loadParks(country).then(setParks);
   }, [country]);
   useEffect(() => {
+    let cancelled = false;
     setPackageMissing(false);
-    loadCountryData(country).then(
-      (d) => setData(d.emergency),
-      () => {
-        // Sin conexión y sin el paquete del país: solo lo que encuentre OpenStreetMap cuando haya conexión.
-        setPackageMissing(true);
-        setData(EMPTY_DATA);
-      },
-    );
-  }, [country]);
+    void Promise.all(
+      near.map((c) =>
+        loadCountryData(c).then(
+          (d) => d.emergency,
+          () => null,
+        ),
+      ),
+    ).then((list) => {
+      if (cancelled) return;
+      // Sin conexión y sin el paquete del país del lugar: solo lo que encuentre OpenStreetMap cuando haya conexión.
+      if (list[0] === null) setPackageMissing(true);
+      setData(list[0] ?? EMPTY_DATA);
+      setDataNear(list.slice(1).filter((d): d is EmergencyData => d !== null));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [nearKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Los servicios se le piden a OpenStreetMap solo con su filtro (hay muchos y la consulta se vuelve pesada).
   const searchKey = place ? `${place.lat.toFixed(3)},${place.lon.toFixed(3)},${radiusKm},${service ?? ''}` : null;
@@ -143,10 +160,14 @@ export function NearbyPage() {
   // Todo lo conocido, sin límite de distancia (los datos oficiales vienen en la app).
   const everything = useMemo(() => {
     if (!data || !place) return [];
-    const known = [...officialNearby(data, place.lat, place.lon, Infinity), ...(serviceData ? serviceNearby(serviceData, place.lat, place.lon) : [])];
+    // Cada país por su cuenta: el cartel «Oficial» u «OpenStreetMap» depende del archivo de cada uno.
+    const known = [
+      ...[data, ...dataNear].flatMap((d) => officialNearby(d, place.lat, place.lon, Infinity)),
+      ...[serviceData, ...serviceNear].flatMap((d) => (d ? serviceNearby(d, place.lat, place.lon) : [])),
+    ];
     const merged = mergeNearby(known, osm?.key === searchKey ? osm.items : []);
     return parks ? withParks(merged, parks, place.lat, place.lon).sort((a, b) => a.distance - b.distance) : merged;
-  }, [data, serviceData, parks, place?.lat, place?.lon, osm, searchKey]);
+  }, [data, dataNear, serviceData, serviceNear, parks, place?.lat, place?.lon, osm, searchKey]);
   const results = radiusKm === 0 ? nearestPerKind(everything, NEAREST_PER_KIND) : everything.filter((p) => p.distance <= radiusKm * 1000);
   const shown = results.filter((r) => matches(r.kind));
   // Nada en el rango: igual se muestra lo más cercano de cada tipo, aunque esté lejos.

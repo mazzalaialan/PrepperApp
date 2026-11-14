@@ -196,7 +196,7 @@ test('guía en voz alta: lee cada paso, se corta al llamar y se repite', async (
   await expect.poll(spoken).toContain('¿El lugar es seguro?');
   const first = await spoken();
   expect(first).toContain('¿Podés acercarte sin ponerte en peligro?');
-  expect(first).toContain('Opciones: Sí, es seguro, No.');
+  expect(first).toContain('Opciones, Sí, es seguro, No.');
 
   // Al elegir una respuesta, lee el paso siguiente.
   await page.getByRole('button', { name: 'No', exact: true }).click();

@@ -405,6 +405,9 @@
     "openOtherTitle": "Abrir en la app de mapas que elijas (Waze, OsmAnd, Maps…)",
     "newContact": "Nuevo contacto",
     "editContact": "Editar {{name}}",
+    "hereCountry": "Estás en {{country}}: estos son sus números de emergencia.",
+    "homeCountry": "Tu país en Ajustes: {{country}}",
+    "countrySwitchHint": "País de la app (Ajustes): se usa cuando todavía no sabemos dónde estás.",
     "nationalTitle": "Números nacionales",
     "national": {
       "emergencies": { "name": "Emergencias · Policía", "desc": "911: policía y, en muchas provincias, también ambulancias" },
@@ -1234,6 +1237,19 @@
       "jupiter": "Júpiter",
       "saturn": "Saturno"
     }
+  },
+  "countryOffer": {
+    "title": "Estás en {{country}}: ¿usar {{country}} en la app?",
+    "hint": "Ya te mostramos sus números de emergencia y sus datos. Si cambiás, {{country}} pasa a ser el país de la app (ahora es {{current}}). Podés cambiarlo cuando quieras en Ajustes.",
+    "change": "Cambiar",
+    "no": "No, gracias"
+  },
+  "countryDownload": {
+    "title": "Para usar la app sin conexión en {{countries}} hay que bajar {{size}}.",
+    "hint": "No hay Wi-Fi seguro (datos móviles o conexión desconocida), por eso preguntamos. Los mapas sin conexión de otros países se bajan aparte, desde Mapas: no se bajan solos.",
+    "yes": "Bajar ahora",
+    "busy": "Bajando…",
+    "no": "Ahora no"
   },
   "portable": {
     "isPortable": "Estás usando el paquete portable (sin internet). No se actualiza solo: cuando haya una versión nueva, descargala y reemplazá el contenido de la carpeta. Tus datos se mantienen.",
@@ -2137,6 +2153,7 @@
     "mercadopago": "Aportar por Mercado Pago"
   },
   "guides": {
+    "hereCountry": "Los números de la guía son los de {{country}}, el país donde estás. Tu país en Ajustes es {{home}}.",
     "voice": "Leer los pasos en voz alta",
     "voiceRepeat": "Repetir en voz alta",
     "optionsSpoken": "Opciones: {{options}}.",

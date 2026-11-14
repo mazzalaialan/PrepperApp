@@ -36,6 +36,7 @@ describe('voz de los kilómetros', () => {
     expect(forSpeech('Atención: salí del agua')).toBe('Atención, salí del agua');
     expect(forSpeech('Paso 2 : abrí la vía aérea')).toBe('Paso 2, abrí la vía aérea');
     expect(forSpeech('Ya: 1:05:09')).toBe('Ya, 1 05 09');
+    expect(forSpeech('Mi ubicación:')).toBe('Mi ubicación.');
     expect(forSpeech('sin dos puntos')).toBe('sin dos puntos');
     for (const s of ['a:b', ': hola', 'x::y', '12:30 h']) expect(forSpeech(s)).not.toContain(':');
   });

@@ -112,6 +112,11 @@ export interface Settings {
   mapTracksMode: 'auto' | 'none' | 'chosen' | 'all';
   /** Los recorridos elegidos (ids), para el modo `chosen`. */
   mapTracksChosen: string[];
+  /** País donde se detectó que estás (por la última ubicación) y los vecinos a menos de 50 km de su frontera; `null` = todavía no se detectó. */
+  detectedCountry: Country | null;
+  detectedNear: Country[];
+  /** Países para los que dijiste «No, gracias» al aviso «Estás en X: ¿usar X en la app?» (no se vuelve a preguntar). */
+  countryOfferDismissed: Country[];
   /** Última actividad elegida en Entrenamiento. */
   trainingKind: WorkoutKind;
   /** Lee en voz alta el tiempo y el ritmo al cerrar cada kilómetro. */
@@ -254,6 +259,9 @@ export const DEFAULT_SETTINGS: Settings = {
   dismissedNotices: [],
   mapTracksMode: 'auto',
   mapTracksChosen: [],
+  detectedCountry: null,
+  detectedNear: [],
+  countryOfferDismissed: [],
   trainingKind: 'walk',
   trainingVoice: false,
   trainingCountdownS: 0,

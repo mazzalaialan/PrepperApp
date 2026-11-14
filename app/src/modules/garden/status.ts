@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useGeolocation } from '@/core/geo/useGeolocation';
 import type { GardenBed, Planting } from '@/core/model/types';
 import { useSettings } from '@/core/settings/settings';
+import { usePlaceCountry } from '@/modules/emergency/usePlaceCountry';
 import { today as todayIso } from '@/modules/inventory/domain/dates';
 import { useWaypoints } from '@/modules/waypoints/store';
 import { useRainWatch } from '@/modules/weather/rainWatch';
@@ -44,7 +45,8 @@ export function useZonePlace(useGps = false): GardenPlace | null {
 /** Zona elegida a mano o, si no, la sugerida por el lugar (sin lugar: Pampeana). */
 export function useGardenZone(place: GardenPlace | null): { zone: Zone; suggested: Zone | null; manual: boolean } {
   const chosen = useSettings((s) => s.settings.gardenZone);
-  const country = useSettings((s) => s.settings.country);
+  // El país es el del propio lugar (la huerta de casa sigue siendo de casa aunque estés de viaje en otro país).
+  const country = usePlaceCountry(place);
   const suggested = place ? zoneFor(place.lat, place.lon, country) : null;
   const manual = chosen !== null && (ZONES as readonly string[]).includes(chosen);
   return { zone: manual ? (chosen as Zone) : (suggested ?? 'pampeana'), suggested, manual };

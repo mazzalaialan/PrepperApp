@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Phone } from 'lucide-react';
 import type { EmergencyCard, EmergencyCardPhone } from '@/core/security/emergencyCard';
-import { useSettings } from '@/core/settings/settings';
 import { dialable, NATIONAL_NUMBERS } from '@/modules/emergency/national';
+import { useCurrentCountry } from '@/modules/emergency/currentCountry';
 
 /** Un teléfono que se toca para llamar. */
 function Call({ item }: { item: EmergencyCardPhone }) {
@@ -28,8 +28,8 @@ function Call({ item }: { item: EmergencyCardPhone }) {
  */
 export function EmergencyCardView({ card }: { card: EmergencyCard | null }) {
   const { t, i18n } = useTranslation();
-  const country = useSettings((s) => s.settings.country);
-  // Los primeros números del país: emergencias, ambulancia, bomberos.
+  // Los primeros números del país donde estás (el detectado con la última ubicación; si no hay, el de Ajustes): emergencias, ambulancia, bomberos.
+  const { here: country } = useCurrentCountry();
   const national = NATIONAL_NUMBERS[country].slice(0, 3);
 
   return (

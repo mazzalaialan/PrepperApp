@@ -156,9 +156,11 @@ test('mi ubicación para socorristas y radio', async ({ page }, testInfo) => {
 
   // Leer el mensaje en voz alta: las coordenadas cifra por cifra, sin el link; "Llamar" lo corta.
   await page.getByRole('button', { name: 'Leer en voz alta' }).click();
-  await expect.poll(() => spokenLines(page)).toContain('Coordenadas: 41 coma 1 3 3 5 0 grados sur, 71 coma 3 1 0 3 0 grados oeste. Precisión: 0 metros.');
+  await expect.poll(() => spokenLines(page)).toContain('Coordenadas, 41 coma 1 3 3 5 0 grados sur, 71 coma 3 1 0 3 0 grados oeste. Precisión, 0 metros.');
   const read = await spokenLines(page);
-  expect(read[0]).toBe('Necesito ayuda. Mi ubicación:');
+  // Ninguna voz dice «dos puntos»: todo texto hablado llega sin «:».
+  expect(read.some((l) => l.includes(':'))).toBe(false);
+  expect(read[0]).toBe('Necesito ayuda. Mi ubicación.');
   expect(read.join(' ')).not.toContain('google.com');
   await expect(page.getByRole('button', { name: 'Dejar de leer' })).toBeVisible();
   const before = await cancelCount(page);

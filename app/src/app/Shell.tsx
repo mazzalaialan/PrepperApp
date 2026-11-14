@@ -8,6 +8,8 @@ import { useEmergencyCardSync } from '@/modules/firstAid/emergencyCard';
 import { YOUTUBE_URL } from '@/core/about';
 import { YoutubeIcon } from '@/ui/YoutubeIcon';
 import { useCountryPrefetch } from '@/modules/emergency/country';
+import { CountryNotices } from '@/modules/emergency/CountryNotices';
+import { useCountryAutomation } from '@/modules/emergency/countryAutomation';
 import { BrandMark } from '@/ui/Brand';
 import { BackButton } from '@/ui/BackButton';
 import { ConfirmHost } from '@/ui/confirm';
@@ -48,6 +50,8 @@ export function Shell() {
   // Sin contraseña no hay bloqueo: el botón no se muestra.
   const openVault = useVault((s) => s.open);
   useCountryPrefetch();
+  // Detecta en qué país estás cuando llega una ubicación (sin pedir el GPS) y ofrece cambiar el país o bajar sus datos.
+  useCountryAutomation();
   // Datos de emergencia para la pantalla de bloqueo (si se activaron): se mantienen al día con las fichas.
   useEmergencyCardSync();
   const { pathname } = useLocation();
@@ -121,6 +125,7 @@ export function Shell() {
           )}
         </header>
         <PortableUpdateNotice />
+        <CountryNotices />
         <RainNotices />
         <RecordingBar />
         <OutingPlanBar />

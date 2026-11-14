@@ -405,6 +405,9 @@
     "openOtherTitle": "Open in the map app you choose (Waze, OsmAnd, Maps…)",
     "newContact": "New contact",
     "editContact": "Edit {{name}}",
+    "hereCountry": "You are in {{country}}: these are its emergency numbers.",
+    "homeCountry": "Your country in Settings: {{country}}",
+    "countrySwitchHint": "App country (Settings): used when we do not know where you are yet.",
     "nationalTitle": "National numbers (Argentina)",
     "national": {
       "emergencies": { "name": "Emergencies · Police", "desc": "911: police and, in many provinces, ambulances too" },
@@ -1234,6 +1237,19 @@
       "jupiter": "Jupiter",
       "saturn": "Saturn"
     }
+  },
+  "countryOffer": {
+    "title": "You are in {{country}}: use {{country}} in the app?",
+    "hint": "We already show its emergency numbers and data. If you change, {{country}} becomes the app country (now {{current}}). You can change it anytime in Settings.",
+    "change": "Change",
+    "no": "No, thanks"
+  },
+  "countryDownload": {
+    "title": "To use the app offline in {{countries}} you need to download {{size}}.",
+    "hint": "There is no safe Wi-Fi (mobile data or unknown connection), so we ask first. Offline maps of other countries are downloaded separately, from Maps: they are not downloaded automatically.",
+    "yes": "Download now",
+    "busy": "Downloading…",
+    "no": "Not now"
   },
   "portable": {
     "isPortable": "You're using the portable package (offline). It doesn't update itself: when there's a new version, download it and replace the folder's contents. Your data is kept.",
@@ -2137,6 +2153,7 @@
     "mercadopago": "Contribute via Mercado Pago"
   },
   "guides": {
+    "hereCountry": "The guide numbers are those of {{country}}, the country you are in. Your country in Settings is {{home}}.",
     "voice": "Read the steps aloud",
     "voiceRepeat": "Repeat aloud",
     "optionsSpoken": "Options: {{options}}.",

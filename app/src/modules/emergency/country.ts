@@ -54,21 +54,27 @@ export function loadCountryData(country: Country): Promise<CountryData> {
 export function useCountryPrefetch(): void {
   const country = useSettings((s) => s.settings.country);
   useEffect(() => {
-    const fetchIt = () => {
-      if (country !== 'AR') void loadCountryData(country).catch(() => undefined);
-      // Servicios del país (estaciones, farmacias, agua, refugios…; también Argentina: van aparte para no agrandar la descarga inicial).
-      void prefetchServices(country).catch(() => undefined);
-      // Repetidoras oficiales de Chile: también con Argentina (en la cordillera se está cerca).
-      void loadOfficialRepeaters(country).catch(() => undefined);
-      // Áreas protegidas de Chile (CONAF): también con Argentina, por la cordillera.
-      if (country === 'AR' || country === 'CL') void loadParksCL().catch(() => undefined);
-      // Bolivia y Perú: las suyas (SERNAP, SERNANP).
-      if (country === 'BO' || country === 'PE') void loadParksFile(country).catch(() => undefined);
-    };
+    const fetchIt = () => void prefetchCountry(country);
     if (navigator.onLine) fetchIt();
     window.addEventListener('online', fetchIt);
     return () => window.removeEventListener('online', fetchIt);
   }, [country]);
+}
+
+/** Baja todo lo del país que se usa sin conexión: el paquete, los servicios, las repetidoras oficiales y los parques. Falla en silencio. */
+export async function prefetchCountry(country: Country): Promise<void> {
+  const quiet = (p: Promise<unknown>) => p.catch(() => undefined);
+  await Promise.all([
+    country !== 'AR' ? quiet(loadCountryData(country)) : undefined,
+    // Servicios del país (estaciones, farmacias, agua, refugios…; también Argentina: van aparte para no agrandar la descarga inicial).
+    quiet(prefetchServices(country)),
+    // Repetidoras oficiales de Chile: también con Argentina (en la cordillera se está cerca).
+    quiet(loadOfficialRepeaters(country)),
+    // Áreas protegidas de Chile (CONAF): también con Argentina, por la cordillera.
+    country === 'AR' || country === 'CL' ? quiet(loadParksCL()) : undefined,
+    // Bolivia y Perú: las suyas (SERNAP, SERNANP).
+    country === 'BO' || country === 'PE' ? quiet(loadParksFile(country)) : undefined,
+  ]);
 }
 
 /** ¿Ya está guardado el paquete del país? (Argentina siempre). */

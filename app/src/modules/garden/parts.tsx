@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/core/settings/settings';
+import { usePlaceCountry } from '@/modules/emergency/usePlaceCountry';
 import { ESTIMATED_ZONES, ZONES, type CropCalendar, type Zone } from './calendar';
 import { cropName, type Crop, type Family } from './crops';
 import type { GardenPlace } from './status';
@@ -40,7 +41,7 @@ export function CropLink({ crop }: { crop: Crop }) {
 export function ZonePicker({ place, zone, suggested, manual }: { place: GardenPlace | null; zone: Zone; suggested: Zone | null; manual: boolean }) {
   const { t } = useTranslation();
   const update = useSettings((s) => s.update);
-  const country = useSettings((s) => s.settings.country);
+  const country = usePlaceCountry(place);
   return (
     <div className="stack" style={{ gap: 8 }}>
       <div className="field">

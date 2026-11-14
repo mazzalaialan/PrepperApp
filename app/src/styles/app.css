@@ -4488,3 +4488,11 @@ a.module-card:hover {
   border: 2px solid var(--border);
   border-radius: 4px;
 }
+
+/* Números de emergencia del país de Ajustes cuando no es el país donde estás: aparte y más tenues. */
+.home-numbers {
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  opacity: 0.85;
+}

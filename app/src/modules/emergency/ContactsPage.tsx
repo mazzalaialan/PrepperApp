@@ -5,8 +5,9 @@ import { Pencil, Plus, Search, Stethoscope, User } from 'lucide-react';
 import { ageOn, useMedical } from '@/modules/firstAid/medicalStore';
 import { doctorLabel, doctorUses, fichaContacts, insurancePhones, medScheduleText, resolveEmergencyContacts } from '@/modules/firstAid/medText';
 import { today } from '@/modules/inventory/domain/dates';
-import { useSettings } from '@/core/settings/settings';
+import type { Country } from '@/core/settings/settings';
 import { CountrySwitch } from './CountrySwitch';
+import { useCurrentCountry } from './currentCountry';
 import { NATIONAL_NUMBERS } from './national';
 import { KindIcon, MapLink, PhoneActions } from './parts';
 import { useContacts } from './store';
@@ -32,7 +33,7 @@ export function ContactsPage() {
   // Médicos compartidos: en qué fichas están ("Pediatra de Tomi").
   const profiles = useMedical((s) => s.profiles);
   const uses = useMemo(() => doctorUses(profiles, t), [profiles, t]);
-  const country = useSettings((s) => s.settings.country);
+  const { here, home, differs } = useCurrentCountry();
 
   return (
     <div className="stack">
@@ -44,28 +45,21 @@ export function ContactsPage() {
 
       <section className="card stack" aria-labelledby="national-title">
         <h2 id="national-title" className="section-title" style={{ margin: 0 }}>{t('emergency.nationalTitle')}</h2>
+        {/* Los números son los del país donde estás (por la última ubicación); el selector cambia el país de la app (Ajustes). */}
+        {differs && (
+          <p className="hint here-country" style={{ margin: 0 }} data-testid="national-here">
+            {t('emergency.hereCountry', { country: t(`country.${here}`) })}
+          </p>
+        )}
+        <NationalList country={here} />
+        {differs && (
+          <div className="stack home-numbers" data-testid="national-home">
+            <h3 className="contact-group-title">{t('emergency.homeCountry', { country: t(`country.${home}`) })}</h3>
+            <NationalList country={home} home />
+          </div>
+        )}
+        <p className="hint" style={{ margin: 0 }}>{t('emergency.countrySwitchHint')}</p>
         <CountrySwitch />
-        <ul className="list contact-list" data-testid="national-numbers">
-          {NATIONAL_NUMBERS[country].map((n) => (
-            <li key={n.id} className="contact-row" data-testid={`national-${n.id}`}>
-              <KindIcon kind={n.kind} />
-              <span className="list-main">
-                <span className="list-title">{t(`emergency.national.${n.id}.name`)}</span>
-                <span className="list-sub">{t(`emergency.national.${n.id}.desc`)}</span>
-                {n.unconfirmed && (
-                  <span className="list-sub national-unconfirmed" data-testid={`unconfirmed-${n.id}`}>
-                    {t('emergency.unconfirmed')}{' '}
-                    <Link to={`/about?tipo=bug&texto=${encodeURIComponent(t('emergency.unconfirmedReport', { name: t(`emergency.national.${n.id}.name`), number: n.number }))}`}>
-                      {t('emergency.unconfirmedLink')}
-                    </Link>
-                  </span>
-                )}
-              </span>
-              <PhoneActions phone={n.number} />
-            </li>
-          ))}
-        </ul>
-        <p className="hint" style={{ margin: 0 }}>{t(`emergency.localNote${country}`)}</p>
       </section>
 
       <section className="card stack" aria-labelledby="services-title">
@@ -321,6 +315,37 @@ function FamilyGroup() {
         })}
       </ul>
       <p className="hint" style={{ margin: 0 }}>{t('emergency.familyHint')}</p>
+    </>
+  );
+}
+
+/** Los números nacionales de un país. `home`: el de Ajustes cuando no es donde estás (ids aparte para distinguirlos). */
+function NationalList({ country, home = false }: { country: Country; home?: boolean }) {
+  const { t } = useTranslation();
+  const tag = home ? 'home-' : '';
+  return (
+    <>
+      <ul className={`list contact-list${home ? ' contact-list-home' : ''}`} data-testid={home ? 'national-numbers-home' : 'national-numbers'}>
+        {NATIONAL_NUMBERS[country].map((n) => (
+          <li key={n.id} className="contact-row" data-testid={`national-${tag}${n.id}`}>
+            <KindIcon kind={n.kind} />
+            <span className="list-main">
+              <span className="list-title">{t(`emergency.national.${n.id}.name`)}</span>
+              <span className="list-sub">{t(`emergency.national.${n.id}.desc`)}</span>
+              {n.unconfirmed && (
+                <span className="list-sub national-unconfirmed" data-testid={`unconfirmed-${tag}${n.id}`}>
+                  {t('emergency.unconfirmed')}{' '}
+                  <Link to={`/about?tipo=bug&texto=${encodeURIComponent(t('emergency.unconfirmedReport', { name: t(`emergency.national.${n.id}.name`), number: n.number }))}`}>
+                    {t('emergency.unconfirmedLink')}
+                  </Link>
+                </span>
+              )}
+            </span>
+            <PhoneActions phone={n.number} />
+          </li>
+        ))}
+      </ul>
+      <p className="hint" style={{ margin: 0 }}>{t(`emergency.localNote${country}`)}</p>
     </>
   );
 }

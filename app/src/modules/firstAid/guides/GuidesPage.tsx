@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Play, Search } from 'lucide-react';
 import { normalize } from '@/modules/inventory/selectors';
 import { TOPICS } from './content';
-import { useSettings } from '@/core/settings/settings';
 import { CountrySwitch } from '@/modules/emergency/CountrySwitch';
+import { useCurrentCountry } from '@/modules/emergency/currentCountry';
 import { EnvSwitch, useLang } from './parts';
 import { fillGuideText } from './types';
 import { Notice } from '@/ui/Notice';
@@ -15,7 +15,8 @@ export function GuidesPage() {
   const { t } = useTranslation();
   const lang = useLang();
   const [query, setQuery] = useState('');
-  const country = useSettings((s) => s.settings.country);
+  // Los números de la guía son los del país donde estás; el selector de arriba cambia el país de la app (Ajustes).
+  const { here: country, home, differs } = useCurrentCountry();
   const medical = fillGuideText('{medical}', country, lang);
   const topics = useMemo(() => {
     const q = normalize(query.trim());
@@ -28,6 +29,11 @@ export function GuidesPage() {
         <h1 className="page-title" style={{ flex: 1 }}>{t('guides.title')}</h1>
       </div>
 
+      {differs && (
+        <p className="hint" style={{ margin: 0 }} data-testid="guide-here-country">
+          {t('guides.hereCountry', { country: t(`country.${country}`), home: t(`country.${home}`) })}
+        </p>
+      )}
       <CountrySwitch />
       <EnvSwitch />
 

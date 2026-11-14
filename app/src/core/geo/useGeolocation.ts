@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSensorActive } from '@/core/power/saver';
 import type { LatLon } from './geo';
+import { reportLocation } from './locationEvents';
 
 export interface GeoFix extends LatLon {
   /** Altitud sobre el nivel del mar, si el GPS la informa. */
@@ -47,6 +48,7 @@ export function useGeolocation(enabled = true): { fix: GeoFix | null; error: Geo
       (p) => {
         setFix(toFix(p));
         setError(null);
+        reportLocation(p.coords.latitude, p.coords.longitude);
       },
       (e) => setError(toError(e)),
       OPTIONS,
@@ -71,6 +73,7 @@ export function currentPosition(): Promise<GeoFix> {
     const id = navigator.geolocation.watchPosition(
       (p) => {
         navigator.geolocation.clearWatch(id);
+        reportLocation(p.coords.latitude, p.coords.longitude);
         resolve(toFix(p));
       },
       (e) => {
