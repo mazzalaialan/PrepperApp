@@ -1471,6 +1471,20 @@
       "thresholdAlert": "Alert {{m}} m",
       "thresholdEvac": "Evacuation {{m}} m",
       "thresholdLow": "Low water {{m}} m",
+      "forecast": {
+        "show": "Show forecast",
+        "hide": "Hide forecast",
+        "loading": "Looking for the forecast…",
+        "peak": "INA forecast: high {{max}} m on {{maxAt}}, low {{min}} m on {{minAt}}.",
+        "reach": "It would reach {{what}} ({{m}} m) on {{when}}.",
+        "reachBand": "It could reach {{what}} ({{m}} m) on {{when}}, according to the forecast band.",
+        "none": "It does not reach any station level in the forecast days.",
+        "what": { "evac": "the evacuation level", "alert": "the alert level", "low": "low water" },
+        "chartLabel": "Height forecast chart for {{name}}",
+        "issued": "Forecast issued on {{date}}.",
+        "legend": "Line: forecast height. Shaded area: from lower to upper bound of the forecast. Dashed: low water, alert and evacuation levels of the station.",
+        "disclaimer": "INA forecast, informational: not an official alert. Updated every one to three days; it can change with rain."
+      },
       "perDay": "in 24 h",
       "state": { "evac": "Evacuation", "alert": "Alert", "low": "Low water", "normal": "Normal" },
       "reference": "Levels in meters above each station's own scale zero (not comparable between stations). The status compares with that station's thresholds.",
@@ -1502,7 +1516,13 @@
       "gaugeBelow": "the water is {{value}} m below the prediction (measured at {{time}}).",
       "gaugeNoisy": "The measurement is far from the predicted tide: it may be wind, pressure or a faulty sensor. Take it with care.",
       "gaugeNote": "Dashed line: measured level ({{operator}}, via IOC), not quality-controlled and shifted to the level of the predicted curve. Offline, the last saved reading is kept.",
-      "gaugeStale": "Could not update: this is the last saved reading."
+      "gaugeStale": "Could not update: this is the last saved reading.",
+      "sfTitle": "INA forecast for the estuary",
+      "sfIntro": "INA model for {{name}} that does include the wind and river discharge: it is the expected height of the Río de la Plata, not the astronomical tide above. It is on the zero of the INA gauge, not mean sea level.",
+      "sfChart": "Río de la Plata height forecast chart at {{name}}",
+      "sfPeak": "Expected high {{max}} m on {{when}}.",
+      "sfBand": "According to the forecast band, between {{lo}} and {{hi}} m.",
+      "sfNote": "Forecast issued on {{date}}, informational and unofficial. Dashed lines: alert and evacuation levels of the station. Updated daily and changes with the wind."
     }
   },
   "declination": {

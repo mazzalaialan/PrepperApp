@@ -4,6 +4,10 @@ import { useSettings } from '@/core/settings/settings';
 import type { PickedPlace } from '@/modules/waypoints/PlacePicker';
 import { fetchIocLevels, iocNear, loadIocCatalog, loadSavedIoc, measuredSeries, saveIoc, type IocCatalog, type IocLevels } from './ioc';
 import { sourceEnabled } from './sources';
+import { ForecastChart } from './ForecastChart';
+import { fetchForecasts, loadSavedForecasts, saveForecasts, summarize, type StationForecast } from './forecast';
+import { loadRivers, type RiverStation } from './rivers';
+import { distanceMeters } from '@/core/geo/geo';
 import { isEstuary, loadTides, nearestStations, NEAR_KM, tideCurve, tideExtremes, tideLevelAt, type TidesData } from './tides';
 
 const DAY_MS = 86_400_000;
@@ -51,6 +55,57 @@ function TideChart({ curve, now, label, locale, measured }: { curve: { time: Dat
       ))}
       {now.getTime() >= t0 && now.getTime() <= t1 && <line x1={x(now.getTime())} x2={x(now.getTime())} y1={pad.t} y2={H - pad.b} className="tide-now" />}
     </svg>
+  );
+}
+
+/** San Fernando: la estación del INA con el modelo de la marea del Río de la Plata (viento y caudales), a unos 25 km de Buenos Aires. */
+const SAN_FERNANDO_ID = 52;
+const SF_MAX_KM = 80;
+
+/** Pronóstico del INA para el estuario: reemplaza el «puede diferir más de 1 m» por una curva con viento y caudales, con su banda. */
+function EstuaryForecast({ place, now }: { place: PickedPlace; now: Date }) {
+  const { t, i18n } = useTranslation();
+  const [station, setStation] = useState<RiverStation | null>(null);
+  const [forecast, setForecast] = useState<StationForecast | null>(() => loadSavedForecasts().get(SAN_FERNANDO_ID) ?? null);
+  useEffect(() => {
+    void loadRivers().then((d) => setStation(d.stations.find((s) => s.id === SAN_FERNANDO_ID) ?? null), () => undefined);
+  }, []);
+  useEffect(() => {
+    if (!station || !navigator.onLine) return;
+    let cancelled = false;
+    void fetchForecasts([station]).then((m) => {
+      const f = m.get(station.id);
+      if (cancelled || !f) return;
+      saveForecasts(m);
+      setForecast(f);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [station]);
+  if (!station || !forecast || distanceMeters(place, station) / 1000 > SF_MAX_KM) return null;
+  const sum = summarize(forecast, station, now.getTime());
+  if (!sum) return null;
+  const nf = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const at = (ms: number) => new Date(ms).toLocaleString(i18n.language, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const top = forecast.points.find((p) => p.t === sum.peak.t);
+  return (
+    <div className="stack" style={{ gap: 6 }} data-testid="estuary-forecast">
+      <h3 className="section-title" style={{ margin: 0, fontSize: '1rem' }}>
+        {t('navigation.tides.sfTitle')}
+      </h3>
+      <p className="hint" style={{ margin: 0 }}>
+        {t('navigation.tides.sfIntro', { name: station.name })}
+      </p>
+      <ForecastChart forecast={forecast} levels={station} now={now.getTime()} label={t('navigation.tides.sfChart', { name: station.name })} locale={i18n.language} testId="estuary-chart" />
+      <p style={{ margin: 0 }} data-testid="estuary-peak">
+        {t('navigation.tides.sfPeak', { max: nf.format(sum.peak.v), when: at(sum.peak.t) })}
+        {top?.lo != null && top.hi != null ? ` ${t('navigation.tides.sfBand', { lo: nf.format(top.lo), hi: nf.format(top.hi) })}` : ''}
+      </p>
+      <p className="hint" style={{ margin: 0 }}>
+        {t('navigation.tides.sfNote', { date: at(forecast.issued) })}
+      </p>
+    </div>
   );
 }
 
@@ -152,6 +207,7 @@ export function TidesCard({ place }: { place: PickedPlace | null }) {
               </span>
             </p>
           )}
+          {isEstuary(station, place.lat, place.lon) && <EstuaryForecast place={place} now={now} />}
           {station.issues.length > 0 && (
             <p className="hint" data-testid="tide-issues" style={{ margin: 0 }}>
               {t('navigation.tides.issues')}

@@ -4540,6 +4540,43 @@ a.module-card:hover {
   font-size: 11px;
 }
 
+/* Navegación: pronóstico de altura de los ríos */
+.fc-chart {
+  width: 100%;
+  height: auto;
+  max-height: 230px;
+}
+.river-forecast {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 6px;
+}
+.fc-line {
+  fill: none;
+  stroke: var(--info);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.fc-band {
+  fill: var(--info);
+  opacity: 0.2;
+}
+.fc-level {
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+.fc-evac {
+  stroke: var(--scale-6);
+}
+.fc-alert {
+  stroke: var(--scale-5);
+}
+.fc-low {
+  stroke: var(--scale-4);
+}
+
 /* Navegación: niveles de ríos */
 .river-level {
   display: flex;

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { PickedPlace } from '@/modules/waypoints/PlacePicker';
+import { ForecastChart } from './ForecastChart';
+import { fetchForecasts, loadSavedForecasts, saveForecasts, summarize, type StationForecast } from './forecast';
 import {
   fetchReadings,
   loadRivers,
@@ -22,6 +24,13 @@ export function RiversCard({ place }: { place: PickedPlace | null }) {
   const [failed, setFailed] = useState(false);
   const [readings, setReadings] = useState<Map<number, RiverReading>>(() => loadSavedReadings());
   const [live, setLive] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [forecasts, setForecasts] = useState<Map<number, StationForecast>>(() => loadSavedForecasts());
+  const [openForecast, setOpenForecast] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   useEffect(() => {
     void loadRivers().then(setData, () => setFailed(true));
   }, []);
@@ -51,7 +60,23 @@ export function RiversCard({ place }: { place: PickedPlace | null }) {
     };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pronóstico de altura del INA de las estaciones cercanas que lo tienen; sin conexión quedan los últimos guardados.
+  useEffect(() => {
+    const withF = near.map((n) => n.station).filter((s) => s.forecast?.length);
+    if (!withF.length || !navigator.onLine) return;
+    let cancelled = false;
+    void fetchForecasts(withF).then((fresh) => {
+      if (cancelled || !fresh.size) return;
+      saveForecasts(fresh);
+      setForecasts((prev) => new Map([...prev, ...fresh]));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const nf = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const whenFmt = (ms: number) => new Date(ms).toLocaleString(i18n.language, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const sf = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'always' });
   const km = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 0 });
   const ago = (iso: string) => {
@@ -84,6 +109,9 @@ export function RiversCard({ place }: { place: PickedPlace | null }) {
         {near.map(({ station: s, km: dist }) => {
           const r = readings.get(s.series);
           const state = r ? riverState(r.level, s) : null;
+          const fc = s.forecast?.length ? forecasts.get(s.id) : undefined;
+          const sum = fc ? summarize(fc, s, now) : null;
+          const threshold = (kind: 'evac' | 'alert' | 'low') => nf.format(s[kind] ?? 0);
           return (
             <li key={s.id} className="list-row river-row" data-testid={`river-${s.id}`}>
               <span className="list-main">
@@ -103,6 +131,37 @@ export function RiversCard({ place }: { place: PickedPlace | null }) {
                     .filter(Boolean)
                     .join(' · ')}
                 </span>
+                {s.forecast?.length ? (
+                  <span className="river-forecast" data-testid={`river-forecast-${s.id}`}>
+                    {fc && sum ? (
+                      <>
+                        <span className="hint">
+                          {t('navigation.rivers.forecast.peak', { max: nf.format(sum.peak.v), maxAt: whenFmt(sum.peak.t), min: nf.format(sum.trough.v), minAt: whenFmt(sum.trough.t) })}{' '}
+                          {sum.first
+                            ? t(sum.first.band ? 'navigation.rivers.forecast.reachBand' : 'navigation.rivers.forecast.reach', {
+                                what: t(`navigation.rivers.forecast.what.${sum.first.kind}`),
+                                m: threshold(sum.first.kind),
+                                when: whenFmt(sum.first.t),
+                              })
+                            : t('navigation.rivers.forecast.none')}
+                        </span>
+                        <button type="button" className="btn" aria-expanded={openForecast === s.id} onClick={() => setOpenForecast(openForecast === s.id ? null : s.id)}>
+                          {t(openForecast === s.id ? 'navigation.rivers.forecast.hide' : 'navigation.rivers.forecast.show')}
+                        </button>
+                        {openForecast === s.id && (
+                          <>
+                            <ForecastChart forecast={fc} levels={s} now={now} label={t('navigation.rivers.forecast.chartLabel', { name: s.name })} locale={i18n.language} testId={`forecast-chart-${s.id}`} />
+                            <span className="hint">
+                              {t('navigation.rivers.forecast.issued', { date: whenFmt(fc.issued) })} {t('navigation.rivers.forecast.legend')}
+                            </span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <span className="hint">{t('navigation.rivers.forecast.loading')}</span>
+                    )}
+                  </span>
+                ) : null}
               </span>
               <span className="list-end river-level">
                 {r && state ? (
@@ -136,6 +195,11 @@ export function RiversCard({ place }: { place: PickedPlace | null }) {
           <p className="hint" style={{ margin: 0 }}>
             {t('navigation.rivers.alerts')}
           </p>
+          {near.some((n) => n.station.forecast?.length) && (
+            <p className="hint" style={{ margin: 0 }}>
+              {t('navigation.rivers.forecast.disclaimer')}
+            </p>
+          )}
         </>
       )}
     </section>

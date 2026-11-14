@@ -1471,6 +1471,20 @@
       "thresholdAlert": "Alerta {{m}} m",
       "thresholdEvac": "Evacuación {{m}} m",
       "thresholdLow": "Aguas bajas {{m}} m",
+      "forecast": {
+        "show": "Ver pronóstico",
+        "hide": "Ocultar pronóstico",
+        "loading": "Buscando el pronóstico…",
+        "peak": "Pronóstico del INA: máximo {{max}} m el {{maxAt}}, mínimo {{min}} m el {{minAt}}.",
+        "reach": "Llegaría a {{what}} ({{m}} m) el {{when}}.",
+        "reachBand": "Podría llegar a {{what}} ({{m}} m) el {{when}}, según la banda del pronóstico.",
+        "none": "No llega a ningún nivel de la estación en los días pronosticados.",
+        "what": { "evac": "nivel de evacuación", "alert": "nivel de alerta", "low": "aguas bajas" },
+        "chartLabel": "Gráfico del pronóstico de altura de {{name}}",
+        "issued": "Pronóstico emitido el {{date}}.",
+        "legend": "Línea: altura prevista. Zona sombreada: de menos a más según el pronóstico. Punteadas: aguas bajas, alerta y evacuación de la estación.",
+        "disclaimer": "Pronóstico del INA, informativo: no es una alerta oficial. Se actualiza cada uno a tres días y puede cambiar con la lluvia."
+      },
       "perDay": "en 24 h",
       "state": { "evac": "Evacuación", "alert": "Alerta", "low": "Aguas bajas", "normal": "Normal" },
       "reference": "Niveles en metros sobre el cero de escala de cada estación (no son iguales entre estaciones). El estado compara con los umbrales de esa estación.",
@@ -1502,7 +1516,13 @@
       "gaugeBelow": "el agua está {{value}} m por debajo de lo calculado (medido a las {{time}}).",
       "gaugeNoisy": "La medición se separa mucho de la marea calculada: puede ser el viento, la presión o un sensor con fallas. Tomala con cuidado.",
       "gaugeNote": "Línea punteada: nivel medido ({{operator}}, vía IOC), sin control de calidad y llevado al nivel de la curva calculada. Sin conexión queda la última lectura guardada.",
-      "gaugeStale": "No se pudo actualizar: es la última lectura guardada."
+      "gaugeStale": "No se pudo actualizar: es la última lectura guardada.",
+      "sfTitle": "Pronóstico del INA para el estuario",
+      "sfIntro": "Modelo del INA para {{name}} que sí incluye el viento y el caudal de los ríos: es la altura esperada del Río de la Plata, no la marea astronómica de arriba. Va sobre el cero de la escala del INA, no sobre el nivel medio.",
+      "sfChart": "Gráfico del pronóstico de altura del Río de la Plata en {{name}}",
+      "sfPeak": "Máximo previsto {{max}} m el {{when}}.",
+      "sfBand": "Según la banda del pronóstico, entre {{lo}} y {{hi}} m.",
+      "sfNote": "Pronóstico emitido el {{date}}, informativo y no oficial. Líneas punteadas: niveles de alerta y evacuación de la estación. Se actualiza todos los días y cambia con el viento."
     }
   },
   "declination": {

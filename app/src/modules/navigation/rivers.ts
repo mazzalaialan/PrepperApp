@@ -19,6 +19,8 @@ export interface RiverStation {
   low: number | null;
   /** Serie de altura del INA. */
   series: number;
+  /** Modelos del INA que pronostican su altura, del mejor al peor (ver `forecast.ts`); no tiene si no hay pronóstico. */
+  forecast?: number[];
 }
 
 export interface RiversData {

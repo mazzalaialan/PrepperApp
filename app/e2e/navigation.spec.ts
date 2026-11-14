@@ -340,3 +340,83 @@ test('Navegación: sin mareógrafo medido cerca (Puerto Madryn sí, Buenos Aires
   await expect(page.getByTestId('tide-gauge')).toHaveCount(0);
   await expect(page.getByTestId('tide-measured-line')).toHaveCount(0);
 });
+
+/** Una corrida del INA como la de las tablas de pronóstico: una estación, diaria, con banda inferior y superior. */
+function inaRun(estacion: number, values: number[], names = { main: 'medio', lo: 'inferior', hi: 'superior' }, stepMs = 86_400_000) {
+  const t0 = Math.floor(Date.now() / stepMs) * stepMs;
+  return [
+    {
+      id: 1,
+      forecast_date: new Date(t0).toISOString(),
+      series: [
+        {
+          estacion_id: estacion,
+          pronosticos: values.flatMap((v, i) => [
+            { timestart: new Date(t0 + i * stepMs).toISOString(), valor: v, qualifier: names.main },
+            { timestart: new Date(t0 + i * stepMs).toISOString(), valor: v - 0.3, qualifier: names.lo },
+            { timestart: new Date(t0 + i * stepMs).toISOString(), valor: v + 0.4, qualifier: names.hi },
+          ]),
+        },
+      ],
+    },
+  ];
+}
+
+test('Navegación: pronóstico del INA en el río (Rosario) con el máximo, cuándo llega a un nivel y el gráfico con su banda, también sin conexión', async ({ page, context }, testInfo) => {
+  await mockOpenMeteo(page);
+  await context.route('https://alerta.ina.gob.ar/a5/obs/**', (route) =>
+    route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: [{ series_id: 34, timestart: new Date(Date.now() - 3_600_000).toISOString(), valor: 4.4 }] }),
+  );
+  // Rosario: alerta en 5,00 m. El pronóstico sube hasta 5,2 m en el cuarto día.
+  await context.route('https://alerta.ina.gob.ar/a5/sim/calibrados/289/**', (route) =>
+    route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: inaRun(34, [4.4, 4.6, 4.9, 5.2, 5.1, 4.8, 4.6, 4.5, 4.4]) }),
+  );
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -32.95, longitude: -60.65, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  const row = page.getByTestId('river-forecast-34');
+  await expect(row).toContainText('Pronóstico del INA: máximo 5,20 m', { timeout: 20_000 });
+  await expect(row).toContainText(/Llegaría a nivel de alerta \(5,00 m\)/);
+  await expect(page.getByTestId('rivers-card')).toContainText('Pronóstico del INA, informativo: no es una alerta oficial');
+  await row.getByRole('button', { name: 'Ver pronóstico' }).click();
+  await expect(page.getByTestId('forecast-chart-34')).toBeVisible();
+  await expect(page.getByTestId('forecast-chart-34-band')).toHaveCount(1);
+  await expect(page.getByTestId('forecast-chart-34-fc-alert')).toHaveCount(1);
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-98-river-forecast.png`, fullPage: true });
+  // Sin conexión queda el último pronóstico guardado.
+  await context.setOffline(true);
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('river-forecast-34')).toContainText('Pronóstico del INA: máximo 5,20 m', { timeout: 20_000 });
+});
+
+test('Navegación: en el Río de la Plata el pronóstico del INA para San Fernando (viento y caudales) con su banda', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.route('https://alerta.ina.gob.ar/a5/obs/**', (route) => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: [] }));
+  // Modelo horario de San Fernando (aparece desde ahora): sube hasta 2,6 m en dos días.
+  await context.route('https://alerta.ina.gob.ar/a5/sim/calibrados/432/**', (route) =>
+    route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: inaRun(52, [1.2, 1.6, 2.0, 2.4, 2.6, 2.3, 1.9, 1.5], { main: 'main', lo: 'p05', hi: 'p95' }, 3_600_000 * 6) }),
+  );
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -34.6, longitude: -58.4, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('tide-estuary')).toBeVisible({ timeout: 15_000 });
+  const box = page.getByTestId('estuary-forecast');
+  await expect(box).toContainText('Pronóstico del INA para el estuario', { timeout: 20_000 });
+  await expect(page.getByTestId('estuary-chart')).toBeVisible();
+  await expect(page.getByTestId('estuary-chart-band')).toHaveCount(1);
+  await expect(page.getByTestId('estuary-peak')).toContainText('Máximo previsto 2,60 m');
+  await expect(page.getByTestId('estuary-peak')).toContainText('entre 2,30 y 3,00 m');
+});
+
+test('Navegación: sin pronóstico del INA (Ushuaia, lejos de los ríos con modelo) no aparece el pronóstico de estuario', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -54.8, longitude: -68.3, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('estuary-forecast')).toHaveCount(0);
+});
