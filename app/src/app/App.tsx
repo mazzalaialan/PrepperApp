@@ -146,7 +146,7 @@ const router = createHashRouter([
       { path: '/orientation/inclinometer', element: <InclinometerPage /> },
       { path: '/orientation/altimeter', element: <AltimeterPage /> },
       { path: '/orientation/starmap', element: <StarMapPage /> },
-      { path: '/orientation/navigation', element: <NavigationPage /> },
+      { path: '/weather/navigation', element: <NavigationPage /> },
       {
         path: '/orientation/maps',
         element: (

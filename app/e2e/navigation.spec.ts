@@ -17,8 +17,8 @@ test('Navegación: mareas sin conexión de la estación más cercana, con el avi
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -42.77, longitude: -65.04, accuracy: 20 });
   await start(page);
-  // Aparece en Orientación.
-  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Orientación', exact: true }).first().click();
+  // Aparece en Meteorología.
+  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Meteo', exact: true }).first().click();
   await page.getByRole('link', { name: /Navegación/ }).click();
   await expect(page.getByRole('heading', { name: 'Navegación' })).toBeVisible();
   await expect(page.getByTestId('navigation-notice')).toContainText('No reemplaza las cartas náuticas');
@@ -35,8 +35,8 @@ test('Navegación: mareas sin conexión de la estación más cercana, con el avi
 
   // Sin conexión funciona igual (se calcula en el teléfono con los datos ya guardados): se sale y se vuelve a entrar.
   await context.setOffline(true);
-  await page.goto('/#/orientation');
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('tide-station')).toContainText('Puerto Madryn', { timeout: 15_000 });
   await expect(page.getByTestId('tide-chart')).toBeVisible();
 });
@@ -45,7 +45,7 @@ test('Navegación: sin estación cerca (Montevideo) se avisa que la marea puede 
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -34.9, longitude: -56.2, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('tide-station')).toContainText('Buenos Aires', { timeout: 15_000 });
   await expect(page.getByTestId('tide-far')).toContainText('puede ser muy distinta');
   await expect(page.getByTestId('tide-estuary')).toContainText('el viento y el caudal');
@@ -71,7 +71,7 @@ test('Navegación: niveles de los ríos del INA con su estado, y sin conexión l
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -34.56, longitude: -58.4, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   const row = page.getByTestId('river-85');
   await expect(row).toContainText('Buenos Aires', { timeout: 15_000 });
   await expect(row).toContainText('Río de la Plata');
@@ -86,8 +86,8 @@ test('Navegación: niveles de los ríos del INA con su estado, y sin conexión l
 
   // Sin conexión: se ve el último nivel guardado y el aviso.
   await context.setOffline(true);
-  await page.goto('/#/orientation');
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('rivers-offline')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('river-85')).toContainText('3,50 m');
   await expect(page.getByTestId('river-state-85')).toHaveText('Alerta');
@@ -126,7 +126,7 @@ test('Navegación: oleaje y viento con el estado del mar, el punto del modelo y 
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -38.1, longitude: -57.45, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('wave-now')).toContainText(/\d,\d m/, { timeout: 15_000 });
   await expect(page.getByTestId('wave-now')).toContainText(/Marejada|Marejadilla/);
   await expect(page.getByTestId('wave-now')).toContainText('período 7 s');
@@ -141,8 +141,8 @@ test('Navegación: oleaje y viento con el estado del mar, el punto del modelo y 
 
   // Sin conexión: queda el último pronóstico guardado de este lugar.
   await context.setOffline(true);
-  await page.goto('/#/orientation');
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('waves-offline')).toContainText('último pronóstico guardado', { timeout: 15_000 });
   await expect(page.getByTestId('wave-now')).toContainText(/\d,\d m/);
 });
@@ -152,7 +152,7 @@ test('Navegación: en un río o tierra adentro el modelo marino no cubre el punt
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -32.95, longitude: -60.64, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('waves-none')).toContainText('no cubre este punto', { timeout: 15_000 });
   await expect(page.getByTestId('wave-now')).toHaveCount(0);
 });
@@ -177,7 +177,7 @@ test('Navegación: pronóstico marítimo de la Armada de Chile para tu zona y li
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -33.6, longitude: -71.62, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   const mine = page.getByTestId('chile-mine');
   await expect(mine).toContainText('Zona Tres (Valparaíso a Constitución)', { timeout: 20_000 });
   await expect(mine).toContainText('N/NW 15/25 kt ocasional 30 kt');
@@ -197,7 +197,7 @@ test('Navegación: la tarjeta de Chile no aparece fuera de Chile', async ({ page
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -34.56, longitude: -58.4, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('chile-card')).toHaveCount(0);
 });
@@ -221,7 +221,7 @@ test('Navegación: aviso marino de INUMET en el Río de la Plata (también del l
   // Buenos Aires, orilla argentina del estuario.
   await context.setGeolocation({ latitude: -34.56, longitude: -58.4, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   const warnings = page.getByTestId('uy-warnings');
   await expect(warnings).toContainText('Río de la Plata · visibilidad', { timeout: 20_000 });
   await expect(warnings).toContainText('neblinas y bancos de nieblas');
@@ -235,7 +235,63 @@ test('Navegación: el aviso de INUMET no aparece lejos del Río de la Plata (Pue
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: -42.77, longitude: -65.04, accuracy: 20 });
   await start(page);
-  await page.goto('/#/orientation/navigation');
+  await page.goto('/#/weather/navigation');
   await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('uy-card')).toHaveCount(0);
+});
+
+test('Navegación: ríos y lago Titicaca de Bolivia (SENAMHI) con la fecha de cada lectura y el aviso de lectura vieja', async ({ page, context }, testInfo) => {
+  await mockOpenMeteo(page);
+  // El servidor propio responde (simulado) con el reporte leído del PDF del SENAMHI.
+  await context.route('https://valhallarust2.ddns.net/api/rivers/bo', (route) =>
+    route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: {
+        reportDate: '2026-11-12',
+        fetchedAt: Date.now(),
+        url: 'https://senamhi.gob.bo/x.pdf',
+        stale: false,
+        readings: [
+          { station: 'HUATAJATA', river: 'TITICACA', prevDate: '2026-11-11', prevCm: 321, lastDate: '2026-11-12', lastCm: 320, zeroCm: null, trend: 'falling' },
+          { station: 'AGUALLAMAYA', river: 'DESAGUADERO', prevDate: '2026-11-10', prevCm: 84, lastDate: '2026-11-11', lastCm: 85, zeroCm: null, trend: 'rising' },
+          { station: 'GUANAY', river: 'MAPIRI', prevDate: '2026-05-31', prevCm: 100, lastDate: '2026-06-01', lastCm: 100, zeroCm: 500, trend: 'steady' },
+        ],
+      },
+    }),
+  );
+  await context.grantPermissions(['geolocation']);
+  // Orilla boliviana del lago Titicaca.
+  await context.setGeolocation({ latitude: -16.21, longitude: -68.71, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  const row = page.getByTestId('bo-HUATAJATA-TITICACA');
+  await expect(row).toContainText('Huatajata'.toUpperCase(), { timeout: 20_000 });
+  await expect(row).toContainText('320 cm');
+  await expect(row).toContainText('Descenso');
+  await expect(row).toContainText('−1 cm desde la lectura anterior'.replace('−', '-'));
+  await expect(row).toContainText('ubicación aproximada');
+  await expect(page.getByTestId('bo-report')).toContainText('Reporte del');
+  // La lectura de junio se marca como vieja.
+  await expect(page.getByTestId('bo-GUANAY-MAPIRI')).toContainText('lectura vieja');
+  await expect(page.getByTestId('bo-GUANAY-MAPIRI')).toContainText('Nivel cero de barranco: 500 cm');
+  await expect(page.getByTestId('bo-HUATAJATA-TITICACA').getByTestId('bo-old')).toHaveCount(0);
+  await expect(page.getByTestId('bo-source')).toContainText('SENAMHI Bolivia');
+  await page.screenshot({ path: `e2e-results/screens/${testInfo.project.name}-99-navigation-bolivia.png`, fullPage: true });
+
+  // Sin conexión: el último reporte guardado.
+  await context.setOffline(true);
+  await page.goto('/#/weather');
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('bo-offline')).toContainText('último reporte guardado', { timeout: 15_000 });
+  await expect(page.getByTestId('bo-HUATAJATA-TITICACA')).toContainText('320 cm');
+});
+
+test('Navegación: la tarjeta de Bolivia no aparece fuera de Bolivia', async ({ page, context }) => {
+  await mockOpenMeteo(page);
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -34.56, longitude: -58.4, accuracy: 20 });
+  await start(page);
+  await page.goto('/#/weather/navigation');
+  await expect(page.getByTestId('tide-station')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('bo-card')).toHaveCount(0);
 });

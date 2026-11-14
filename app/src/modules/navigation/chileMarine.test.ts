@@ -54,6 +54,8 @@ describe('fuentes de Navegación y copia comercial', () => {
     expect(sourceEnabled('ina', true)).toBe(true);
     expect(sourceEnabled('tides', true)).toBe(true);
     expect(sourceEnabled('armada-cl', true)).toBe(true);
+    expect(sourceEnabled('senamhi-bo', false)).toBe(true);
+    expect(sourceEnabled('senamhi-bo', true)).toBe(false);
     expect(visibleSources(true).map((s) => s.id)).toEqual(['ina', 'tides', 'armada-cl', 'inumet']);
   });
   it('cada fuente trae su licencia, su enlace y su cita', () => {

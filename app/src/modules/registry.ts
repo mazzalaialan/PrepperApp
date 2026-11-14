@@ -71,8 +71,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'declination', section: 'orientation', icon: Magnet, implemented: true, path: '/orientation/declination' },
   { id: 'inclinometer', section: 'orientation', icon: Triangle, implemented: true, path: '/orientation/inclinometer', requires: ['motion'] },
   { id: 'altimeter', section: 'orientation', icon: Mountain, implemented: true, path: '/orientation/altimeter', requires: ['geolocation'] },
-  { id: 'navigation', section: 'orientation', icon: Waves, implemented: true, path: '/orientation/navigation', degradesWithout: ['geolocation'] },
-  { id: 'maps', section: 'orientation', icon: MapIcon, implemented: true, path: '/orientation/maps', degradesWithout: ['geolocation'] },
+    { id: 'maps', section: 'orientation', icon: MapIcon, implemented: true, path: '/orientation/maps', degradesWithout: ['geolocation'] },
   // Las rutas van dentro de Waypoints (abajo), no como módulo aparte.
   { id: 'waypoints', section: 'orientation', icon: MapPin, implemented: true, path: '/orientation/waypoints', degradesWithout: ['geolocation'] },
   { id: 'tracks', section: 'orientation', icon: Footprints, implemented: true, path: '/orientation/tracks' },
@@ -86,6 +85,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'gear', section: 'training', icon: Shirt, implemented: true, path: '/training/gear', hideWhenOff: 'trainingGear' },
   { id: 'weather', section: 'weather', icon: CloudSun, implemented: true, path: '/weather/forecast' },
   { id: 'weatherMap', section: 'weather', icon: MapIcon, implemented: true, path: '/weather/map' },
+  { id: 'navigation', section: 'weather', icon: Waves, implemented: true, path: '/weather/navigation', degradesWithout: ['geolocation'] },
   { id: 'astronomy', section: 'weather', icon: Moon, implemented: true, path: '/weather/sky', degradesWithout: ['geolocation'] },
   { id: 'knotGuide', section: 'knots', icon: Lasso, implemented: true, path: '/knots/guide' },
   { id: 'anchors', section: 'knots', icon: Anchor, implemented: true, path: '/knots/anchors' },

@@ -3,6 +3,7 @@ import { usePlacePicker } from '@/modules/waypoints/PlacePicker';
 import { NavigationNotice } from './NavigationNotice';
 import { RiversCard } from './RiversCard';
 import { TidesCard } from './TidesCard';
+import { BoliviaRiversCard } from './BoliviaRiversCard';
 import { ChileMarineCard } from './ChileMarineCard';
 import { SourcesCard } from './SourcesCard';
 import { UruguayMarineCard } from './UruguayMarineCard';
@@ -22,6 +23,7 @@ export function NavigationPage() {
       <NavigationNotice />
       {picker}
       <RiversCard place={place} />
+      {sourceEnabled('senamhi-bo') && <BoliviaRiversCard place={place} />}
       <TidesCard place={place} />
       {sourceEnabled('open-meteo') && <WavesCard place={place} />}
       <ChileMarineCard place={place} />

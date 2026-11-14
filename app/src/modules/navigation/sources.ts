@@ -1,10 +1,10 @@
 /**
  * Fuentes de Navegación con su licencia. Decisión de quien dirige (2026-11-14): sin licencia declarada se usa (citando y con la fecha del
- * dato) y con licencia no comercial se usa mientras la app sea gratuita y sin publicidad. Para una copia paga, con publicidad o
- * institucional (por ejemplo la de una escuela) se compila con `VITE_COMMERCIAL=1` y se apagan las fuentes que prohíben el uso comercial.
+ * dato) y con licencia no comercial o con derechos reservados se usa mientras la app sea gratuita y sin publicidad. Para una copia paga,
+ * con publicidad o institucional (por ejemplo la de una escuela) se compila con `VITE_COMMERCIAL=1` y se apagan esas fuentes.
  */
-export type SourceId = 'ina' | 'tides' | 'open-meteo' | 'armada-cl' | 'inumet' | 'ioc';
-export type LicenseKind = 'open' | 'undeclared' | 'non-commercial';
+export type SourceId = 'ina' | 'tides' | 'open-meteo' | 'armada-cl' | 'inumet' | 'senamhi-bo' | 'ioc';
+export type LicenseKind = 'open' | 'undeclared' | 'reserved' | 'non-commercial';
 
 export interface NavSource {
   id: SourceId;
@@ -66,6 +66,15 @@ export const NAV_SOURCES: NavSource[] = [
     cite: 'Instituto Uruguayo de Meteorología (INUMET), aviso marino',
   },
   {
+    id: 'senamhi-bo',
+    name: 'SENAMHI Bolivia, reporte de niveles diarios',
+    provides: 'Niveles de ríos y del lago Titicaca de Bolivia',
+    license: 'reserved',
+    licenseText: 'Derechos reservados, sin términos de uso (el enlace «Términos y condiciones» del sitio está vacío)',
+    url: 'https://senamhi.gob.bo/hidrologia/rhidrologico',
+    cite: 'Servicio Nacional de Meteorología e Hidrología (SENAMHI) de Bolivia, reporte de niveles diarios; ubicación de las estaciones: mapa de pronóstico del SENAMHI y OpenStreetMap (© OpenStreetMap contributors)',
+  },
+  {
     id: 'ioc',
     name: 'IOC Sea Level Station Monitoring Facility',
     provides: 'Nivel del mar medido casi en vivo (pendiente: falta la aprobación de la cuenta)',
@@ -82,7 +91,7 @@ export const COMMERCIAL_BUILD: boolean = import.meta.env.VITE_COMMERCIAL === '1'
 /** ¿Se puede usar esta fuente? En una copia comercial se apagan las de licencia no comercial. */
 export function sourceEnabled(id: SourceId, commercial: boolean = COMMERCIAL_BUILD): boolean {
   const s = NAV_SOURCES.find((x) => x.id === id);
-  return !!s && !(commercial && s.license === 'non-commercial');
+  return !!s && !(commercial && (s.license === 'non-commercial' || s.license === 'reserved'));
 }
 
 /** Las fuentes que se muestran en la lista de licencias de la pantalla (las apagadas no). */

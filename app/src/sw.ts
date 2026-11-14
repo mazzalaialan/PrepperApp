@@ -150,7 +150,7 @@ self.addEventListener('push', (event) => {
           tag: `river-${r.station}`,
           renotify: true,
           ...(urgent ? { vibrate: [500, 200, 500, 200, 500], requireInteraction: true } : {}),
-          data: { url: '#/orientation/navigation' },
+          data: { url: '#/weather/navigation' },
         } as NotificationOptions);
       } else if (payload.type === 'garden' && payload.garden) {
         const g = payload.garden;
